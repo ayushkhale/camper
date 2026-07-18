@@ -7,6 +7,12 @@ import MainDrawer from './MainDrawer';
 import CompleteRegistrationScreen from '../Screens/Auth/CompleteRegistrationScreen';
 import StaffManagementScreen from '../Screens/Main/StaffManagementScreen';
 import AddStaffScreen from '../Screens/Main/AddStaffScreen';
+import ProductCatalogScreen from '../Screens/Main/ProductCatalogScreen';
+import AddProductScreen from '../Screens/Main/AddProductScreen';
+import ProductDetailScreen from '../Screens/Main/ProductDetailScreen';
+import RouteListScreen from '../Screens/Main/RouteListScreen';
+import AddRouteScreen from '../Screens/Main/AddRouteScreen';
+import RouteDetailScreen from '../Screens/Main/RouteDetailScreen';
 import { AuthProvider, AuthContext } from '../context/AuthContext';
 import { COLORS } from '../constants/colors';
 
@@ -34,6 +40,13 @@ const RootNavigatorContent = () => {
           <Stack.Screen name="MainDrawer" component={MainDrawer} />
           <Stack.Screen name="StaffManagement" component={StaffManagementScreen} />
           <Stack.Screen name="AddStaff" component={AddStaffScreen} />
+          <Stack.Screen name="ProductCatalog" component={ProductCatalogScreen} />
+          <Stack.Screen name="AddProduct" component={AddProductScreen} />
+          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+          <Stack.Screen name="EditProduct" component={AddProductScreen} />
+          <Stack.Screen name="RouteList" component={RouteListScreen} />
+          <Stack.Screen name="AddRoute" component={AddRouteScreen} />
+          <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
         </>
       )}
     </Stack.Navigator>

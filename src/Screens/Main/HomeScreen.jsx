@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
-import { Truck, UserPlus } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Truck, UserPlus, Package, MapPin } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS } from '../../constants/colors';
@@ -10,38 +11,8 @@ const HomeScreen = () => {
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-        {/* Overview Section */}
-        <Text style={styles.sectionTitle}>{t('home.overviewTitle')}</Text>
-        <View style={styles.grid}>
-          <View style={[styles.card, styles.cardOne]}>
-            <Text style={styles.cardSubtitle}>{t('home.totalDelivery')}</Text>
-            <View style={styles.cardRow}>
-              <Text style={styles.cardValue}>18</Text>
-              <Truck color={COLORS.primary} size={26} strokeWidth={2} />
-            </View>
-          </View>
-
-          <View style={[styles.card, styles.cardTwo]}>
-            <Text style={styles.cardSubtitle}>{t('home.totalLiter')}</Text>
-            <View style={styles.cardRow}>
-              <Text style={styles.cardValue}>8,500 <Text style={styles.cardUnit}>Ltr</Text></Text>
-            </View>
-          </View>
-
-          <View style={[styles.card, styles.cardThree]}>
-            <Text style={styles.cardSubtitle}>{t('home.todayEarnings')}</Text>
-            <Text style={styles.cardValue}>₹ 12,450</Text>
-          </View>
-
-          <View style={[styles.card, styles.cardFour]}>
-            <Text style={styles.cardSubtitle}>{t('home.outstandingAmount')}</Text>
-            <Text style={styles.cardValue}>₹ 45,600</Text>
-          </View>
-        </View>
-
         {/* Quick Actions */}
         <Text style={styles.sectionTitle}>{t('home.quickActionsTitle')}</Text>
         <View style={styles.actionsRow}>
@@ -50,9 +21,29 @@ const HomeScreen = () => {
             onPress={() => navigation.navigate('StaffManagement')}
           >
             <View style={styles.actionIconContainer}>
-              <UserPlus color={COLORS.primary} size={28} strokeWidth={1.5} />
+              <UserPlus color={COLORS.primary} size={24} strokeWidth={2} />
             </View>
             <Text style={styles.actionText}>{t('home.actionAddStaff')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionItem}
+            onPress={() => navigation.navigate('ProductCatalog')}
+          >
+            <View style={styles.actionIconContainer}>
+              <Package color={COLORS.primary} size={24} strokeWidth={2} />
+            </View>
+            <Text style={styles.actionText}>{t('products.title')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionItem}
+            onPress={() => navigation.navigate('RouteList')}
+          >
+            <View style={styles.actionIconContainer}>
+              <MapPin color={COLORS.primary} size={24} strokeWidth={2} />
+            </View>
+            <Text style={styles.actionText}>Delivery Routes</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -63,51 +54,56 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
-    padding: 20
+    padding: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'Poppins-Bold',
-    color: COLORS.primary,
-    marginBottom: 15,
-    marginTop: 10,
+    color: COLORS.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 12,
+    marginTop: 8,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   card: {
     width: '48%',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 6,
+    padding: 14,
+    marginBottom: 14,
     borderWidth: 1,
+    backgroundColor: COLORS.surface,
+    borderColor: COLORS.border,
   },
   cardOne: {
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.primary,
   },
   cardTwo: {
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.success,
   },
   cardThree: {
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.warning,
   },
   cardFour: {
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.danger,
   },
   cardSubtitle: {
-    fontSize: 14,
+    fontSize: 11.5,
     fontFamily: 'Poppins-Medium',
-    color: COLORS.primary,
-    marginBottom: 8,
+    color: COLORS.textSecondary,
+    marginBottom: 6,
   },
   cardRow: {
     flexDirection: 'row',
@@ -115,42 +111,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cardValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontFamily: 'Poppins-Bold',
-    color: COLORS.primary,
+    color: COLORS.textPrimary,
   },
   cardUnit: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'Poppins-Regular',
-    color: COLORS.primary,
+    color: COLORS.textSecondary,
   },
   actionsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap'
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 6,
+    padding: 16,
+    justifyContent: 'flex-start',
   },
   actionItem: {
-    width: '28%',
+    width: '25%',
     alignItems: 'center',
-    marginBottom: 20
+    marginRight: 12,
   },
   actionIconContainer: {
-    width: 65,
-    height: 65,
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
+    width: 48,
+    height: 48,
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: COLORS.border
+    marginBottom: 8,
   },
   actionText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontFamily: 'Poppins-Medium',
     color: COLORS.textPrimary,
-    textAlign: 'center'
-  }
+    textAlign: 'center',
+  },
 });
 
 export default HomeScreen;

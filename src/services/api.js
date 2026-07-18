@@ -121,6 +121,78 @@ const patchRequest = async (endpoint, body, token = null) => {
   }
 };
 
+const postMultipartRequest = async (endpoint, formData, token = null) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  console.log(`🚀 [API Request] POST Multipart ${url}`);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 429) {
+      const error = new Error('TOO_MANY_REQUESTS');
+      logError(url, error);
+      throw error;
+    }
+
+    const data = await response.json();
+    logResponse(url, response.status, data);
+
+    if (!response.ok) {
+      const error = new Error(data.message || 'Something went wrong');
+      logError(url, error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    if (error.message !== 'TOO_MANY_REQUESTS' && !error.message.includes('went wrong')) {
+      logError(url, error);
+    }
+    throw error;
+  }
+};
+
+const patchMultipartRequest = async (endpoint, formData, token = null) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  console.log(`🚀 [API Request] PATCH Multipart ${url}`);
+
+  try {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers,
+      body: formData,
+    });
+
+    const data = await response.json();
+    logResponse(url, response.status, data);
+
+    if (!response.ok) {
+      const error = new Error(data.message || 'Something went wrong');
+      logError(url, error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    logError(url, error);
+    throw error;
+  }
+};
+
 const deleteRequest = async (endpoint, token = null) => {
   const url = `${API_BASE_URL}${endpoint}`;
   const headers = { 'Content-Type': 'application/json' };
@@ -192,4 +264,44 @@ export const api = {
 
   deleteStaff: (token, id) => 
     deleteRequest(`/api/vendor/staff/${id}`, token),
+
+  // Product / SKU Catalog APIs
+  listProducts: (token) => 
+    getRequest('/api/vendor/products', token),
+
+  getProduct: (token, id) => 
+    getRequest(`/api/vendor/products/${id}`, token),
+
+  createProduct: (token, formData) => 
+    postMultipartRequest('/api/vendor/products', formData, token),
+
+  updateProduct: (token, id, data, isMultipart = false) => 
+    isMultipart 
+      ? patchMultipartRequest(`/api/vendor/products/${id}`, data, token)
+      : patchRequest(`/api/vendor/products/${id}`, data, token),
+
+  deleteProduct: (token, id) => 
+    deleteRequest(`/api/vendor/products/${id}`, token),
+
+  // Delivery Routes APIs
+  listRoutes: (token) => 
+    getRequest('/api/vendor/routes', token),
+
+  getRoute: (token, id) => 
+    getRequest(`/api/vendor/routes/${id}`, token),
+
+  createRoute: (token, routeData) => 
+    postRequest('/api/vendor/routes', routeData, token),
+
+  updateRoute: (token, id, routeData) => 
+    patchRequest(`/api/vendor/routes/${id}`, routeData, token),
+
+  deleteRoute: (token, id) => 
+    deleteRequest(`/api/vendor/routes/${id}`, token),
+
+  assignStaff: (token, id, assignmentData) => 
+    postRequest(`/api/vendor/routes/${id}/assign-staff`, assignmentData, token),
+
+  endStaffAssignment: (token, routeId, staffRouteId) => 
+    deleteRequest(`/api/vendor/routes/${routeId}/assign-staff/${staffRouteId}`, token),
 };

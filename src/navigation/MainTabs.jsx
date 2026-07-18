@@ -8,6 +8,7 @@ import { COLORS } from '../constants/colors';
 import HomeScreen from '../Screens/Main/HomeScreen';
 import OrdersScreen from '../Screens/Main/OrdersScreen';
 import ProfileScreen from '../Screens/Main/ProfileScreen';
+import ProductCatalogScreen from '../Screens/Main/ProductCatalogScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -78,7 +79,7 @@ const MainTabs = () => {
       />
       <Tab.Screen 
         name="Products" 
-        component={DummyScreen} 
+        component={ProductCatalogScreen} 
         options={{ tabBarLabel: t('tabs.products') }}
       />
       <Tab.Screen 

@@ -19,7 +19,7 @@ const OnboardingScreen2 = ({ navigation }) => {
   const { t } = useTranslation();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {/* Header with Logo and Back */}
       <View style={styles.header}>
         <Image
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 16,
   },
   logo: {
@@ -84,7 +84,9 @@ const styles = StyleSheet.create({
   backButton: {
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 16,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     backgroundColor: COLORS.surface,
   },
   backText: {
@@ -110,7 +112,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -129,7 +131,7 @@ const styles = StyleSheet.create({
   dot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: 2,
     backgroundColor: COLORS.border,
     marginHorizontal: 4,
   },
@@ -140,18 +142,14 @@ const styles = StyleSheet.create({
   nextButton: {
     width: '100%',
     backgroundColor: COLORS.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
+    height: 48,
+    borderRadius: 6,
     alignItems: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    justifyContent: 'center',
   },
   nextButtonText: {
-    color: COLORS.background,
-    fontSize: 18,
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

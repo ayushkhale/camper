@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   langButton: {
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: COLORS.surface,
@@ -92,16 +92,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Medium',
   },
   activeLangText: {
-    color: COLORS.background,
+    color: '#FFFFFF',
   },
   logoutButton: {
     marginTop: 40,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    paddingVertical: 12,
+    borderRadius: 6,
+    borderWidth: 1,
     borderColor: COLORS.error,
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.surface,
   },
   logoutText: {
     fontSize: 14,

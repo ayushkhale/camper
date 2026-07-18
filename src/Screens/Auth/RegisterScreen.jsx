@@ -62,7 +62,7 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {/* Custom Toast Notification */}
       {toast.visible && (
         <View style={[styles.toast, toast.type === 'success' ? styles.toastSuccess : styles.toastError]}>
@@ -142,7 +142,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 40,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   logoContainer: {
     alignItems: 'center',
@@ -161,34 +162,33 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
+    backgroundColor: COLORS.surface,
+    padding: 20,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.textPrimary,
     marginBottom: 24,
   },
   inputLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.primary,
-    marginBottom: 8,
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+    marginBottom: 6,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 12,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.background,
     marginBottom: 20,
-    height: 52,
-    // Soft minimal shadow
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    height: 48,
   },
   countryCode: {
     fontSize: 16,
@@ -209,21 +209,17 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     backgroundColor: COLORS.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
+    height: 48,
+    borderRadius: 6,
     alignItems: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    elevation: 4,
+    justifyContent: 'center',
     marginBottom: 24,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   buttonText: {
-    color: COLORS.background,
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: 'bold',
   },
@@ -241,31 +237,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  // Custom Toast Styles
   toast: {
     position: 'absolute',
-    top: 50,
+    top: 16,
     left: 24,
     right: 24,
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 12,
+    borderRadius: 6,
     zIndex: 9999,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
     alignItems: 'center',
   },
   toastError: {
-    backgroundColor: COLORS.error,
+    backgroundColor: COLORS.danger,
   },
   toastSuccess: {
     backgroundColor: COLORS.success,
   },
   toastText: {
-    color: COLORS.background,
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
