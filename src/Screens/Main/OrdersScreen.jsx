@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
-  Truck, Package, CheckCircle, XCircle, ChevronRight, X, Play
+  Truck, Package, CheckCircle, XCircle, ChevronRight, X, Play, Calendar, MapPin
 } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -42,6 +43,33 @@ const OrdersScreen = () => {
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [calendarDays] = useState(getNext7Days());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const formatDateString = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const parseDateString = (str) => {
+    if (!str) return new Date();
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+    return new Date();
+  };
+
+  const onDateChange = (event, selectedDateObj) => {
+    setShowDatePicker(false);
+    if (selectedDateObj) {
+      setSelectedDate(formatDateString(selectedDateObj));
+    }
+  };
 
   // Deliveries State
   const [deliveries, setDeliveries] = useState([]);
@@ -55,10 +83,28 @@ const OrdersScreen = () => {
   const [emptyUnits, setEmptyUnits] = useState('0');
   const [updating, setUpdating] = useState(false);
 
-  const fetchDeliveries = async (dateStr) => {
+  // Filters State
+  const [routes, setRoutes] = useState([]);
+  const [selectedRouteId, setSelectedRouteId] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [activeFilterModal, setActiveFilterModal] = useState(null); // 'route' | 'status' | null
+
+  const fetchRoutes = async () => {
+    try {
+      const res = await api.listRoutes(userToken);
+      if (res.success) {
+        setRoutes(res.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching routes:', err);
+    }
+  };
+
+  const fetchDeliveries = async (dateStr, routeId = '', status = '') => {
     setLoadingDeliveries(true);
     try {
-      const res = await api.listDeliveries(userToken, dateStr);
+      const statusParam = status === 'all' ? '' : status;
+      const res = await api.listDeliveries(userToken, dateStr, routeId, statusParam);
       if (res.success) {
         setDeliveries(res.data || []);
       }
@@ -71,9 +117,15 @@ const OrdersScreen = () => {
 
   useEffect(() => {
     if (userToken) {
-      fetchDeliveries(selectedDate);
+      fetchDeliveries(selectedDate, selectedRouteId, selectedStatus);
     }
-  }, [selectedDate, userToken]);
+  }, [selectedDate, selectedRouteId, selectedStatus, userToken]);
+
+  useEffect(() => {
+    if (userToken) {
+      fetchRoutes();
+    }
+  }, [userToken]);
 
   const handleGenerateDeliveries = async () => {
     setGenerating(true);
@@ -129,6 +181,21 @@ const OrdersScreen = () => {
     }
   };
 
+  const getGroupedDeliveries = () => {
+    const groups = {};
+    deliveries.forEach(d => {
+      const routeName = d.Customer?.Route?.name || 'Unassigned Route';
+      if (!groups[routeName]) {
+        groups[routeName] = [];
+      }
+      groups[routeName].push(d);
+    });
+    return Object.keys(groups).map(name => ({
+      routeName: name,
+      items: groups[name]
+    }));
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right', 'top']}>
       
@@ -141,9 +208,17 @@ const OrdersScreen = () => {
         
         {/* Calendar Card Section */}
         <View style={styles.calendarCard}>
-          <Text style={styles.calendarTitle}>
-            {new Date(selectedDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </Text>
+          <View style={styles.calendarHeader}>
+            <Text style={styles.calendarTitle}>
+              {new Date(selectedDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </Text>
+            <TouchableOpacity 
+              onPress={() => setShowDatePicker(true)}
+              style={styles.calendarIconBtn}
+            >
+              <Calendar size={18} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.calendarStrip}>
             {calendarDays.map((day, index) => {
@@ -163,6 +238,30 @@ const OrdersScreen = () => {
               );
             })}
           </ScrollView>
+        </View>
+
+        {/* Filters Row */}
+        <View style={styles.filtersRow}>
+          <TouchableOpacity 
+            style={styles.filterDropdown} 
+            onPress={() => setActiveFilterModal('route')}
+          >
+            <MapPin size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
+            <Text style={styles.filterDropdownText} numberOfLines={1}>
+              {selectedRouteId ? (routes.find(r => r.id === selectedRouteId)?.name || 'Route') : 'All Routes'}
+            </Text>
+            <ChevronRight size={14} color={COLORS.textSecondary} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.filterDropdown, { marginLeft: 12 }]} 
+            onPress={() => setActiveFilterModal('status')}
+          >
+            <Text style={styles.filterDropdownText}>
+              {selectedStatus === 'all' ? 'All Status' : selectedStatus.toUpperCase()}
+            </Text>
+            <ChevronRight size={14} color={COLORS.textSecondary} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
+          </TouchableOpacity>
         </View>
 
         {/* Deliveries Actions Row */}
@@ -196,47 +295,57 @@ const OrdersScreen = () => {
               <Text style={styles.emptySubtitle}>Click generate if you've added new subscriptions recently.</Text>
             </View>
           ) : (
-            deliveries.map((delivery) => {
-              const statusColors = getStatusColor(delivery.status);
-              return (
-                <TouchableOpacity 
-                  key={delivery.id} 
-                  style={styles.deliveryCard}
-                  activeOpacity={0.7}
-                  onPress={() => openUpdateModal(delivery)}
-                >
-                  <View style={styles.deliveryHeader}>
-                    <View style={styles.deliveryCustomerInfo}>
-                      <Text style={styles.deliveryCustomerName} numberOfLines={1}>
-                        {delivery.Customer?.name || 'Unknown'}
-                      </Text>
-                      <Text style={styles.deliveryAddress} numberOfLines={1}>
-                        {delivery.Customer?.address || 'No address'}
-                      </Text>
-                    </View>
-                    <View style={[styles.statusBadge, { backgroundColor: statusColors.bg }]}>
-                      <Text style={[styles.statusText, { color: statusColors.text }]}>
-                        {delivery.status.toUpperCase()}
-                      </Text>
-                    </View>
+            getGroupedDeliveries().map((group, groupIdx) => (
+              <View key={groupIdx} style={styles.routeGroup}>
+                <View style={styles.routeHeader}>
+                  <Text style={styles.routeTitle}>{group.routeName.toUpperCase()}</Text>
+                  <View style={styles.routeBadge}>
+                    <Text style={styles.routeBadgeText}>{group.items.length} Trips</Text>
                   </View>
-                  
-                  <View style={styles.deliveryDivider} />
-                  
-                  <View style={styles.deliveryFooter}>
-                    <View style={styles.deliveryProductInfo}>
-                      <Package size={14} color={COLORS.textPlaceholder} style={{ marginRight: 6 }} />
-                      <Text style={styles.deliveryProductName} numberOfLines={1}>
-                        {delivery.Subscription?.Product?.name || 'Product'}
-                      </Text>
-                    </View>
-                    <Text style={styles.deliveryQty}>
-                      Qty: {delivery.Subscription?.baseQuantity || 0}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )
-            })
+                </View>
+                {group.items.map((delivery) => {
+                  const statusColors = getStatusColor(delivery.status);
+                  return (
+                    <TouchableOpacity 
+                      key={delivery.id} 
+                      style={styles.deliveryCard}
+                      activeOpacity={0.7}
+                      onPress={() => openUpdateModal(delivery)}
+                    >
+                      <View style={styles.deliveryHeader}>
+                        <View style={styles.deliveryCustomerInfo}>
+                          <Text style={styles.deliveryCustomerName} numberOfLines={1}>
+                            {delivery.Customer?.name || 'Unknown'}
+                          </Text>
+                          <Text style={styles.deliveryAddress} numberOfLines={1}>
+                            {delivery.Customer?.address || 'No address'}
+                          </Text>
+                        </View>
+                        <View style={[styles.statusBadge, { backgroundColor: statusColors.bg }]}>
+                          <Text style={[styles.statusText, { color: statusColors.text }]}>
+                            {delivery.status.toUpperCase()}
+                          </Text>
+                        </View>
+                      </View>
+                      
+                      <View style={styles.deliveryDivider} />
+                      
+                      <View style={styles.deliveryFooter}>
+                        <View style={styles.deliveryProductInfo}>
+                          <Package size={14} color={COLORS.textPlaceholder} style={{ marginRight: 6 }} />
+                          <Text style={styles.deliveryProductName} numberOfLines={1}>
+                            {delivery.Subscription?.Product?.name || 'Product'}
+                          </Text>
+                        </View>
+                        <Text style={styles.deliveryQty}>
+                          Qty: {delivery.Subscription?.baseQuantity || 0}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))
           )}
         </View>
 
@@ -310,6 +419,96 @@ const OrdersScreen = () => {
         </Modal>
       )}
 
+      {/* Route & Status Filter Modals */}
+      {activeFilterModal === 'route' && (
+        <Modal
+          visible={true}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setActiveFilterModal(null)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay} 
+            activeOpacity={1} 
+            onPress={() => setActiveFilterModal(null)}
+          >
+            <View style={styles.filterModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Route</Text>
+                <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
+                  <X size={24} color={COLORS.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <ScrollView>
+                <TouchableOpacity 
+                  style={styles.filterModalItem} 
+                  onPress={() => { setSelectedRouteId(''); setActiveFilterModal(null); }}
+                >
+                  <Text style={[styles.filterModalItemText, !selectedRouteId && { color: COLORS.primary, fontFamily: 'Poppins-Bold' }]}>
+                    All Routes
+                  </Text>
+                </TouchableOpacity>
+                {routes.map((r) => (
+                  <TouchableOpacity 
+                    key={r.id}
+                    style={styles.filterModalItem} 
+                    onPress={() => { setSelectedRouteId(r.id); setActiveFilterModal(null); }}
+                  >
+                    <Text style={[styles.filterModalItemText, selectedRouteId === r.id && { color: COLORS.primary, fontFamily: 'Poppins-Bold' }]}>
+                      {r.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
+
+      {activeFilterModal === 'status' && (
+        <Modal
+          visible={true}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setActiveFilterModal(null)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay} 
+            activeOpacity={1} 
+            onPress={() => setActiveFilterModal(null)}
+          >
+            <View style={styles.filterModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Status</Text>
+                <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
+                  <X size={24} color={COLORS.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              {['all', 'pending', 'delivered', 'skipped'].map((statusOption) => (
+                <TouchableOpacity 
+                  key={statusOption}
+                  style={styles.filterModalItem} 
+                  onPress={() => { setSelectedStatus(statusOption); setActiveFilterModal(null); }}
+                >
+                  <Text style={[styles.filterModalItemText, selectedStatus === statusOption && { color: COLORS.primary, fontFamily: 'Poppins-Bold' }]}>
+                    {statusOption === 'all' ? 'All Status' : statusOption.toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={parseDateString(selectedDate)}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+        />
+      )}
+
     </SafeAreaView>
   );
 };
@@ -341,11 +540,25 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 24,
   },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   calendarTitle: {
     fontSize: 15,
     fontFamily: 'Poppins-Bold',
     color: COLORS.primary,
-    marginBottom: 16,
+    marginBottom: 0,
+  },
+  calendarIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   calendarStrip: {
     paddingRight: 10,
@@ -587,7 +800,72 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontFamily: 'Poppins-Bold',
-  }
+  },
+  filtersRow: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  filterDropdown: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 16,
+    height: 44,
+    paddingHorizontal: 12,
+  },
+  filterDropdownText: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Bold',
+    color: COLORS.textPrimary,
+    flex: 1,
+  },
+  routeGroup: {
+    marginBottom: 24,
+  },
+  routeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
+  routeTitle: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Bold',
+    color: COLORS.primary,
+    letterSpacing: 1,
+  },
+  routeBadge: {
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  routeBadgeText: {
+    fontSize: 11,
+    fontFamily: 'Poppins-Bold',
+    color: COLORS.primary,
+  },
+  filterModalContent: {
+    width: '90%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  filterModalItem: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  filterModalItemText: {
+    fontSize: 14.5,
+    fontFamily: 'Poppins-Medium',
+    color: COLORS.textPrimary,
+  },
 });
 
 export default OrdersScreen;

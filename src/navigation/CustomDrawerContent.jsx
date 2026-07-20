@@ -24,6 +24,7 @@ const CustomDrawerContent = (props) => {
     { title: 'Routes', type: 'navigate', screen: 'RouteList' },
     { title: 'Customers', type: 'navigate', screen: 'CustomerList' },
     { title: 'Subscriptions', type: 'navigate', screen: 'SubscriptionList' },
+    { title: 'Ad-hoc Orders', type: 'navigate', screen: 'OneTimeOrderList' },
     { title: 'Product Catalog', type: 'navigate', screen: 'ProductCatalog' },
     { title: 'Staff Management', type: 'navigate', screen: 'StaffManagement' },
     { title: 'Settings', type: 'navigate', screen: 'Settings' },

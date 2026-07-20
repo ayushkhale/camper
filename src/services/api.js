@@ -381,4 +381,14 @@ export const api = {
 
   deleteOverride: (token, subscriptionId, overrideId) =>
     deleteRequest(`/api/vendor/subscriptions/${subscriptionId}/overrides/${overrideId}`, token),
+
+  // One-Time Orders APIs
+  listOneTimeOrders: (token) =>
+    getRequest('/api/vendor/one-time-orders', token),
+
+  createOneTimeOrder: (token, orderData) =>
+    postRequest('/api/vendor/one-time-orders', orderData, token),
+
+  updateOneTimeOrderStatus: (token, id, status) =>
+    patchRequest(`/api/vendor/one-time-orders/${id}/status`, { status }, token),
 };

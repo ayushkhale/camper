@@ -1,15 +1,15 @@
 import React, { useState, useContext, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
   ActivityIndicator
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { 
-  UserPlus, Package, MapPin, Users, Repeat, LayoutDashboard
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  UserPlus, Package, MapPin, Users, Repeat, ShoppingBag
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -21,7 +21,6 @@ const HomeScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
-  const insets = useSafeAreaInsets();
 
   const [stats, setStats] = useState({ customers: 0, subscriptions: 0, routes: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
@@ -37,7 +36,7 @@ const HomeScreen = () => {
             api.listSubscriptions(userToken, '', 'active'),
             api.listRoutes(userToken)
           ]);
-          
+
           if (isActive) {
             setStats({
               customers: custRes.success ? (custRes.data?.length || 0) : 0,
@@ -51,75 +50,65 @@ const HomeScreen = () => {
           if (isActive) setLoadingStats(false);
         }
       };
-      
+
       fetchStats();
       return () => { isActive = false; };
     }, [userToken])
   );
 
   const features = [
-    { title: 'Customers', icon: Users, screen: 'CustomerList', color: COLORS.primary },
-    { title: 'Subscriptions', icon: Repeat, screen: 'SubscriptionList', color: COLORS.success },
-    { title: 'Routes', icon: MapPin, screen: 'RouteList', color: COLORS.warning },
-    { title: 'Product Catalog', icon: Package, screen: 'ProductCatalog', color: COLORS.textPrimary },
-    { title: 'Staff', icon: UserPlus, screen: 'StaffManagement', color: '#8B5CF6' },
+    { title: 'Customers', icon: Users, screen: 'CustomerList' },
+    { title: 'Subscriptions', icon: Repeat, screen: 'SubscriptionList' },
+    { title: 'Routes', icon: MapPin, screen: 'RouteList' },
+    { title: 'Product Catalog', icon: Package, screen: 'ProductCatalog' },
+    { title: 'Staff', icon: UserPlus, screen: 'StaffManagement' },
+    { title: 'Ad-hoc Orders', icon: ShoppingBag, screen: 'OneTimeOrderList' },
   ];
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <View style={[styles.headerContainer, { paddingTop: insets.top > 0 ? insets.top + 10 : 20 }]}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.greetingText}>Good Morning,</Text>
-            <Text style={styles.userName}>{user?.ownerName || 'Admin'}</Text>
-          </View>
-          <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.openDrawer()}>
-            <LayoutDashboard size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
-        {/* Dashboard Overview Stats */}
-        <Text style={styles.sectionTitle}>Overview</Text>
-        <View style={styles.statsCard}>
-          {loadingStats ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={COLORS.primary} />
-            </View>
-          ) : (
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats.customers}</Text>
-                <Text style={styles.statLabel}>Customers</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats.subscriptions}</Text>
-                <Text style={styles.statLabel}>Active Subs</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats.routes}</Text>
-                <Text style={styles.statLabel}>Routes</Text>
-              </View>
-            </View>
-          )}
-        </View>
 
-        {/* Features Grid */}
+        {/* Dashboard Overview Stats (M3 Filled Cards) */}
+        <Text style={styles.sectionTitle}>Overview</Text>
+        {loadingStats ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
+          </View>
+        ) : (
+          <View style={styles.statsRow}>
+            {/* Customers Card */}
+            <View style={[styles.statM3Card, { backgroundColor: COLORS.primaryLight }]}>
+              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.customers}</Text>
+              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>Customers</Text>
+            </View>
+
+            {/* Active Subs Card */}
+            <View style={[styles.statM3Card, { backgroundColor: COLORS.primaryLight }]}>
+              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.subscriptions}</Text>
+              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>Active Subs</Text>
+            </View>
+
+            {/* Routes Card */}
+            <View style={[styles.statM3Card, { backgroundColor: COLORS.primaryLight }]}>
+              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.routes}</Text>
+              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>Routes</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Features Grid (M3 Elevated Cards) */}
         <Text style={styles.sectionTitle}>Dashboard Features</Text>
         <View style={styles.featuresGrid}>
           {features.map((feature, idx) => (
-            <TouchableOpacity 
+            <TouchableOpacity
               key={idx}
               style={styles.featureCard}
               activeOpacity={0.7}
               onPress={() => navigation.navigate(feature.screen)}
             >
-              <View style={styles.featureIconWrap}>
-                <feature.icon size={24} color={feature.color} strokeWidth={2} />
+              <View style={[styles.featureIconWrap, { backgroundColor: COLORS.primaryLight }]}>
+                <feature.icon size={22} color={COLORS.primary} strokeWidth={2.5} />
               </View>
               <Text style={styles.featureText}>{feature.title}</Text>
             </TouchableOpacity>
@@ -134,76 +123,70 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  headerContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    backgroundColor: '#F8FAFC',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  greetingText: {
-    fontSize: 13,
-    fontFamily: 'Poppins-Medium',
-    color: COLORS.textSecondary,
-  },
-  userName: {
-    fontSize: 20,
-    fontFamily: 'Poppins-Bold',
-    color: COLORS.primary,
-  },
-  profileCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    backgroundColor: '#FAF9FC', // Soft M3 grey/purple background
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 12,
     fontFamily: 'Poppins-Bold',
-    color: COLORS.textPrimary,
+    color: COLORS.textSecondary,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
     marginBottom: 12,
+    marginTop: 16,
     marginLeft: 4,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  statM3Card: {
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+  },
+  statValue: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontFamily: 'Poppins-Medium',
+    textAlign: 'center',
   },
   featuresGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 24,
   },
   featureCard: {
     width: '48%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F0F5',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   featureIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: '#F8FAFC',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -212,44 +195,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Poppins-Bold',
     color: COLORS.textPrimary,
-  },
-  statsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 12,
-    elevation: 2,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 22,
-    fontFamily: 'Poppins-Bold',
-    color: COLORS.primary,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Medium',
-    color: COLORS.textSecondary,
     textAlign: 'center',
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: COLORS.border,
-    marginHorizontal: 10,
   },
   loadingContainer: {
     paddingVertical: 30,
