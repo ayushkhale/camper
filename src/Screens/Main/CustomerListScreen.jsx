@@ -8,10 +8,12 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Plus, Search, User, ChevronRight, AlertCircle, RefreshCw, MapPin, Phone } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -19,6 +21,7 @@ import { api } from '../../services/api';
 const CustomerListScreen = () => {
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
+  const { t } = useTranslation();
 
   const [customers, setCustomers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,7 +75,7 @@ const CustomerListScreen = () => {
       >
         <View style={styles.cardHeader}>
           <View style={styles.iconBox}>
-            <User size={20} color={COLORS.primary} />
+            <User size={22} color={COLORS.primary} />
           </View>
           <View style={styles.titleContainer}>
             <Text style={styles.customerName} numberOfLines={1}>
@@ -80,7 +83,7 @@ const CustomerListScreen = () => {
             </Text>
             {item.phone ? (
               <View style={styles.row}>
-                <Phone size={12} color={COLORS.textPlaceholder} style={{ marginRight: 4 }} />
+                <Phone size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
                 <Text style={styles.subText}>{item.phone}</Text>
               </View>
             ) : null}
@@ -92,16 +95,17 @@ const CustomerListScreen = () => {
 
         <View style={styles.cardFooter}>
           <View style={styles.routeContainer}>
-            <MapPin size={14} color={COLORS.textPlaceholder} style={{ marginRight: 4 }} />
-            <Text style={styles.routeText} numberOfLines={1}>
-              {item.Route ? item.Route.name : 'No Route Assigned'}
+            <MapPin size={14} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+            <Text style={styles.routeText} numberOfLines={1} ellipsizeMode="tail">
+              {item.Route ? item.Route.name : 'No Route'}
             </Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: item.status === 'active' ? COLORS.successLight : COLORS.dangerLight }]}>
-            <Text style={[styles.statusText, { color: item.status === 'active' ? COLORS.success : COLORS.danger }]}>
-              {item.status.toUpperCase()}
-            </Text>
-          </View>
+            <View style={styles.statusBadge}>
+              <View style={[styles.statusDot, { backgroundColor: item.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
+              <Text style={[styles.statusText, { color: item.status === 'active' ? '#15803D' : '#64748B' }]}>
+                {item.status.toUpperCase()}
+              </Text>
+            </View>
         </View>
       </TouchableOpacity>
     );
@@ -109,88 +113,86 @@ const CustomerListScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Customers</Text>
-      </View>
+      <View style={styles.contentWrapper}>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>{t('customers.title')}</Text>
+        </View>
 
-      {/* Search Header */}
-      <View style={styles.searchHeader}>
-        <View style={styles.searchBar}>
-          <Search size={18} color={COLORS.textPlaceholder} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search customers by name or phone..."
-            placeholderTextColor={COLORS.textPlaceholder}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-      </View>
-
-      {/* Body List */}
-      {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading customers...</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.centerContainer}>
-          <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => fetchCustomers(true)}>
-            <RefreshCw size={14} color={COLORS.primary} style={{ marginRight: 6 }} />
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredCustomers}
-          keyExtractor={(item) => item.id || Math.random().toString()}
-          renderItem={renderCustomerCard}
-          contentContainerStyle={
-            filteredCustomers.length === 0 ? styles.emptyListContent : styles.listContent
-          }
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[COLORS.primary]}
-              tintColor={COLORS.primary}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('customers.searchPlaceholder')}
+              placeholderTextColor={COLORS.textPlaceholder}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <User size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-              <Text style={styles.emptyTitle}>No customers found</Text>
-              <Text style={styles.emptySubtitle}>
-                {searchQuery
-                  ? 'Try adjusting your search criteria'
-                  : 'Start by adding your first customer'}
-              </Text>
-              {!searchQuery && (
-                <TouchableOpacity
-                  style={styles.emptyAddBtn}
-                  onPress={() => navigation.navigate('AddCustomer')}
-                >
-                  <Plus size={18} color={COLORS.primary} style={{ marginRight: 6 }} />
-                  <Text style={styles.emptyAddBtnText}>Add Customer</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          }
-        />
-      )}
+          </View>
+        </View>
 
-      {/* Boxy FAB (Add Customer) */}
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Loading customers...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => fetchCustomers(true)}>
+              <RefreshCw size={16} color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredCustomers}
+            keyExtractor={(item) => item.id || Math.random().toString()}
+            renderItem={renderCustomerCard}
+            contentContainerStyle={
+              filteredCustomers.length === 0 ? styles.emptyListContent : styles.listContent
+            }
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[COLORS.primary]}
+                tintColor={COLORS.primary}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <User size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
+                <Text style={styles.emptyTitle}>{t('customers.noCustomersTitle')}</Text>
+                <Text style={styles.emptySubtitle}>
+                  {searchQuery
+                    ? t('customers.noCustomersSearch')
+                    : t('customers.noCustomersSub')}
+                </Text>
+                {!searchQuery && (
+                  <TouchableOpacity
+                    style={styles.emptyAddBtn}
+                    onPress={() => navigation.navigate('AddCustomer')}
+                  >
+                    <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.emptyAddBtnText}>{t('customers.addNew')}</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          />
+        )}
+      </View>
+
       {!loading && !error && (
         <TouchableOpacity
           style={styles.fab}
           activeOpacity={0.85}
           onPress={() => navigation.navigate('AddCustomer')}
         >
-          <Plus size={24} color={COLORS.primary} />
+          <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
     </SafeAreaView>
@@ -202,48 +204,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+  contentWrapper: {
+    flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 24 : 16,
+  },
+  headerRow: {
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
   headerTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
+    fontSize: 22,
+    fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
-  searchHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: COLORS.surfaceMuted,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+  searchContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.surface,
     borderRadius: 16,
-    paddingHorizontal: 14,
-    height: 44,
+    paddingHorizontal: 16,
+    height: 52,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
   },
   searchIcon: {
     marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    color: COLORS.primary,
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    color: COLORS.textPrimary,
+    fontSize: 15,
     paddingVertical: 0,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: 24,
     paddingBottom: 90,
   },
   emptyListContent: {
@@ -253,48 +251,51 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
-    marginBottom: 14,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    padding: 16,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconBox: {
-    width: 40,
-    height: 40,
-    backgroundColor: COLORS.textPlaceholder,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
   },
   titleContainer: {
     flex: 1,
   },
   customerName: {
-    fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontSize: 14,
+    fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 4,
   },
   subText: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textPlaceholder,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.textPlaceholder,
-    marginVertical: 12,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 14,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -308,18 +309,25 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   routeText: {
-    fontSize: 13,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textPlaceholder,
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+    flexShrink: 1,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   centerContainer: {
     flex: 1,
@@ -329,13 +337,13 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontSize: 15,
+    fontWeight: '500',
     color: COLORS.textPlaceholder,
   },
   errorText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontSize: 15,
+    fontWeight: '500',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -345,28 +353,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 16,
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
-    fontSize: 14,
+    fontWeight: 'bold',
+    fontSize: 15,
   },
   emptyContainer: {
     alignItems: 'center',
     paddingHorizontal: 30,
   },
   emptyTitle: {
-    fontSize: 17,
-    fontFamily: 'Inter-Bold',
+    fontSize: 18,
+    fontWeight: 'bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
-    fontSize: 13,
-    fontFamily: 'Inter-Regular',
+    fontSize: 14,
     color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 24,
@@ -375,21 +382,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 22,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 16,
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
-    fontSize: 14.5,
+    fontWeight: 'bold',
+    fontSize: 15,
   },
   fab: {
     position: 'absolute',
     bottom: 24,
-    right: 22,
-    width: 52,
-    height: 52,
+    right: 24,
+    width: 56,
+    height: 56,
     borderRadius: 16,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',

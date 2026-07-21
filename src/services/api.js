@@ -225,84 +225,91 @@ const deleteRequest = async (endpoint, token = null) => {
 
 export const api = {
   // Signup Flow - Step 1: Request OTP
-  signupRequestOtp: (phone) => 
+  signupRequestOtp: (phone) =>
     postRequest('/api/auth/signup-request-otp', { phone }),
 
   // Signup Flow - Step 2: Verify OTP
-  signupVerifyOtp: (contextId, otp) => 
+  signupVerifyOtp: (contextId, otp) =>
     postRequest('/api/auth/signup-verify-otp', { contextId, otp }),
 
   // Signup Flow - Step 3: Complete Registration
-  completeRegistration: (token, ownerName, businessName, businessCategoryId, email) => 
-    postRequest('/api/auth/complete-registration', { ownerName, businessName, businessCategoryId, email }, token),
+  completeRegistration: (token, ownerName, businessName, businessCategoryId, email, address, pincode, city, state, country) =>
+    postRequest('/api/auth/complete-registration', { ownerName, businessName, businessCategoryId, email, address, pincode, city, state, country }, token),
 
   // Login Flow - Step 1: Request OTP
-  loginRequestOtp: (phone) => 
+  loginRequestOtp: (phone) =>
     postRequest('/api/auth/request-otp', { phone, type: 'user' }),
 
   // Login Flow - Step 2: Verify OTP
-  loginVerifyOtp: (contextId, otp) => 
+  loginVerifyOtp: (contextId, otp) =>
     postRequest('/api/auth/verify-otp', { contextId, otp }),
 
   // Resend OTP
-  resendOtp: (contextId) => 
+  resendOtp: (contextId) =>
     postRequest('/api/auth/resend-otp', { contextId }),
+
+  // Vendor Profile APIs
+  getVendorProfile: (token) =>
+    getRequest('/api/vendor/profile', token),
+
+  updateVendorProfile: (token, updatedData) =>
+    patchRequest('/api/vendor/profile', updatedData, token),
 
   // Fetch Categories
   getCategories: () =>
     getRequest('/api/public/categories'),
 
   // Staff APIs
-  listStaff: (token) => 
+  listStaff: (token) =>
     getRequest('/api/vendor/staff', token),
 
-  addStaff: (token, staffData) => 
+  addStaff: (token, staffData) =>
     postRequest('/api/vendor/staff', staffData, token),
 
-  updateStaff: (token, id, staffData) => 
+  updateStaff: (token, id, staffData) =>
     patchRequest(`/api/vendor/staff/${id}`, staffData, token),
 
-  deleteStaff: (token, id) => 
+  deleteStaff: (token, id) =>
     deleteRequest(`/api/vendor/staff/${id}`, token),
 
   // Product / SKU Catalog APIs
-  listProducts: (token) => 
+  listProducts: (token) =>
     getRequest('/api/vendor/products', token),
 
-  getProduct: (token, id) => 
+  getProduct: (token, id) =>
     getRequest(`/api/vendor/products/${id}`, token),
 
-  createProduct: (token, formData) => 
+  createProduct: (token, formData) =>
     postMultipartRequest('/api/vendor/products', formData, token),
 
-  updateProduct: (token, id, data, isMultipart = false) => 
-    isMultipart 
+  updateProduct: (token, id, data, isMultipart = false) =>
+    isMultipart
       ? patchMultipartRequest(`/api/vendor/products/${id}`, data, token)
       : patchRequest(`/api/vendor/products/${id}`, data, token),
 
-  deleteProduct: (token, id) => 
+  deleteProduct: (token, id) =>
     deleteRequest(`/api/vendor/products/${id}`, token),
 
   // Delivery Routes APIs
-  listRoutes: (token) => 
+  listRoutes: (token) =>
     getRequest('/api/vendor/routes', token),
 
-  getRoute: (token, id) => 
+  getRoute: (token, id) =>
     getRequest(`/api/vendor/routes/${id}`, token),
 
-  createRoute: (token, routeData) => 
+  createRoute: (token, routeData) =>
     postRequest('/api/vendor/routes', routeData, token),
 
-  updateRoute: (token, id, routeData) => 
+  updateRoute: (token, id, routeData) =>
     patchRequest(`/api/vendor/routes/${id}`, routeData, token),
 
-  deleteRoute: (token, id) => 
+  deleteRoute: (token, id) =>
     deleteRequest(`/api/vendor/routes/${id}`, token),
 
-  assignStaff: (token, id, assignmentData) => 
+  assignStaff: (token, id, assignmentData) =>
     postRequest(`/api/vendor/routes/${id}/assign-staff`, assignmentData, token),
 
-  endStaffAssignment: (token, routeId, staffRouteId) => 
+  endStaffAssignment: (token, routeId, staffRouteId) =>
     deleteRequest(`/api/vendor/routes/${routeId}/assign-staff/${staffRouteId}`, token),
 
   // Customer APIs
@@ -314,16 +321,16 @@ export const api = {
     return getRequest(`/api/vendor/customers${queryString}`, token);
   },
 
-  getCustomer: (token, id) => 
+  getCustomer: (token, id) =>
     getRequest(`/api/vendor/customers/${id}`, token),
 
-  createCustomer: (token, customerData) => 
+  createCustomer: (token, customerData) =>
     postRequest('/api/vendor/customers', customerData, token),
 
-  updateCustomer: (token, id, customerData) => 
+  updateCustomer: (token, id, customerData) =>
     patchRequest(`/api/vendor/customers/${id}`, customerData, token),
 
-  deleteCustomer: (token, id) => 
+  deleteCustomer: (token, id) =>
     deleteRequest(`/api/vendor/customers/${id}`, token),
 
   // Subscriptions APIs
@@ -335,20 +342,20 @@ export const api = {
     return getRequest(`/api/vendor/subscriptions${queryString}`, token);
   },
 
-  getSubscription: (token, id) => 
+  getSubscription: (token, id) =>
     getRequest(`/api/vendor/subscriptions/${id}`, token),
 
-  createSubscription: (token, subscriptionData) => 
+  createSubscription: (token, subscriptionData) =>
     postRequest('/api/vendor/subscriptions', subscriptionData, token),
 
-  updateSubscription: (token, id, subscriptionData) => 
+  updateSubscription: (token, id, subscriptionData) =>
     patchRequest(`/api/vendor/subscriptions/${id}`, subscriptionData, token),
 
-  deleteSubscription: (token, id) => 
+  deleteSubscription: (token, id) =>
     deleteRequest(`/api/vendor/subscriptions/${id}`, token),
 
   // Deliveries APIs
-  generateDeliveries: (token, targetDate) => 
+  generateDeliveries: (token, targetDate) =>
     postRequest('/api/vendor/deliveries/generate', { targetDate }, token),
 
   listDeliveries: (token, date, routeId = '', status = '') => {
@@ -359,7 +366,7 @@ export const api = {
     return getRequest(`/api/vendor/deliveries${queryString}`, token);
   },
 
-  updateDeliveryStatus: (token, id, statusData) => 
+  updateDeliveryStatus: (token, id, statusData) =>
     patchRequest(`/api/vendor/deliveries/${id}/status`, statusData, token),
 
   // Pauses APIs

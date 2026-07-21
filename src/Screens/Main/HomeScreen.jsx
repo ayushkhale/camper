@@ -5,7 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -42,6 +43,7 @@ const HomeScreen = () => {
               customers: custRes.success ? (custRes.data?.length || 0) : 0,
               subscriptions: subRes.success ? (subRes.data?.length || 0) : 0,
               routes: routeRes.success ? (routeRes.data?.length || 0) : 0,
+              products: prodRes.success ? (prodRes.data?.length || 0) : 0,
             });
           }
         } catch (err) {
@@ -57,7 +59,7 @@ const HomeScreen = () => {
   );
 
   const features = [
-    { title: t('tabs.customers'), icon: Users, screen: 'CustomerList' },
+    { title: t('tabs.customers'), icon: Users, tab: 'Customers' },
     { title: t('subscriptions.title'), icon: Repeat, screen: 'SubscriptionList' },
     { title: t('deliveries.allRoutes'), icon: MapPin, screen: 'RouteList' },
     { title: t('products.title'), icon: Package, screen: 'ProductCatalog' },
@@ -69,48 +71,82 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* Dashboard Overview Stats (M3 Filled Cards) */}
-        <Text style={styles.sectionTitle}>{t('home.overviewTitle')}</Text>
+        {/* Today's Overview (Colorful Vertical Cards) */}
+        <Text style={styles.sectionTitle}>{t('home.overviewTitle') || 'Today\'s Overview'}</Text>
         {loadingStats ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={COLORS.primary} />
           </View>
         ) : (
-          <View style={styles.statsRow}>
-            {/* Customers Card */}
-            <View style={[styles.statM3Card, { backgroundColor: COLORS.surface }]}>
-              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.customers}</Text>
-              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>{t('tabs.customers')}</Text>
-            </View>
+          <View style={styles.overviewGrid}>
+            <View style={styles.overviewRow}>
+              {/* Customers Card */}
+              <View style={styles.overviewCardQuart}>
+                <View style={styles.overviewImageBgPlaceholder} />
+                <View style={styles.overviewIconAbsolute}>
+                  <Users size={64} color={COLORS.primary} strokeWidth={1.5} />
+                </View>
+                <Text style={styles.overviewTitleDark}>{t('tabs.customers')}</Text>
+                <Text style={styles.overviewValueDark}>{stats.customers}</Text>
+              </View>
 
-            {/* Active Subs Card */}
-            <View style={[styles.statM3Card, { backgroundColor: COLORS.surface }]}>
-              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.subscriptions}</Text>
-              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>{t('subscriptions.active')}</Text>
+              {/* Active Subs Card */}
+              <View style={styles.overviewCardQuart}>
+                <View style={styles.overviewImageBgPlaceholder} />
+                <View style={styles.overviewIconAbsolute}>
+                  <Repeat size={64} color={COLORS.primary} strokeWidth={1.5} />
+                </View>
+                <Text style={styles.overviewTitleDark}>{t('subscriptions.active')}</Text>
+                <Text style={styles.overviewValueDark}>{stats.subscriptions}</Text>
+              </View>
             </View>
+            <View style={[styles.overviewRow, { marginBottom: 0 }]}>
+              {/* Routes Card */}
+              <View style={styles.overviewCardQuart}>
+                <View style={styles.overviewImageBgPlaceholder} />
+                <View style={styles.overviewIconAbsolute}>
+                  <MapPin size={64} color={COLORS.primary} strokeWidth={1.5} />
+                </View>
+                <Text style={styles.overviewTitleDark}>{t('deliveries.allRoutes')}</Text>
+                <Text style={styles.overviewValueDark}>{stats.routes}</Text>
+              </View>
 
-            {/* Routes Card */}
-            <View style={[styles.statM3Card, { backgroundColor: COLORS.surface }]}>
-              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.routes}</Text>
-              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>{t('deliveries.allRoutes')}</Text>
+              {/* Products Card */}
+              <View style={styles.overviewCardQuart}>
+                <View style={styles.overviewImageBgPlaceholder} />
+                <View style={styles.overviewIconAbsolute}>
+                  <Package size={64} color={COLORS.primary} strokeWidth={1.5} />
+                </View>
+                <Text style={styles.overviewTitleDark}>{t('products.title')}</Text>
+                <Text style={styles.overviewValueDark}>{stats.products}</Text>
+              </View>
             </View>
           </View>
         )}
 
-        {/* Features Grid (M3 Elevated Cards) */}
-        <Text style={styles.sectionTitle}>{t('home.quickActionsTitle')}</Text>
-        <View style={styles.featuresGrid}>
+        {/* Business Services (White Card Grid) */}
+        <Text style={styles.sectionTitle}>{t('home.quickActionsTitle') || 'Business Services'}</Text>
+        <View style={styles.servicesCard}>
           {features.map((feature, idx) => (
             <TouchableOpacity
               key={idx}
-              style={styles.featureCard}
+              style={styles.serviceItem}
               activeOpacity={0.7}
-              onPress={() => navigation.navigate(feature.screen)}
+              onPress={() => {
+                if (feature.tab) {
+                  navigation.navigate('MainDrawer', {
+                    screen: 'MainTabs',
+                    params: { screen: feature.tab },
+                  });
+                } else {
+                  navigation.navigate(feature.screen);
+                }
+              }}
             >
-              <View style={[styles.featureIconWrap, { backgroundColor: COLORS.surface }]}>
-                <feature.icon size={22} color={COLORS.primary} strokeWidth={2.5} />
+              <View style={styles.serviceIconWrap}>
+                <feature.icon size={28} color={COLORS.primary} strokeWidth={2} />
               </View>
-              <Text style={styles.featureText}>{feature.title}</Text>
+              <Text style={styles.serviceText}>{feature.title}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -123,84 +159,111 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.background, // Pure white background to match onboarding/login
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
-    color: COLORS.textSecondary,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-    marginTop: 16,
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+    marginTop: 10,
     marginLeft: 4,
   },
-  statsRow: {
+
+  // Overview Section
+  loadingContainer: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  overviewGrid: {
+    marginBottom: 4,
+  },
+  overviewRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  statM3Card: {
-    flex: 1,
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 4,
+  overviewCardQuart: {
+    width: '48%',
+    height: 120,
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'column',
+    overflow: 'hidden',
+    backgroundColor: 'rgba(14, 68, 168, 0.06)', // Low opacity primary
   },
-  statValue: {
-    fontSize: 24,
-    fontFamily: 'Inter-Bold',
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 11,
+  overviewTitleDark: {
+    fontSize: 13,
     fontFamily: 'Inter-Medium',
-    textAlign: 'center',
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 4,
+    zIndex: 2,
   },
-  featuresGrid: {
+  overviewValueDark: {
+    fontSize: 28,
+    fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    zIndex: 2,
+  },
+  overviewImageBgPlaceholder: {
+    position: 'absolute',
+    right: -20,
+    bottom: -20,
+    width: 90,
+    height: 90,
+    backgroundColor: 'rgba(14, 68, 168, 0.08)',
+    borderRadius: 45,
+    zIndex: 0,
+  },
+  overviewIconAbsolute: {
+    position: 'absolute',
+    right: -5,
+    bottom: -5,
+    zIndex: 1,
+    opacity: 0.06,
+    transform: [{ rotate: '-10deg' }],
+  },
+
+  // Business Services Grid
+  servicesCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24, // softer, pillowy rounding
+    paddingVertical: 24,
+    paddingHorizontal: 10,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  featureCard: {
-    width: '48%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F3F0F5',
+    // Soft M3 elevated shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
+    marginBottom: 10,
   },
-  featureIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  serviceItem: {
+    width: '33.33%',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  serviceIconWrap: {
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  featureText: {
-    fontSize: 13,
-    fontFamily: 'Inter-Bold',
+  serviceText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
     textAlign: 'center',
-  },
-  loadingContainer: {
-    paddingVertical: 30,
-    alignItems: 'center',
-  },
+  }
 });
 
 export default HomeScreen;

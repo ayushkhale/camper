@@ -42,6 +42,7 @@ const MainDrawer = () => {
         component={SettingsScreen} 
         options={{ 
           title: 'Settings',
+          headerShown: false,
           drawerIcon: ({ color }) => <Settings color={color} size={22} /> 
         }} 
       />

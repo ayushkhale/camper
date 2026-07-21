@@ -17,7 +17,9 @@ import {
 } from 'react-native';
 import Contacts from 'react-native-contacts';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, User, Phone, MapPin, AlertCircle, IndianRupee, X, Contact } from 'lucide-react-native';
+import { ChevronLeft, User, Phone, MapPin, AlertCircle, IndianRupee, X, Contact, Package, Repeat, Calendar, Plus, ChevronDown, ChevronUp, Hash, Search, ChevronRight } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -26,6 +28,7 @@ const AddCustomerScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
+  const { t } = useTranslation();
 
   const editCustomer = route.params?.customer || null;
   const isEditMode = !!editCustomer;
@@ -46,6 +49,18 @@ const AddCustomerScreen = () => {
   const [loadingRoutes, setLoadingRoutes] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // Subscription section
+  const [addSubscription, setAddSubscription] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productId, setProductId] = useState('');
+  const [baseQuantity, setBaseQuantity] = useState('1');
+  const [recurrencePattern, setRecurrencePattern] = useState('daily');
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [productModalVisible, setProductModalVisible] = useState(false);
+  const [recurrenceModalVisible, setRecurrenceModalVisible] = useState(false);
+
   // Contacts Modal States
   const [contactModalVisible, setContactModalVisible] = useState(false);
   const [contactsList, setContactsList] = useState([]);
@@ -55,6 +70,7 @@ const AddCustomerScreen = () => {
 
   useEffect(() => {
     fetchRoutes();
+    fetchProducts();
   }, []);
 
   const fetchRoutes = async () => {
@@ -67,6 +83,18 @@ const AddCustomerScreen = () => {
       console.error('Error fetching routes:', err);
     } finally {
       setLoadingRoutes(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const res = await api.listProducts(userToken);
+      if (res.success) setProducts(res.data || []);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+    } finally {
+      setLoadingProducts(false);
     }
   };
 
@@ -137,7 +165,7 @@ const AddCustomerScreen = () => {
       if (isEditMode) {
         const response = await api.updateCustomer(userToken, editCustomer.id, customerData);
         if (response && response.success) {
-          Alert.alert('Success', 'Customer updated successfully');
+          Alert.alert('Success', t('customers.updateSuccess'));
           navigation.goBack();
         } else {
           setApiError(response.message || 'Failed to update customer');
@@ -145,7 +173,25 @@ const AddCustomerScreen = () => {
       } else {
         const response = await api.createCustomer(userToken, customerData);
         if (response && response.success) {
-          Alert.alert('Success', 'Customer added successfully');
+          const newCustomerId = response.data?.id;
+          // If subscription fields are filled, create subscription too
+          if (addSubscription && productId && newCustomerId) {
+            try {
+              await api.createSubscription(userToken, {
+                customerId: newCustomerId,
+                productId,
+                baseQuantity: parseInt(baseQuantity) || 1,
+                recurrencePattern,
+                startDate,
+                status: 'active',
+              });
+              Alert.alert(t('staff.title').includes('Staff') ? 'Success' : 'Success', t('customers.addWithSubSuccess'));
+            } catch (subErr) {
+              Alert.alert(t('customers.partialSuccess'), subErr.message || '');
+            }
+          } else {
+            Alert.alert('Success', t('customers.addSuccess'));
+          }
           navigation.goBack();
         } else {
           setApiError(response.message || 'Failed to add customer');
@@ -156,6 +202,42 @@ const AddCustomerScreen = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const formatDateString = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const parseDateString = (str) => {
+    if (!str) return new Date();
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    }
+    return new Date();
+  };
+
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) setStartDate(formatDateString(selectedDate));
+  };
+
+  const formatRecurrence = (pattern) => {
+    switch(pattern) {
+      case 'daily': return 'Daily';
+      case 'alternate_days': return 'Alternate Days';
+      case 'weekly': return 'Weekly';
+      case 'monthly': return 'Monthly';
+      default: return pattern;
+    }
+  };
+
+  const getProductName = (id) => {
+    const p = products.find(p => p.id === id);
+    return p ? p.name : 'Select Product';
   };
 
   const handleImportContacts = async () => {
@@ -254,50 +336,57 @@ const AddCustomerScreen = () => {
         onPress={() => setRouteModalVisible(false)}
       >
         <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+          {/* Handle bar */}
+          <View style={styles.modalHandle} />
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Route</Text>
-            <TouchableOpacity onPress={() => setRouteModalVisible(false)}>
-              <X size={24} color={COLORS.textPlaceholder} />
+            <Text style={styles.modalTitle}>{t('customers.selectRoute')}</Text>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setRouteModalVisible(false)}>
+              <X size={18} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
           
           {loadingRoutes ? (
-            <View style={{ padding: 20, alignItems: 'center' }}>
+            <View style={{ padding: 30, alignItems: 'center' }}>
               <ActivityIndicator size="small" color={COLORS.primary} />
             </View>
           ) : routes.length === 0 ? (
-            <Text style={{ textAlign: 'center', padding: 20, color: COLORS.textPlaceholder }}>
-              No routes available.
-            </Text>
+            <Text style={styles.modalEmptyText}>No routes available.</Text>
           ) : (
             <FlatList
               data={routes}
               keyExtractor={item => item.id}
-              style={{ maxHeight: 300 }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setRouteId(item.id);
-                    setRouteModalVisible(false);
-                  }}
-                >
-                  <Text style={[styles.modalItemText, routeId === item.id && styles.modalItemTextActive]}>
-                    {item.name} {item.areaCode ? `(${item.areaCode})` : ''}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              style={{ maxHeight: 320 }}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => {
+                const selected = routeId === item.id;
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalRouteItem, selected && styles.modalRouteItemActive]}
+                    onPress={() => { setRouteId(item.id); setRouteModalVisible(false); }}
+                  >
+                    <View style={[styles.modalRouteIcon, selected && { backgroundColor: COLORS.primary }]}>
+                      <MapPin size={16} color={selected ? '#FFF' : COLORS.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.modalRouteText, selected && { color: COLORS.primary, fontWeight: '700' }]}>
+                        {item.name}
+                      </Text>
+                      {item.areaCode ? <Text style={styles.modalRouteSubText}>{item.areaCode}</Text> : null}
+                    </View>
+                    {selected && (
+                      <View style={styles.modalCheckDot} />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
             />
           )}
           
-          <TouchableOpacity 
-            style={[styles.modalItem, { borderBottomWidth: 0, marginTop: 10 }]}
-            onPress={() => {
-              setRouteId('');
-              setRouteModalVisible(false);
-            }}
+          <TouchableOpacity
+            style={styles.modalClearBtn}
+            onPress={() => { setRouteId(''); setRouteModalVisible(false); }}
           >
-            <Text style={styles.modalItemText}>Clear Selection</Text>
+            <Text style={styles.modalClearBtnText}>{t('customers.clearRoute')}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -315,18 +404,22 @@ const AddCustomerScreen = () => {
         style={styles.modalOverlay}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+        <View style={[styles.modalContent, { maxHeight: '85%' }]}>
+          {/* Handle bar */}
+          <View style={styles.modalHandle} />
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Contact</Text>
-            <TouchableOpacity onPress={() => setContactModalVisible(false)}>
-              <X size={24} color={COLORS.textPlaceholder} />
+            <Text style={styles.modalTitle}>{t('customers.importContacts')}</Text>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setContactModalVisible(false)}>
+              <X size={18} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.inputContainer, { marginBottom: 15 }]}>
+          {/* Search */}
+          <View style={styles.modalSearchBar}>
+            <Search size={17} color={COLORS.textPlaceholder} style={{ marginRight: 10 }} />
             <TextInput
-              style={styles.input}
-              placeholder="Search contacts..."
+              style={styles.modalSearchInput}
+              placeholder="Search by name or number..."
               value={contactSearch}
               onChangeText={handleSearchContacts}
               placeholderTextColor={COLORS.textPlaceholder}
@@ -336,28 +429,35 @@ const AddCustomerScreen = () => {
           {loadingContacts ? (
             <View style={{ padding: 40, alignItems: 'center' }}>
               <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text style={{ marginTop: 10, color: COLORS.textPlaceholder }}>Loading contacts...</Text>
+              <Text style={styles.modalEmptyText}>Loading contacts...</Text>
             </View>
           ) : filteredContacts.length === 0 ? (
-            <Text style={{ textAlign: 'center', padding: 20, color: COLORS.textPlaceholder }}>
-              No contacts found.
-            </Text>
+            <Text style={styles.modalEmptyText}>No contacts found.</Text>
           ) : (
             <FlatList
               data={filteredContacts}
               keyExtractor={item => item.id}
               showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => handleSelectContact(item)}
-                >
-                  <Text style={styles.modalItemText}>{item.name}</Text>
-                  <Text style={{ color: COLORS.textPlaceholder, fontSize: 13, marginTop: 4 }}>
-                    {item.phone}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              contentContainerStyle={{ paddingBottom: 12 }}
+              renderItem={({ item }) => {
+                const initials = item.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+                return (
+                  <TouchableOpacity
+                    style={styles.contactRow}
+                    onPress={() => handleSelectContact(item)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.contactAvatar}>
+                      <Text style={styles.contactAvatarText}>{initials}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.contactName}>{item.name}</Text>
+                      <Text style={styles.contactPhone}>{item.phone}</Text>
+                    </View>
+                    <ChevronRight size={16} color={COLORS.textPlaceholder} />
+                  </TouchableOpacity>
+                );
+              }}
             />
           )}
         </View>
@@ -367,16 +467,6 @@ const AddCustomerScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isEditMode ? 'Edit Customer' : 'Add New Customer'}
-        </Text>
-        <View style={styles.headerRightSpacing} />
-      </View>
-
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
@@ -386,6 +476,21 @@ const AddCustomerScreen = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <View style={styles.headerRow}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <ChevronLeft size={28} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.titleContainer}>
+            <Text style={styles.pageTitle}>
+              {isEditMode ? t('customers.editCustomer') : t('customers.addNew')}
+            </Text>
+            <Text style={styles.pageSubtitle}>
+              {isEditMode ? t('customers.editSubtitle') : t('customers.addSubtitle')}
+            </Text>
+          </View>
+
           {apiError ? (
             <View style={styles.errorBanner}>
               <AlertCircle size={20} color={COLORS.primary} style={styles.errorIcon} />
@@ -401,18 +506,18 @@ const AddCustomerScreen = () => {
                 activeOpacity={0.7}
               >
                 <Contact size={20} color={COLORS.primary} style={{ marginRight: 8 }} />
-                <Text style={styles.importBtnText}>Import from Contacts</Text>
+                <Text style={styles.importBtnText}>{t('customers.importContacts')}</Text>
               </TouchableOpacity>
             )}
 
             {/* Name */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Name *</Text>
+              <Text style={styles.label}>{t('customers.name')} *</Text>
               <View style={[styles.inputContainer, nameError ? styles.inputErrorBorder : null]}>
                 <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Ramesh Kumar"
+                  placeholder={t('customers.namePlaceholder')}
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -424,7 +529,7 @@ const AddCustomerScreen = () => {
 
             {/* Phone */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Phone (Optional)</Text>
+              <Text style={styles.label}>{t('customers.phone')}</Text>
               <View style={[styles.inputContainer, phoneError ? styles.inputErrorBorder : null]}>
                 <Phone size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <Text style={styles.countryCode}>+91</Text>
@@ -442,20 +547,18 @@ const AddCustomerScreen = () => {
               </View>
               {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
               {isEditMode && editCustomer?.phone && (
-                <Text style={styles.helperText}>
-                  Phone number cannot be changed once assigned.
-                </Text>
+                <Text style={styles.helperText}>{t('customers.phoneCantChange')}</Text>
               )}
             </View>
 
             {/* Address */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Address (Optional)</Text>
+              <Text style={styles.label}>{t('customers.address')}</Text>
               <View style={[styles.inputContainer, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
                 <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, { height: 60 }]}
-                  placeholder="e.g. Flat 402, Building A"
+                  placeholder={t('customers.addressPlaceholder')}
                   value={address}
                   onChangeText={setAddress}
                   multiline
@@ -466,7 +569,7 @@ const AddCustomerScreen = () => {
 
             {/* Credit Limit */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Credit Limit (Optional)</Text>
+              <Text style={styles.label}>{t('customers.creditLimit')}</Text>
               <View style={styles.inputContainer}>
                 <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
@@ -482,15 +585,15 @@ const AddCustomerScreen = () => {
 
             {/* Route */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Route (Optional)</Text>
+              <Text style={styles.label}>{t('customers.route')}</Text>
               <TouchableOpacity 
                 style={[styles.inputContainer, { justifyContent: 'space-between' }]}
                 onPress={() => setRouteModalVisible(true)}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                  <Text style={[styles.input, { marginTop: 14, color: routeId ? COLORS.primary : COLORS.textPlaceholder }]}>
-                    {getRouteName(routeId)}
+                  <Text style={[styles.input, { marginTop: 14, color: routeId ? COLORS.textPrimary : COLORS.textPlaceholder }]}>
+                    {routeId ? getRouteName(routeId) : t('customers.selectRoute')}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -498,30 +601,186 @@ const AddCustomerScreen = () => {
 
           </View>
 
-          <View style={styles.actions}>
-            <TouchableOpacity 
-              style={[styles.btn, styles.btnPrimary, submitting && styles.btnDisabled]}
-              onPress={handleSubmit}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
-              ) : (
-                <Text style={styles.btnTextPrimary}>
-                  {isEditMode ? 'Save Changes' : 'Add Customer'}
-                </Text>
-              )}
-            </TouchableOpacity>
+          {/* Subscription Section - only in add mode */}
+          {!isEditMode && (
+            <>
+              <TouchableOpacity
+                style={styles.subscriptionToggle}
+                onPress={() => setAddSubscription(!addSubscription)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.subscriptionToggleLeft}>
+                  <View style={styles.subToggleIcon}>
+                    <Plus size={18} color={COLORS.primary} />
+                  </View>
+                  <View>
+                    <Text style={styles.subToggleTitle}>{t('customers.addSubscription')}</Text>
+                    <Text style={styles.subToggleSubtitle}>{t('customers.addSubDesc')}</Text>
+                  </View>
+                </View>
+                {addSubscription
+                  ? <ChevronUp size={20} color={COLORS.textSecondary} />
+                  : <ChevronDown size={20} color={COLORS.textSecondary} />}
+              </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.btn, styles.btnSecondary]}
-              onPress={() => navigation.goBack()}
-              disabled={submitting}
-            >
-              <Text style={styles.btnTextSecondary}>Cancel</Text>
+              {addSubscription && (
+                <View style={styles.subscriptionSection}>
+                  {/* Product */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>{t('customers.product')} *</Text>
+                    <TouchableOpacity
+                      style={styles.inputContainer}
+                      onPress={() => setProductModalVisible(true)}
+                    >
+                      <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <Text style={[styles.dropdownText, !productId && { color: COLORS.textPlaceholder }]}>
+                        {productId ? getProductName(productId) : t('customers.selectProduct')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Quantity */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>{t('customers.quantity')} *</Text>
+                    <View style={styles.inputContainer}>
+                      <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        value={baseQuantity}
+                        onChangeText={setBaseQuantity}
+                        keyboardType="number-pad"
+                        placeholderTextColor={COLORS.textPlaceholder}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Frequency */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>{t('customers.frequency')} *</Text>
+                    <TouchableOpacity
+                      style={styles.inputContainer}
+                      onPress={() => setRecurrenceModalVisible(true)}
+                    >
+                      <Repeat size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <Text style={styles.dropdownText}>
+                        {formatRecurrence(recurrencePattern)}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Start Date */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>{t('customers.startDate')} *</Text>
+                    <TouchableOpacity
+                      style={styles.inputContainer}
+                      onPress={() => setShowDatePicker(true)}
+                    >
+                      <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <Text style={styles.dropdownText}>
+                        {startDate}
+                      </Text>
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                      <DateTimePicker
+                        value={parseDateString(startDate)}
+                        mode="date"
+                        display="default"
+                        onChange={onDateChange}
+                      />
+                    )}
+                  </View>
+                </View>
+              )}
+            </>
+          )}
+
+          {/* Product Modal */}
+          <Modal
+            visible={productModalVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setProductModalVisible(false)}
+          >
+            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setProductModalVisible(false)}>
+              <View style={[styles.modalContent, { maxHeight: '70%' }]} onStartShouldSetResponder={() => true}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>{t('customers.selectProduct')}</Text>
+                  <TouchableOpacity onPress={() => setProductModalVisible(false)}>
+                    <X size={24} color={COLORS.textPlaceholder} />
+                  </TouchableOpacity>
+                </View>
+                {loadingProducts ? (
+                  <ActivityIndicator size="small" color={COLORS.primary} style={{ padding: 20 }} />
+                ) : products.length === 0 ? (
+                  <Text style={{ textAlign: 'center', padding: 20, color: COLORS.textPlaceholder }}>No products available.</Text>
+                ) : (
+                  <FlatList
+                    data={products}
+                    keyExtractor={item => item.id}
+                    style={{ maxHeight: 300 }}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.modalItem}
+                        onPress={() => { setProductId(item.id); setProductModalVisible(false); }}
+                      >
+                        <Text style={[styles.modalItemText, productId === item.id && styles.modalItemTextActive]}>
+                          {item.name}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                )}
+              </View>
             </TouchableOpacity>
-          </View>
+          </Modal>
+
+          {/* Recurrence Modal */}
+          <Modal
+            visible={recurrenceModalVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setRecurrenceModalVisible(false)}
+          >
+            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setRecurrenceModalVisible(false)}>
+              <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>{t('customers.selectFrequency')}</Text>
+                  <TouchableOpacity onPress={() => setRecurrenceModalVisible(false)}>
+                    <X size={24} color={COLORS.textPlaceholder} />
+                  </TouchableOpacity>
+                </View>
+                {['daily', 'alternate_days', 'weekly', 'monthly'].map(opt => (
+                  <TouchableOpacity
+                    key={opt}
+                    style={styles.modalItem}
+                    onPress={() => { setRecurrencePattern(opt); setRecurrenceModalVisible(false); }}
+                  >
+                    <Text style={[styles.modalItemText, recurrencePattern === opt && styles.modalItemTextActive]}>
+                      {formatRecurrence(opt)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        
         </ScrollView>
+        {/* Floating Bottom Bar */}
+        <View style={styles.bottomBar}>
+          <TouchableOpacity 
+            style={[styles.btn, styles.btnPrimary, submitting && styles.btnDisabled]}
+            onPress={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.btnTextPrimary}>
+                {isEditMode ? t('customers.saveChanges') : t('customers.addNew')}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
       {renderRouteModal()}
       {renderContactsModal()}
@@ -534,41 +793,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-    flex: 1,
-  },
-  headerRightSpacing: {
-    width: 40,
-  },
   keyboardAvoid: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'ios' ? 10 : 20,
     paddingBottom: 40,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    marginLeft: -8,
+  },
+  backButton: {
+    padding: 8,
+  },
+  titleContainer: {
+    marginBottom: 32,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginBottom: 6,
+  },
+  pageSubtitle: {
+    fontSize: 15,
+    color: COLORS.textPlaceholder,
+    fontWeight: '500',
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: '#FECACA',
     padding: 12,
     borderRadius: 16,
     marginBottom: 20,
@@ -586,39 +847,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.textPlaceholder,
+    backgroundColor: '#F8FAFC',
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
   },
   importBtnText: {
-    color: '#FFFFFF',
+    color: COLORS.primary,
     fontSize: 14,
     fontFamily: 'Inter-Bold',
   },
   form: {
-    marginBottom: 30,
+    marginBottom: 0,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textPlaceholder,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
     marginBottom: 6,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceMuted,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
     borderRadius: 16,
     paddingHorizontal: 12,
-    height: 48,
+    height: 52,
   },
   inputIcon: {
     marginRight: 8,
@@ -653,15 +914,18 @@ const styles = StyleSheet.create({
     marginTop: 6,
     paddingHorizontal: 2,
   },
-  actions: {
-    marginTop: 10,
+  bottomBar: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
   },
   btn: {
-    height: 48,
+    height: 52,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
   },
   btnPrimary: {
     backgroundColor: COLORS.primary,
@@ -669,57 +933,226 @@ const styles = StyleSheet.create({
   btnDisabled: {
     opacity: 0.5,
   },
-  btnSecondary: {
-    backgroundColor: COLORS.primaryLight,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-  },
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
     fontFamily: 'Inter-Bold',
   },
-  btnTextSecondary: {
-    color: COLORS.textPlaceholder,
-    fontSize: 15,
-    fontFamily: 'Inter-Bold',
-  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: COLORS.overlay,
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: COLORS.primaryLight,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
     paddingBottom: 40,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E2E8F0',
+    alignSelf: 'center',
+    marginBottom: 16,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 18,
   },
   modalTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
+    fontSize: 17,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalEmptyText: {
+    textAlign: 'center',
+    padding: 24,
+    color: COLORS.textPlaceholder,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  // Route modal items
+  modalRouteItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderRadius: 12,
+    marginBottom: 6,
+  },
+  modalRouteItemActive: {
+    backgroundColor: '#EEF2FF',
+  },
+  modalRouteIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  modalRouteText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  modalRouteSubText: {
+    fontSize: 12,
+    color: COLORS.textPlaceholder,
+    marginTop: 2,
+  },
+  modalCheckDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: COLORS.primary,
+  },
+  modalClearBtn: {
+    marginTop: 12,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    alignItems: 'center',
+  },
+  modalClearBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  // Search bar in contacts modal
+  modalSearchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  modalSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.textPrimary,
+    padding: 0,
+  },
+  // Contact rows
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  contactAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
+  },
+  contactAvatarText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  contactName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  contactPhone: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  // Generic modal item (still used by product/frequency pickers)
   modalItem: {
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+    borderBottomColor: '#F1F5F9',
   },
   modalItemText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontSize: 15,
+    fontWeight: '500',
     color: COLORS.textPrimary,
   },
   modalItemTextActive: {
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  subscriptionToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F0F4FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    marginTop: 0,
+  },
+  subscriptionToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  subToggleIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  subToggleTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 2,
+  },
+  subToggleSubtitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  subscriptionSection: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 16,
+    marginBottom: 20,
+  },
+  dropdownText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
     color: COLORS.textPrimary,
-    fontFamily: 'Inter-Bold',
   },
 });
 

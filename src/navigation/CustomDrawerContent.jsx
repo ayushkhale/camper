@@ -7,18 +7,37 @@ import {
   ScrollView,
   Platform,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronRight, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
 import { AuthContext } from '../context/AuthContext';
+import { api } from '../services/api';
 
 const CustomDrawerContent = (props) => {
   const { t } = useTranslation();
-  const { user, logout } = useContext(AuthContext);
+  const { user, userToken, logout } = useContext(AuthContext);
   const { navigation } = props;
   const insets = useSafeAreaInsets();
+  const [profile, setProfile] = React.useState(null);
+
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        if (userToken) {
+          const res = await api.getVendorProfile(userToken);
+          if (res.success && res.profile) {
+            setProfile(res.profile);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch profile for drawer', e);
+      }
+    };
+    fetchProfile();
+  }, [userToken]);
 
   // Only list screens that actually exist and are registered in navigation
   const menuItems = [
@@ -45,14 +64,17 @@ const CustomDrawerContent = (props) => {
     }
   };
 
-  const businessName = user?.businessName || 'My Business';
-  const ownerName = user?.ownerName || 'Owner Account';
-  const roleDisplay = user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Admin';
+  const vendorAccount = profile?.VendorAccounts?.[0];
+  const businessName = vendorAccount?.businessName || user?.businessName || 'My Business';
+  const ownerName = profile?.name || user?.ownerName || 'Owner Account';
+  const roleDisplay = profile?.role 
+    ? (profile.role.charAt(0).toUpperCase() + profile.role.slice(1)) 
+    : (user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Admin');
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left']}>
       {/* Deep Indigo Premium Header */}
-      <View style={[styles.header, { paddingTop: insets.top > 0 ? insets.top + 10 : 30 }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <View style={styles.headerLeft}>
           <Text style={styles.businessName} numberOfLines={1}>
             {businessName}
@@ -65,7 +87,7 @@ const CustomDrawerContent = (props) => {
 
         {/* User Avatar Circle */}
         <View style={styles.avatarCircle}>
-          <User size={28} color={COLORS.textPlaceholder} />
+          <Image source={require('../../assets/fallbackimage.png')} style={styles.avatarImage} />
         </View>
       </View>
 
@@ -75,17 +97,29 @@ const CustomDrawerContent = (props) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.menuContent}
       >
-        {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.menuItem}
-            activeOpacity={0.7}
-            onPress={() => handlePress(item)}
-          >
-            <Text style={styles.itemText}>{item.title}</Text>
-            <ChevronRight size={16} color="#1E3A5F" strokeWidth={2.5} />
-          </TouchableOpacity>
-        ))}
+        {menuItems.map((item, index) => {
+          const isActive = props.state && item.type === 'navigate' && props.state.routeNames[props.state.index] === item.screen;
+          
+          return (
+            <TouchableOpacity
+              key={index}
+              style={[styles.menuItem, isActive && styles.activeMenuItem]}
+              activeOpacity={0.7}
+              onPress={() => handlePress(item)}
+            >
+              <Text style={[
+                styles.itemText, 
+                isActive && styles.activeItemText,
+                item.type === 'logout' && { color: COLORS.danger }
+              ]}>
+                {item.title}
+              </Text>
+              {item.type !== 'logout' && (
+                <ChevronRight size={18} color={isActive ? COLORS.primary : COLORS.textPlaceholder} strokeWidth={2.5} />
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -135,28 +169,43 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   menuScroll: {
     flex: 1,
     backgroundColor: COLORS.surface,
   },
   menuContent: {
+    paddingTop: 12,
     paddingBottom: 20,
   },
   menuItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    marginHorizontal: 12,
+    marginBottom: 4,
+    borderRadius: 16,
+  },
+  activeMenuItem: {
+    backgroundColor: '#EEF2FF',
   },
   itemText: {
-    fontSize: 14,
+    fontSize: 14.5,
     fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
     fontWeight: '500',
+  },
+  activeItemText: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
   },
 });
 

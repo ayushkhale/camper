@@ -37,7 +37,7 @@ const OnboardingScreen1 = ({ navigation }) => {
       {/* Illustration Area */}
       <View style={styles.illustrationContainer}>
         <Image
-          source={require('../../../assets/Onboarding1.png')}
+          source={require('../../../assets/onboarding1.png')}
           style={styles.illustration}
           resizeMode="contain"
         />

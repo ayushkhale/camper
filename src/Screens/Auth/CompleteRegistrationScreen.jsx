@@ -9,7 +9,11 @@ import {
   ScrollView,
   Platform,
   Image,
+  Modal,
+  FlatList,
+  ActivityIndicator
 } from 'react-native';
+import { ChevronDown } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -21,10 +25,22 @@ const CompleteRegistrationScreen = () => {
   const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [pincode, setPincode] = useState('');
+  const [city, setCity] = useState('');
+  const [stateName, setStateName] = useState('');
+  const [country, setCountry] = useState('India');
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [loading, setLoading] = useState(false);
   const { t, i18n } = useTranslation();
+
+  // Pincode Dropdown States
+  const [availableCities, setAvailableCities] = useState([]);
+  const [availableStates, setAvailableStates] = useState([]);
+  const [isCityModalVisible, setCityModalVisible] = useState(false);
+  const [isStateModalVisible, setStateModalVisible] = useState(false);
+  const [fetchingPincode, setFetchingPincode] = useState(false);
 
   // Custom Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
@@ -65,9 +81,41 @@ const CompleteRegistrationScreen = () => {
     fetchCategories();
   }, []);
 
+  // Fetch pincode details
+  useEffect(() => {
+    if (pincode.length === 6) {
+      setFetchingPincode(true);
+      fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data[0] && data[0].Status === 'Success') {
+            const postOffices = data[0].PostOffice;
+            const uniqueCities = [...new Set(postOffices.map(po => po.District))];
+            const uniqueStates = [...new Set(postOffices.map(po => po.State))];
+            setAvailableCities(uniqueCities);
+            setAvailableStates(uniqueStates);
+            if (uniqueCities.length > 0) setCity(uniqueCities[0]);
+            if (uniqueStates.length > 0) setStateName(uniqueStates[0]);
+          } else {
+            triggerToast('Invalid Pincode', 'error');
+            setAvailableCities([]);
+            setAvailableStates([]);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          triggerToast('Failed to fetch pincode details', 'error');
+        })
+        .finally(() => setFetchingPincode(false));
+    } else {
+      setAvailableCities([]);
+      setAvailableStates([]);
+    }
+  }, [pincode]);
+
   const handleSubmit = async () => {
-    if (!ownerName || !businessName) {
-      triggerToast(t('completeReg.validationError'), 'error');
+    if (!ownerName || !businessName || !address || !pincode || !city || !stateName || !country) {
+      triggerToast('Please fill all required fields.', 'error');
       return;
     }
 
@@ -83,7 +131,12 @@ const CompleteRegistrationScreen = () => {
         ownerName,
         businessName,
         selectedCategoryId,
-        email || null
+        email || null,
+        address,
+        pincode,
+        city,
+        stateName,
+        country
       );
 
       if (response.success) {
@@ -168,6 +221,63 @@ const CompleteRegistrationScreen = () => {
               />
             </View>
 
+            {/* Address Input */}
+            <Text style={styles.inputLabel}>Address Line 1 *</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="123 Main Street"
+                placeholderTextColor={COLORS.textPlaceholder}
+                value={address}
+                onChangeText={setAddress}
+                editable={!loading}
+              />
+            </View>
+
+            {/* Pincode Input */}
+            <Text style={styles.inputLabel}>Pincode *</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="110001"
+                placeholderTextColor={COLORS.textPlaceholder}
+                keyboardType="numeric"
+                maxLength={6}
+                value={pincode}
+                onChangeText={setPincode}
+                editable={!loading}
+              />
+              {fetchingPincode && (
+                <ActivityIndicator size="small" color={COLORS.primary} style={{ position: 'absolute', right: 16 }} />
+              )}
+            </View>
+
+            {/* City Dropdown */}
+            <Text style={styles.inputLabel}>City *</Text>
+            <TouchableOpacity 
+              style={[styles.inputContainer, styles.dropdownContainer]} 
+              onPress={() => setCityModalVisible(true)}
+              disabled={loading || availableCities.length === 0}
+            >
+              <Text style={city ? styles.dropdownText : styles.dropdownPlaceholderText}>
+                {city || (availableCities.length === 0 ? "Enter valid pincode" : "Select City")}
+              </Text>
+              <ChevronDown size={20} color={COLORS.textPlaceholder} />
+            </TouchableOpacity>
+
+            {/* State Dropdown */}
+            <Text style={styles.inputLabel}>State *</Text>
+            <TouchableOpacity 
+              style={[styles.inputContainer, styles.dropdownContainer]} 
+              onPress={() => setStateModalVisible(true)}
+              disabled={loading || availableStates.length === 0}
+            >
+              <Text style={stateName ? styles.dropdownText : styles.dropdownPlaceholderText}>
+                {stateName || (availableStates.length === 0 ? "Enter valid pincode" : "Select State")}
+              </Text>
+              <ChevronDown size={20} color={COLORS.textPlaceholder} />
+            </TouchableOpacity>
+
             {/* Submit Button */}
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
@@ -181,6 +291,54 @@ const CompleteRegistrationScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* City Modal */}
+      <Modal visible={isCityModalVisible} transparent={true} animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setCityModalVisible(false)}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select City</Text>
+            <FlatList
+              data={availableCities}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setCity(item);
+                    setCityModalVisible(false);
+                  }}
+                >
+                  <Text style={[styles.modalItemText, city === item && styles.modalItemTextSelected]}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* State Modal */}
+      <Modal visible={isStateModalVisible} transparent={true} animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setStateModalVisible(false)}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select State</Text>
+            <FlatList
+              data={availableStates}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setStateName(item);
+                    setStateModalVisible(false);
+                  }}
+                >
+                  <Text style={[styles.modalItemText, stateName === item && styles.modalItemTextSelected]}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -281,6 +439,54 @@ const styles = StyleSheet.create({
   toastError: { backgroundColor: COLORS.danger },
   toastSuccess: { backgroundColor: COLORS.success },
   toastText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
+  dropdownContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  dropdownText: {
+    color: COLORS.primary,
+    fontSize: 14.5,
+  },
+  dropdownPlaceholderText: {
+    color: COLORS.textPlaceholder,
+    fontSize: 14.5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    maxHeight: '60%',
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalItem: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  modalItemText: {
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  modalItemTextSelected: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+  },
 });
 
 export default CompleteRegistrationScreen;
