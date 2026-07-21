@@ -10,25 +10,27 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronRight, User } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
 import { AuthContext } from '../context/AuthContext';
 
 const CustomDrawerContent = (props) => {
+  const { t } = useTranslation();
   const { user, logout } = useContext(AuthContext);
   const { navigation } = props;
   const insets = useSafeAreaInsets();
 
   // Only list screens that actually exist and are registered in navigation
   const menuItems = [
-    { title: 'Home', type: 'navigate', screen: 'MainTabs' },
-    { title: 'Routes', type: 'navigate', screen: 'RouteList' },
-    { title: 'Customers', type: 'navigate', screen: 'CustomerList' },
-    { title: 'Subscriptions', type: 'navigate', screen: 'SubscriptionList' },
-    { title: 'Ad-hoc Orders', type: 'navigate', screen: 'OneTimeOrderList' },
-    { title: 'Product Catalog', type: 'navigate', screen: 'ProductCatalog' },
-    { title: 'Staff Management', type: 'navigate', screen: 'StaffManagement' },
-    { title: 'Settings', type: 'navigate', screen: 'Settings' },
-    { title: 'Logout', type: 'logout' },
+    { title: t('tabs.home'), type: 'navigate', screen: 'MainTabs' },
+    { title: t('deliveries.allRoutes'), type: 'navigate', screen: 'RouteList' },
+    { title: t('tabs.customers'), type: 'navigate', screen: 'CustomerList' },
+    { title: t('subscriptions.title'), type: 'navigate', screen: 'SubscriptionList' },
+    { title: t('oneTimeOrders.title'), type: 'navigate', screen: 'OneTimeOrderList' },
+    { title: t('products.title'), type: 'navigate', screen: 'ProductCatalog' },
+    { title: t('staff.title'), type: 'navigate', screen: 'StaffManagement' },
+    { title: t('settings.title'), type: 'navigate', screen: 'Settings' },
+    { title: t('settings.logout'), type: 'logout' },
   ];
 
   const handlePress = (item) => {
@@ -36,9 +38,9 @@ const CustomDrawerContent = (props) => {
     if (item.type === 'navigate') {
       navigation.navigate(item.screen);
     } else if (item.type === 'logout') {
-      Alert.alert('Logout', 'Are you sure you want to logout?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: () => logout() },
+      Alert.alert(t('settings.logout'), t('settings.logoutConfirm'), [
+        { text: t('staff.cancel'), style: 'cancel' },
+        { text: t('settings.logout'), style: 'destructive', onPress: () => logout() },
       ]);
     }
   };
@@ -110,20 +112,20 @@ const styles = StyleSheet.create({
   },
   businessName: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
     fontWeight: '700',
     marginBottom: 4,
   },
   ownerName: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: '#CBD5E1',
     marginBottom: 2,
   },
   roleText: {
     fontSize: 12,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: '#94A3B8',
   },
   avatarCircle: {
@@ -152,7 +154,7 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
     fontWeight: '500',
   },

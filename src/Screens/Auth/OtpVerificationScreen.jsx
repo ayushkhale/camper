@@ -27,7 +27,7 @@ const OtpVerificationScreen = ({ route, navigation }) => {
   // Custom Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { login } = useContext(AuthContext);
   const inputRef = useRef(null);
 
@@ -117,7 +117,7 @@ const OtpVerificationScreen = ({ route, navigation }) => {
           {/* Logo Branding */}
           <View style={styles.logoContainer}>
             <Image
-              source={require('../../../assets/hindilogo.png')}
+              source={i18n.language === 'hi' ? require('../../../assets/hindilogo.png') : require('../../../assets/englishlogo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -268,18 +268,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.textPlaceholder,
     borderRadius: 16,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: COLORS.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   otpBoxFilled: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.surface,
   },
   otpBoxFocused: {
     borderColor: COLORS.primary,
     borderWidth: 2,
-    backgroundColor: COLORS.surface,
   },
   otpBoxText: {
     fontSize: 18,
@@ -341,18 +339,9 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     alignItems: 'center',
   },
-  toastError: {
-    backgroundColor: COLORS.surface,
-  },
-  toastSuccess: {
-    backgroundColor: COLORS.surface,
-  },
-  toastText: {
-    color: COLORS.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
+  toastError: { backgroundColor: COLORS.danger },
+  toastSuccess: { backgroundColor: COLORS.success },
+  toastText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
 });
 
 export default OtpVerificationScreen;

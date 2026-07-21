@@ -21,11 +21,13 @@ import {
   Phone,
   Package,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
 const OneTimeOrderListScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
 
@@ -68,18 +70,18 @@ const OneTimeOrderListScreen = () => {
 
   const handleCancelOrder = (orderId) => {
     Alert.alert(
-      'Cancel Order',
-      'Are you sure you want to cancel this one-time order? This will remove all associated delivery tasks from the driver\'s list.',
+      t('oneTimeOrders.title'),
+      t('oneTimeOrders.confirmCancel'),
       [
-        { text: 'No', style: 'cancel' },
+        { text: t('staff.cancel'), style: 'cancel' },
         {
-          text: 'Yes, Cancel',
+          text: t('staff.deleteBtn'),
           style: 'destructive',
           onPress: async () => {
             try {
               const res = await api.updateOneTimeOrderStatus(userToken, orderId, 'cancelled');
               if (res.success) {
-                Alert.alert('Success', 'Order cancelled successfully');
+                Alert.alert(t('completeReg.success'), t('oneTimeOrders.orderCancelled'));
                 fetchOrders(false);
               } else {
                 throw new Error(res.message || 'Could not cancel order');
@@ -142,7 +144,7 @@ const OneTimeOrderListScreen = () => {
 
         {/* Items Summary */}
         <View style={styles.itemsContainer}>
-          <Text style={styles.itemsTitle}>Items</Text>
+          <Text style={styles.itemsTitle}>{t('oneTimeOrders.items')}</Text>
           {(item.OneTimeOrderItems || []).map((itm, index) => (
             <View key={index} style={styles.itemRow}>
               <Package size={12} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
@@ -161,7 +163,7 @@ const OneTimeOrderListScreen = () => {
         ) : null}
 
         <View style={styles.cardFooter}>
-          <Text style={styles.totalLabel}>Total Order Amount:</Text>
+          <Text style={styles.totalLabel}>{t('home.todayEarnings')}:</Text>
           <Text style={styles.totalValue}>₹{totalOrderPrice.toFixed(2)}</Text>
 
           {item.status === 'pending' && (
@@ -184,21 +186,21 @@ const OneTimeOrderListScreen = () => {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <ArrowLeft size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ad-hoc One-Time Orders</Text>
+        <Text style={styles.headerTitle}>{t('oneTimeOrders.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading orders...</Text>
+          <Text style={styles.loadingText}>{t('deliveries.updating')}</Text>
         </View>
       ) : error ? (
         <View style={styles.centerContainer}>
           <AlertCircle size={40} color={COLORS.danger} style={{ marginBottom: 12 }} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => fetchOrders(true)}>
-            <Text style={styles.retryText}>Retry</Text>
+            <Text style={styles.retryText}>{t('products.cancel')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -216,8 +218,8 @@ const OneTimeOrderListScreen = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <ShoppingBag size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-              <Text style={styles.emptyTitle}>No Ad-hoc Orders Found</Text>
-              <Text style={styles.emptySubtitle}>Start by creating a multi-day or single-day ad-hoc order.</Text>
+              <Text style={styles.emptyTitle}>{t('oneTimeOrders.noOrders')}</Text>
+              <Text style={styles.emptySubtitle}>{t('oneTimeOrders.noOrdersSub')}</Text>
             </View>
           }
         />
@@ -256,7 +258,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   centerContainer: {
@@ -268,12 +270,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -286,7 +288,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
   listContent: {
@@ -305,14 +307,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 13.5,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
@@ -334,7 +336,7 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
@@ -344,7 +346,7 @@ const styles = StyleSheet.create({
   },
   customerPhone: {
     fontSize: 12,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
   },
   statusBadge: {
@@ -354,7 +356,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   divider: {
     height: 1,
@@ -368,7 +370,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
   },
   itemsContainer: {
@@ -381,7 +383,7 @@ const styles = StyleSheet.create({
   },
   itemsTitle: {
     fontSize: 12,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textSecondary,
     marginBottom: 8,
   },
@@ -394,12 +396,12 @@ const styles = StyleSheet.create({
   itemName: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
   },
   itemPrice: {
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   notesContainer: {
@@ -408,7 +410,7 @@ const styles = StyleSheet.create({
   },
   notesText: {
     fontSize: 12,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     fontStyle: 'italic',
   },
@@ -419,13 +421,13 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     marginRight: 6,
   },
   totalValue: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.primary,
   },
   cancelBtn: {

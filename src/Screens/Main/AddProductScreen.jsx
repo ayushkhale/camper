@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   scrollContent: {
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   selectImageText: {
     fontSize: 14,
     color: COLORS.textPrimary,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   selectedImageContainer: {
     width: '100%',
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textPlaceholder,
     marginBottom: 6,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   inputBox: {
     backgroundColor: COLORS.surfaceMuted,
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   input: {
     color: COLORS.primary,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     height: '100%',
   },
   row: {
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 12,
     marginTop: 6,
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     color: COLORS.textPlaceholder,
     marginRight: 8,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   checkboxSquare: {
     width: 18,
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   // Photo Picker Modal Styles
   modalOverlay: {
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   modalOptionBtn: {
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
   modalOptionText: {
     fontSize: 14,
     color: COLORS.textPlaceholder,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   // Custom Toast Styles
   toast: {
@@ -663,16 +663,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  toastError: {
-    backgroundColor: COLORS.surface,
-  },
-  toastSuccess: {
-    backgroundColor: COLORS.surface,
-  },
+  toastError: { backgroundColor: COLORS.danger },
+  toastSuccess: { backgroundColor: COLORS.success },
   toastText: {
     color: COLORS.textPrimary,
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     textAlign: 'center',
   },
 });

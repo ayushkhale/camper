@@ -11,24 +11,26 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { ChevronRight } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 
 const { width, height } = Dimensions.get('window');
 
 const OnboardingScreen1 = ({ navigation }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {/* Header with Logo and Skip */}
       <View style={styles.header}>
         <Image
-          source={require('../../../assets/hindilogo.png')}
+          source={i18n.language === 'hi' ? require('../../../assets/hindilogo.png') : require('../../../assets/englishlogo.png')}
           style={styles.logo}
           resizeMode="contain"
         />
         <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.skipButton}>
           <Text style={styles.skipText}>{t('onboarding.skip')}</Text>
+          <ChevronRight size={18} color={COLORS.primary} style={{ marginLeft: 4 }} />
         </TouchableOpacity>
       </View>
 
@@ -67,7 +69,7 @@ const OnboardingScreen1 = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: 'row',
@@ -82,16 +84,14 @@ const styles = StyleSheet.create({
     height: 40,
   },
   skipButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 8,
   },
   skipText: {
     color: COLORS.primary,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
   illustrationContainer: {
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   nextButtonText: {
-    color: COLORS.primary,
+    color: COLORS.background,
     fontSize: 16,
     fontWeight: 'bold',
   },

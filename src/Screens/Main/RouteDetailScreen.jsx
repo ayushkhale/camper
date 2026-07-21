@@ -461,7 +461,7 @@ const RouteDetailScreen = () => {
                 style={styles.inputBox}
                 onPress={() => setActiveDatePicker('effectiveFrom')}
               >
-                <Text style={{ color: COLORS.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}>
+                <Text style={{ color: COLORS.textPrimary, fontFamily: 'Inter-Medium', fontSize: 14 }}>
                   {effectiveFrom}
                 </Text>
               </TouchableOpacity>
@@ -501,7 +501,7 @@ const RouteDetailScreen = () => {
                   style={styles.inputBox}
                   onPress={() => setActiveDatePicker('effectiveTo')}
                 >
-                  <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Poppins-Medium', fontSize: 14 }}>
+                  <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Inter-Medium', fontSize: 14 }}>
                     {effectiveTo || 'Select End Date'}
                   </Text>
                 </TouchableOpacity>
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   headerRight: {
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
   },
   routeNameText: {
     fontSize: 20,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   areaContainer: {
@@ -594,13 +594,13 @@ const styles = StyleSheet.create({
   },
   areaLabel: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textPlaceholder,
     marginRight: 6,
   },
   areaValue: {
     fontSize: 13.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.primary,
   },
   assignBtn: {
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   assignBtnText: {
     color: '#FFFFFF',
     fontSize: 14.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   emptyCard: {
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   },
   emptyCardText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textPlaceholder,
   },
   staffCard: {
@@ -658,12 +658,12 @@ const styles = StyleSheet.create({
   },
   staffName: {
     fontSize: 14.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   staffPhone: {
     fontSize: 12.5,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textPlaceholder,
     marginTop: 1,
   },
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 11.5,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
   },
   endAssignBtn: {
@@ -688,7 +688,7 @@ const styles = StyleSheet.create({
   endAssignText: {
     color: COLORS.textPrimary,
     fontSize: 12,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   historyBadge: {
     paddingVertical: 4,
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
   historyBadgeText: {
     color: COLORS.textPlaceholder,
     fontSize: 11,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   centerContainer: {
     flex: 1,
@@ -711,12 +711,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -729,7 +729,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
   // Modal Styles
@@ -754,14 +754,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   inputLabel: {
     fontSize: 12,
     color: COLORS.textPlaceholder,
     marginBottom: 6,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   dropdownTrigger: {
     flexDirection: 'row',
@@ -777,12 +777,12 @@ const styles = StyleSheet.create({
   selectedStaffText: {
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   placeholderText: {
     color: COLORS.textPlaceholder,
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
   },
   dropdownContainer: {
     backgroundColor: COLORS.primaryLight,
@@ -802,14 +802,14 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 13.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginRight: 8,
   },
   dropdownItemPhone: {
     fontSize: 12.5,
     color: COLORS.textPlaceholder,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
   },
   dropdownEmpty: {
     padding: 16,
@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
   dropdownEmptyText: {
     color: COLORS.textPlaceholder,
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
   },
   inputBox: {
     backgroundColor: COLORS.surface,
@@ -832,7 +832,7 @@ const styles = StyleSheet.create({
   input: {
     color: COLORS.primary,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     height: '100%',
   },
   toggleRow: {
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   checkboxRow: {
@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: COLORS.textPlaceholder,
     marginRight: 6,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   checkboxSquare: {
     width: 18,
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
   modalSaveText: {
     color: COLORS.textPrimary,
     fontSize: 14.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   // Toast
   toast: {
@@ -903,16 +903,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  toastError: {
-    backgroundColor: COLORS.surface,
-  },
-  toastSuccess: {
-    backgroundColor: COLORS.surface,
-  },
+  toastError: { backgroundColor: COLORS.danger },
+  toastSuccess: { backgroundColor: COLORS.success },
   toastText: {
     color: COLORS.textPrimary,
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     textAlign: 'center',
   },
 });

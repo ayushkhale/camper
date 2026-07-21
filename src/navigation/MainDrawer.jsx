@@ -18,7 +18,7 @@ const MainDrawer = () => {
         drawerActiveTintColor: COLORS.primary,
         drawerInactiveTintColor: COLORS.textSecondary,
         drawerLabelStyle: {
-          fontFamily: 'Poppins-Medium',
+          fontFamily: 'Inter-Medium',
           fontSize: 13.5,
           marginLeft: -10,
         },

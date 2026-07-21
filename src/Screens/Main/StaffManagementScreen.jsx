@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     flex: 1,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.primary,
     padding: 0,
   },
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 15,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 20,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
   emptyIconContainer: {
@@ -383,14 +383,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 25,
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   },
   emptyAddText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
   buttonIcon: {
@@ -443,14 +443,14 @@ const styles = StyleSheet.create({
   avatarText: {
     color: COLORS.textPrimary,
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   infoContainer: {
     flex: 1,
   },
   staffName: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 4,
   },
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textPlaceholder,
   },
   divider: {
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     marginRight: 10,
   },
   statusActive: {

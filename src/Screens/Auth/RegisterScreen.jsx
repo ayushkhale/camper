@@ -18,7 +18,7 @@ import { api } from '../../services/api';
 const RegisterScreen = ({ navigation }) => {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Custom Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
@@ -78,7 +78,7 @@ const RegisterScreen = ({ navigation }) => {
           {/* Logo Section */}
           <View style={styles.logoContainer}>
             <Image
-              source={require('../../../assets/hindilogo.png')}
+              source={i18n.language === 'hi' ? require('../../../assets/hindilogo.png') : require('../../../assets/englishlogo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -162,11 +162,9 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: COLORS.surface,
     padding: 20,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
   },
   headerTitle: {
     fontSize: 20,
@@ -248,18 +246,9 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     alignItems: 'center',
   },
-  toastError: {
-    backgroundColor: COLORS.surface,
-  },
-  toastSuccess: {
-    backgroundColor: COLORS.surface,
-  },
-  toastText: {
-    color: COLORS.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
+  toastError: { backgroundColor: COLORS.danger },
+  toastSuccess: { backgroundColor: COLORS.success },
+  toastText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
 });
 
 export default RegisterScreen;

@@ -304,7 +304,7 @@ const CustomerDetailScreen = () => {
         ) : subscriptions.length === 0 ? (
           <View style={[styles.detailsCard, { padding: 30, alignItems: 'center' }]}>
             <Repeat size={32} color={COLORS.textPlaceholder} style={{ marginBottom: 8 }} />
-            <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Poppins-Regular', fontSize: 13 }}>No active subscriptions</Text>
+            <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Inter-Regular', fontSize: 13 }}>No active subscriptions</Text>
           </View>
         ) : (
           subscriptions.map((sub, index) => (
@@ -315,14 +315,14 @@ const CustomerDetailScreen = () => {
                 onPress={() => navigation.navigate('SubscriptionDetail', { subscriptionId: sub.id, subscription: sub })}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 14, color: COLORS.primary }}>
+                  <Text style={{ fontFamily: 'Inter-Bold', fontSize: 14, color: COLORS.primary }}>
                     {sub.Product?.name || 'Unknown Product'}
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                    <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: COLORS.textPlaceholder, marginRight: 12 }}>
+                    <Text style={{ fontFamily: 'Inter-Medium', fontSize: 12, color: COLORS.textPlaceholder, marginRight: 12 }}>
                       Qty: {sub.baseQuantity}
                     </Text>
-                    <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: COLORS.textPlaceholder }}>
+                    <Text style={{ fontFamily: 'Inter-Medium', fontSize: 12, color: COLORS.textPlaceholder }}>
                       {formatRecurrence(sub.recurrencePattern)}
                     </Text>
                   </View>
@@ -343,12 +343,12 @@ const CustomerDetailScreen = () => {
                   {sub.status === 'active' ? (
                     <>
                       <Pause size={14} color={COLORS.primary} style={{ marginRight: 6 }} />
-                      <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: COLORS.primary }}>Pause</Text>
+                      <Text style={{ fontFamily: 'Inter-Medium', fontSize: 12, color: COLORS.primary }}>Pause</Text>
                     </>
                   ) : (
                     <>
                       <Play size={14} color={COLORS.primary} style={{ marginRight: 6 }} />
-                      <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: COLORS.primary }}>Resume</Text>
+                      <Text style={{ fontFamily: 'Inter-Medium', fontSize: 12, color: COLORS.primary }}>Resume</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -357,7 +357,7 @@ const CustomerDetailScreen = () => {
                   onPress={() => handleDeleteSubscription(sub)}
                 >
                   <Trash2 size={14} color={COLORS.primary} style={{ marginRight: 6 }} />
-                  <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: COLORS.primary }}>Delete</Text>
+                  <Text style={{ fontFamily: 'Inter-Medium', fontSize: 12, color: COLORS.primary }}>Delete</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   headerRight: {
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   },
   customerNameText: {
     fontSize: 20,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   sectionHeader: {
     marginBottom: 12,
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   addBtnSmall: {
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
   },
   addBtnSmallText: {
     color: COLORS.textPrimary,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 12,
   },
   detailsCard: {
@@ -485,13 +485,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 11,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.primary,
   },
   divider: {
@@ -509,12 +509,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
 });

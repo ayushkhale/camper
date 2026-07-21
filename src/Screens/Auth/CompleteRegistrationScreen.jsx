@@ -24,7 +24,7 @@ const CompleteRegistrationScreen = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [loading, setLoading] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Custom Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
@@ -116,7 +116,7 @@ const CompleteRegistrationScreen = () => {
           {/* Logo Branding */}
           <View style={styles.logoContainer}>
             <Image
-              source={require('../../../assets/hindilogo.png')}
+              source={i18n.language === 'hi' ? require('../../../assets/hindilogo.png') : require('../../../assets/englishlogo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -278,18 +278,9 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     alignItems: 'center',
   },
-  toastError: {
-    backgroundColor: COLORS.surface,
-  },
-  toastSuccess: {
-    backgroundColor: COLORS.surface,
-  },
-  toastText: {
-    color: COLORS.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
+  toastError: { backgroundColor: COLORS.danger },
+  toastSuccess: { backgroundColor: COLORS.success },
+  toastText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
 });
 
 export default CompleteRegistrationScreen;

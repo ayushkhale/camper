@@ -57,12 +57,12 @@ const HomeScreen = () => {
   );
 
   const features = [
-    { title: 'Customers', icon: Users, screen: 'CustomerList' },
-    { title: 'Subscriptions', icon: Repeat, screen: 'SubscriptionList' },
-    { title: 'Routes', icon: MapPin, screen: 'RouteList' },
-    { title: 'Product Catalog', icon: Package, screen: 'ProductCatalog' },
-    { title: 'Staff', icon: UserPlus, screen: 'StaffManagement' },
-    { title: 'Ad-hoc Orders', icon: ShoppingBag, screen: 'OneTimeOrderList' },
+    { title: t('tabs.customers'), icon: Users, screen: 'CustomerList' },
+    { title: t('subscriptions.title'), icon: Repeat, screen: 'SubscriptionList' },
+    { title: t('deliveries.allRoutes'), icon: MapPin, screen: 'RouteList' },
+    { title: t('products.title'), icon: Package, screen: 'ProductCatalog' },
+    { title: t('staff.title'), icon: UserPlus, screen: 'StaffManagement' },
+    { title: t('oneTimeOrders.title'), icon: ShoppingBag, screen: 'OneTimeOrderList' },
   ];
 
   return (
@@ -70,7 +70,7 @@ const HomeScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Dashboard Overview Stats (M3 Filled Cards) */}
-        <Text style={styles.sectionTitle}>Overview</Text>
+        <Text style={styles.sectionTitle}>{t('home.overviewTitle')}</Text>
         {loadingStats ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={COLORS.primary} />
@@ -78,27 +78,27 @@ const HomeScreen = () => {
         ) : (
           <View style={styles.statsRow}>
             {/* Customers Card */}
-            <View style={[styles.statM3Card, { backgroundColor: COLORS.primaryLight }]}>
+            <View style={[styles.statM3Card, { backgroundColor: COLORS.surface }]}>
               <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.customers}</Text>
-              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>Customers</Text>
+              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>{t('tabs.customers')}</Text>
             </View>
 
             {/* Active Subs Card */}
-            <View style={[styles.statM3Card, { backgroundColor: COLORS.primaryLight }]}>
+            <View style={[styles.statM3Card, { backgroundColor: COLORS.surface }]}>
               <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.subscriptions}</Text>
-              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>Active Subs</Text>
+              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>{t('subscriptions.active')}</Text>
             </View>
 
             {/* Routes Card */}
-            <View style={[styles.statM3Card, { backgroundColor: COLORS.primaryLight }]}>
+            <View style={[styles.statM3Card, { backgroundColor: COLORS.surface }]}>
               <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.routes}</Text>
-              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>Routes</Text>
+              <Text style={[styles.statLabel, { color: COLORS.textSecondary }]}>{t('deliveries.allRoutes')}</Text>
             </View>
           </View>
         )}
 
         {/* Features Grid (M3 Elevated Cards) */}
-        <Text style={styles.sectionTitle}>Dashboard Features</Text>
+        <Text style={styles.sectionTitle}>{t('home.quickActionsTitle')}</Text>
         <View style={styles.featuresGrid}>
           {features.map((feature, idx) => (
             <TouchableOpacity
@@ -107,7 +107,7 @@ const HomeScreen = () => {
               activeOpacity={0.7}
               onPress={() => navigation.navigate(feature.screen)}
             >
-              <View style={[styles.featureIconWrap, { backgroundColor: COLORS.primaryLight }]}>
+              <View style={[styles.featureIconWrap, { backgroundColor: COLORS.surface }]}>
                 <feature.icon size={22} color={COLORS.primary} strokeWidth={2.5} />
               </View>
               <Text style={styles.featureText}>{feature.title}</Text>
@@ -123,7 +123,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9FC', // Soft M3 grey/purple background
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     padding: 16,
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textSecondary,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -155,12 +155,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 24,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 11,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     textAlign: 'center',
   },
   featuresGrid: {
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
   },

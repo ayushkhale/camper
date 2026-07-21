@@ -2,6 +2,38 @@
   "migIndex": 1,
   "data": [
     {
+      "path": "assets/fonts/BricolageGrotesque-Bold.ttf",
+      "sha1": "eb41484bba537d10397bc6fa741c534b4c0ae67b"
+    },
+    {
+      "path": "assets/fonts/BricolageGrotesque-Medium.ttf",
+      "sha1": "eb41484bba537d10397bc6fa741c534b4c0ae67b"
+    },
+    {
+      "path": "assets/fonts/BricolageGrotesque-Regular.ttf",
+      "sha1": "eb41484bba537d10397bc6fa741c534b4c0ae67b"
+    },
+    {
+      "path": "assets/fonts/BricolageGrotesque-SemiBold.ttf",
+      "sha1": "eb41484bba537d10397bc6fa741c534b4c0ae67b"
+    },
+    {
+      "path": "assets/fonts/Inter-Bold.ttf",
+      "sha1": "04388c7a01e024b1b12125c4f7a7c311c77306aa"
+    },
+    {
+      "path": "assets/fonts/Inter-Medium.ttf",
+      "sha1": "bac43f80077ab85b7fab7051eb1ca373c7fed157"
+    },
+    {
+      "path": "assets/fonts/Inter-Regular.ttf",
+      "sha1": "2c360cb421407046bccbc09315c0a4e35d7c0fca"
+    },
+    {
+      "path": "assets/fonts/Inter-SemiBold.ttf",
+      "sha1": "bb837be2bb58f53a8bea59a08917c67c7b82b699"
+    },
+    {
       "path": "assets/fonts/Poppins-Bold.ttf",
       "sha1": "45e4d582cbb4dab2bbad3f624fad9ae567c66547"
     },

@@ -15,6 +15,7 @@ const Tab = createBottomTabNavigator();
 const DummyScreen = () => <View style={{ flex: 1, backgroundColor: COLORS.background }} />;
 
 const HomeHeader = () => {
+  const { i18n } = useTranslation();
   const navigation = useNavigation();
   
   return (
@@ -24,7 +25,7 @@ const HomeHeader = () => {
       </TouchableOpacity>
       <View style={styles.logoContainer}>
         <Image 
-          source={require('../../assets/hindilogo.png')} 
+          source={i18n.language === 'hi' ? require('../../assets/hindilogo.png') : require('../../assets/englishlogo.png')} 
           style={{ height: 42, width: 140 }} 
           resizeMode="contain" 
         />
@@ -52,7 +53,7 @@ const MainTabs = () => {
         },
         tabBarLabelStyle: {
           fontSize: 10.5,
-          fontFamily: 'Poppins-Medium',
+          fontFamily: 'Inter-Medium',
         },
         tabBarIcon: ({ focused, color, size }) => {
           const iconSize = 20; // Reduced size

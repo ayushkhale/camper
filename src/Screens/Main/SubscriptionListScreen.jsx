@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   filterContainer: {
@@ -261,12 +261,12 @@ const styles = StyleSheet.create({
   },
   filterTabText: {
     fontSize: 11,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
   },
   filterTabTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   listContent: {
     paddingHorizontal: 16,
@@ -311,12 +311,12 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   productName: {
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
     marginTop: 2,
   },
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 11,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
   },
   statusBadge: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   centerContainer: {
     flex: 1,
@@ -368,12 +368,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
   emptyContainer: {
@@ -397,14 +397,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14.5,
   },
   fab: {

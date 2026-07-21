@@ -30,11 +30,13 @@ import {
   Play,
   Settings,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
 const SubscriptionDetailScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
@@ -346,7 +348,7 @@ const SubscriptionDetailScreen = () => {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <ArrowLeft size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Subscription Details</Text>
+        <Text style={styles.headerTitle}>{t('subscriptions.title')}</Text>
         <TouchableOpacity
           style={styles.editHeaderButton}
           onPress={() => navigation.navigate('AddSubscription', { subscription })}
@@ -358,14 +360,14 @@ const SubscriptionDetailScreen = () => {
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading details...</Text>
+          <Text style={styles.loadingText}>{t('deliveries.updating')}</Text>
         </View>
       ) : error ? (
         <View style={styles.centerContainer}>
           <AlertCircle size={40} color={COLORS.danger} style={{ marginBottom: 12 }} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => fetchSubscriptionData(true)}>
-            <Text style={styles.retryText}>Retry</Text>
+            <Text style={styles.retryText}>{t('products.cancel')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -391,7 +393,7 @@ const SubscriptionDetailScreen = () => {
               }]}>
                 <Text style={{
                   fontSize: 11,
-                  fontFamily: 'Poppins-Bold',
+                  fontFamily: 'Inter-Bold',
                   color: subscription.status === 'active' ? COLORS.success : COLORS.danger
                 }}>
                   {subscription.status.toUpperCase()}
@@ -406,7 +408,7 @@ const SubscriptionDetailScreen = () => {
               <View style={styles.infoCol}>
                 <View style={styles.labelRow}>
                   <Package size={16} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-                  <Text style={styles.infoLabel}>Product</Text>
+                  <Text style={styles.infoLabel}>{t('oneTimeOrders.items')}</Text>
                 </View>
                 <Text style={styles.infoValue}>{subscription.Product?.name}</Text>
               </View>
@@ -414,7 +416,7 @@ const SubscriptionDetailScreen = () => {
               <View style={styles.infoCol}>
                 <View style={styles.labelRow}>
                   <Info size={16} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-                  <Text style={styles.infoLabel}>Base Quantity</Text>
+                  <Text style={styles.infoLabel}>{t('subscriptions.quantity')}</Text>
                 </View>
                 <Text style={styles.infoValue}>{subscription.baseQuantity} units</Text>
               </View>
@@ -424,7 +426,7 @@ const SubscriptionDetailScreen = () => {
               <View style={styles.infoCol}>
                 <View style={styles.labelRow}>
                   <Repeat size={16} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-                  <Text style={styles.infoLabel}>Recurrence</Text>
+                  <Text style={styles.infoLabel}>{t('subscriptions.frequency')}</Text>
                 </View>
                 <Text style={styles.infoValue}>{getRecurrenceLabel(subscription.recurrencePattern)}</Text>
               </View>
@@ -432,7 +434,7 @@ const SubscriptionDetailScreen = () => {
               <View style={styles.infoCol}>
                 <View style={styles.labelRow}>
                   <Calendar size={16} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-                  <Text style={styles.infoLabel}>Start Date</Text>
+                  <Text style={styles.infoLabel}>{t('subscriptions.startDate')}</Text>
                 </View>
                 <Text style={styles.infoValue}>
                   {subscription.startDate ? subscription.startDate.split('T')[0] : 'N/A'}
@@ -442,7 +444,7 @@ const SubscriptionDetailScreen = () => {
           </View>
 
           {/* Action CTAs */}
-          <Text style={styles.sectionTitle}>Manage Deliveries</Text>
+          <Text style={styles.sectionTitle}>{t('deliveries.title')}</Text>
           <View style={styles.actionsGrid}>
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: COLORS.warningLight }]}
@@ -454,8 +456,8 @@ const SubscriptionDetailScreen = () => {
               }}
             >
               <Pause size={20} color={COLORS.warning} style={{ marginBottom: 6 }} />
-              <Text style={[styles.actionBtnText, { color: COLORS.warning }]}>Vacation Mode</Text>
-              <Text style={styles.actionBtnSub}>Pause deliveries</Text>
+              <Text style={[styles.actionBtnText, { color: COLORS.warning }]}>{t('subscriptions.vacationMode')}</Text>
+              <Text style={styles.actionBtnSub}>{t('subscriptions.vacationMode')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -470,19 +472,19 @@ const SubscriptionDetailScreen = () => {
               }}
             >
               <Plus size={20} color={COLORS.success} style={{ marginBottom: 6 }} />
-              <Text style={[styles.actionBtnText, { color: COLORS.success }]}>Log Exception</Text>
-              <Text style={styles.actionBtnSub}>Skip or modify delivery</Text>
+              <Text style={[styles.actionBtnText, { color: COLORS.success }]}>{t('subscriptions.logException')}</Text>
+              <Text style={styles.actionBtnSub}>{t('subscriptions.logException')}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Exception History Unified Timeline */}
-          <Text style={styles.sectionTitle}>Exceptions & Pauses History</Text>
+          <Text style={styles.sectionTitle}>{t('subscriptions.history')}</Text>
           <View style={styles.timelineCard}>
             {timeline.length === 0 ? (
               <View style={styles.emptyHistory}>
                 <Clock size={32} color={COLORS.textPlaceholder} style={{ marginBottom: 8 }} />
-                <Text style={styles.emptyHistoryTitle}>No Exceptions Logged</Text>
-                <Text style={styles.emptyHistorySubtitle}>Tapping any action above will create scheduling adjustments.</Text>
+                <Text style={styles.emptyHistoryTitle}>{t('subscriptions.noLogs')}</Text>
+                <Text style={styles.emptyHistorySubtitle}>{t('subscriptions.noLogs')}</Text>
               </View>
             ) : (
               timeline.map((item, index) => {
@@ -542,14 +544,14 @@ const SubscriptionDetailScreen = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pause Subscription</Text>
+              <Text style={styles.modalTitle}>{t('subscriptions.vacationMode')}</Text>
               <TouchableOpacity onPress={() => setPauseModalVisible(false)}>
                 <X size={24} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalSubtitle}>Suspends all deliveries during the chosen timeframe.</Text>
+            <Text style={styles.modalSubtitle}>{t('subscriptions.vacationMode')}</Text>
 
-            <Text style={styles.inputLabel}>Pause From</Text>
+            <Text style={styles.inputLabel}>{t('subscriptions.pauseFrom')}</Text>
             <TouchableOpacity
               style={styles.textInputBtn}
               onPress={() => setActiveDatePicker('pauseFrom')}
@@ -559,7 +561,7 @@ const SubscriptionDetailScreen = () => {
               </Text>
             </TouchableOpacity>
 
-            <Text style={styles.inputLabel}>Pause To</Text>
+            <Text style={styles.inputLabel}>{t('subscriptions.pauseTo')}</Text>
             <TouchableOpacity
               style={styles.textInputBtn}
               onPress={() => setActiveDatePicker('pauseTo')}
@@ -577,7 +579,7 @@ const SubscriptionDetailScreen = () => {
               {submittingPause ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.submitBtnText}>Confirm Pause</Text>
+                <Text style={styles.submitBtnText}>{t('subscriptions.addPause')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -594,14 +596,14 @@ const SubscriptionDetailScreen = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Log Exception / Event</Text>
+              <Text style={styles.modalTitle}>{t('subscriptions.logException')}</Text>
               <TouchableOpacity onPress={() => setExceptionModalVisible(false)}>
                 <X size={24} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalSubtitle}>Applies a schedule override for specific dates.</Text>
+            <Text style={styles.modalSubtitle}>{t('subscriptions.logException')}</Text>
 
-            <Text style={styles.inputLabel}>Start Date</Text>
+            <Text style={styles.inputLabel}>{t('subscriptions.startDate')}</Text>
             <TouchableOpacity
               style={styles.textInputBtn}
               onPress={() => setActiveDatePicker('overrideFrom')}
@@ -611,24 +613,24 @@ const SubscriptionDetailScreen = () => {
               </Text>
             </TouchableOpacity>
 
-            <Text style={styles.inputLabel}>End Date (Optional)</Text>
+            <Text style={styles.inputLabel}>{t('subscriptions.pauseTo')}</Text>
             <TouchableOpacity
               style={styles.textInputBtn}
               onPress={() => setActiveDatePicker('overrideTo')}
             >
               <Text style={[styles.textInputBtnText, !overrideTo && { color: COLORS.textPlaceholder }]}>
-                {overrideTo || 'Select End Date (defaults to Start Date)'}
+                {overrideTo || 'Select End Date'}
               </Text>
             </TouchableOpacity>
 
-            <Text style={styles.inputLabel}>Exception Type</Text>
+            <Text style={styles.inputLabel}>{t('products.status')}</Text>
             <View style={styles.typeSelectorRow}>
               <TouchableOpacity
                 style={[styles.typeOption, overrideType === 'skip' && styles.typeOptionActive]}
                 onPress={() => setOverrideType('skip')}
               >
                 <Text style={[styles.typeOptionText, overrideType === 'skip' && styles.typeOptionTextActive]}>
-                  Skip Delivery
+                  {t('deliveries.skipped')}
                 </Text>
               </TouchableOpacity>
 
@@ -637,14 +639,14 @@ const SubscriptionDetailScreen = () => {
                 onPress={() => setOverrideType('extra')}
               >
                 <Text style={[styles.typeOptionText, overrideType === 'extra' && styles.typeOptionTextActive]}>
-                  Modify Qty
+                  {t('oneTimeOrders.qty')}
                 </Text>
               </TouchableOpacity>
             </View>
 
             {overrideType === 'extra' && (
               <View>
-                <Text style={styles.inputLabel}>Total Quantity Required</Text>
+                <Text style={styles.inputLabel}>{t('subscriptions.quantity')}</Text>
                 <TextInput
                   style={styles.textInput}
                   value={overrideQuantity}
@@ -667,7 +669,7 @@ const SubscriptionDetailScreen = () => {
               {submittingException ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.submitBtnText}>Submit Exception</Text>
+                <Text style={styles.submitBtnText}>{t('subscriptions.addException')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -711,7 +713,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   editHeaderButton: {
@@ -730,12 +732,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -748,7 +750,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
   detailsCard: {
@@ -777,12 +779,12 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   customerPhone: {
     fontSize: 12.5,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     marginTop: 1,
   },
@@ -810,17 +812,17 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 11,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
   },
   infoValue: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   sectionTitle: {
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 12,
     marginLeft: 4,
@@ -840,11 +842,11 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     fontSize: 13.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   actionBtnSub: {
     fontSize: 11,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     marginTop: 2,
   },
@@ -861,13 +863,13 @@ const styles = StyleSheet.create({
   },
   emptyHistoryTitle: {
     fontSize: 14.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
   emptyHistorySubtitle: {
     fontSize: 11.5,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
@@ -914,19 +916,19 @@ const styles = StyleSheet.create({
   },
   exceptionBadgeText: {
     fontSize: 10,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   deleteIconButton: {
     padding: 4,
   },
   timelineDates: {
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   timelineDetails: {
     fontSize: 11.5,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     marginTop: 4,
   },
@@ -951,18 +953,18 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   modalSubtitle: {
     fontSize: 12.5,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 12,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -972,7 +974,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
     marginBottom: 16,
   },
@@ -988,7 +990,7 @@ const styles = StyleSheet.create({
   },
   textInputBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
   },
   typeSelectorRow: {
@@ -1011,16 +1013,16 @@ const styles = StyleSheet.create({
   },
   typeOptionText: {
     fontSize: 12,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
   },
   typeOptionTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   helperText: {
     fontSize: 11.5,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     marginBottom: 16,
     marginTop: -8,
@@ -1035,7 +1037,7 @@ const styles = StyleSheet.create({
   submitBtnText: {
     color: '#FFF',
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
 });
 

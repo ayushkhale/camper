@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   editButton: {
@@ -327,12 +327,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 14.5,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
   scrollContent: {
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   },
   noImageText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
     marginTop: 10,
   },
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   infoCard: {
     backgroundColor: COLORS.primaryLight,
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 22,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 14,
   },
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: 12,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
     marginBottom: 4,
   },
@@ -436,12 +436,12 @@ const styles = StyleSheet.create({
   },
   priceValue: {
     fontSize: 26,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.primary,
   },
   unitBadge: {
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
     backgroundColor: COLORS.surface,
     paddingHorizontal: 10,
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   },
   returnableTitle: {
     fontSize: 13.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   returnableRow: {
@@ -476,12 +476,12 @@ const styles = StyleSheet.create({
   },
   returnableLabel: {
     fontSize: 12.5,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
   },
   returnableValue: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.primary,
   },
   statusCard: {
@@ -501,13 +501,13 @@ const styles = StyleSheet.create({
   },
   statusCardTitle: {
     fontSize: 14.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
   statusCardSub: {
     fontSize: 11.5,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textPlaceholder,
   },
   actionsContainer: {
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   editFullText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   deleteButton: {
     flexDirection: 'row',
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: COLORS.danger,
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
 });
 

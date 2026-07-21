@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   searchHeader: {
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLORS.primary,
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     paddingVertical: 0,
   },
   listContent: {
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   row: {
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   },
   subText: {
     fontSize: 12,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textPlaceholder,
   },
   divider: {
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   },
   routeText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
   },
   statusBadge: {
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   centerContainer: {
     flex: 1,
@@ -330,12 +330,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
   emptyContainer: {
@@ -359,14 +359,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 24,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14.5,
   },
   fab: {

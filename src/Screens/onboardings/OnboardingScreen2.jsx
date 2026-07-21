@@ -11,23 +11,25 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { ChevronLeft } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 
 const { width, height } = Dimensions.get('window');
 
 const OnboardingScreen2 = ({ navigation }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {/* Header with Logo and Back */}
       <View style={styles.header}>
         <Image
-          source={require('../../../assets/hindilogo.png')}
+          source={i18n.language === 'hi' ? require('../../../assets/hindilogo.png') : require('../../../assets/englishlogo.png')}
           style={styles.logo}
           resizeMode="contain"
         />
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <ChevronLeft size={18} color={COLORS.primary} style={{ marginRight: 4 }} />
           <Text style={styles.backText}>{t('onboarding.back')}</Text>
         </TouchableOpacity>
       </View>
@@ -67,7 +69,7 @@ const OnboardingScreen2 = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: 'row',
@@ -82,16 +84,14 @@ const styles = StyleSheet.create({
     height: 40,
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 8,
   },
   backText: {
-    color: COLORS.textPlaceholder,
-    fontSize: 14,
+    color: COLORS.primary,
+    fontSize: 15,
     fontWeight: '600',
   },
   illustrationContainer: {
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   nextButtonText: {
-    color: COLORS.primary,
+    color: COLORS.background,
     fontSize: 16,
     fontWeight: 'bold',
   },

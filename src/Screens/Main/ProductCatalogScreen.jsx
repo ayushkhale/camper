@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     paddingVertical: 0,
   },
   listContent: {
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   cardContent: {
     flex: 1,
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   productName: {
     flex: 1,
     fontSize: 15.5,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginRight: 6,
   },
@@ -391,12 +391,12 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.primary,
   },
   unitText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     marginLeft: 4,
   },
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   },
   returnableText: {
     fontSize: 11,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.primary,
   },
   centerContainer: {
@@ -423,12 +423,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14,
   },
   emptyContainer: {
@@ -463,14 +463,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 13.5,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Inter-Regular',
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 14.5,
   },
   fab: {

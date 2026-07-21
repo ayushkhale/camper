@@ -17,11 +17,13 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, User, Package, Calendar, Repeat, AlertCircle, CheckCircle, X, Hash } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
 const AddSubscriptionScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
@@ -275,7 +277,7 @@ const AddSubscriptionScreen = () => {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder }}>Loading...</Text>
+        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder }}>{t('deliveries.updating')}</Text>
       </SafeAreaView>
     );
   }
@@ -287,7 +289,7 @@ const AddSubscriptionScreen = () => {
           <ChevronLeft size={28} color={COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {isEditMode ? 'Edit Subscription' : 'New Subscription'}
+          {isEditMode ? t('subscriptions.edit') : t('subscriptions.title')}
         </Text>
         <View style={styles.headerRightSpacing} />
       </View>
@@ -311,7 +313,7 @@ const AddSubscriptionScreen = () => {
           <View style={styles.form}>
             {/* Customer */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Customer *</Text>
+              <Text style={styles.label}>{t('tabs.customers')} *</Text>
               <TouchableOpacity 
                 style={[styles.inputContainer, isEditMode && styles.inputDisabled]}
                 onPress={() => !isEditMode && setActiveModal('customer')}
@@ -326,7 +328,7 @@ const AddSubscriptionScreen = () => {
 
             {/* Product */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Product *</Text>
+              <Text style={styles.label}>{t('oneTimeOrders.items')} *</Text>
               <TouchableOpacity 
                 style={[styles.inputContainer, isEditMode && styles.inputDisabled]}
                 onPress={() => !isEditMode && setActiveModal('product')}
@@ -341,7 +343,7 @@ const AddSubscriptionScreen = () => {
 
             {/* Quantity */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Quantity / Day *</Text>
+              <Text style={styles.label}>{t('subscriptions.quantity')} *</Text>
               <View style={styles.inputContainer}>
                 <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
@@ -356,7 +358,7 @@ const AddSubscriptionScreen = () => {
 
             {/* Frequency */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Frequency *</Text>
+              <Text style={styles.label}>{t('subscriptions.frequency')} *</Text>
               <TouchableOpacity 
                 style={styles.inputContainer}
                 onPress={() => setActiveModal('recurrence')}
@@ -370,7 +372,7 @@ const AddSubscriptionScreen = () => {
 
             {/* Start Date */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Start Date *</Text>
+              <Text style={styles.label}>{t('subscriptions.startDate')} *</Text>
               <TouchableOpacity 
                 style={styles.inputContainer}
                 onPress={() => setShowDatePicker(true)}
@@ -393,7 +395,7 @@ const AddSubscriptionScreen = () => {
             {/* Status (Edit Mode Only or Default Active) */}
             {isEditMode && (
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Status</Text>
+                <Text style={styles.label}>{t('products.status')}</Text>
                 <TouchableOpacity 
                   style={styles.inputContainer}
                   onPress={() => setActiveModal('status')}
@@ -401,7 +403,7 @@ const AddSubscriptionScreen = () => {
                   <CheckCircle size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                   <Text style={[
                     styles.inputText, 
-                    { color: status === 'active' ? COLORS.primary : status === 'paused' ? COLORS.primary : COLORS.primary, fontFamily: 'Poppins-Bold' }
+                    { color: status === 'active' ? COLORS.primary : status === 'paused' ? COLORS.primary : COLORS.primary, fontFamily: 'Inter-Bold' }
                   ]}>
                     {status.toUpperCase()}
                   </Text>
@@ -421,7 +423,7 @@ const AddSubscriptionScreen = () => {
                 <ActivityIndicator size="small" color={COLORS.primary} />
               ) : (
                 <Text style={styles.btnTextPrimary}>
-                  {isEditMode ? 'Save Changes' : 'Create Subscription'}
+                  {isEditMode ? t('deliveries.saveChanges') : t('subscriptions.title')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -431,7 +433,7 @@ const AddSubscriptionScreen = () => {
               onPress={() => navigation.goBack()}
               disabled={submitting}
             >
-              <Text style={styles.btnTextSecondary}>Cancel</Text>
+              <Text style={styles.btnTextSecondary}>{t('products.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -460,7 +462,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.primary,
     textAlign: 'center',
     flex: 1,
@@ -491,7 +493,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
   },
   form: {
@@ -502,7 +504,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -526,14 +528,14 @@ const styles = StyleSheet.create({
   inputText: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
   },
   input: {
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -561,12 +563,12 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   btnTextSecondary: {
     color: COLORS.textSecondary,
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -588,7 +590,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   modalItem: {
@@ -601,13 +603,13 @@ const styles = StyleSheet.create({
   },
   modalItemText: {
     fontSize: 16,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
     flex: 1,
   },
   modalItemTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
   },
 });
 

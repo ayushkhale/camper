@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     color: COLORS.textPrimary,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     marginBottom: 30,
   },
   section: {
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 15,
   },
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   langText: {
     fontSize: 14,
     color: COLORS.textPrimary,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Inter-Medium',
   },
   activeLangText: {
     color: COLORS.textPrimary,
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   }
 });

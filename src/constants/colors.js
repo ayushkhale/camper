@@ -3,8 +3,8 @@
 
 export const COLORS = {
   // --- Core Brand ---
-  primary: '#050066',         // Premium deep navy/indigo
-  primaryLight: '#E6E6FF',    // Light accent bg for navy
+  primary: '#0e44a8',         // Premium deep navy/indigo
+  primaryLight: '#388cd9',    // Light accent bg for navy
   primaryDark: '#03004D',
 
   // --- Backgrounds & Surfaces ---
