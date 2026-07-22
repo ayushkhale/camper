@@ -214,6 +214,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
+    fontFamily: 'Inter-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
@@ -237,6 +238,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
+    fontFamily: 'Inter-Medium',
     fontSize: 15,
     paddingVertical: 0,
   },
@@ -278,7 +280,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   customerName: {
-    fontSize: 14,
+    fontSize: 15,
+    fontFamily: 'Inter-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
@@ -290,7 +293,7 @@ const styles = StyleSheet.create({
   subText: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontWeight: '500',
+    fontFamily: 'Inter-Medium',
   },
   divider: {
     height: 1,
@@ -310,8 +313,9 @@ const styles = StyleSheet.create({
   },
   routeText: {
     fontSize: 12,
-    fontWeight: '500',
-    color: COLORS.textSecondary,
+    fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
+    color: COLORS.primary,
     flexShrink: 1,
   },
   statusBadge: {
@@ -326,7 +330,8 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
     letterSpacing: 0.5,
   },
   centerContainer: {
@@ -338,12 +343,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -358,7 +363,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontFamily: 'Inter-SemiBold',
     fontSize: 15,
   },
   emptyContainer: {
@@ -367,7 +372,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter-SemiBold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
@@ -376,6 +381,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textPlaceholder,
     textAlign: 'center',
+    fontFamily: 'Inter-Medium',
     marginBottom: 24,
   },
   emptyAddBtn: {
@@ -388,7 +394,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontFamily: 'Inter-SemiBold',
     fontSize: 15,
   },
   fab: {

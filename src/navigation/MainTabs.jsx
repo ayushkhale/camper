@@ -1,10 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Truck, Package, Users, Menu, User } from 'lucide-react-native';
+import { Home, Truck, Package, Users, Bell } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
+import { AuthContext } from '../context/AuthContext';
+import { api } from '../services/api';
 import HomeScreen from '../Screens/Main/HomeScreen';
 import OrdersScreen from '../Screens/Main/OrdersScreen';
 import ProductCatalogScreen from '../Screens/Main/ProductCatalogScreen';
@@ -17,11 +19,35 @@ const DummyScreen = () => <View style={{ flex: 1, backgroundColor: COLORS.backgr
 const HomeHeader = () => {
   const { i18n } = useTranslation();
   const navigation = useNavigation();
-  
+  const { userToken, user } = useContext(AuthContext);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        if (userToken) {
+          const res = await api.getVendorProfile(userToken);
+          if (res.success && res.profile) {
+            setProfile(res.profile);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch profile in HomeHeader', e);
+      }
+    };
+    fetchProfile();
+  }, [userToken]);
+
+  const vendorLogo = profile?.logoUrl || profile?.imageUrl || user?.logoUrl || user?.imageUrl;
+
   return (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
-        <Menu color={COLORS.textPrimary} size={28} />
+      <TouchableOpacity onPress={() => navigation.toggleDrawer()} activeOpacity={0.7}>
+        {vendorLogo ? (
+          <Image source={{ uri: vendorLogo }} style={styles.vendorAvatar} />
+        ) : (
+          <Image source={require('../../assets/customerfallback.png')} style={styles.vendorAvatar} />
+        )}
       </TouchableOpacity>
       <View style={styles.logoContainer}>
         <Image 
@@ -30,8 +56,8 @@ const HomeHeader = () => {
           resizeMode="contain" 
         />
       </View>
-      <TouchableOpacity>
-        <User color={COLORS.textPrimary} size={26} />
+      <TouchableOpacity activeOpacity={0.7} onPress={() => Alert.alert('Notifications', 'No new notifications')}>
+        <Bell color={COLORS.textPrimary} size={24} />
       </TouchableOpacity>
     </View>
   );
@@ -106,6 +132,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  vendorAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: COLORS.primaryLight,
   },
 });
 

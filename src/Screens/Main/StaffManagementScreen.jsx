@@ -3,14 +3,15 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   FlatList, 
   TouchableOpacity, 
   TextInput, 
   ActivityIndicator, 
   Alert,
-  Switch
+  Switch,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Plus, Search, Trash2, Edit2, User, Phone, Mail, AlertCircle } from 'lucide-react-native';
@@ -54,14 +55,12 @@ const StaffManagementScreen = () => {
     }
   }, [userToken, t]);
 
-  // Refetch staff list whenever screen comes into focus
   useFocusEffect(
     useCallback(() => {
       fetchStaff();
     }, [fetchStaff])
   );
 
-  // Filter staff list when searchQuery changes
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredList(staffList);
@@ -80,7 +79,6 @@ const StaffManagementScreen = () => {
     const nextStatus = item.status === 'active' ? 'inactive' : 'active';
     setActionLoadingId(item.id);
     
-    // Optimistic UI update
     const previousList = [...staffList];
     setStaffList(prev => 
       prev.map(staff => staff.id === item.id ? { ...staff, status: nextStatus } : staff)
@@ -89,7 +87,6 @@ const StaffManagementScreen = () => {
     try {
       await api.updateStaff(userToken, item.id, { status: nextStatus });
     } catch (err) {
-      // Revert if API fails
       setStaffList(previousList);
       Alert.alert('Error', err.message || 'Failed to update status');
     } finally {
@@ -145,125 +142,122 @@ const StaffManagementScreen = () => {
               {item.name}
             </Text>
             <View style={styles.detailRow}>
-              <Phone size={14} color={COLORS.textPlaceholder} style={styles.detailIcon} />
+              <Phone size={12} color={COLORS.textSecondary} style={styles.detailIcon} />
               <Text style={styles.detailText}>{item.phone}</Text>
             </View>
             {item.email ? (
               <View style={styles.detailRow}>
-                <Mail size={14} color={COLORS.textPlaceholder} style={styles.detailIcon} />
+                <Mail size={12} color={COLORS.textSecondary} style={styles.detailIcon} />
                 <Text style={styles.detailText} numberOfLines={1}>{item.email}</Text>
               </View>
             ) : null}
+          </View>
+
+          {/* Status Switch */}
+          <View style={styles.switchContainer}>
+            {isUpdating ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <Switch
+                value={isActive}
+                onValueChange={() => handleToggleStatus(item)}
+                trackColor={{ false: COLORS.border, true: COLORS.success }}
+                thumbColor={COLORS.background}
+                ios_backgroundColor={COLORS.border}
+              />
+            )}
           </View>
         </View>
 
         <View style={styles.divider} />
 
-        {/* Action Controls */}
-        <View style={styles.cardActions}>
-          <View style={styles.statusToggleContainer}>
-            <Text style={[styles.statusText, isActive ? styles.statusActive : styles.statusInactive]}>
-              {isActive ? t('staff.active') : t('staff.inactive')}
-            </Text>
-            {isUpdating ? (
-              <ActivityIndicator size="small" color={COLORS.primary} style={styles.loadingIndicator} />
-            ) : (
-              <Switch
-                value={isActive}
-                onValueChange={() => handleToggleStatus(item)}
-                trackColor={{ false: COLORS.textPlaceholder, true: COLORS.primary }}
-                thumbColor={isActive ? COLORS.primary : COLORS.primaryLight}
-                ios_backgroundColor={COLORS.textPlaceholder}
-              />
-            )}
-          </View>
-
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('AddStaff', { staff: item })}
-              disabled={isUpdating}
-            >
-              <Edit2 size={18} color={COLORS.primary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.deleteButton]}
-              onPress={() => handleDeleteStaff(item)}
-              disabled={isUpdating}
-            >
-              <Trash2 size={18} color={COLORS.primary} />
-            </TouchableOpacity>
-          </View>
+        {/* Footer split actions */}
+        <View style={styles.subActions}>
+          <TouchableOpacity 
+            style={[styles.subActionBtn, { borderRightWidth: 1, borderRightColor: '#F1F5F9' }]}
+            onPress={() => navigation.navigate('AddStaff', { staff: item })}
+            disabled={isUpdating}
+          >
+            <Edit2 size={15} color={COLORS.primary} style={{ marginRight: 6 }} />
+            <Text style={styles.subActionText}>Edit</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.subActionBtn}
+            onPress={() => handleDeleteStaff(item)}
+            disabled={isUpdating}
+          >
+            <Trash2 size={15} color={COLORS.danger} style={{ marginRight: 6 }} />
+            <Text style={[styles.subActionText, { color: COLORS.danger }]}>Delete</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('staff.title')}</Text>
-        <View style={styles.headerRightSpacing} />
-      </View>
-
-      {/* Search Input */}
-      <View style={styles.searchSection}>
-        <View style={styles.searchContainer}>
-          <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('staff.searchPlaceholder')}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor={COLORS.textPlaceholder}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text style={styles.clearText}>×</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Main Content */}
-      {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
-      ) : error ? (
-        <View style={styles.centerContainer}>
-          <AlertCircle size={48} color={COLORS.primary} style={styles.errorIcon} />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchStaff}>
-            <Text style={styles.retryText}>Retry</Text>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <View style={styles.contentWrapper}>
+        
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <ChevronLeft size={28} color={COLORS.textPrimary} />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('staff.title')}</Text>
+          <View style={styles.headerRightSpacing} />
         </View>
-      ) : filteredList.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <View style={styles.emptyIconContainer}>
-            <User size={64} color={COLORS.textPlaceholder} />
+
+        {/* Search Box */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('staff.searchPlaceholder')}
+              placeholderTextColor={COLORS.textPlaceholder}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
-          <Text style={styles.emptyTitle}>
-            {searchQuery ? 'No Results Found' : t('staff.noStaffTitle')}
-          </Text>
-          <Text style={styles.emptySubtitle}>
-            {searchQuery ? 'Try searching another name or phone' : t('staff.noStaffSub')}
-          </Text>
         </View>
-      ) : (
-        <FlatList
-          data={filteredList}
-          keyExtractor={(item) => item.id}
-          renderItem={renderStaffCard}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+
+        {/* Main Content */}
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Loading staff list...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={fetchStaff}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : filteredList.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <View style={styles.emptyIconContainer}>
+              <User size={48} color={COLORS.textPlaceholder} />
+            </View>
+            <Text style={styles.emptyTitle}>
+              {searchQuery ? 'No Results Found' : t('staff.noStaffTitle')}
+            </Text>
+            <Text style={styles.emptySubtitle}>
+              {searchQuery ? 'Try searching another name or phone' : t('staff.noStaffSub')}
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredList}
+            keyExtractor={(item) => item.id}
+            renderItem={renderStaffCard}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
 
       {/* Floating Action Button */}
       {!loading && !error && (
@@ -271,7 +265,7 @@ const StaffManagementScreen = () => {
           style={styles.fab}
           onPress={() => navigation.navigate('AddStaff')}
         >
-          <Plus size={28} color={COLORS.primary} />
+          <Plus size={26} color="#FFFFFF" />
         </TouchableOpacity>
       )}
     </SafeAreaView>
@@ -283,87 +277,85 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
+  contentWrapper: {
+    flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 24 : 16,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   backButton: {
-    padding: 5,
+    padding: 4,
+    marginLeft: -4,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
+    fontWeight: 'bold',
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     flex: 1,
   },
   headerRightSpacing: {
-    width: 40,
-  },
-  searchSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: COLORS.surface,
+    width: 32,
   },
   searchContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceMuted,
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    paddingHorizontal: 12,
-    height: 48,
+    borderColor: '#E2E8F0',
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    height: '100%',
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.primary,
-    padding: 0,
-  },
-  clearText: {
-    fontSize: 22,
-    color: COLORS.textPlaceholder,
-    paddingHorizontal: 8,
+    color: COLORS.textPrimary,
+    fontFamily: 'Inter-Medium',
+    fontSize: 15,
+    paddingVertical: 0,
   },
   listContent: {
-    padding: 20,
-    paddingBottom: 100,
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 90,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 30,
+    paddingHorizontal: 30,
   },
-  loadingIndicator: {
-    marginLeft: 8,
-  },
-  errorIcon: {
-    marginBottom: 15,
+  loadingText: {
+    marginTop: 12,
+    fontSize: 15,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
     fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   retryButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 16,
     backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
   retryText: {
     color: '#FFFFFF',
@@ -371,15 +363,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   emptyIconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: COLORS.textPlaceholder,
-    borderStyle: 'dashed',
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   emptyTitle: {
     fontSize: 18,
@@ -389,68 +381,53 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontSize: 13.5,
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 25,
-    paddingHorizontal: 20,
-  },
-  emptyAddButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 16,
-  },
-  emptyAddText: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
-    fontSize: 14,
-  },
-  buttonIcon: {
-    marginRight: 8,
   },
   card: {
     backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
   },
   cardInactive: {
-    opacity: 0.6,
-    backgroundColor: COLORS.surfaceMuted,
-    borderColor: COLORS.border,
+    opacity: 0.7,
+    backgroundColor: '#F8FAFC',
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
   },
   avatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: COLORS.primaryLight,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EEF2FF',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E0E7FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 14,
   },
   avatarText: {
-    color: COLORS.textPrimary,
-    fontSize: 18,
+    color: COLORS.primary,
+    fontSize: 15,
     fontFamily: 'Inter-Bold',
   },
   infoContainer: {
     flex: 1,
   },
   staffName: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
     color: COLORS.textPrimary,
     marginBottom: 4,
   },
@@ -466,60 +443,40 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   detailText: {
-    fontSize: 13,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textPlaceholder,
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textSecondary,
+  },
+  switchContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.textPlaceholder,
-    marginVertical: 12,
+    backgroundColor: '#F1F5F9',
   },
-  cardActions: {
+  subActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
   },
-  statusToggleContainer: {
+  subActionBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
   },
-  statusText: {
+  subActionText: {
     fontSize: 13,
     fontFamily: 'Inter-Bold',
-    marginRight: 10,
-  },
-  statusActive: {
-    color: COLORS.primary,
-  },
-  statusInactive: {
-    color: COLORS.textPlaceholder,
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  deleteButton: {
-    borderColor: COLORS.textPlaceholder,
-    backgroundColor: COLORS.primaryLight,
+    color: COLORS.textSecondary,
   },
   fab: {
     position: 'absolute',
-    bottom: 25,
-    right: 25,
-    width: 52,
-    height: 52,
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
     borderRadius: 16,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',

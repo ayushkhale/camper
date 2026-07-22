@@ -24,7 +24,8 @@ import {
   Repeat,
   Play,
   Pause,
-  Plus
+  Plus,
+  ChevronRight
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -229,88 +230,68 @@ const CustomerDetailScreen = () => {
         </View>
 
         {/* Subscriptions */}
-        <View style={[styles.sectionHeaderFlex, { marginTop: 0 }]}>
-          <Text style={styles.sectionTitleFlex} numberOfLines={1}>{t('customers.activeSubscriptions')}</Text>
-          <TouchableOpacity 
-            style={styles.addBtnSmall}
-            onPress={() => navigation.navigate('AddSubscription', { customerId: customerData.id })}
-          >
-            <Plus size={16} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.sectionTitle}>{t('customers.activeSubscriptions')}</Text>
 
         {loadingSubs ? (
           <View style={[styles.detailsCard, { padding: 30, alignItems: 'center' }]}>
             <ActivityIndicator size="small" color={COLORS.primary} />
           </View>
         ) : subscriptions.length === 0 ? (
-          <View style={[styles.detailsCard, { padding: 30, alignItems: 'center', backgroundColor: '#F8FAFC' }]}>
-            <Repeat size={32} color={COLORS.textPlaceholder} style={{ marginBottom: 12 }} />
-            <Text style={{ color: COLORS.textPlaceholder, fontWeight: '500', fontSize: 14 }}>{t('customers.noActiveSubscriptions')}</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.subscriptionToggle}
+            onPress={() => navigation.navigate('AddSubscription', { customerId: customerData.id })}
+            activeOpacity={0.7}
+          >
+            <View style={styles.subscriptionToggleLeft}>
+              <View style={styles.subToggleIcon}>
+                <Plus size={18} color={COLORS.primary} />
+              </View>
+              <View>
+                <Text style={styles.subToggleTitle}>{t('customers.addSubscription')}</Text>
+                <Text style={styles.subToggleSubtitle}>{t('customers.addSubDesc')}</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color={COLORS.textSecondary} />
+          </TouchableOpacity>
         ) : (
-          subscriptions.map((sub) => (
-            <View key={sub.id} style={styles.subscriptionCard}>
+          subscriptions.map((sub) => {
+            const statusColor = sub.status === 'active' 
+              ? { dot: '#16A34A', text: '#15803D' } 
+              : sub.status === 'paused' 
+              ? { dot: '#D97706', text: '#B45309' } 
+              : { dot: '#94A3B8', text: '#64748B' };
+
+            return (
               <TouchableOpacity
-                style={styles.subscriptionInner}
+                key={sub.id}
+                style={styles.subscriptionCard}
                 activeOpacity={0.7}
                 onPress={() => navigation.navigate('SubscriptionDetail', { subscriptionId: sub.id, subscription: sub })}
               >
                 <View style={styles.subLeft}>
                   <View style={styles.subIconWrap}>
-                    <Package size={20} color={COLORS.primary} />
+                    <Package size={22} color={COLORS.primary} />
                   </View>
-                  <View>
-                    <Text style={styles.subTitle}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.subTitle} numberOfLines={1}>
                       {sub.Product?.name || 'Unknown Product'}
                     </Text>
-                    <View style={styles.subMeta}>
-                      <Text style={styles.subMetaText}>Qty: {sub.baseQuantity}</Text>
-                      <View style={styles.dot} />
-                      <Text style={styles.subMetaText}>{formatRecurrence(sub.recurrencePattern)}</Text>
-                    </View>
+                    <Text style={styles.subMetaText} numberOfLines={1}>
+                      Qty: {sub.baseQuantity} • {formatRecurrence(sub.recurrencePattern)}
+                    </Text>
                   </View>
                 </View>
                 
                 <View style={styles.statusBadge}>
-                  <View style={[styles.statusDot, {
-                    backgroundColor: sub.status === 'active' ? '#16A34A' : sub.status === 'paused' ? '#D97706' : '#94A3B8'
-                  }]} />
-                  <Text style={[styles.statusText, {
-                    color: sub.status === 'active' ? '#15803D' : sub.status === 'paused' ? '#B45309' : '#64748B'
-                  }]}>
+                  <View style={[styles.statusDot, { backgroundColor: statusColor.dot }]} />
+                  <Text style={[styles.statusText, { color: statusColor.text }]}>
                     {sub.status.toUpperCase()}
                   </Text>
                 </View>
+                <ChevronRight size={18} color={COLORS.textPlaceholder} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
-
-              <View style={styles.subActions}>
-                <TouchableOpacity 
-                  style={[styles.subActionBtn, { borderRightWidth: 1, borderRightColor: '#F1F5F9' }]}
-                  onPress={() => toggleSubscriptionStatus(sub)}
-                >
-                  {sub.status === 'active' ? (
-                    <>
-                      <Pause size={16} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-                      <Text style={styles.subActionText}>Pause</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Play size={16} color={COLORS.primary} style={{ marginRight: 6 }} />
-                      <Text style={[styles.subActionText, { color: COLORS.primary }]}>Resume</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.subActionBtn}
-                  onPress={() => handleDeleteSubscription(sub)}
-                >
-                  <Trash2 size={16} color="#E53E3E" style={{ marginRight: 6 }} />
-                  <Text style={[styles.subActionText, { color: '#E53E3E' }]}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
+            );
+          })
         )}
 
         {/* Contact Details */}
@@ -444,10 +425,10 @@ const styles = StyleSheet.create({
     borderRadius: 44,
   },
   customerName: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontFamily: 'Inter-SemiBold',
     color: COLORS.textPrimary,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -455,42 +436,37 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontSize: 11,
+    fontFamily: 'Inter-SemiBold',
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 16,
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: COLORS.textSecondary,
+    marginBottom: 12,
   },
   sectionHeaderFlex: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 8,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionTitleFlex: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: COLORS.textSecondary,
     flex: 1,
     marginRight: 8,
   },
   addBtnSmall: {
-    width: 34,
-    height: 34,
+    width: 32,
+    height: 32,
     backgroundColor: '#EEF2FF',
     borderRadius: 10,
     justifyContent: 'center',
@@ -502,56 +478,53 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: 20,
-    marginBottom: 32,
+    padding: 16,
+    marginBottom: 24,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   detailIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 14,
   },
   detailContent: {
     flex: 1,
   },
   detailLabel: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   detailValue: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
     color: COLORS.textPrimary,
   },
   divider: {
     height: 1,
     backgroundColor: '#F1F5F9',
-    marginVertical: 16,
+    marginVertical: 12,
   },
   subscriptionCard: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    marginBottom: 16,
-    overflow: 'hidden',
-  },
-  subscriptionInner: {
+    marginBottom: 12,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'space-between',
+    padding: 14,
   },
   subLeft: {
     flexDirection: 'row',
@@ -561,25 +534,27 @@ const styles = StyleSheet.create({
   subIconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 20,
     backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
   },
   subTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
     color: COLORS.textPrimary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   subMeta: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   subMetaText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
   },
   dot: {
@@ -633,8 +608,45 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 15,
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+  },
+  subscriptionToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F0F4FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    marginTop: 0,
+  },
+  subscriptionToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  subToggleIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  subToggleTitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: COLORS.primary,
+    marginBottom: 2,
+  },
+  subToggleSubtitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontFamily: 'Inter-Medium',
   },
 });
 

@@ -197,8 +197,8 @@ const resources = {
         allStatus: 'All Status'
       },
       oneTimeOrders: {
-        title: 'Ad-hoc Orders',
-        newOrder: 'New Ad-hoc Order',
+        title: 'One Time Orders',
+        newOrder: 'New One Time Order',
         orderFrom: 'Order From',
         orderTo: 'Order To',
         items: 'Items',
@@ -207,13 +207,13 @@ const resources = {
         priceOverride: 'Price Override',
         driverNotes: 'Driver Instructions / Notes',
         notesPlaceholder: 'e.g. Leave at back gate, call customer on arrival',
-        createOrder: 'Create Ad-hoc Order',
+        createOrder: 'Create One Time Order',
         creating: 'Creating...',
         orderSuccess: 'One-time order created successfully. If scheduled for today, it has been instantly dispatched to the driver.',
         confirmCancel: 'Are you sure you want to cancel this one-time order? This will remove all associated delivery tasks from the driver\'s list.',
         orderCancelled: 'Order cancelled successfully',
-        noOrders: 'No Ad-hoc Orders Found',
-        noOrdersSub: 'Start by creating a multi-day or single-day ad-hoc order.'
+        noOrders: 'No One Time Orders Found',
+        noOrdersSub: 'Start by creating a multi-day or single-day one-time order.'
       },
       customers: {
         title: 'Customers',

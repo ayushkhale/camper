@@ -26,7 +26,6 @@ import {
   Hash,
   Trash2,
   Plus,
-  Info,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -102,7 +101,6 @@ const AddOneTimeOrderScreen = () => {
       const formatted = formatDateString(selectedDate);
       if (pickerType === 'orderFrom') {
         setOrderFrom(formatted);
-        // If orderTo is before orderFrom, update it
         if (orderTo < formatted) {
           setOrderTo(formatted);
         }
@@ -115,6 +113,13 @@ const AddOneTimeOrderScreen = () => {
         }
       }
     }
+  };
+
+  const formatDisplayDate = (str) => {
+    if (!str) return '—';
+    const [y, m, d] = str.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${d} ${months[parseInt(m) - 1]} ${y}`;
   };
 
   const validate = () => {
@@ -182,7 +187,6 @@ const AddOneTimeOrderScreen = () => {
   };
 
   const handleAddProductItem = (product) => {
-    // Check if product already added
     const exists = items.some((item) => item.productId === product.id);
     if (exists) {
       Alert.alert('Duplicate Product', 'This product is already added. Modify its quantity instead.');
@@ -192,7 +196,7 @@ const AddOneTimeOrderScreen = () => {
     const newItem = {
       productId: product.id,
       quantity: '1',
-      unitPrice: product.basePrice ? product.basePrice.toString() : '0',
+      unitPrice: product.price ? product.price.toString() : '0',
       Product: product,
     };
 
@@ -235,7 +239,7 @@ const AddOneTimeOrderScreen = () => {
     let currentVal = null;
 
     if (activeModal === 'customer') {
-      title = t('deliveries.selectRoute').replace('Route', 'Customer').replace('रूट', 'कस्टमर');
+      title = 'Select Customer';
       data = customers;
       currentVal = customerId;
       renderItemText = (item) => `${item.name} ${item.phone ? `(${item.phone})` : ''}`;
@@ -244,9 +248,9 @@ const AddOneTimeOrderScreen = () => {
         setActiveModal(null);
       };
     } else if (activeModal === 'product') {
-      title = t('deliveries.selectRoute').replace('Route', 'Product').replace('रूट', 'उत्पाद');
+      title = 'Select Product';
       data = products;
-      renderItemText = (item) => `${item.name} (₹${item.basePrice || '0'})`;
+      renderItemText = (item) => `${item.name} (₹${item.price || '0'})`;
       onSelect = (item) => {
         handleAddProductItem(item);
       };
@@ -268,7 +272,7 @@ const AddOneTimeOrderScreen = () => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{title}</Text>
               <TouchableOpacity onPress={() => setActiveModal(null)}>
-                <X size={24} color={COLORS.textSecondary} />
+                <X size={22} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -291,7 +295,7 @@ const AddOneTimeOrderScreen = () => {
               }}
               ListEmptyComponent={
                 <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Inter-Regular' }}>
+                  <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Inter-Medium' }}>
                     No items available
                   </Text>
                 </View>
@@ -307,19 +311,20 @@ const AddOneTimeOrderScreen = () => {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder }}>Loading form data...</Text>
+        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder, fontFamily: 'Inter-Medium' }}>
+          Loading form data...
+        </Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      {/* Header Row - Matches AddCustomer Header Row */}
+      <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.primary} />
+          <ChevronLeft size={28} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('oneTimeOrders.newOrder')}</Text>
         <View style={styles.headerRightSpacing} />
       </View>
 
@@ -339,13 +344,21 @@ const AddOneTimeOrderScreen = () => {
             </View>
           ) : null}
 
+          {/* Title Container */}
+          <View style={styles.titleContainer}>
+            <Text style={styles.pageTitle}>{t('oneTimeOrders.newOrder')}</Text>
+            <Text style={styles.pageSubtitle}>Create a one-time product delivery</Text>
+          </View>
+
+          {/* Form Direct Inputs */}
           <View style={styles.form}>
             {/* Customer Dropdown */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('tabs.customers')} *</Text>
+              <Text style={styles.label}>Customer *</Text>
               <TouchableOpacity
                 style={styles.inputContainer}
                 onPress={() => setActiveModal('customer')}
+                activeOpacity={0.7}
               >
                 <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <Text style={[styles.inputText, !customerId && { color: COLORS.textPlaceholder }]}>
@@ -354,27 +367,29 @@ const AddOneTimeOrderScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Date Pickers */}
+            {/* Date Pickers Row */}
             <View style={styles.dateRow}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.label}>{t('oneTimeOrders.orderFrom')} *</Text>
+                <Text style={styles.label}>Start Date *</Text>
                 <TouchableOpacity
                   style={styles.inputContainer}
                   onPress={() => setActiveDatePicker('orderFrom')}
+                  activeOpacity={0.7}
                 >
                   <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                  <Text style={styles.inputText}>{orderFrom}</Text>
+                  <Text style={styles.inputText}>{formatDisplayDate(orderFrom)}</Text>
                 </TouchableOpacity>
               </View>
 
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.label}>{t('oneTimeOrders.orderTo')} *</Text>
+                <Text style={styles.label}>End Date *</Text>
                 <TouchableOpacity
                   style={styles.inputContainer}
                   onPress={() => setActiveDatePicker('orderTo')}
+                  activeOpacity={0.7}
                 >
                   <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                  <Text style={styles.inputText}>{orderTo}</Text>
+                  <Text style={styles.inputText}>{formatDisplayDate(orderTo)}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -386,6 +401,7 @@ const AddOneTimeOrderScreen = () => {
                 <TouchableOpacity
                   style={styles.addProductBtn}
                   onPress={() => setActiveModal('product')}
+                  activeOpacity={0.7}
                 >
                   <Plus size={16} color={COLORS.primary} style={{ marginRight: 4 }} />
                   <Text style={styles.addProductBtnText}>{t('oneTimeOrders.addProduct')}</Text>
@@ -399,7 +415,7 @@ const AddOneTimeOrderScreen = () => {
                 </View>
               ) : (
                 <View style={styles.itemsListContainer}>
-                  {items.map((item, index) => (
+                  {items.map((item) => (
                     <View key={item.productId} style={styles.productItemCard}>
                       <View style={styles.productItemHeader}>
                         <Text style={styles.productItemName} numberOfLines={1}>
@@ -431,7 +447,7 @@ const AddOneTimeOrderScreen = () => {
 
                         {/* Price field */}
                         <View style={[styles.itemInputCol, { marginLeft: 12 }]}>
-                          <Text style={styles.itemInputLabel}>{t('oneTimeOrders.priceOverride')}</Text>
+                          <Text style={styles.itemInputLabel}>Price Override</Text>
                           <View style={styles.itemInputWrap}>
                             <Text style={styles.currencySymbol}>₹</Text>
                             <TextInput
@@ -452,7 +468,7 @@ const AddOneTimeOrderScreen = () => {
 
             {/* Notes Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('oneTimeOrders.driverNotes')}</Text>
+              <Text style={styles.label}>Notes</Text>
               <View style={[styles.inputContainer, styles.textAreaContainer]}>
                 <TextInput
                   style={[styles.input, styles.textArea]}
@@ -466,29 +482,23 @@ const AddOneTimeOrderScreen = () => {
               </View>
             </View>
           </View>
-
-          <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.btn, styles.btnPrimary, submitting && styles.btnDisabled]}
-              onPress={handleSubmit}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.btnTextPrimary}>{t('oneTimeOrders.createOrder')}</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.btn, styles.btnSecondary]}
-              onPress={() => navigation.goBack()}
-              disabled={submitting}
-            >
-              <Text style={styles.btnTextSecondary}>{t('products.cancel')}</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
+
+        {/* Bottom Actions Bar (Matches AddCustomerScreen) */}
+        <View style={styles.bottomBar}>
+          <TouchableOpacity
+            style={[styles.btn, styles.btnPrimary, submitting && styles.btnDisabled]}
+            onPress={handleSubmit}
+            disabled={submitting}
+            activeOpacity={0.85}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.btnTextPrimary}>{t('oneTimeOrders.createOrder')}</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
 
       {renderModal()}
@@ -512,41 +522,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 10 : 14,
+    paddingBottom: 4,
   },
   backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.primary,
-    textAlign: 'center',
-    flex: 1,
+    padding: 8,
+    marginLeft: -8,
   },
   headerRightSpacing: {
-    width: 40,
+    width: 32,
   },
   keyboardAvoid: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: 10,
     paddingBottom: 40,
+  },
+  titleContainer: {
+    marginBottom: 32,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 6,
+  },
+  pageSubtitle: {
+    fontSize: 15,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textPlaceholder,
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: COLORS.danger,
+    borderColor: '#FECACA',
     padding: 12,
     borderRadius: 16,
     marginBottom: 20,
@@ -561,17 +580,17 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
   },
   form: {
-    marginBottom: 20,
+    marginBottom: 0,
   },
   inputGroup: {
-    marginBottom: 18,
+    marginBottom: 20,
   },
   dateRow: {
     flexDirection: 'row',
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -580,10 +599,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
     borderRadius: 16,
-    paddingHorizontal: 12,
-    height: 48,
+    paddingHorizontal: 14,
+    height: 52,
   },
   inputIcon: {
     marginRight: 8,
@@ -603,8 +622,8 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   textAreaContainer: {
-    height: 90,
-    paddingVertical: 10,
+    height: 100,
+    paddingVertical: 12,
     alignItems: 'flex-start',
   },
   textArea: {
@@ -620,10 +639,12 @@ const styles = StyleSheet.create({
   addProductBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
   addProductBtnText: {
     fontSize: 12,
@@ -631,18 +652,18 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   emptyProductsCard: {
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
     borderStyle: 'dashed',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F8FAFC',
   },
   emptyProductsText: {
-    fontSize: 12.5,
-    fontFamily: 'Inter-Regular',
+    fontSize: 13,
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
   },
   itemsListContainer: {
@@ -652,7 +673,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
     padding: 14,
     marginBottom: 12,
   },
@@ -679,7 +700,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemInputLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: 'Inter-Bold',
     color: COLORS.textSecondary,
     marginBottom: 4,
@@ -687,9 +708,9 @@ const styles = StyleSheet.create({
   itemInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceMuted,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
     borderRadius: 10,
     paddingHorizontal: 8,
     height: 38,
@@ -708,15 +729,19 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginRight: 4,
   },
-  actions: {
-    marginTop: 10,
+  bottomBar: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
   },
   btn: {
-    height: 48,
+    height: 52,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
   },
   btnPrimary: {
     backgroundColor: COLORS.primary,
@@ -724,18 +749,8 @@ const styles = StyleSheet.create({
   btnDisabled: {
     opacity: 0.5,
   },
-  btnSecondary: {
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
   btnTextPrimary: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontFamily: 'Inter-Bold',
-  },
-  btnTextSecondary: {
-    color: COLORS.textSecondary,
     fontSize: 15,
     fontFamily: 'Inter-Bold',
   },
@@ -746,10 +761,11 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: COLORS.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    paddingBottom: 40,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 24,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    paddingTop: 24,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -758,7 +774,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
@@ -768,7 +784,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: '#F1F5F9',
   },
   modalItemText: {
     fontSize: 15,

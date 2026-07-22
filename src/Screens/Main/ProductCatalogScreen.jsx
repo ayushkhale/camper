@@ -21,8 +21,6 @@ import {
   ChevronRight,
   AlertCircle,
   RefreshCw,
-  CheckCircle2,
-  XCircle,
   RefreshCcw,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
@@ -65,7 +63,6 @@ const ProductCatalogScreen = () => {
     }
   };
 
-  // Fetch fresh data every time screen comes into focus because imageUrl expires in 15 mins
   useFocusEffect(
     useCallback(() => {
       fetchProducts();
@@ -98,76 +95,53 @@ const ProductCatalogScreen = () => {
 
   const renderProductCard = ({ item }) => {
     const isActive = item.isActive !== false;
+    const priceStr = `₹${parseFloat(item.price || 0).toLocaleString()}`;
+    const returnableStr = item.isReturnableContainer ? ' • Returnable' : '';
 
     return (
       <TouchableOpacity
-        style={[styles.productCard, !isActive && styles.productCardInactive]}
+        style={styles.card}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
       >
-        <View style={styles.imageWrapper}>
-          {item.imageUrl ? (
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={styles.productImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.placeholderImage}>
-              <Package size={28} color={COLORS.textPlaceholder} />
-            </View>
-          )}
-          <View
-            style={[
-              styles.statusBadge,
-              isActive ? styles.statusBadgeActive : styles.statusBadgeInactive,
-            ]}
-          >
-            <View
-              style={[
-                styles.statusDot,
-                { backgroundColor: isActive ? COLORS.primary : COLORS.textPlaceholder },
-              ]}
-            />
-            <Text
-              style={[
-                styles.statusText,
-                { color: isActive ? COLORS.primary : COLORS.textPlaceholder },
-              ]}
-            >
-              {isActive ? t('products.active') : t('products.inactive')}
-            </Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.iconBox}>
+            {item.imageUrl ? (
+              <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
+            ) : (
+              <Package size={22} color={COLORS.primary} />
+            )}
           </View>
-        </View>
-
-        <View style={styles.cardContent}>
-          <View style={styles.cardHeaderRow}>
+          <View style={styles.titleContainer}>
             <Text style={styles.productName} numberOfLines={1}>
               {item.name}
             </Text>
-            <ChevronRight size={18} color={COLORS.textPlaceholder} />
-          </View>
-
-          <View style={styles.priceRow}>
-            <Text style={styles.priceText}>
-              ₹ {parseFloat(item.price || 0).toLocaleString()}
-            </Text>
-            {item.unit ? (
-              <Text style={styles.unitText}>/ {item.unit}</Text>
-            ) : null}
-          </View>
-
-          {item.isReturnableContainer && (
-            <View style={styles.returnableBadge}>
-              <RefreshCcw size={12} color={COLORS.primary} style={{ marginRight: 4 }} />
-              <Text style={styles.returnableText}>
-                {t('products.returnable')}
-                {item.depositAmount && parseFloat(item.depositAmount) > 0
-                  ? ` (₹${parseFloat(item.depositAmount)} dep)`
-                  : ''}
+            <View style={styles.row}>
+              <Text style={styles.subText}>
+                {item.unit ? `Unit: ${item.unit}` : 'No Unit'}
               </Text>
             </View>
-          )}
+          </View>
+          <ChevronRight size={18} color={COLORS.textPlaceholder} />
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.cardFooter}>
+          <View style={styles.metaContainer}>
+            {item.isReturnableContainer && (
+              <RefreshCcw size={13} color={COLORS.primary} style={{ marginRight: 4 }} />
+            )}
+            <Text style={styles.metaText} numberOfLines={1}>
+              {priceStr}{returnableStr}
+            </Text>
+          </View>
+          <View style={styles.statusBadge}>
+            <View style={[styles.statusDot, { backgroundColor: isActive ? '#16A34A' : '#94A3B8' }]} />
+            <Text style={[styles.statusText, { color: isActive ? '#15803D' : '#64748B' }]}>
+              {isActive ? 'ACTIVE' : 'INACTIVE'}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -175,92 +149,89 @@ const ProductCatalogScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Search and Header Banner */}
-      <View style={styles.searchHeader}>
-        <View style={styles.searchBar}>
-          <Search size={18} color={COLORS.textPlaceholder} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('products.searchPlaceholder')}
-            placeholderTextColor={COLORS.textPlaceholder}
-            value={searchQuery}
-            onChangeText={handleSearchChange}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => handleSearchChange('')}>
-              <XCircle size={18} color={COLORS.textPlaceholder} />
-            </TouchableOpacity>
-          )}
+      <View style={styles.contentWrapper}>
+        
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>Product Catalog</Text>
         </View>
+
+        {/* Search Box */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search products..."
+              placeholderTextColor={COLORS.textPlaceholder}
+              value={searchQuery}
+              onChangeText={handleSearchChange}
+            />
+          </View>
+        </View>
+
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Loading products...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => fetchProducts()}>
+              <RefreshCw size={16} color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredProducts}
+            keyExtractor={(item) => item.id || Math.random().toString()}
+            renderItem={renderProductCard}
+            contentContainerStyle={
+              filteredProducts.length === 0 ? styles.emptyListContent : styles.listContent
+            }
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[COLORS.primary]}
+                tintColor={COLORS.primary}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Package size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
+                <Text style={styles.emptyTitle}>No Products Found</Text>
+                <Text style={styles.emptySubtitle}>
+                  {searchQuery
+                    ? 'No products match your current search.'
+                    : 'Start by adding a new product to your catalog.'}
+                </Text>
+                {!searchQuery && (
+                  <TouchableOpacity
+                    style={styles.emptyAddBtn}
+                    onPress={() => navigation.navigate('AddProduct')}
+                  >
+                    <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.emptyAddBtnText}>Add Product</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          />
+        )}
       </View>
 
-      {/* Catalog List or States */}
-      {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading catalog...</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.centerContainer}>
-          <AlertCircle size={44} color={COLORS.primary} style={{ marginBottom: 12 }} />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => fetchProducts()}>
-            <RefreshCw size={16} color={COLORS.primary} style={{ marginRight: 8 }} />
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredProducts}
-          keyExtractor={(item) => item.id || Math.random().toString()}
-          renderItem={renderProductCard}
-          contentContainerStyle={
-            filteredProducts.length === 0 ? styles.emptyListContent : styles.listContent
-          }
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[COLORS.primary]}
-              tintColor={COLORS.primary}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconCircle}>
-                <Package size={48} color={COLORS.textPlaceholder} />
-              </View>
-              <Text style={styles.emptyTitle}>
-                {searchQuery
-                  ? `No products found matching "${searchQuery}"`
-                  : t('products.noProductsTitle')}
-              </Text>
-              <Text style={styles.emptySubtitle}>
-                {searchQuery ? 'Try a different search term' : t('products.noProductsSub')}
-              </Text>
-              {!searchQuery && (
-                <TouchableOpacity
-                  style={styles.emptyAddBtn}
-                  onPress={() => navigation.navigate('AddProduct')}
-                >
-                  <Plus size={18} color={COLORS.primary} style={{ marginRight: 6 }} />
-                  <Text style={styles.emptyAddBtnText}>{t('products.addNew')}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          }
-        />
-      )}
-
-      {/* Floating Action Button (Add Product) */}
       {!loading && !error && (
         <TouchableOpacity
           style={styles.fab}
           activeOpacity={0.85}
           onPress={() => navigation.navigate('AddProduct')}
         >
-          <Plus size={26} color={COLORS.primary} />
+          <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
     </SafeAreaView>
@@ -272,22 +243,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  searchHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+  contentWrapper: {
+    flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 24 : 16,
+  },
+  headerRow: {
+    paddingHorizontal: 24,
+    marginBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    fontFamily: 'Inter-Bold',
+    color: COLORS.textPrimary,
+  },
+  searchContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceMuted,
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
-    paddingHorizontal: 14,
-    height: 44,
+    paddingHorizontal: 16,
+    height: 52,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
   },
   searchIcon: {
     marginRight: 10,
@@ -295,13 +277,13 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Inter-Medium',
+    fontSize: 15,
     paddingVertical: 0,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: 24,
+    paddingTop: 8,
     paddingBottom: 90,
   },
   emptyListContent: {
@@ -310,109 +292,93 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 60,
   },
-  productCard: {
-    flexDirection: 'row',
+  card: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
-    marginBottom: 14,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconBox: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
     overflow: 'hidden',
-  },
-  productCardInactive: {
-    opacity: 0.75,
-    backgroundColor: COLORS.surfaceMuted,
-  },
-  imageWrapper: {
-    width: 100,
-    height: 105,
-    backgroundColor: COLORS.surfaceMuted,
-    position: 'relative',
-    borderRightWidth: 1,
-    borderRightColor: COLORS.border,
   },
   productImage: {
     width: '100%',
     height: '100%',
+    resizeMode: 'cover',
   },
-  placeholderImage: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.primaryLight,
+  titleContainer: {
+    flex: 1,
   },
-  statusBadge: {
-    position: 'absolute',
-    bottom: 6,
-    left: 6,
+  productName: {
+    fontSize: 15,
+    fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    marginTop: 4,
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 4,
-  },
-  statusText: {
-    fontSize: 10,
+  subText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
     fontFamily: 'Inter-Medium',
   },
-  cardContent: {
-    flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    justifyContent: 'center',
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 14,
   },
-  cardHeaderRow: {
+  cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
   },
-  productName: {
-    flex: 1,
-    fontSize: 15.5,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
-    marginRight: 6,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 6,
-  },
-  priceText: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.primary,
-  },
-  unitText: {
-    fontSize: 13,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textSecondary,
-    marginLeft: 4,
-  },
-  returnableBadge: {
+  metaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+    flex: 1,
+    marginRight: 8,
   },
-  returnableText: {
-    fontSize: 11,
-    fontFamily: 'Inter-Medium',
+  metaText: {
+    fontSize: 13,
+    fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
     color: COLORS.primary,
+    flexShrink: 1,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 11,
+    fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   centerContainer: {
     flex: 1,
@@ -422,12 +388,12 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Inter-Medium',
-    color: COLORS.textSecondary,
+    color: COLORS.textPlaceholder,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
@@ -438,62 +404,51 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 16,
   },
   retryText: {
     color: '#FFFFFF',
     fontFamily: 'Inter-Bold',
-    fontSize: 14,
+    fontSize: 15,
   },
   emptyContainer: {
     alignItems: 'center',
     paddingHorizontal: 30,
   },
-  emptyIconCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 16,
-    backgroundColor: COLORS.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
   emptyTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
-    fontSize: 13.5,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textSecondary,
+    fontSize: 14,
+    color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 24,
+    fontFamily: 'Inter-Medium',
   },
   emptyAddBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 22,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 16,
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
     fontFamily: 'Inter-Bold',
-    fontSize: 14.5,
+    fontSize: 15,
   },
   fab: {
     position: 'absolute',
     bottom: 24,
-    right: 22,
-    width: 52,
-    height: 52,
+    right: 24,
+    width: 56,
+    height: 56,
     borderRadius: 16,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',

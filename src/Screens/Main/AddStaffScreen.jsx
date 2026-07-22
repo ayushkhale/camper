@@ -3,7 +3,6 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   TextInput, 
   TouchableOpacity, 
   ActivityIndicator, 
@@ -12,6 +11,7 @@ import {
   Platform,
   Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, User, Phone, Mail, AlertCircle } from 'lucide-react-native';
@@ -25,7 +25,6 @@ const AddStaffScreen = () => {
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
 
-  // If editing, staff object is passed via navigation params
   const editStaff = route.params?.staff || null;
   const isEditMode = !!editStaff;
 
@@ -40,12 +39,10 @@ const AddStaffScreen = () => {
   
   const [submitting, setSubmitting] = useState(false);
 
-  // Pre-fill form if in Edit Mode
   useEffect(() => {
     if (isEditMode && editStaff) {
       setName(editStaff.name || '');
       
-      // If phone starts with +91, strip it for easier editing in UI
       let rawPhone = editStaff.phone || '';
       if (rawPhone.startsWith('+91') && rawPhone.length > 3) {
         rawPhone = rawPhone.substring(3);
@@ -58,7 +55,6 @@ const AddStaffScreen = () => {
   const validate = () => {
     let isValid = true;
     
-    // Validate Name
     if (!name.trim()) {
       setNameError(t('staff.validationError').split('and')[0] || 'Name is required');
       isValid = false;
@@ -66,7 +62,6 @@ const AddStaffScreen = () => {
       setNameError('');
     }
 
-    // Validate Phone (only required when adding a new staff member)
     if (!isEditMode) {
       const cleanPhone = phone.replace(/[^0-9]/g, '');
       if (!cleanPhone || cleanPhone.length !== 10) {
@@ -79,7 +74,6 @@ const AddStaffScreen = () => {
       setPhoneError('');
     }
 
-    // Validate Email (optional)
     if (email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email.trim())) {
@@ -101,11 +95,9 @@ const AddStaffScreen = () => {
     setSubmitting(true);
     setApiError('');
 
-    // Prepend country code +91 if it's 10 digits
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const formattedPhone = `+91${cleanPhone}`;
 
-    // On edit, do NOT send the phone field as it is not editable
     const staffData = isEditMode
       ? {
           name: name.trim(),
@@ -119,7 +111,6 @@ const AddStaffScreen = () => {
 
     try {
       if (isEditMode) {
-        // Edit flow
         const response = await api.updateStaff(userToken, editStaff.id, staffData);
         if (response && response.success) {
           Alert.alert('Success', t('staff.updateSuccess'));
@@ -128,7 +119,6 @@ const AddStaffScreen = () => {
           setApiError(response.message || 'Failed to update staff');
         }
       } else {
-        // Add flow
         const response = await api.addStaff(userToken, staffData);
         if (response && response.success) {
           Alert.alert('Success', t('staff.addSuccess'));
@@ -138,7 +128,6 @@ const AddStaffScreen = () => {
         }
       }
     } catch (err) {
-      // Check for phone number already exists message
       const errorMsg = err.message || '';
       if (errorMsg.includes('already exists') || errorMsg.includes('already registered')) {
         setApiError(t('staff.phoneExists'));
@@ -151,15 +140,12 @@ const AddStaffScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      {/* Header Row - Matches AddCustomer Header Row */}
+      <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.primary} />
+          <ChevronLeft size={28} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isEditMode ? t('staff.editStaff') : t('staff.addNew')}
-        </Text>
         <View style={styles.headerRightSpacing} />
       </View>
 
@@ -169,16 +155,25 @@ const AddStaffScreen = () => {
       >
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Error Banner */}
           {apiError ? (
             <View style={styles.errorBanner}>
-              <AlertCircle size={20} color={COLORS.primary} style={styles.errorIcon} />
+              <AlertCircle size={20} color={COLORS.danger} style={styles.errorIcon} />
               <Text style={styles.errorBannerText}>{apiError}</Text>
             </View>
           ) : null}
+
+          {/* Title Container */}
+          <View style={styles.titleContainer}>
+            <Text style={styles.pageTitle}>
+              {isEditMode ? t('staff.editStaff') : t('staff.addNew')}
+            </Text>
+            <Text style={styles.pageSubtitle}>
+              {isEditMode ? 'Update staff member profile' : 'Fill details to add a new team member'}
+            </Text>
+          </View>
 
           {/* Form Fields */}
           <View style={styles.form}>
@@ -202,9 +197,8 @@ const AddStaffScreen = () => {
             {/* Phone Field */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('staff.phone')}</Text>
-              <View style={[styles.inputContainer, phoneError ? styles.inputErrorBorder : null]}>
+              <View style={[styles.inputContainer, phoneError ? styles.inputErrorBorder : null, isEditMode && styles.inputDisabled]}>
                 <Phone size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                {/* Prefix */}
                 <Text style={styles.countryCode}>+91</Text>
                 <TextInput
                   style={styles.input}
@@ -253,7 +247,7 @@ const AddStaffScreen = () => {
               disabled={submitting}
             >
               {submitting ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <Text style={styles.btnTextPrimary}>
                   {isEditMode ? t('staff.save') : t('staff.addNew')}
@@ -280,34 +274,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 10 : 14,
+    paddingBottom: 4,
   },
   backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-    flex: 1,
+    padding: 8,
+    marginLeft: -8,
   },
   headerRightSpacing: {
-    width: 40,
+    width: 32,
   },
   keyboardAvoid: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: 10,
     paddingBottom: 40,
+  },
+  titleContainer: {
+    marginBottom: 32,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 6,
+  },
+  pageSubtitle: {
+    fontSize: 15,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textPlaceholder,
   },
   errorBanner: {
     flexDirection: 'row',
@@ -336,19 +339,23 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textPlaceholder,
+    fontFamily: 'Inter-Bold',
+    color: COLORS.textSecondary,
     marginBottom: 6,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceMuted,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
     borderRadius: 16,
-    paddingHorizontal: 12,
-    height: 48,
+    paddingHorizontal: 16,
+    height: 52,
+  },
+  inputDisabled: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
   inputIcon: {
     marginRight: 8,
@@ -364,21 +371,21 @@ const styles = StyleSheet.create({
     height: '100%',
     fontSize: 15,
     fontFamily: 'Inter-Medium',
-    color: COLORS.primary,
+    color: COLORS.textPrimary,
     padding: 0,
   },
   inputErrorBorder: {
-    borderColor: COLORS.primary,
+    borderColor: COLORS.danger,
   },
   errorText: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     marginTop: 4,
   },
   helperText: {
     fontSize: 11,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
     marginTop: 6,
     paddingHorizontal: 2,
@@ -400,9 +407,9 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   btnSecondary: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
   },
   btnTextPrimary: {
     color: '#FFFFFF',
@@ -410,7 +417,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Bold',
   },
   btnTextSecondary: {
-    color: COLORS.textPlaceholder,
+    color: COLORS.textSecondary,
     fontSize: 15,
     fontFamily: 'Inter-Bold',
   },

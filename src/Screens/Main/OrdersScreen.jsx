@@ -8,11 +8,12 @@ import {
   ActivityIndicator, 
   Alert,
   Modal,
-  TextInput
+  TextInput,
+  Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
-  Truck, Package, CheckCircle, XCircle, ChevronRight, X, Play, Calendar, MapPin
+  Truck, Package, CheckCircle, XCircle, ChevronRight, X, Play, Calendar, MapPin, AlertCircle
 } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
@@ -39,7 +40,6 @@ const getNext7Days = () => {
 const OrdersScreen = () => {
   const { t } = useTranslation();
   const { userToken } = useContext(AuthContext);
-  const insets = useSafeAreaInsets();
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [calendarDays] = useState(getNext7Days());
@@ -133,7 +133,7 @@ const OrdersScreen = () => {
       const res = await api.generateDeliveries(userToken, selectedDate);
       if (res.success) {
         Alert.alert('Success', res.message || 'Deliveries generated successfully.');
-        fetchDeliveries(selectedDate); // refresh list
+        fetchDeliveries(selectedDate);
       } else {
         Alert.alert('Notice', res.message || 'Could not generate deliveries.');
       }
@@ -175,9 +175,9 @@ const OrdersScreen = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'delivered': return { bg: COLORS.successLight, text: COLORS.success };
-      case 'skipped': return { bg: COLORS.dangerLight, text: COLORS.danger };
-      default: return { bg: COLORS.warningLight, text: COLORS.warning };
+      case 'delivered': return { dot: '#16A34A', text: '#15803D' };
+      case 'skipped': return { dot: '#EF4444', text: '#B91C1C' };
+      default: return { dot: '#D97706', text: '#B45309' }; // pending
     }
   };
 
@@ -197,159 +197,171 @@ const OrdersScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right', 'top']}>
-      
-      {/* Header */}
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>{t('deliveries.title')}</Text>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <View style={styles.contentWrapper}>
         
-        {/* Calendar Card Section */}
-        <View style={styles.calendarCard}>
-          <View style={styles.calendarHeader}>
-            <Text style={styles.calendarTitle}>
-              {new Date(selectedDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </Text>
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>{t('deliveries.title')}</Text>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* Calendar Card Section */}
+          <View style={styles.calendarCard}>
+            <View style={styles.calendarHeader}>
+              <Text style={styles.calendarTitle}>
+                {new Date(selectedDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </Text>
+              <TouchableOpacity 
+                onPress={() => setShowDatePicker(true)}
+                style={styles.calendarIconBtn}
+                activeOpacity={0.7}
+              >
+                <Calendar size={18} color={COLORS.primary} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.calendarStrip}>
+              {calendarDays.map((day, index) => {
+                const isSelected = selectedDate === day.fullDate;
+                return (
+                  <TouchableOpacity 
+                    key={index}
+                    activeOpacity={0.8}
+                    style={[styles.dayItem, isSelected && styles.dayItemSelected]}
+                    onPress={() => setSelectedDate(day.fullDate)}
+                  >
+                    <Text style={[styles.dayName, isSelected && styles.dayNameSelected]}>{day.dayName}</Text>
+                    <View style={[styles.dayNumberCircle, isSelected && styles.dayNumberCircleSelected]}>
+                      <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{day.dayNumber}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Filters Row */}
+          <View style={styles.filtersRow}>
             <TouchableOpacity 
-              onPress={() => setShowDatePicker(true)}
-              style={styles.calendarIconBtn}
+              style={styles.filterDropdown} 
+              onPress={() => setActiveFilterModal('route')}
+              activeOpacity={0.7}
             >
-              <Calendar size={18} color={COLORS.primary} />
+              <MapPin size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
+              <Text style={styles.filterDropdownText} numberOfLines={1}>
+                {selectedRouteId ? (routes.find(r => r.id === selectedRouteId)?.name || 'Route') : t('deliveries.allRoutes')}
+              </Text>
+              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 6, transform: [{ rotate: '90deg' }] }} />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.filterDropdown, { marginLeft: 10 }]} 
+              onPress={() => setActiveFilterModal('status')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.filterDropdownText} numberOfLines={1}>
+                {selectedStatus === 'all' ? t('deliveries.allStatus') : t('deliveries.' + selectedStatus)}
+              </Text>
+              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 6, transform: [{ rotate: '90deg' }] }} />
             </TouchableOpacity>
           </View>
-          
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.calendarStrip}>
-            {calendarDays.map((day, index) => {
-              const isSelected = selectedDate === day.fullDate;
-              return (
-                <TouchableOpacity 
-                  key={index}
-                  activeOpacity={0.8}
-                  style={[styles.dayItem, isSelected && styles.dayItemSelected]}
-                  onPress={() => setSelectedDate(day.fullDate)}
-                >
-                  <Text style={[styles.dayName, isSelected && styles.dayNameSelected]}>{day.dayName}</Text>
-                  <View style={[styles.dayNumberCircle, isSelected && styles.dayNumberCircleSelected]}>
-                    <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{day.dayNumber}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
 
-        {/* Filters Row */}
-        <View style={styles.filtersRow}>
-          <TouchableOpacity 
-            style={styles.filterDropdown} 
-            onPress={() => setActiveFilterModal('route')}
-          >
-            <MapPin size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-            <Text style={styles.filterDropdownText} numberOfLines={1}>
-              {selectedRouteId ? (routes.find(r => r.id === selectedRouteId)?.name || 'Route') : t('deliveries.allRoutes')}
-            </Text>
-            <ChevronRight size={14} color={COLORS.textSecondary} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
-          </TouchableOpacity>
+          {/* Deliveries Actions Row */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>{t('deliveries.taskList')}</Text>
+            <TouchableOpacity 
+              style={styles.generateBtn} 
+              onPress={handleGenerateDeliveries}
+              disabled={generating}
+              activeOpacity={0.7}
+            >
+              {generating ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <>
+                  <Play size={13} color={COLORS.primary} style={{ marginRight: 4 }} />
+                  <Text style={styles.generateBtnText}>{t('deliveries.generate')}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity 
-            style={[styles.filterDropdown, { marginLeft: 12 }]} 
-            onPress={() => setActiveFilterModal('status')}
-          >
-            <Text style={styles.filterDropdownText}>
-              {selectedStatus === 'all' ? t('deliveries.allStatus') : t('deliveries.' + selectedStatus)}
-            </Text>
-            <ChevronRight size={14} color={COLORS.textSecondary} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Deliveries Actions Row */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>{t('deliveries.taskList')}</Text>
-          <TouchableOpacity 
-            style={styles.generateBtn} 
-            onPress={handleGenerateDeliveries}
-            disabled={generating}
-          >
-            {generating ? (
-              <ActivityIndicator size="small" color={COLORS.primary} />
-            ) : (
-              <>
-                <Play size={14} color={COLORS.primary} style={{ marginRight: 4 }} />
-                <Text style={styles.generateBtnText}>{t('deliveries.generate')}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.deliveriesContainer}>
-          {loadingDeliveries ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
-            </View>
-          ) : deliveries.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Truck size={40} color={COLORS.textPlaceholder} style={{ marginBottom: 12 }} />
-              <Text style={styles.emptyTitle}>{t('deliveries.emptyDeliveries')}</Text>
-              <Text style={styles.emptySubtitle}>{t('deliveries.emptyDeliveriesSub')}</Text>
-            </View>
-          ) : (
-            getGroupedDeliveries().map((group, groupIdx) => (
-              <View key={groupIdx} style={styles.routeGroup}>
-                <View style={styles.routeHeader}>
-                  <Text style={styles.routeTitle}>{group.routeName.toUpperCase()}</Text>
-                  <View style={styles.routeBadge}>
-                    <Text style={styles.routeBadgeText}>{group.items.length} {t('deliveries.trips')}</Text>
-                  </View>
-                </View>
-                {group.items.map((delivery) => {
-                  const statusColors = getStatusColor(delivery.status);
-                  return (
-                    <TouchableOpacity 
-                      key={delivery.id} 
-                      style={styles.deliveryCard}
-                      activeOpacity={0.7}
-                      onPress={() => openUpdateModal(delivery)}
-                    >
-                      <View style={styles.deliveryHeader}>
-                        <View style={styles.deliveryCustomerInfo}>
-                          <Text style={styles.deliveryCustomerName} numberOfLines={1}>
-                            {delivery.Customer?.name || 'Unknown'}
-                          </Text>
-                          <Text style={styles.deliveryAddress} numberOfLines={1}>
-                            {delivery.Customer?.address || 'No address'}
-                          </Text>
-                        </View>
-                        <View style={[styles.statusBadge, { backgroundColor: statusColors.bg }]}>
-                          <Text style={[styles.statusText, { color: statusColors.text }]}>
-                            {delivery.status.toUpperCase()}
-                          </Text>
-                        </View>
-                      </View>
-                      
-                      <View style={styles.deliveryDivider} />
-                      
-                      <View style={styles.deliveryFooter}>
-                        <View style={styles.deliveryProductInfo}>
-                          <Package size={14} color={COLORS.textPlaceholder} style={{ marginRight: 6 }} />
-                          <Text style={styles.deliveryProductName} numberOfLines={1}>
-                            {delivery.Subscription?.Product?.name || 'Product'}
-                          </Text>
-                        </View>
-                        <Text style={styles.deliveryQty}>
-                          {t('oneTimeOrders.qty')}: {delivery.Subscription?.baseQuantity || 0}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
+          <View style={styles.deliveriesContainer}>
+            {loadingDeliveries ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text style={styles.loadingText}>Loading deliveries...</Text>
               </View>
-            ))
-          )}
-        </View>
+            ) : deliveries.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Truck size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
+                <Text style={styles.emptyTitle}>{t('deliveries.emptyDeliveries')}</Text>
+                <Text style={styles.emptySubtitle}>{t('deliveries.emptyDeliveriesSub')}</Text>
+              </View>
+            ) : (
+              getGroupedDeliveries().map((group, groupIdx) => (
+                <View key={groupIdx} style={styles.routeGroup}>
+                  <View style={styles.routeHeader}>
+                    <Text style={styles.routeTitle}>{group.routeName.toUpperCase()}</Text>
+                    <View style={styles.routeBadge}>
+                      <Text style={styles.routeBadgeText}>{group.items.length} {t('deliveries.trips')}</Text>
+                    </View>
+                  </View>
 
-      </ScrollView>
+                  {group.items.map((delivery) => {
+                    const statusColors = getStatusColor(delivery.status);
+                    return (
+                      <TouchableOpacity 
+                        key={delivery.id} 
+                        style={styles.deliveryCard}
+                        activeOpacity={0.7}
+                        onPress={() => openUpdateModal(delivery)}
+                      >
+                        <View style={styles.cardHeader}>
+                          <View style={styles.iconBox}>
+                            <Truck size={22} color={COLORS.primary} />
+                          </View>
+                          <View style={styles.titleContainer}>
+                            <Text style={styles.customerName} numberOfLines={1}>
+                              {delivery.Customer?.name || 'Unknown Customer'}
+                            </Text>
+                            <Text style={styles.subText} numberOfLines={1}>
+                              {delivery.Customer?.address || 'No address provided'}
+                            </Text>
+                          </View>
+                          <View style={styles.statusBadge}>
+                            <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
+                            <Text style={[styles.statusText, { color: statusColors.text }]}>
+                              {delivery.status.toUpperCase()}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.divider} />
+
+                        <View style={styles.cardFooter}>
+                          <View style={styles.metaContainer}>
+                            <Package size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
+                            <Text style={styles.metaText} numberOfLines={1}>
+                              {delivery.Subscription?.Product?.name || 'Product'}
+                            </Text>
+                          </View>
+                          <Text style={styles.qtyText}>
+                            Qty: {delivery.Subscription?.baseQuantity || 0}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ))
+            )}
+          </View>
+
+        </ScrollView>
+      </View>
 
       {/* Update Delivery Modal */}
       {selectedDelivery && (
@@ -359,20 +371,24 @@ const OrdersScreen = () => {
           animationType="fade"
           onRequestClose={() => setSelectedDelivery(null)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setSelectedDelivery(null)}
+          >
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{t('deliveries.statusFilter')}</Text>
+                <Text style={styles.modalTitle}>Update Delivery</Text>
                 <TouchableOpacity onPress={() => setSelectedDelivery(null)}>
-                  <X size={24} color={COLORS.textPlaceholder} />
+                  <X size={22} color={COLORS.textSecondary} />
                 </TouchableOpacity>
               </View>
               
               <Text style={styles.modalSubtitle}>
-                {selectedDelivery.Customer?.name} - {selectedDelivery.Subscription?.Product?.name}
+                {selectedDelivery.Customer?.name} • {selectedDelivery.Subscription?.Product?.name || 'Item'}
               </Text>
 
-              <Text style={styles.inputLabel}>{t('products.status')}</Text>
+              <Text style={styles.inputLabel}>Status</Text>
               <View style={styles.statusRow}>
                 {['pending', 'delivered', 'skipped'].map(st => (
                   <TouchableOpacity
@@ -381,41 +397,50 @@ const OrdersScreen = () => {
                     onPress={() => setUpdateStatus(st)}
                   >
                     <Text style={[styles.statusOptionText, updateStatus === st && styles.statusOptionTextActive]}>
-                      {t('deliveries.' + st)}
+                      {st.toUpperCase()}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
               <Text style={styles.inputLabel}>{t('deliveries.fullDelivered')}</Text>
-              <TextInput
-                style={styles.textInput}
-                value={fullUnits}
-                onChangeText={setFullUnits}
-                keyboardType="numeric"
-              />
+              <View style={styles.inputContainer}>
+                <Package size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.textInput}
+                  value={fullUnits}
+                  onChangeText={setFullUnits}
+                  keyboardType="numeric"
+                  placeholder="0"
+                />
+              </View>
 
               <Text style={styles.inputLabel}>{t('deliveries.emptyCollected')}</Text>
-              <TextInput
-                style={styles.textInput}
-                value={emptyUnits}
-                onChangeText={setEmptyUnits}
-                keyboardType="numeric"
-              />
+              <View style={styles.inputContainer}>
+                <Package size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.textInput}
+                  value={emptyUnits}
+                  onChangeText={setEmptyUnits}
+                  keyboardType="numeric"
+                  placeholder="0"
+                />
+              </View>
 
               <TouchableOpacity 
                 style={styles.submitBtn} 
                 onPress={handleUpdateSubmit}
                 disabled={updating}
+                activeOpacity={0.85}
               >
                 {updating ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text style={styles.submitBtnText}>{t('deliveries.saveChanges')}</Text>
                 )}
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         </Modal>
       )}
 
@@ -436,10 +461,10 @@ const OrdersScreen = () => {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Select Route</Text>
                 <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
-                  <X size={24} color={COLORS.textSecondary} />
+                  <X size={22} color={COLORS.textSecondary} />
                 </TouchableOpacity>
               </View>
-              <ScrollView>
+              <ScrollView showsVerticalScrollIndicator={false}>
                 <TouchableOpacity 
                   style={styles.filterModalItem} 
                   onPress={() => { setSelectedRouteId(''); setActiveFilterModal(null); }}
@@ -481,7 +506,7 @@ const OrdersScreen = () => {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Select Status</Text>
                 <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
-                  <X size={24} color={COLORS.textSecondary} />
+                  <X size={22} color={COLORS.textSecondary} />
                 </TouchableOpacity>
               </View>
               {['all', 'pending', 'delivered', 'skipped'].map((statusOption) => (
@@ -516,47 +541,50 @@ const OrdersScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.background,
   },
-  headerContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+  contentWrapper: {
+    flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 24 : 16,
+  },
+  headerRow: {
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 22,
+    fontWeight: 'bold',
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   calendarCard: {
-    backgroundColor: '#EEF2FF',
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 24,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   calendarHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   calendarTitle: {
     fontSize: 15,
     fontFamily: 'Inter-Bold',
     color: COLORS.primary,
-    marginBottom: 0,
   },
   calendarIconBtn: {
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -568,28 +596,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 52,
     height: 72,
-    borderRadius: 26,
-    backgroundColor: '#FFFFFF',
-    marginRight: 12,
+    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   dayItemSelected: {
     backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   dayName: {
     fontSize: 11,
     fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   dayNameSelected: {
     color: '#FFFFFF',
     opacity: 0.9,
   },
   dayNumberCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.surfaceMuted,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -604,22 +635,46 @@ const styles = StyleSheet.create({
   dayNumberSelected: {
     color: COLORS.primary,
   },
+  filtersRow: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  filterDropdown: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    height: 46,
+    paddingHorizontal: 12,
+  },
+  filterDropdownText: {
+    fontSize: 13,
+    fontFamily: 'Inter-Bold',
+    color: COLORS.textPrimary,
+    flex: 1,
+  },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 4,
+    marginBottom: 14,
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   generateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -633,102 +688,159 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textPlaceholder,
+  },
   deliveriesContainer: {
     marginBottom: 24,
   },
   emptyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     padding: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyTitle: {
-    fontSize: 15,
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   emptySubtitle: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textSecondary,
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textPlaceholder,
     textAlign: 'center',
   },
-  deliveryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+  routeGroup: {
+    marginBottom: 24,
   },
-  deliveryHeader: {
+  routeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  deliveryCustomerInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  deliveryCustomerName: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
-    marginBottom: 2,
-  },
-  deliveryAddress: {
+  routeTitle: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textSecondary,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  statusText: {
-    fontSize: 10,
     fontFamily: 'Inter-Bold',
+    color: COLORS.primary,
+    letterSpacing: 1,
   },
-  deliveryDivider: {
-    height: 1,
-    backgroundColor: COLORS.border,
-    marginVertical: 12,
+  routeBadge: {
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
-  deliveryFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  deliveryProductInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  deliveryProductName: {
-    fontSize: 13,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textSecondary,
-  },
-  deliveryQty: {
-    fontSize: 13,
+  routeBadgeText: {
+    fontSize: 11,
     fontFamily: 'Inter-Bold',
     color: COLORS.primary,
   },
+  deliveryCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconBox: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  customerName: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: COLORS.textPrimary,
+  },
+  subText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontFamily: 'Inter-Medium',
+    marginTop: 2,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 11,
+    fontFamily: 'Inter-Bold',
+    letterSpacing: 0.5,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 14,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+  },
+  metaText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textSecondary,
+    flexShrink: 1,
+  },
+  qtyText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: COLORS.primary,
+  },
+
+  // Modals
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: COLORS.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   modalContent: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
+    maxWidth: 400,
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
+    padding: 20,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -745,121 +857,84 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   inputLabel: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-Bold',
     color: COLORS.textSecondary,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   statusRow: {
     flexDirection: 'row',
-    marginBottom: 20,
+    gap: 8,
+    marginBottom: 16,
   },
   statusOption: {
     flex: 1,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
-    marginRight: 8,
     borderRadius: 12,
+    backgroundColor: '#F8FAFC',
   },
   statusOptionActive: {
-    backgroundColor: COLORS.primaryLight,
-    borderColor: COLORS.primary,
+    backgroundColor: '#EEF2FF',
+    borderColor: '#C7D2FE',
   },
   statusOptionText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontSize: 11,
+    fontFamily: 'Inter-Bold',
     color: COLORS.textSecondary,
   },
   statusOptionTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Inter-Bold',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    height: 48,
+    marginBottom: 16,
   },
   textInput: {
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 12,
-    padding: 12,
+    flex: 1,
+    height: '100%',
     fontSize: 14,
     fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
-    marginBottom: 20,
+    padding: 0,
   },
   submitBtn: {
     backgroundColor: COLORS.primary,
-    paddingVertical: 14,
+    height: 48,
     borderRadius: 16,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 8,
   },
   submitBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontFamily: 'Inter-Bold',
   },
-  filtersRow: {
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  filterDropdown: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 16,
-    height: 44,
-    paddingHorizontal: 12,
-  },
-  filterDropdownText: {
-    fontSize: 13,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
-    flex: 1,
-  },
-  routeGroup: {
-    marginBottom: 24,
-  },
-  routeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-    paddingHorizontal: 4,
-  },
-  routeTitle: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.primary,
-    letterSpacing: 1,
-  },
-  routeBadge: {
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  routeBadgeText: {
-    fontSize: 11,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.primary,
-  },
   filterModalContent: {
-    width: '90%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
     padding: 20,
     maxHeight: '80%',
   },
   filterModalItem: {
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: '#F1F5F9',
   },
   filterModalItemText: {
     fontSize: 14.5,

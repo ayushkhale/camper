@@ -17,12 +17,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft,
+  ChevronLeft,
   Camera,
   Image as ImageIcon,
   Trash2,
   Check,
   X,
+  Package,
+  IndianRupee,
+  Info,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -246,15 +249,12 @@ const AddProductScreen = () => {
         </View>
       )}
 
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header Row - Matches AddCustomer Header Row */}
+      <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={22} color={COLORS.primary} />
+          <ChevronLeft size={28} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isEditing ? 'Edit Product' : 'Add Product'}
-        </Text>
-        <View style={{ width: 40 }} />
+        <View style={styles.headerRightSpacing} />
       </View>
 
       <KeyboardAvoidingView
@@ -266,8 +266,18 @@ const AddProductScreen = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Form Content Wrapper with Crisp Border & White Background */}
-          <View style={styles.cardContainer}>
+          {/* Title Container */}
+          <View style={styles.titleContainer}>
+            <Text style={styles.pageTitle}>
+              {isEditing ? 'Edit Product' : 'Add Product'}
+            </Text>
+            <Text style={styles.pageSubtitle}>
+              {isEditing ? 'Update catalog details' : 'Create a new product listing'}
+            </Text>
+          </View>
+
+          {/* Form Area - flat direct inputs */}
+          <View style={styles.form}>
             {/* Select Image Box */}
             <View style={styles.imageBoxContainer}>
               {displayImageUri ? (
@@ -281,7 +291,7 @@ const AddProductScreen = () => {
                     style={styles.removeImageButton}
                     onPress={handleRemoveImage}
                   >
-                    <Trash2 size={16} color={COLORS.primary} />
+                    <Trash2 size={16} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -290,87 +300,100 @@ const AddProductScreen = () => {
                   activeOpacity={0.8}
                   onPress={() => setPhotoModalVisible(true)}
                 >
-                  <Text style={styles.selectImageText}>Select image</Text>
+                  <Camera size={26} color={COLORS.textPlaceholder} style={{ marginBottom: 8 }} />
+                  <Text style={styles.selectImageText}>Select product image</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             {/* Product Name */}
-            <Text style={styles.inputLabel}>Product name *</Text>
-            <View style={styles.inputBox}>
-              <TextInput
-                style={styles.input}
-                placeholder="Product name"
-                placeholderTextColor={COLORS.textPlaceholder}
-                value={name}
-                onChangeText={setName}
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Product name *</Text>
+              <View style={styles.inputContainer}>
+                <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. 20L Water Jar"
+                  placeholderTextColor={COLORS.textPlaceholder}
+                  value={name}
+                  onChangeText={setName}
+                />
+              </View>
             </View>
 
             {/* Price & Unit Side by Side */}
             <View style={styles.row}>
               <View style={[styles.col, { marginRight: 8 }]}>
-                <Text style={styles.inputLabel}>Price (₹) *</Text>
-                <View style={styles.inputBox}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Price"
-                    placeholderTextColor={COLORS.textPlaceholder}
-                    keyboardType="numeric"
-                    value={price}
-                    onChangeText={setPrice}
-                  />
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Price (₹) *</Text>
+                  <View style={styles.inputContainer}>
+                    <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. 150"
+                      placeholderTextColor={COLORS.textPlaceholder}
+                      keyboardType="numeric"
+                      value={price}
+                      onChangeText={setPrice}
+                    />
+                  </View>
                 </View>
               </View>
 
               <View style={[styles.col, { marginLeft: 8 }]}>
-                <Text style={styles.inputLabel}>Unit</Text>
-                <View style={styles.inputBox}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="can"
-                    placeholderTextColor={COLORS.textPlaceholder}
-                    value={unit}
-                    onChangeText={setUnit}
-                  />
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Unit</Text>
+                  <View style={styles.inputContainer}>
+                    <Info size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. jar"
+                      placeholderTextColor={COLORS.textPlaceholder}
+                      value={unit}
+                      onChangeText={setUnit}
+                    />
+                  </View>
                 </View>
               </View>
             </View>
 
             {/* Returnable Container Checkbox Row */}
-            <Text style={styles.sectionTitle}>Returnable Container :</Text>
-            <View style={styles.checkboxRow}>
-              <TouchableOpacity
-                style={styles.checkboxOption}
-                activeOpacity={0.7}
-                onPress={() => setIsReturnableContainer(true)}
-              >
-                <Text style={styles.checkboxLabel}>Yes</Text>
-                <View style={[styles.checkboxSquare, isReturnableContainer && styles.checkboxSquareChecked]}>
-                  {isReturnableContainer && <Check size={12} color={COLORS.primary} strokeWidth={3} />}
-                </View>
-              </TouchableOpacity>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Returnable Container</Text>
+              <View style={styles.checkboxRow}>
+                <TouchableOpacity
+                  style={[styles.checkboxOption, isReturnableContainer && styles.checkboxOptionActive]}
+                  activeOpacity={0.7}
+                  onPress={() => setIsReturnableContainer(true)}
+                >
+                  <Text style={[styles.checkboxLabel, isReturnableContainer && styles.checkboxLabelActive]}>Yes</Text>
+                  <View style={[styles.checkboxSquare, isReturnableContainer && styles.checkboxSquareChecked]}>
+                    {isReturnableContainer && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
+                  </View>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.checkboxOption, { marginLeft: 20 }]}
-                activeOpacity={0.7}
-                onPress={() => setIsReturnableContainer(false)}
-              >
-                <Text style={styles.checkboxLabel}>No</Text>
-                <View style={[styles.checkboxSquare, !isReturnableContainer && styles.checkboxSquareChecked]}>
-                  {!isReturnableContainer && <Check size={12} color={COLORS.primary} strokeWidth={3} />}
-                </View>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.checkboxOption, !isReturnableContainer && styles.checkboxOptionActive]}
+                  activeOpacity={0.7}
+                  onPress={() => setIsReturnableContainer(false)}
+                >
+                  <Text style={[styles.checkboxLabel, !isReturnableContainer && styles.checkboxLabelActive]}>No</Text>
+                  <View style={[styles.checkboxSquare, !isReturnableContainer && styles.checkboxSquareChecked]}>
+                    {!isReturnableContainer && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Deposit Amount Input (Conditional) */}
             {isReturnableContainer && (
-              <View style={{ marginTop: 14 }}>
-                <Text style={styles.inputLabel}>Deposit amount (₹)</Text>
-                <View style={styles.inputBox}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Deposit amount (₹)</Text>
+                <View style={styles.inputContainer}>
+                  <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Deposit amount"
+                    placeholder="e.g. 200"
                     placeholderTextColor={COLORS.textPlaceholder}
                     keyboardType="numeric"
                     value={depositAmount}
@@ -382,19 +405,19 @@ const AddProductScreen = () => {
           </View>
         </ScrollView>
 
-        {/* Bottom Floating Card / Button Bar */}
+        {/* Bottom Floating Button Bar */}
         <View style={styles.bottomBar}>
           <TouchableOpacity
-            style={[styles.addButton, loading && styles.addButtonDisabled]}
+            style={[styles.btn, styles.btnPrimary, loading && styles.btnDisabled]}
             activeOpacity={0.85}
             onPress={handleSubmit}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={COLORS.primary} />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.addButtonText}>
-                {isEditing ? 'Save Changes' : 'Add'}
+              <Text style={styles.btnTextPrimary}>
+                {isEditing ? 'Save Changes' : 'Add Product'}
               </Text>
             )}
           </TouchableOpacity>
@@ -415,7 +438,7 @@ const AddProductScreen = () => {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select photo option</Text>
+              <Text style={styles.modalTitle}>Select product photo</Text>
               <TouchableOpacity onPress={() => setPhotoModalVisible(false)}>
                 <X size={20} color={COLORS.textPlaceholder} />
               </TouchableOpacity>
@@ -451,60 +474,69 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: COLORS.primaryLight,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+    paddingTop: Platform.OS === 'ios' ? 10 : 14,
+    paddingBottom: 4,
   },
   backButton: {
-    padding: 4,
+    padding: 8,
+    marginLeft: -8,
   },
-  headerTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
+  headerRightSpacing: {
+    width: 32,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 24,
+    paddingTop: 10,
     paddingBottom: 40,
   },
-  cardContainer: {
-    backgroundColor: COLORS.primaryLight,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    borderRadius: 20,
-    padding: 20,
+  titleContainer: {
+    marginBottom: 32,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 6,
+  },
+  pageSubtitle: {
+    fontSize: 15,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textPlaceholder,
+  },
+  form: {
+    marginBottom: 0,
   },
   imageBoxContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   selectImageBox: {
     width: '100%',
     height: 180,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
     borderStyle: 'dashed',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
   selectImageText: {
     fontSize: 14,
-    color: COLORS.textPrimary,
-    fontFamily: 'Inter-Medium',
+    color: COLORS.textSecondary,
+    fontFamily: 'Inter-Bold',
   },
   selectedImageContainer: {
     width: '100%',
     height: 180,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
     position: 'relative',
   },
@@ -516,34 +548,42 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10,
-    backgroundColor: COLORS.primary,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     width: 32,
     height: 32,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  inputLabel: {
-    fontSize: 12,
-    color: COLORS.textPlaceholder,
-    marginBottom: 6,
-    fontFamily: 'Inter-Medium',
+  inputGroup: {
+    marginBottom: 20,
   },
-  inputBox: {
-    backgroundColor: COLORS.surfaceMuted,
+  label: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: COLORS.textSecondary,
+    marginBottom: 6,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
     borderRadius: 16,
-    height: 48,
-    paddingHorizontal: 12,
-    justifyContent: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 14,
+    height: 52,
+  },
+  inputIcon: {
+    marginRight: 8,
   },
   input: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    flex: 1,
     height: '100%',
+    color: COLORS.textPrimary,
+    fontFamily: 'Inter-Medium',
+    fontSize: 15,
+    padding: 0,
   },
   row: {
     flexDirection: 'row',
@@ -551,64 +591,71 @@ const styles = StyleSheet.create({
   col: {
     flex: 1,
   },
-  sectionTitle: {
-    fontSize: 13,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
-    marginBottom: 12,
-    marginTop: 6,
-  },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
+    gap: 12,
   },
   checkboxOption: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 18,
-    marginBottom: 10,
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
+  },
+  checkboxOptionActive: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#C7D2FE',
   },
   checkboxLabel: {
-    fontSize: 13.5,
-    color: COLORS.textPlaceholder,
-    marginRight: 8,
+    fontSize: 14,
+    color: COLORS.textSecondary,
     fontFamily: 'Inter-Medium',
   },
+  checkboxLabelActive: {
+    color: COLORS.primary,
+    fontFamily: 'Inter-Bold',
+  },
   checkboxSquare: {
-    width: 18,
-    height: 18,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#CBD5E1',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
   },
   checkboxSquareChecked: {
-    backgroundColor: COLORS.textPlaceholder,
+    backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
   bottomBar: {
-    backgroundColor: COLORS.primaryLight,
-    paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
-    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: COLORS.textPlaceholder,
+    borderTopColor: '#F1F5F9',
+    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
   },
-  addButton: {
-    width: '100%',
-    backgroundColor: COLORS.primary,
-    height: 48,
+  btn: {
+    height: 52,
     borderRadius: 16,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  addButtonDisabled: {
+  btnPrimary: {
+    backgroundColor: COLORS.primary,
+  },
+  btnDisabled: {
     opacity: 0.7,
   },
-  addButtonText: {
+  btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
     fontFamily: 'Inter-Bold',
@@ -620,12 +667,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: COLORS.primaryLight,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 24,
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-    paddingTop: 20,
+    paddingTop: 24,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -634,7 +681,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 15,
+    fontSize: 17,
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
@@ -643,11 +690,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.primary,
+    borderBottomColor: '#F1F5F9',
   },
   modalOptionText: {
-    fontSize: 14,
-    color: COLORS.textPlaceholder,
+    fontSize: 15,
+    color: COLORS.textPrimary,
     fontFamily: 'Inter-Medium',
   },
   // Custom Toast Styles
@@ -666,7 +713,7 @@ const styles = StyleSheet.create({
   toastError: { backgroundColor: COLORS.danger },
   toastSuccess: { backgroundColor: COLORS.success },
   toastText: {
-    color: COLORS.textPrimary,
+    color: '#FFFFFF',
     fontSize: 13,
     fontFamily: 'Inter-Medium',
     textAlign: 'center',

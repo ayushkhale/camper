@@ -281,22 +281,24 @@ const RouteDetailScreen = () => {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={22} color={COLORS.primary} />
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <ArrowLeft size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Route Details</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.headerActionBtn}
             onPress={() => navigation.navigate('AddRoute', { route: routeData })}
+            activeOpacity={0.7}
           >
             <Edit size={18} color={COLORS.primary} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.headerActionBtn, { marginLeft: 12 }]}
+            style={[styles.headerActionBtn, { marginLeft: 8 }]}
             onPress={handleDeleteRoute}
+            activeOpacity={0.7}
           >
-            <Trash2 size={18} color={COLORS.primary} />
+            <Trash2 size={18} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </View>
@@ -319,13 +321,12 @@ const RouteDetailScreen = () => {
           activeOpacity={0.8}
           onPress={() => setAssignModalVisible(true)}
         >
-          <UserPlus size={18} color={COLORS.primary} style={{ marginRight: 8 }} />
+          <UserPlus size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
           <Text style={styles.assignBtnText}>Assign Staff Member</Text>
         </TouchableOpacity>
 
         {/* Active Staff Assignments */}
         <View style={styles.sectionHeader}>
-          <UserCheck size={16} color={COLORS.primary} style={{ marginRight: 6 }} />
           <Text style={styles.sectionTitle}>Currently Active Staff ({activeAssignments.length})</Text>
         </View>
 
@@ -340,13 +341,14 @@ const RouteDetailScreen = () => {
                 <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
                 <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
                 <View style={styles.dateRow}>
-                  <Calendar size={12} color={COLORS.textPlaceholder} style={{ marginRight: 4 }} />
+                  <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
                   <Text style={styles.dateText}>From: {assignment.effectiveFrom}</Text>
                 </View>
               </View>
               <TouchableOpacity
                 style={styles.endAssignBtn}
                 onPress={() => handleEndAssignment(assignment.id, assignment.staffUser?.name)}
+                activeOpacity={0.7}
               >
                 <Text style={styles.endAssignText}>End</Text>
               </TouchableOpacity>
@@ -356,7 +358,6 @@ const RouteDetailScreen = () => {
 
         {/* Past Assignments History */}
         <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-          <History size={16} color={COLORS.primary} style={{ marginRight: 6 }} />
           <Text style={styles.sectionTitle}>Assignment History ({pastAssignments.length})</Text>
         </View>
 
@@ -371,7 +372,7 @@ const RouteDetailScreen = () => {
                 <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
                 <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
                 <View style={styles.dateRow}>
-                  <Calendar size={12} color={COLORS.textPlaceholder} style={{ marginRight: 4 }} />
+                  <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
                   <Text style={styles.dateText}>
                     {assignment.effectiveFrom} to {assignment.effectiveTo}
                   </Text>
@@ -405,7 +406,7 @@ const RouteDetailScreen = () => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Assign Staff Member</Text>
               <TouchableOpacity onPress={() => setAssignModalVisible(false)}>
-                <X size={20} color={COLORS.textPlaceholder} />
+                <X size={20} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -477,7 +478,7 @@ const RouteDetailScreen = () => {
                 >
                   <Text style={styles.checkboxLabel}>Yes</Text>
                   <View style={[styles.checkboxSquare, isPermanent && styles.checkboxSquareChecked]}>
-                    {isPermanent && <Check size={12} color={COLORS.primary} strokeWidth={3} />}
+                    {isPermanent && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                   </View>
                 </TouchableOpacity>
 
@@ -487,7 +488,7 @@ const RouteDetailScreen = () => {
                 >
                   <Text style={styles.checkboxLabel}>Temporary</Text>
                   <View style={[styles.checkboxSquare, !isPermanent && styles.checkboxSquareChecked]}>
-                    {!isPermanent && <Check size={12} color={COLORS.primary} strokeWidth={3} />}
+                    {!isPermanent && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                   </View>
                 </TouchableOpacity>
               </View>
@@ -502,34 +503,35 @@ const RouteDetailScreen = () => {
                   onPress={() => setActiveDatePicker('effectiveTo')}
                 >
                   <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Inter-Medium', fontSize: 14 }}>
-                    {effectiveTo || 'Select End Date'}
+                    {effectiveTo || 'YYYY-MM-DD (Optional)'}
                   </Text>
                 </TouchableOpacity>
               </View>
             )}
 
-            {/* Save Button */}
+            {/* Modal Save CTA */}
             <TouchableOpacity
               style={[styles.modalSaveButton, assignLoading && styles.modalSaveButtonDisabled]}
-              activeOpacity={0.85}
               onPress={handleAssignStaff}
               disabled={assignLoading}
             >
               {assignLoading ? (
-                <ActivityIndicator color={COLORS.primary} />
+                <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.modalSaveText}>Confirm Assignment</Text>
+                <Text style={styles.modalSaveText}>Assign Staff</Text>
               )}
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
 
+      {/* Date Picker Component */}
       {activeDatePicker && (
         <DateTimePicker
           value={
-            activeDatePicker === 'effectiveFrom' ? parseDateString(effectiveFrom) :
-            parseDateString(effectiveTo)
+            activeDatePicker === 'effectiveFrom'
+              ? parseDateString(effectiveFrom)
+              : parseDateString(effectiveTo)
           }
           mode="date"
           display="default"
@@ -543,24 +545,28 @@ const RouteDetailScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: COLORS.primaryLight,
+    paddingTop: Platform.OS === 'ios' ? 16 : 12,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+    borderBottomColor: '#F1F5F9',
   },
   backButton: {
-    padding: 4,
+    padding: 6,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
   },
   headerTitle: {
     fontSize: 16,
     fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   headerRight: {
@@ -568,23 +574,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerActionBtn: {
-    padding: 4,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingTop: 18,
     paddingBottom: 40,
   },
   infoCard: {
-    backgroundColor: COLORS.primaryLight,
-    padding: 20,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    padding: 18,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
     marginBottom: 16,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 8,
+    elevation: 1,
   },
   routeNameText: {
     fontSize: 20,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Inter-SemiBold',
     color: COLORS.textPrimary,
   },
   areaContainer: {
@@ -594,20 +611,24 @@ const styles = StyleSheet.create({
   },
   areaLabel: {
     fontSize: 13,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textPlaceholder,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textSecondary,
     marginRight: 6,
   },
   areaValue: {
-    fontSize: 13.5,
-    fontFamily: 'Inter-Bold',
+    fontSize: 13,
+    fontFamily: 'Inter-SemiBold',
     color: COLORS.primary,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   assignBtn: {
     flexDirection: 'row',
     backgroundColor: COLORS.primary,
     height: 48,
-    borderRadius: 16,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
@@ -615,56 +636,58 @@ const styles = StyleSheet.create({
   assignBtnText: {
     color: '#FFFFFF',
     fontSize: 14.5,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Inter-SemiBold',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    marginLeft: 2,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: COLORS.textSecondary,
   },
   emptyCard: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
   },
   emptyCardText: {
     fontSize: 13,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textPlaceholder,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textSecondary,
   },
   staffCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
     borderRadius: 16,
     padding: 14,
     marginBottom: 10,
   },
   historyCard: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
   staffInfo: {
     flex: 1,
   },
   staffName: {
-    fontSize: 14.5,
-    fontFamily: 'Inter-Bold',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
     color: COLORS.textPrimary,
   },
   staffPhone: {
     fontSize: 12.5,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textPlaceholder,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textSecondary,
     marginTop: 1,
   },
   dateRow: {
@@ -673,31 +696,31 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   dateText: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: COLORS.textPlaceholder,
+    color: COLORS.textSecondary,
   },
   endAssignBtn: {
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: 12,
-    backgroundColor: COLORS.primaryLight,
+    borderColor: '#FCA5A5',
+    borderRadius: 10,
+    backgroundColor: '#FEF2F2',
   },
   endAssignText: {
-    color: COLORS.textPrimary,
+    color: '#EF4444',
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Inter-SemiBold',
   },
   historyBadge: {
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: COLORS.textPlaceholder,
-    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
   },
   historyBadgeText: {
-    color: COLORS.textPlaceholder,
+    color: '#64748B',
     fontSize: 11,
     fontFamily: 'Inter-Medium',
   },
@@ -706,13 +729,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 30,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F8FAFC',
   },
   loadingText: {
     marginTop: 12,
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: COLORS.textPlaceholder,
+    color: COLORS.textSecondary,
   },
   errorText: {
     fontSize: 14,
@@ -724,26 +747,27 @@ const styles = StyleSheet.create({
   retryButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 16,
+    borderRadius: 14,
     backgroundColor: COLORS.primary,
   },
   retryText: {
     color: '#FFFFFF',
     fontFamily: 'Inter-Bold',
     fontSize: 14,
+    fontWeight: '700',
   },
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: COLORS.overlay,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
   modalContent: {
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
     padding: 20,
   },
   modalHeader: {
@@ -753,24 +777,26 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 15,
+    fontSize: 17,
     fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   inputLabel: {
     fontSize: 12,
-    color: COLORS.textPlaceholder,
+    color: COLORS.textSecondary,
     marginBottom: 6,
     fontFamily: 'Inter-Medium',
+    fontWeight: '600',
   },
   dropdownTrigger: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    borderRadius: 16,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
     height: 48,
     paddingHorizontal: 12,
   },
@@ -778,6 +804,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontSize: 14,
     fontFamily: 'Inter-Medium',
+    fontWeight: '600',
   },
   placeholderText: {
     color: COLORS.textPlaceholder,
@@ -785,10 +812,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
   },
   dropdownContainer: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    borderRadius: 16,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
     marginTop: 4,
     overflow: 'hidden',
   },
@@ -798,17 +825,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.primary,
+    borderBottomColor: '#F1F5F9',
   },
   dropdownItemText: {
     fontSize: 13.5,
     fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: COLORS.textPrimary,
     marginRight: 8,
   },
   dropdownItemPhone: {
     fontSize: 12.5,
-    color: COLORS.textPlaceholder,
+    color: COLORS.textSecondary,
     fontFamily: 'Inter-Regular',
   },
   dropdownEmpty: {
@@ -821,16 +849,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
   },
   inputBox: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    borderRadius: 16,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
     height: 48,
     paddingHorizontal: 12,
     justifyContent: 'center',
   },
   input: {
-    color: COLORS.primary,
+    color: COLORS.textPrimary,
     fontSize: 14,
     fontFamily: 'Inter-Medium',
     height: '100%',
@@ -844,6 +872,7 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: 13,
     fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   checkboxRow: {
@@ -856,28 +885,29 @@ const styles = StyleSheet.create({
   },
   checkboxLabel: {
     fontSize: 12.5,
-    color: COLORS.textPlaceholder,
+    color: COLORS.textSecondary,
     marginRight: 6,
     fontFamily: 'Inter-Medium',
+    fontWeight: '500',
   },
   checkboxSquare: {
     width: 18,
     height: 18,
-    borderRadius: 12,
+    borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#CBD5E1',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
   },
   checkboxSquareChecked: {
-    backgroundColor: COLORS.textPlaceholder,
+    backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
   modalSaveButton: {
     backgroundColor: COLORS.primary,
     height: 48,
-    borderRadius: 16,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 24,
@@ -886,9 +916,10 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   modalSaveText: {
-    color: COLORS.textPrimary,
-    fontSize: 14.5,
+    color: '#FFFFFF',
+    fontSize: 15,
     fontFamily: 'Inter-Bold',
+    fontWeight: '700',
   },
   // Toast
   toast: {
@@ -898,7 +929,7 @@ const styles = StyleSheet.create({
     right: 24,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 16,
+    borderRadius: 14,
     zIndex: 999,
     alignItems: 'center',
     justifyContent: 'center',
@@ -906,9 +937,10 @@ const styles = StyleSheet.create({
   toastError: { backgroundColor: COLORS.danger },
   toastSuccess: { backgroundColor: COLORS.success },
   toastText: {
-    color: COLORS.textPrimary,
+    color: '#FFFFFF',
     fontSize: 13,
     fontFamily: 'Inter-Medium',
+    fontWeight: '700',
     textAlign: 'center',
   },
 });

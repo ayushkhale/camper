@@ -398,4 +398,8 @@ export const api = {
 
   updateOneTimeOrderStatus: (token, id, status) =>
     patchRequest(`/api/vendor/one-time-orders/${id}/status`, { status }, token),
+
+  // Dashboard APIs
+  getDashboardStats: (token) =>
+    getRequest('/api/vendor/dashboard', token),
 };

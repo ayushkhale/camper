@@ -111,10 +111,10 @@ const RouteListScreen = () => {
       {/* Search Header */}
       <View style={styles.searchHeader}>
         <View style={styles.searchBar}>
-          <Search size={18} color={COLORS.textPlaceholder} style={styles.searchIcon} />
+          <Search size={18} color={COLORS.textSecondary} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search routes..."
+            placeholder="Search routes by name or area..."
             placeholderTextColor={COLORS.textPlaceholder}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -130,10 +130,10 @@ const RouteListScreen = () => {
         </View>
       ) : error ? (
         <View style={styles.centerContainer}>
-          <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
+          <AlertCircle size={40} color={COLORS.danger} style={{ marginBottom: 12 }} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => fetchRoutes(true)}>
-            <RefreshCw size={14} color={COLORS.primary} style={{ marginRight: 6 }} />
+            <RefreshCw size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
             <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
@@ -156,7 +156,9 @@ const RouteListScreen = () => {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <MapPin size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
+              <View style={styles.emptyIconCircle}>
+                <MapPin size={28} color={COLORS.textPlaceholder} />
+              </View>
               <Text style={styles.emptyTitle}>No routes found</Text>
               <Text style={styles.emptySubtitle}>
                 {searchQuery
@@ -168,7 +170,7 @@ const RouteListScreen = () => {
                   style={styles.emptyAddBtn}
                   onPress={() => navigation.navigate('AddRoute')}
                 >
-                  <Plus size={18} color={COLORS.primary} style={{ marginRight: 6 }} />
+                  <Plus size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
                   <Text style={styles.emptyAddBtnText}>Add Route</Text>
                 </TouchableOpacity>
               )}
@@ -177,14 +179,14 @@ const RouteListScreen = () => {
         />
       )}
 
-      {/* Boxy FAB (Add Route) */}
+      {/* Floating Action Button */}
       {!loading && !error && (
         <TouchableOpacity
           style={styles.fab}
           activeOpacity={0.85}
           onPress={() => navigation.navigate('AddRoute')}
         >
-          <Plus size={24} color={COLORS.primary} />
+          <Plus size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
     </SafeAreaView>
@@ -194,49 +196,50 @@ const RouteListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   header: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingTop: Platform.OS === 'ios' ? 16 : 12,
+    paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+    borderBottomColor: '#F1F5F9',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 22,
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
   searchHeader: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: COLORS.surfaceMuted,
+    backgroundColor: '#F8FAFC',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+    borderBottomColor: '#F1F5F9',
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     paddingHorizontal: 14,
-    height: 44,
+    height: 46,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
   },
   searchIcon: {
     marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    color: COLORS.primary,
+    color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Inter-Medium',
     paddingVertical: 0,
   },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 90,
   },
@@ -247,25 +250,27 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    marginBottom: 14,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    padding: 16,
+    borderColor: '#E2E8F0',
+    padding: 14,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconBox: {
-    width: 40,
-    height: 40,
-    backgroundColor: COLORS.textPlaceholder,
-    borderRadius: 16,
+    width: 42,
+    height: 42,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 21,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
   },
   titleContainer: {
     flex: 1,
@@ -273,17 +278,19 @@ const styles = StyleSheet.create({
   routeName: {
     fontSize: 15,
     fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
   areaCode: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textPlaceholder,
+    fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
+    color: COLORS.primary,
     marginTop: 2,
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.textPlaceholder,
+    backgroundColor: '#F1F5F9',
     marginVertical: 12,
   },
   cardFooter: {
@@ -292,12 +299,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   staffCountText: {
-    fontSize: 13,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textPlaceholder,
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textSecondary,
   },
   staffCountValue: {
     fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
     color: COLORS.primary,
   },
   centerContainer: {
@@ -325,30 +333,41 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 16,
+    borderRadius: 14,
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Inter-SemiBold',
     fontSize: 14,
   },
   emptyContainer: {
     alignItems: 'center',
     paddingHorizontal: 30,
   },
+  emptyIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
   emptyTitle: {
-    fontSize: 17,
-    fontFamily: 'Inter-Bold',
+    fontSize: 18,
+    fontFamily: 'Inter-SemiBold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 13,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textPlaceholder,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   emptyAddBtn: {
     flexDirection: 'row',
@@ -356,23 +375,28 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 22,
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: 14,
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Inter-SemiBold',
     fontSize: 14.5,
   },
   fab: {
     position: 'absolute',
     bottom: 24,
-    right: 22,
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    right: 20,
+    width: 54,
+    height: 54,
+    borderRadius: 18,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
 });
 

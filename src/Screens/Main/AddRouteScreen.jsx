@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ArrowLeft } from 'lucide-react-native';
+import { ChevronLeft, MapPin, Hash } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -90,15 +90,12 @@ const AddRouteScreen = () => {
         </View>
       )}
 
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header Row - Matches AddCustomer Header Row */}
+      <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={22} color={COLORS.primary} />
+          <ChevronLeft size={28} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isEditing ? 'Edit Route' : 'Create Route'}
-        </Text>
-        <View style={{ width: 40 }} />
+        <View style={styles.headerRightSpacing} />
       </View>
 
       <KeyboardAvoidingView
@@ -110,46 +107,63 @@ const AddRouteScreen = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.cardContainer}>
+          {/* Title Container (Matches AddCustomerScreen) */}
+          <View style={styles.titleContainer}>
+            <Text style={styles.pageTitle}>
+              {isEditing ? 'Edit Route' : 'Create Route'}
+            </Text>
+            <Text style={styles.pageSubtitle}>
+              {isEditing ? 'Update route distribution area' : 'Set up a new delivery route'}
+            </Text>
+          </View>
+
+          {/* Form Area - flat direct inputs */}
+          <View style={styles.form}>
             {/* Route Name Input */}
-            <Text style={styles.inputLabel}>Route Name *</Text>
-            <View style={styles.inputBox}>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Satellite Area Route"
-                placeholderTextColor={COLORS.textPlaceholder}
-                value={name}
-                onChangeText={setName}
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Route Name *</Text>
+              <View style={styles.inputContainer}>
+                <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Satellite Area Route"
+                  placeholderTextColor={COLORS.textPlaceholder}
+                  value={name}
+                  onChangeText={setName}
+                />
+              </View>
             </View>
 
             {/* Area Code Input */}
-            <Text style={styles.inputLabel}>Area Code (Optional)</Text>
-            <View style={styles.inputBox}>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. SAT-01"
-                placeholderTextColor={COLORS.textPlaceholder}
-                value={areaCode}
-                onChangeText={setAreaCode}
-                autoCapitalize="characters"
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Area Code (Optional)</Text>
+              <View style={styles.inputContainer}>
+                <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. SAT-01"
+                  placeholderTextColor={COLORS.textPlaceholder}
+                  value={areaCode}
+                  onChangeText={setAreaCode}
+                  autoCapitalize="characters"
+                />
+              </View>
             </View>
           </View>
         </ScrollView>
 
-        {/* Bottom Actions */}
+        {/* Bottom Actions Bar (Matches AddCustomerScreen) */}
         <View style={styles.bottomBar}>
           <TouchableOpacity
-            style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+            style={[styles.btn, styles.btnPrimary, loading && styles.btnDisabled]}
             activeOpacity={0.85}
             onPress={handleSubmit}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={COLORS.primary} />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.saveButtonText}>
+              <Text style={styles.btnTextPrimary}>
                 {isEditing ? 'Save Changes' : 'Create Route'}
               </Text>
             )}
@@ -168,77 +182,95 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: COLORS.primaryLight,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
+    paddingTop: Platform.OS === 'ios' ? 10 : 14,
+    paddingBottom: 4,
   },
   backButton: {
-    padding: 4,
+    padding: 8,
+    marginLeft: -8,
   },
-  headerTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
+  headerRightSpacing: {
+    width: 32,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 24,
+    paddingTop: 10,
     paddingBottom: 40,
   },
-  cardContainer: {
-    backgroundColor: COLORS.primaryLight,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    borderRadius: 20,
-    padding: 20,
+  titleContainer: {
+    marginBottom: 32,
   },
-  inputLabel: {
-    fontSize: 12,
-    color: COLORS.textPlaceholder,
+  pageTitle: {
+    fontSize: 28,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
+    color: COLORS.textPrimary,
     marginBottom: 6,
-    fontFamily: 'Inter-Medium',
   },
-  inputBox: {
-    backgroundColor: COLORS.surfaceMuted,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    borderRadius: 16,
-    height: 48,
-    paddingHorizontal: 12,
-    justifyContent: 'center',
+  pageSubtitle: {
+    fontSize: 15,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textPlaceholder,
+  },
+  form: {
+    marginBottom: 0,
+  },
+  inputGroup: {
     marginBottom: 20,
   },
+  label: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: COLORS.textSecondary,
+    marginBottom: 6,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    height: 52,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
   input: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    flex: 1,
     height: '100%',
+    color: COLORS.textPrimary,
+    fontFamily: 'Inter-Medium',
+    fontSize: 15,
+    padding: 0,
   },
   bottomBar: {
-    backgroundColor: COLORS.primaryLight,
-    paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
-    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: COLORS.textPlaceholder,
+    borderTopColor: '#F1F5F9',
+    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
   },
-  saveButton: {
-    width: '100%',
-    backgroundColor: COLORS.primary,
-    height: 48,
+  btn: {
+    height: 52,
     borderRadius: 16,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  saveButtonDisabled: {
+  btnPrimary: {
+    backgroundColor: COLORS.primary,
+  },
+  btnDisabled: {
     opacity: 0.7,
   },
-  saveButtonText: {
+  btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
     fontFamily: 'Inter-Bold',
@@ -259,7 +291,7 @@ const styles = StyleSheet.create({
   toastError: { backgroundColor: COLORS.danger },
   toastSuccess: { backgroundColor: COLORS.success },
   toastText: {
-    color: COLORS.textPrimary,
+    color: '#FFFFFF',
     fontSize: 13,
     fontFamily: 'Inter-Medium',
     textAlign: 'center',

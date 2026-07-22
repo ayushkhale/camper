@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, { useState, useContext, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Image
+  Image,
+  Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -23,7 +24,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
 
-  const [stats, setStats] = useState({ customers: 0, subscriptions: 0, routes: 0 });
+  const [stats, setStats] = useState({ customers: 0, subscriptions: 0, routes: 0, oneTimeOrders: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
   useFocusEffect(
@@ -32,18 +33,14 @@ const HomeScreen = () => {
       const fetchStats = async () => {
         setLoadingStats(true);
         try {
-          const [custRes, subRes, routeRes] = await Promise.all([
-            api.listCustomers(userToken),
-            api.listSubscriptions(userToken, '', 'active'),
-            api.listRoutes(userToken)
-          ]);
-
-          if (isActive) {
+          const res = await api.getDashboardStats(userToken);
+          if (isActive && res.success) {
+            const data = res.data || {};
             setStats({
-              customers: custRes.success ? (custRes.data?.length || 0) : 0,
-              subscriptions: subRes.success ? (subRes.data?.length || 0) : 0,
-              routes: routeRes.success ? (routeRes.data?.length || 0) : 0,
-              products: prodRes.success ? (prodRes.data?.length || 0) : 0,
+              customers: data.customersCount || 0,
+              subscriptions: data.activeSubscriptionsCount || 0,
+              routes: data.routesCount || 0,
+              oneTimeOrders: data.oneTimeOrdersCount || 0,
             });
           }
         } catch (err) {
@@ -56,6 +53,52 @@ const HomeScreen = () => {
       fetchStats();
       return () => { isActive = false; };
     }, [userToken])
+  );
+
+  const pulseAnim = React.useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    if (loadingStats) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 0.8,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 0.4,
+            duration: 800,
+            useNativeDriver: true,
+          })
+        ])
+      ).start();
+    }
+  }, [loadingStats]);
+
+  const renderSkeleton = () => (
+    <View style={styles.overviewGrid}>
+      <View style={styles.overviewRow}>
+        <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
+          <View style={styles.skeletonTitle} />
+          <View style={styles.skeletonValue} />
+        </Animated.View>
+        <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
+          <View style={styles.skeletonTitle} />
+          <View style={styles.skeletonValue} />
+        </Animated.View>
+      </View>
+      <View style={[styles.overviewRow, { marginBottom: 0 }]}>
+        <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
+          <View style={styles.skeletonTitle} />
+          <View style={styles.skeletonValue} />
+        </Animated.View>
+        <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
+          <View style={styles.skeletonTitle} />
+          <View style={styles.skeletonValue} />
+        </Animated.View>
+      </View>
+    </View>
   );
 
   const features = [
@@ -73,18 +116,18 @@ const HomeScreen = () => {
 
         {/* Today's Overview (Colorful Vertical Cards) */}
         <Text style={styles.sectionTitle}>{t('home.overviewTitle') || 'Today\'s Overview'}</Text>
-        {loadingStats ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={COLORS.primary} />
-          </View>
-        ) : (
+        {loadingStats ? renderSkeleton() : (
           <View style={styles.overviewGrid}>
             <View style={styles.overviewRow}>
               {/* Customers Card */}
               <View style={styles.overviewCardQuart}>
                 <View style={styles.overviewImageBgPlaceholder} />
-                <View style={styles.overviewIconAbsolute}>
-                  <Users size={64} color={COLORS.primary} strokeWidth={1.5} />
+                <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                  <Image
+                    source={require('../../../assets/customerstats.png')}
+                    style={{ width: 95, height: 95 }}
+                    resizeMode="contain"
+                  />
                 </View>
                 <Text style={styles.overviewTitleDark}>{t('tabs.customers')}</Text>
                 <Text style={styles.overviewValueDark}>{stats.customers}</Text>
@@ -93,10 +136,14 @@ const HomeScreen = () => {
               {/* Active Subs Card */}
               <View style={styles.overviewCardQuart}>
                 <View style={styles.overviewImageBgPlaceholder} />
-                <View style={styles.overviewIconAbsolute}>
-                  <Repeat size={64} color={COLORS.primary} strokeWidth={1.5} />
+                <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                  <Image
+                    source={require('../../../assets/activesubstat.png')}
+                    style={{ width: 95, height: 95 }}
+                    resizeMode="contain"
+                  />
                 </View>
-                <Text style={styles.overviewTitleDark}>{t('subscriptions.active')}</Text>
+                <Text style={styles.overviewTitleDark}>{t('customers.activeSubscriptions')}</Text>
                 <Text style={styles.overviewValueDark}>{stats.subscriptions}</Text>
               </View>
             </View>
@@ -104,21 +151,29 @@ const HomeScreen = () => {
               {/* Routes Card */}
               <View style={styles.overviewCardQuart}>
                 <View style={styles.overviewImageBgPlaceholder} />
-                <View style={styles.overviewIconAbsolute}>
-                  <MapPin size={64} color={COLORS.primary} strokeWidth={1.5} />
+                <View style={[styles.overviewIconAbsolute, { right: -25, bottom: -25, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                  <Image
+                    source={require('../../../assets/routestat.png')}
+                    style={{ width: 140, height: 140 }}
+                    resizeMode="contain"
+                  />
                 </View>
                 <Text style={styles.overviewTitleDark}>{t('deliveries.allRoutes')}</Text>
                 <Text style={styles.overviewValueDark}>{stats.routes}</Text>
               </View>
 
-              {/* Products Card */}
+              {/* One Time Orders Card */}
               <View style={styles.overviewCardQuart}>
                 <View style={styles.overviewImageBgPlaceholder} />
-                <View style={styles.overviewIconAbsolute}>
-                  <Package size={64} color={COLORS.primary} strokeWidth={1.5} />
+                <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                  <Image
+                    source={require('../../../assets/onetimestat.png')}
+                    style={{ width: 95, height: 95 }}
+                    resizeMode="contain"
+                  />
                 </View>
-                <Text style={styles.overviewTitleDark}>{t('products.title')}</Text>
-                <Text style={styles.overviewValueDark}>{stats.products}</Text>
+                <Text style={styles.overviewTitleDark}>{t('oneTimeOrders.title')}</Text>
+                <Text style={styles.overviewValueDark}>{stats.oneTimeOrders}</Text>
               </View>
             </View>
           </View>
@@ -238,6 +293,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     flexDirection: 'row',
     flexWrap: 'wrap',
+    borderWidth: 1,
+    borderColor: 'rgba(14, 68, 168, 0.12)',
     // Soft M3 elevated shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -263,7 +320,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Medium',
     color: COLORS.textPrimary,
     textAlign: 'center',
-  }
+  },
+  skeletonTitle: {
+    width: '65%',
+    height: 14,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 7,
+    marginBottom: 12,
+    marginTop: 2,
+  },
+  skeletonValue: {
+    width: '40%',
+    height: 28,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 7,
+  },
 });
 
 export default HomeScreen;

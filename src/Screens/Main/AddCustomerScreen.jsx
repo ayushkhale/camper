@@ -815,14 +815,15 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 6,
   },
   pageSubtitle: {
     fontSize: 15,
+    fontFamily: 'Inter-Medium',
     color: COLORS.textPlaceholder,
-    fontWeight: '500',
   },
   errorBanner: {
     flexDirection: 'row',

@@ -9,20 +9,22 @@ import {
   ActivityIndicator,
   Alert,
   Switch,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft,
-  Edit3,
+  ChevronLeft,
+  Edit,
   Trash2,
   Package,
   AlertCircle,
   RefreshCw,
   RefreshCcw,
-  CheckCircle2,
-  ShieldAlert,
+  IndianRupee,
+  Info,
+  Calendar,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -62,7 +64,6 @@ const ProductDetailScreen = () => {
     }
   };
 
-  // Always fetch fresh on load/focus because imageUrl expires in 15 mins
   useFocusEffect(
     useCallback(() => {
       fetchProductDetail();
@@ -74,7 +75,6 @@ const ProductDetailScreen = () => {
     setStatusUpdating(true);
 
     try {
-      // PATCH /:id with application/json
       const res = await api.updateProduct(
         userToken,
         product.id,
@@ -131,163 +131,162 @@ const ProductDetailScreen = () => {
 
   const isActive = product?.isActive !== false;
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading details...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <SafeAreaView style={styles.centerContainer}>
+        <Text style={styles.errorText}>{error || 'Product not found'}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.retryText}>Go Back</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* ── Header Actions (Identical to Customer Detail Screen) ── */}
+      <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={22} color={COLORS.primary} />
+          <ChevronLeft size={28} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('products.title')}</Text>
-        {product && !loading && !error ? (
+        <View style={styles.headerRight}>
           <TouchableOpacity
-            style={styles.editButton}
+            style={styles.headerActionBtn}
             onPress={() => navigation.navigate('EditProduct', { product })}
           >
-            <Edit3 size={20} color={COLORS.primary} />
+            <Edit size={18} color={COLORS.primary} />
           </TouchableOpacity>
-        ) : (
-          <View style={{ width: 40 }} />
-        )}
+          <TouchableOpacity
+            style={[styles.headerActionBtn, { borderColor: '#E2E8F0', backgroundColor: '#FFF5F5' }]}
+            onPress={handleDeleteConfirm}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <ActivityIndicator size="small" color="#E53E3E" />
+            ) : (
+              <Trash2 size={18} color="#E53E3E" />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading product info...</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.centerContainer}>
-          <AlertCircle size={48} color={COLORS.primary} style={{ marginBottom: 14 }} />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchProductDetail}>
-            <RefreshCw size={16} color={COLORS.primary} style={{ marginRight: 8 }} />
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : product ? (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Image Header Card */}
-          <View style={styles.imageCard}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        {/* ── Profile Hero Section (Identical to Customer Detail Screen) ── */}
+        <View style={styles.profileHero}>
+          <View style={styles.avatarContainer}>
             {product.imageUrl ? (
-              <Image
-                source={{ uri: product.imageUrl }}
-                style={styles.productImage}
-                resizeMode="cover"
-              />
+              <Image source={{ uri: product.imageUrl }} style={styles.avatarImage} />
             ) : (
-              <View style={styles.placeholderImage}>
-                <Package size={56} color={COLORS.textPlaceholder} />
-                <Text style={styles.noImageText}>No image uploaded</Text>
+              <View style={styles.avatarFallback}>
+                <Package size={38} color={COLORS.primary} />
               </View>
             )}
+          </View>
+          <Text style={styles.productName}>{product.name}</Text>
+          <View style={styles.statusBadge}>
+            <View style={[styles.statusDot, { backgroundColor: isActive ? '#16A34A' : '#94A3B8' }]} />
+            <Text style={[styles.statusText, { color: isActive ? '#15803D' : '#64748B' }]}>
+              {isActive ? 'ACTIVE' : 'INACTIVE'}
+            </Text>
+          </View>
+        </View>
 
-            {/* Status Floating Tag */}
-            <View
-              style={[
-                styles.statusTag,
-                isActive ? styles.statusTagActive : styles.statusTagInactive,
-              ]}
-            >
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: isActive ? COLORS.primary : COLORS.textPlaceholder },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.statusText,
-                  { color: isActive ? COLORS.primary : COLORS.textPlaceholder },
-                ]}
-              >
-                {isActive ? t('products.active') : t('products.inactive')}
+        {/* ── Product Info Card ── */}
+        <Text style={styles.sectionTitle}>Product Info</Text>
+        <View style={styles.detailsCard}>
+          {/* Price */}
+          <View style={styles.detailRow}>
+            <View style={styles.detailIconBox}>
+              <IndianRupee size={18} color={COLORS.textSecondary} />
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>Base Price</Text>
+              <Text style={styles.detailValue}>
+                ₹ {parseFloat(product.price || 0).toLocaleString()}
               </Text>
             </View>
           </View>
 
-          {/* Product Details Section */}
-          <View style={styles.infoCard}>
-            <Text style={styles.productName}>{product.name}</Text>
-            
-            <View style={styles.priceContainer}>
-              <Text style={styles.priceLabel}>{t('products.price')}</Text>
-              <View style={styles.priceRow}>
-                <Text style={styles.priceValue}>
-                  ₹ {parseFloat(product.price || 0).toLocaleString()}
-                </Text>
-                {product.unit ? (
-                  <Text style={styles.unitBadge}>{product.unit}</Text>
-                ) : null}
-              </View>
-            </View>
+          <View style={styles.divider} />
 
-            {/* Returnable Container Details */}
-            {product.isReturnableContainer && (
-              <View style={styles.returnableBox}>
-                <View style={styles.returnableHeader}>
-                  <RefreshCcw size={16} color={COLORS.primary} style={{ marginRight: 8 }} />
-                  <Text style={styles.returnableTitle}>{t('products.returnable')}</Text>
+          {/* Unit */}
+          <View style={styles.detailRow}>
+            <View style={styles.detailIconBox}>
+              <Info size={18} color={COLORS.textSecondary} />
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>Billing Unit</Text>
+              <Text style={styles.detailValue}>{product.unit || '—'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Returnable */}
+          <View style={styles.detailRow}>
+            <View style={styles.detailIconBox}>
+              <RefreshCcw size={18} color={COLORS.textSecondary} />
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>Returnable Container</Text>
+              <Text style={styles.detailValue}>{product.isReturnableContainer ? 'Yes' : 'No'}</Text>
+            </View>
+          </View>
+
+          {/* Conditional Deposit */}
+          {product.isReturnableContainer && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.detailRow}>
+                <View style={[styles.detailIconBox, { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }]}>
+                  <IndianRupee size={18} color={COLORS.primary} />
                 </View>
-                <View style={styles.returnableRow}>
-                  <Text style={styles.returnableLabel}>{t('products.depositAmount')}:</Text>
-                  <Text style={styles.returnableValue}>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Deposit Amount</Text>
+                  <Text style={styles.detailValue}>
                     ₹ {parseFloat(product.depositAmount || 0).toLocaleString()}
                   </Text>
                 </View>
               </View>
-            )}
-          </View>
+            </>
+          )}
+        </View>
 
-          {/* Active / Inactive Status Toggle Card */}
-          <View style={styles.statusCard}>
-            <View style={styles.statusCardLeft}>
-              <Text style={styles.statusCardTitle}>{t('products.status')}</Text>
-              <Text style={styles.statusCardSub}>
-                {isActive
-                  ? 'Product is visible and active for orders'
-                  : 'Product is currently hidden/inactive'}
-              </Text>
-            </View>
-            {statusUpdating ? (
-              <ActivityIndicator color={COLORS.primary} />
-            ) : (
-              <Switch
-                value={isActive}
-                onValueChange={handleToggleStatus}
-                trackColor={{ false: COLORS.textPlaceholder, true: '#B3D7F8' }}
-                thumbColor={isActive ? COLORS.primary : '#f4f3f4'}
-              />
-            )}
+        {/* ── Status Controls Toggle Card ── */}
+        <Text style={styles.sectionTitle}>Status Management</Text>
+        <View style={styles.statusToggleCard}>
+          <View style={styles.statusCardLeft}>
+            <Text style={styles.statusCardTitle}>Active Status</Text>
+            <Text style={styles.statusCardSub}>
+              {isActive
+                ? 'Product is visible and active for orders'
+                : 'Product is currently hidden/inactive'}
+            </Text>
           </View>
+          {statusUpdating ? (
+            <ActivityIndicator color={COLORS.primary} />
+          ) : (
+            <Switch
+              value={isActive}
+              onValueChange={handleToggleStatus}
+              trackColor={{ false: COLORS.border, true: COLORS.success }}
+              thumbColor={COLORS.background}
+              ios_backgroundColor={COLORS.border}
+            />
+          )}
+        </View>
 
-          {/* Actions Section */}
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              style={styles.editFullButton}
-              onPress={() => navigation.navigate('EditProduct', { product })}
-            >
-              <Edit3 size={18} color={COLORS.primary} style={{ marginRight: 8 }} />
-              <Text style={styles.editFullText}>{t('products.editProduct')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.deleteButton, deleting && { opacity: 0.6 }]}
-              onPress={handleDeleteConfirm}
-              disabled={deleting}
-            >
-              {deleting ? (
-                <ActivityIndicator color={COLORS.primary} size="small" />
-              ) : (
-                <>
-                  <Trash2 size={18} color={COLORS.primary} style={{ marginRight: 8 }} />
-                  <Text style={styles.deleteButtonText}>{t('products.deleteBtn')}</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      ) : null}
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -297,202 +296,183 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.textPlaceholder,
-    backgroundColor: COLORS.surface,
-  },
-  backButton: {
-    padding: 6,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
-  },
-  editButton: {
-    padding: 6,
-  },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 30,
+    backgroundColor: COLORS.surface,
+    padding: 30,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 14,
+    color: COLORS.textSecondary,
     fontFamily: 'Inter-Medium',
-    color: COLORS.textPlaceholder,
   },
   errorText: {
-    fontSize: 14.5,
-    fontFamily: 'Inter-Medium',
+    fontSize: 14,
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
+    fontFamily: 'Inter-Medium',
   },
   retryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 22,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
   retryText: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
+    color: COLORS.background,
+    fontWeight: 'bold',
     fontSize: 14,
+  },
+
+  // Header Actions
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: -8,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerActionBtn: {
+    marginLeft: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 10,
+    borderRadius: 14,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
-  imageCard: {
-    width: '100%',
-    height: 230,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    marginBottom: 20,
-    position: 'relative',
+
+  // Profile Hero
+  profileHero: {
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 36,
   },
-  productImage: {
-    width: '100%',
-    height: '100%',
-  },
-  placeholderImage: {
-    width: '100%',
-    height: '100%',
+  avatarContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.primaryLight,
-  },
-  noImageText: {
-    fontSize: 13,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textPlaceholder,
-    marginTop: 10,
-  },
-  statusTag: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-  },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 11.5,
-    fontFamily: 'Inter-Bold',
-  },
-  infoCard: {
-    backgroundColor: COLORS.primaryLight,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
     marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#C7D2FE',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+  },
+  avatarFallback: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   productName: {
-    fontSize: 22,
+    fontSize: 24,
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
-    marginBottom: 14,
+    marginBottom: 10,
   },
-  priceContainer: {
-    borderTopWidth: 1,
-    borderTopColor: COLORS.textPlaceholder,
-    paddingTop: 14,
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  priceLabel: {
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textPlaceholder,
-    marginBottom: 4,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  priceValue: {
-    fontSize: 26,
     fontFamily: 'Inter-Bold',
-    color: COLORS.primary,
+    letterSpacing: 0.5,
   },
-  unitBadge: {
-    fontSize: 13,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textSecondary,
+
+  // Section details card
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: COLORS.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 16,
+  },
+  detailsCard: {
     backgroundColor: COLORS.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    marginLeft: 10,
-  },
-  returnableBox: {
-    marginTop: 16,
-    backgroundColor: COLORS.textPlaceholder,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-  },
-  returnableHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  returnableTitle: {
-    fontSize: 13.5,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
-  },
-  returnableRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  returnableLabel: {
-    fontSize: 12.5,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textPrimary,
-  },
-  returnableValue: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.primary,
-  },
-  statusCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: COLORS.primaryLight,
-    padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
+    padding: 20,
+    marginBottom: 32,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontSize: 15,
+    fontFamily: 'Inter-Bold',
+    color: COLORS.textPrimary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 16,
+  },
+
+  // Status Switch Card
+  statusToggleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.surface,
+    padding: 18,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     marginBottom: 24,
   },
   statusCardLeft: {
@@ -500,47 +480,15 @@ const styles = StyleSheet.create({
     paddingRight: 14,
   },
   statusCardTitle: {
-    fontSize: 14.5,
+    fontSize: 15,
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
   statusCardSub: {
-    fontSize: 11.5,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textPlaceholder,
-  },
-  actionsContainer: {
-    marginTop: 6,
-  },
-  editFullButton: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.primary,
-    height: 48,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  editFullText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontFamily: 'Inter-Bold',
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.primaryLight,
-    height: 48,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-  },
-  deleteButtonText: {
-    color: COLORS.danger,
-    fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: COLORS.textSecondary,
   },
 });
 

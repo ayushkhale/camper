@@ -1,17 +1,19 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  TextInput,
   ActivityIndicator,
   RefreshControl,
-  Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Package, ChevronRight, AlertCircle, RefreshCw, Calendar, Repeat, User } from 'lucide-react-native';
+import { Plus, Search, Package, ChevronRight, AlertCircle, RefreshCw, Repeat, User, Calendar } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -19,8 +21,10 @@ import { api } from '../../services/api';
 const SubscriptionListScreen = () => {
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
+  const { t } = useTranslation();
 
   const [subscriptions, setSubscriptions] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
@@ -30,8 +34,6 @@ const SubscriptionListScreen = () => {
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      // Fetch all and filter locally for a snappier experience, or fetch by status.
-      // We will fetch all and filter locally.
       const res = await api.listSubscriptions(userToken);
       if (res.success) {
         setSubscriptions(res.data || []);
@@ -48,7 +50,7 @@ const SubscriptionListScreen = () => {
   };
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       fetchSubscriptions(true);
     }, [])
   );
@@ -58,33 +60,40 @@ const SubscriptionListScreen = () => {
     fetchSubscriptions(false);
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColors = (status) => {
     switch (status) {
-      case 'active': return { bg: COLORS.successLight, text: COLORS.success };
-      case 'paused': return { bg: COLORS.warningLight, text: COLORS.warning };
-      case 'ended': return { bg: COLORS.dangerLight, text: COLORS.danger };
-      default: return { bg: COLORS.borderLight, text: COLORS.textSecondary };
+      case 'active': return { dot: '#16A34A', text: '#15803D' };
+      case 'paused': return { dot: '#D97706', text: '#B45309' };
+      case 'ended': return { dot: '#94A3B8', text: '#64748B' };
+      default: return { dot: '#94A3B8', text: '#64748B' };
     }
   };
 
   const formatRecurrence = (pattern) => {
-    switch(pattern) {
+    switch (pattern) {
       case 'daily': return 'Daily';
-      case 'alternate_days': return 'Alternate Days';
+      case 'alternate': case 'alternate_days': return 'Alternate Days';
       case 'weekly': return 'Weekly';
       case 'monthly': return 'Monthly';
-      default: return pattern;
+      default: return pattern || '';
     }
   };
 
-  const filteredSubscriptions = subscriptions.filter(sub => {
-    if (filterStatus === 'all') return true;
-    return sub.status === filterStatus;
+  const filteredSubscriptions = subscriptions.filter((item) => {
+    // 1. Status Filter
+    if (filterStatus !== 'all' && item.status !== filterStatus) {
+      return false;
+    }
+    // 2. Search Query Filter
+    const query = searchQuery.toLowerCase();
+    const customerMatch = item.Customer?.name?.toLowerCase().includes(query);
+    const productMatch = item.Product?.name?.toLowerCase().includes(query);
+    return customerMatch || productMatch;
   });
 
   const renderSubscriptionCard = ({ item }) => {
-    const statusColors = getStatusColor(item.status);
-    
+    const statusColors = getStatusColors(item.status);
+
     return (
       <TouchableOpacity
         style={styles.card}
@@ -93,42 +102,34 @@ const SubscriptionListScreen = () => {
       >
         <View style={styles.cardHeader}>
           <View style={styles.iconBox}>
-             {item.Product?.imageUrl ? (
-               <Image source={{ uri: item.Product.imageUrl }} style={styles.productImage} />
-             ) : (
-               <Package size={20} color={COLORS.primary} />
-             )}
+            <Package size={22} color={COLORS.primary} />
           </View>
           <View style={styles.titleContainer}>
             <Text style={styles.customerName} numberOfLines={1}>
               {item.Customer?.name || 'Unknown Customer'}
             </Text>
-            <Text style={styles.productName} numberOfLines={1}>
-              {item.Product?.name || 'Unknown Product'}
+            <Text style={styles.subText} numberOfLines={1}>
+              {item.Product?.name || 'Product'}
             </Text>
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} />
+          <View style={styles.statusBadge}>
+            <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
+            <Text style={[styles.statusText, { color: statusColors.text }]}>
+              {(item.status || 'active').toUpperCase()}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.divider} />
 
         <View style={styles.cardFooter}>
-          <View style={styles.detailsRow}>
-            <View style={styles.detailBadge}>
-              <Package size={12} color={COLORS.textPlaceholder} style={{ marginRight: 4 }} />
-              <Text style={styles.detailText}>Qty: {item.baseQuantity}</Text>
-            </View>
-            <View style={[styles.detailBadge, { marginLeft: 8 }]}>
-              <Repeat size={12} color={COLORS.textPlaceholder} style={{ marginRight: 4 }} />
-              <Text style={styles.detailText}>{formatRecurrence(item.recurrencePattern)}</Text>
-            </View>
-          </View>
-          
-          <View style={[styles.statusBadge, { backgroundColor: statusColors.bg }]}>
-            <Text style={[styles.statusText, { color: statusColors.text }]}>
-              {item.status.toUpperCase()}
+          <View style={styles.metaContainer}>
+            <Repeat size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
+            <Text style={styles.metaText} numberOfLines={1}>
+              Qty: {item.baseQuantity} • {formatRecurrence(item.recurrencePattern)}
             </Text>
           </View>
+          <ChevronRight size={18} color={COLORS.textPlaceholder} />
         </View>
       </TouchableOpacity>
     );
@@ -136,77 +137,97 @@ const SubscriptionListScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Subscriptions</Text>
-      </View>
+      <View style={styles.contentWrapper}>
 
-      <View style={styles.filterContainer}>
-        {['all', 'active', 'paused', 'ended'].map(status => (
-          <TouchableOpacity
-            key={status}
-            style={[styles.filterTab, filterStatus === status && styles.filterTabActive]}
-            onPress={() => setFilterStatus(status)}
-          >
-            <Text style={[styles.filterTabText, filterStatus === status && styles.filterTabTextActive]}>
-              {status.toUpperCase()}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>Subscriptions</Text>
+        </View>
 
-      {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading subscriptions...</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.centerContainer}>
-          <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => fetchSubscriptions(true)}>
-            <RefreshCw size={14} color={COLORS.primary} style={{ marginRight: 6 }} />
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredSubscriptions}
-          keyExtractor={(item) => item.id}
-          renderItem={renderSubscriptionCard}
-          contentContainerStyle={
-            filteredSubscriptions.length === 0 ? styles.emptyListContent : styles.listContent
-          }
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[COLORS.primary]}
-              tintColor={COLORS.primary}
+        {/* Search Box */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search by customer or product..."
+              placeholderTextColor={COLORS.textPlaceholder}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Repeat size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-              <Text style={styles.emptyTitle}>No Subscriptions Found</Text>
-              <Text style={styles.emptySubtitle}>
-                {filterStatus !== 'all' 
-                  ? `You have no ${filterStatus} subscriptions.` 
-                  : 'Start by creating a recurring subscription.'}
+          </View>
+        </View>
+
+        {/* Status Filter Chips */}
+        <View style={styles.filterContainer}>
+          {['all', 'active', 'paused', 'ended'].map(status => (
+            <TouchableOpacity
+              key={status}
+              style={[styles.filterTab, filterStatus === status && styles.filterTabActive]}
+              onPress={() => setFilterStatus(status)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.filterTabText, filterStatus === status && styles.filterTabTextActive]}>
+                {status.toUpperCase()}
               </Text>
-              {filterStatus === 'all' && (
-                <TouchableOpacity
-                  style={styles.emptyAddBtn}
-                  onPress={() => navigation.navigate('AddSubscription')}
-                >
-                  <Plus size={18} color={COLORS.primary} style={{ marginRight: 6 }} />
-                  <Text style={styles.emptyAddBtnText}>Add Subscription</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          }
-        />
-      )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Loading subscriptions...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => fetchSubscriptions(true)}>
+              <RefreshCw size={16} color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredSubscriptions}
+            keyExtractor={(item) => item.id || Math.random().toString()}
+            renderItem={renderSubscriptionCard}
+            contentContainerStyle={
+              filteredSubscriptions.length === 0 ? styles.emptyListContent : styles.listContent
+            }
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[COLORS.primary]}
+                tintColor={COLORS.primary}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Package size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
+                <Text style={styles.emptyTitle}>No Subscriptions Found</Text>
+                <Text style={styles.emptySubtitle}>
+                  {searchQuery || filterStatus !== 'all'
+                    ? 'No subscriptions match your current filter or search.'
+                    : 'Start by creating a recurring subscription.'}
+                </Text>
+                {!searchQuery && filterStatus === 'all' && (
+                  <TouchableOpacity
+                    style={styles.emptyAddBtn}
+                    onPress={() => navigation.navigate('AddSubscription')}
+                  >
+                    <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.emptyAddBtnText}>Add Subscription</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          />
+        )}
+      </View>
 
       {!loading && !error && (
         <TouchableOpacity
@@ -214,7 +235,7 @@ const SubscriptionListScreen = () => {
           activeOpacity={0.85}
           onPress={() => navigation.navigate('AddSubscription')}
         >
-          <Plus size={24} color={COLORS.primary} />
+          <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
     </SafeAreaView>
@@ -226,51 +247,75 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
-    backgroundColor: COLORS.surface,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+  contentWrapper: {
+    flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 24 : 16,
+  },
+  headerRow: {
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 22,
+    fontWeight: 'bold',
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
   },
+  searchContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 12,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    color: COLORS.textPrimary,
+    fontFamily: 'Inter-Medium',
+    fontSize: 15,
+    paddingVertical: 0,
+  },
   filterContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderLight,
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   filterTab: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginRight: 8,
-    backgroundColor: COLORS.background,
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginRight: 6,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   filterTabActive: {
-    backgroundColor: COLORS.primaryLight,
-    borderColor: COLORS.primary,
+    backgroundColor: '#EEF2FF',
+    borderColor: '#C7D2FE',
   },
   filterTabText: {
     fontSize: 11,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textSecondary,
+    fontFamily: 'Inter-Bold',
+    color: '#64748B',
+    letterSpacing: 0.5,
   },
   filterTabTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Inter-Bold',
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: 24,
     paddingBottom: 90,
   },
   emptyListContent: {
@@ -282,10 +327,11 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
-    marginBottom: 14,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 16,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -294,17 +340,13 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 44,
     height: 44,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-    overflow: 'hidden',
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
   },
   titleContainer: {
     flex: 1,
@@ -312,52 +354,57 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 15,
     fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
-  productName: {
-    fontSize: 13,
-    fontFamily: 'Inter-Medium',
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  subText: {
+    fontSize: 12,
     color: COLORS.textSecondary,
-    marginTop: 2,
+    fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.border,
-    marginVertical: 12,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 14,
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  detailsRow: {
+  metaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: 8,
   },
-  detailBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  detailText: {
-    fontSize: 11,
+  metaText: {
+    fontSize: 12,
     fontFamily: 'Inter-Medium',
     color: COLORS.textSecondary,
+    flexShrink: 1,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   statusText: {
     fontSize: 11,
     fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   centerContainer: {
     flex: 1,
@@ -367,12 +414,12 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Inter-Medium',
-    color: COLORS.textSecondary,
+    color: COLORS.textPlaceholder,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Inter-Medium',
     color: COLORS.danger,
     textAlign: 'center',
@@ -383,51 +430,51 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 16,
   },
   retryText: {
     color: '#FFFFFF',
     fontFamily: 'Inter-Bold',
-    fontSize: 14,
+    fontSize: 15,
   },
   emptyContainer: {
     alignItems: 'center',
     paddingHorizontal: 30,
   },
   emptyTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
-    fontSize: 13,
-    fontFamily: 'Inter-Regular',
-    color: COLORS.textSecondary,
+    fontSize: 14,
+    color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 24,
+    fontFamily: 'Inter-Medium',
   },
   emptyAddBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 22,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 16,
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
     fontFamily: 'Inter-Bold',
-    fontSize: 14.5,
+    fontSize: 15,
   },
   fab: {
     position: 'absolute',
     bottom: 24,
-    right: 22,
-    width: 52,
-    height: 52,
+    right: 24,
+    width: 56,
+    height: 56,
     borderRadius: 16,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
