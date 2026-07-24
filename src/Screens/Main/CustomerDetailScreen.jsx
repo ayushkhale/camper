@@ -151,15 +151,16 @@ const CustomerDetailScreen = () => {
     try {
       const res = await api.updateSubscription(userToken, sub.id, { status: newStatus });
       if (res.success) {
+        showAlert('Success', `Subscription ${newStatus === 'active' ? 'activated' : 'paused'} successfully`, 'success');
         fetchSubscriptions();
       }
     } catch (err) {
-      Alert.alert('Error', 'Failed to update subscription status');
+      showAlert('Error', 'Failed to update subscription status', 'error');
     }
   };
 
   const handleDeleteSubscription = (sub) => {
-    Alert.alert(
+    showAlert(
       'Delete Subscription',
       'Are you sure you want to delete this subscription?',
       [
@@ -171,10 +172,11 @@ const CustomerDetailScreen = () => {
             try {
               const res = await api.deleteSubscription(userToken, sub.id);
               if (res.success) {
+                showAlert('Success', 'Subscription deleted successfully', 'success');
                 fetchSubscriptions();
               }
             } catch (err) {
-              Alert.alert('Error', 'Could not delete subscription');
+              showAlert('Error', 'Could not delete subscription', 'error');
             }
           },
         },

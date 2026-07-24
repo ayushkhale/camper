@@ -31,12 +31,14 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { useAlert } from '../../context/AlertContext';
 
 const AddProductScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const productToEdit = route.params?.product;
   const isEditing = !!productToEdit;
@@ -67,14 +69,6 @@ const AddProductScreen = () => {
 
   // Loading & Toast State
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
-
-  const triggerToast = (message, type = 'error') => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => {
-      setToast({ visible: false, message: '', type });
-    }, 4000);
-  };
 
   const handleSelectFromGallery = async () => {
     setPhotoModalVisible(false);
@@ -98,7 +92,7 @@ const AddProductScreen = () => {
       setExistingImageUrl(null);
     } catch (err) {
       console.error('Image library error:', err);
-      triggerToast('Could not open photo gallery', 'error');
+      showAlert('Error', 'Could not open photo gallery', 'error');
     }
   };
 
@@ -124,7 +118,7 @@ const AddProductScreen = () => {
       setExistingImageUrl(null);
     } catch (err) {
       console.error('Camera error:', err);
-      triggerToast('Could not open camera', 'error');
+      showAlert('Error', 'Could not open camera', 'error');
     }
   };
 
@@ -134,21 +128,25 @@ const AddProductScreen = () => {
   };
 
   const validateForm = () => {
-    if (!name.trim() || !price.trim()) {
-      triggerToast('Product name and price are required', 'error');
+    if (!name.trim()) {
+      showAlert('Required', t('products.nameRequired'), 'warning');
       return false;
     }
-    const priceNum = parseFloat(price);
-    if (isNaN(priceNum) || priceNum < 0) {
-      triggerToast('Please enter a valid price', 'error');
+    if (!price.trim()) {
+      showAlert('Required', t('products.priceRequired'), 'warning');
       return false;
     }
-    if (isReturnableContainer && depositAmount.trim()) {
-      const depNum = parseFloat(depositAmount);
-      if (isNaN(depNum) || depNum < 0) {
-        triggerToast('Please enter a valid deposit amount', 'error');
-        return false;
-      }
+    if (isNaN(price) || parseFloat(price) < 0) {
+      showAlert('Invalid Price', t('products.invalidPrice'), 'warning');
+      return false;
+    }
+    if (
+      isReturnableContainer &&
+      depositAmount.trim() &&
+      (isNaN(depositAmount) || parseFloat(depositAmount) < 0)
+    ) {
+      showAlert('Invalid Deposit', t('products.invalidDeposit'), 'warning');
+      return false;
     }
     return true;
   };
@@ -178,7 +176,7 @@ const AddProductScreen = () => {
 
           const res = await api.updateProduct(userToken, productToEdit.id, formData, true);
           if (res.success) {
-            Alert.alert('Success', t('products.updateSuccess'));
+            showAlert('Success', t('products.updateSuccess'), 'success');
             navigation.goBack();
           } else {
             throw new Error(res.message || 'Failed to update product');
@@ -197,7 +195,7 @@ const AddProductScreen = () => {
 
           const res = await api.updateProduct(userToken, productToEdit.id, jsonBody, false);
           if (res.success) {
-            Alert.alert('Success', t('products.updateSuccess'));
+            showAlert('Success', t('products.updateSuccess'), 'success');
             navigation.goBack();
           } else {
             throw new Error(res.message || 'Failed to update product');
@@ -224,7 +222,7 @@ const AddProductScreen = () => {
 
         const res = await api.createProduct(userToken, formData);
         if (res.success) {
-          Alert.alert('Success', t('products.addSuccess'));
+          showAlert('Success', t('products.addSuccess'), 'success');
           navigation.goBack();
         } else {
           throw new Error(res.message || 'Failed to create product');
@@ -232,7 +230,7 @@ const AddProductScreen = () => {
       }
     } catch (err) {
       console.error('Submit product error:', err);
-      triggerToast(err.message || 'Error saving product', 'error');
+      showAlert('Error', err.message || 'Error saving product', 'error');
     } finally {
       setLoading(false);
     }
@@ -242,12 +240,6 @@ const AddProductScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Custom Toast Notification */}
-      {toast.visible && (
-        <View style={[styles.toast, toast.type === 'success' ? styles.toastSuccess : styles.toastError]}>
-          <Text style={styles.toastText}>{toast.message}</Text>
-        </View>
-      )}
 
       {/* Header Row - Matches AddCustomer Header Row */}
       <View style={styles.headerRow}>

@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { useAlert } from '../../context/AlertContext';
 
 const PAYMENT_MODES = [
   { id: 'cash', label: 'Cash' },
@@ -24,6 +25,7 @@ const PaymentsScreen = () => {
   const { t } = useTranslation();
   const { userToken } = useContext(AuthContext);
   const route = useRoute();
+  const { showAlert } = useAlert();
 
   const [activeTab, setActiveTab] = useState('record'); // 'record' | 'statement'
   
@@ -191,7 +193,7 @@ const PaymentsScreen = () => {
       }
     } catch (error) {
       console.error('Error fetching statement', error);
-      Alert.alert('Error', 'Could not fetch account statement');
+      showAlert('Error', 'Could not fetch account statement', 'error');
     } finally {
       setLoadingStatement(false);
     }
@@ -199,11 +201,11 @@ const PaymentsScreen = () => {
 
   const handleRecordPayment = async () => {
     if (!selectedCustomer) {
-      Alert.alert('Required', 'Please select a customer first');
+      showAlert('Required', 'Please select a customer first', 'warning');
       return;
     }
     if (!amount || isNaN(amount) || Number(amount) <= 0) {
-      Alert.alert('Required', 'Please enter a valid amount');
+      showAlert('Required', 'Please enter a valid amount', 'warning');
       return;
     }
 
@@ -216,15 +218,14 @@ const PaymentsScreen = () => {
         referenceNote
       });
       if (res.success) {
-        Alert.alert('Success', 'Payment recorded successfully!');
+        showAlert('Success', 'Payment recorded successfully!', 'success');
         setAmount('');
         setReferenceNote('');
-        if (activeTab === 'statement') {
-          fetchStatement(selectedCustomer.id); // Refresh if somehow on statement tab
-        }
+        setActiveTab('statement');
+        fetchStatement(selectedCustomer.id);
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to record payment');
+      showAlert('Error', error.message || 'Failed to record payment', 'error');
     } finally {
       setSubmittingPayment(false);
     }

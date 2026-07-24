@@ -105,8 +105,8 @@ const InvoiceListScreen = () => {
           </View>
           <View style={styles.statusBadge}>
             <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
-            <Text style={[styles.statusText, { color: statusColors.text }]}>
-              {item.status === 'partially_paid' ? 'PARPAID' : (item.status || 'pending').replace('_', ' ').toUpperCase()}
+            <Text style={[styles.statusText, { color: statusColors.text, textAlign: 'right', fontSize: 9, lineHeight: 11 }]}>
+              {item.status === 'partially_paid' ? 'PARTIALLY\nPAID' : (item.status || 'pending').replace('_', ' ').toUpperCase()}
             </Text>
           </View>
         </View>
@@ -169,7 +169,7 @@ const InvoiceListScreen = () => {
               activeOpacity={0.8}
             >
               <Text style={[styles.filterTabText, filterStatus === status && styles.filterTabTextActive]}>
-                {status === 'partially_paid' ? 'PARPAID' : status.replace('_', ' ').toUpperCase()}
+                {status === 'partially_paid' ? 'PARTIALLY' : status.replace('_', ' ').toUpperCase()}
               </Text>
             </TouchableOpacity>
           ))}

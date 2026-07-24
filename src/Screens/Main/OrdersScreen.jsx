@@ -22,6 +22,7 @@ import DeliveryStatusSlider from '../../components/DeliveryStatusSlider';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const getNext7Days = () => {
   const days = [];
@@ -151,6 +152,7 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
 const OrdersScreen = () => {
   const { t } = useTranslation();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [calendarDays] = useState(getNext7Days());
@@ -285,13 +287,13 @@ const OrdersScreen = () => {
     try {
       const res = await api.generateDeliveries(userToken, selectedDate);
       if (res.success) {
-        Alert.alert('Success', res.message || 'Deliveries generated successfully.');
+        showAlert('Success', res.message || 'Deliveries generated successfully.', 'success');
         fetchDeliveries(selectedDate);
       } else {
-        Alert.alert('Notice', res.message || 'Could not generate deliveries.');
+        showAlert('Notice', res.message || 'Could not generate deliveries.', 'info');
       }
     } catch (err) {
-      Alert.alert('Error', err.message || 'An error occurred');
+      showAlert('Error', err.message || 'An error occurred', 'error');
     } finally {
       setGenerating(false);
     }
@@ -305,10 +307,10 @@ const OrdersScreen = () => {
         setDeliveries(prev => prev.filter(d => d.id !== deliveryId));
         fetchDeliveries(selectedDate, selectedRouteId);
       } else {
-        Alert.alert('Error', res.message || 'Failed to update delivery');
+        showAlert('Error', res.message || 'Failed to update delivery', 'error');
       }
     } catch (err) {
-      Alert.alert('Error', err.message);
+      showAlert('Error', err.message, 'error');
     }
   };
 

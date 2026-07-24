@@ -31,11 +31,13 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const AddOneTimeOrderScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const [customerId, setCustomerId] = useState('');
   const [items, setItems] = useState([]); // Array of: { productId, quantity, unitPrice, Product }
@@ -107,7 +109,7 @@ const AddOneTimeOrderScreen = () => {
       }
       if (pickerType === 'orderTo') {
         if (formatted < orderFrom) {
-          Alert.alert('Validation Error', 'End Date cannot be before Start Date');
+          showAlert('Validation Error', 'End Date cannot be before Start Date', 'warning');
         } else {
           setOrderTo(formatted);
         }
@@ -143,6 +145,7 @@ const AddOneTimeOrderScreen = () => {
     const errorMsg = validate();
     if (errorMsg) {
       setApiError(errorMsg);
+      showAlert('Validation Error', errorMsg, 'warning');
       return;
     }
 
@@ -166,16 +169,19 @@ const AddOneTimeOrderScreen = () => {
     try {
       const response = await api.createOneTimeOrder(userToken, orderData);
       if (response && response.success) {
-        Alert.alert(
+        showAlert(
           t('completeReg.success'),
-          t('oneTimeOrders.orderSuccess')
+          t('oneTimeOrders.orderSuccess'),
+          'success'
         );
         navigation.goBack();
       } else {
         setApiError(response.message || 'Failed to create one-time order');
+        showAlert('Error', response.message || 'Failed to create one-time order', 'error');
       }
     } catch (err) {
       setApiError(err.message || 'Something went wrong');
+      showAlert('Error', err.message || 'Something went wrong', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -189,7 +195,7 @@ const AddOneTimeOrderScreen = () => {
   const handleAddProductItem = (product) => {
     const exists = items.some((item) => item.productId === product.id);
     if (exists) {
-      Alert.alert('Duplicate Product', 'This product is already added. Modify its quantity instead.');
+      showAlert('Duplicate Product', 'This product is already added. Modify its quantity instead.', 'warning');
       return;
     }
 

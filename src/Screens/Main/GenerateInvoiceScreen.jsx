@@ -21,12 +21,14 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const GenerateInvoiceScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
+  const { showAlert, showPopup } = useAlert();
 
   const initialCustomerId = route.params?.customerId || '';
 
@@ -108,6 +110,7 @@ const GenerateInvoiceScreen = () => {
     const errorMsg = validate();
     if (errorMsg) {
       setApiError(errorMsg);
+      showPopup('Notice', errorMsg, [{ text: 'OK' }]);
       return;
     }
     
@@ -119,14 +122,20 @@ const GenerateInvoiceScreen = () => {
 
     try {
       const response = await api.generateInvoices(userToken, payload);
-      if (response && response.success) {
-        Alert.alert('Success', response.message || 'Invoices generated successfully');
+      const msg = response?.message || '';
+
+      if (response && response.success && (response.data?.invoicesGenerated === undefined || response.data?.invoicesGenerated > 0)) {
+        showAlert('Success', msg || 'Invoices generated successfully', 'success');
         navigation.goBack();
       } else {
-        setApiError(response.message || 'Failed to generate invoices');
+        const displayMsg = msg || 'All invoices have already been generated for selected date range.';
+        setApiError(displayMsg);
+        showPopup('Notice', displayMsg, [{ text: 'OK' }]);
       }
     } catch (err) {
-      setApiError(err.message || 'Something went wrong');
+      const displayMsg = err.message || 'All invoices have already been generated for selected date range.';
+      setApiError(displayMsg);
+      showPopup('Notice', displayMsg, [{ text: 'OK' }]);
     } finally {
       setSubmitting(false);
     }

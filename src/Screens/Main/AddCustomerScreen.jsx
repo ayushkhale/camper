@@ -24,12 +24,14 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const AddCustomerScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
   const { t } = useTranslation();
+  const { showAlert } = useAlert();
 
   const editCustomer = route.params?.customer || null;
   const isEditMode = !!editCustomer;
@@ -209,7 +211,7 @@ const AddCustomerScreen = () => {
       if (isEditMode) {
         const response = await api.updateCustomer(userToken, editCustomer.id, customerData);
         if (response && response.success) {
-          Alert.alert('Success', t('customers.updateSuccess'));
+          showAlert('Success', t('customers.updateSuccess'), 'success');
           navigation.goBack();
         } else {
           setApiError(response.message || 'Failed to update customer');
@@ -244,12 +246,12 @@ const AddCustomerScreen = () => {
                 startDate,
                 status: 'active',
               });
-              Alert.alert(t('staff.title').includes('Staff') ? 'Success' : 'Success', t('customers.addWithSubSuccess'));
+              showAlert('Success', t('customers.addWithSubSuccess'), 'success');
             } catch (subErr) {
-              Alert.alert(t('customers.partialSuccess'), subErr.message || '');
+              showAlert(t('customers.partialSuccess'), subErr.message || '', 'warning');
             }
           } else {
-            Alert.alert('Success', t('customers.addSuccess'));
+            showAlert('Success', t('customers.addSuccess'), 'success');
           }
           navigation.goBack();
         } else {
@@ -304,15 +306,12 @@ const AddCustomerScreen = () => {
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-          {
-            title: 'Contacts Permission',
-            message: 'App needs access to your contacts to import customer details.',
-            buttonPositive: 'Allow',
-            buttonNegative: 'Cancel',
-          }
+          PermissionsAndroid.PERMISSIONS.READ_CONTACTS
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert('Permission denied', 'Cannot access contacts');
+          showAlert('Permission denied', 'Cannot access contacts', 'warning');
+          setLoadingContacts(false);
+          setContactModalVisible(false);
           return;
         }
       }
@@ -322,13 +321,14 @@ const AddCustomerScreen = () => {
         if (status === 'undefined' || status === 'denied') {
           const res = await Contacts.requestPermission();
           if (res !== 'authorized') {
-            Alert.alert('Permission denied', 'Cannot access contacts');
+            showAlert('Permission denied', 'Cannot access contacts', 'warning');
+            setLoadingContacts(false);
+            setContactModalVisible(false);
             return;
           }
         }
       }
 
-      setContactModalVisible(true);
       setLoadingContacts(true);
 
       const allContacts = await Contacts.getAll();
@@ -346,7 +346,7 @@ const AddCustomerScreen = () => {
       setFilteredContacts(formatted);
     } catch (err) {
       console.log('Error picking contact:', err);
-      Alert.alert('Error', 'Could not load contacts');
+      showAlert('Error', 'Could not load contacts', 'error');
     } finally {
       setLoadingContacts(false);
     }

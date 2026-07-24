@@ -29,12 +29,14 @@ import {
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const ProductDetailScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const productId = route.params?.productId;
 
@@ -83,19 +85,20 @@ const ProductDetailScreen = () => {
       );
       if (res.success && res.data) {
         setProduct({ ...product, isActive: value, ...res.data });
+        showAlert('Success', `Product ${value ? 'activated' : 'deactivated'} successfully`, 'success');
       } else {
-        Alert.alert('Error', res.message || 'Failed to update status');
+        showAlert('Error', res.message || 'Failed to update status', 'error');
       }
     } catch (err) {
       console.error('Toggle status error:', err);
-      Alert.alert('Error', err.message || 'Failed to update product status');
+      showAlert('Error', err.message || 'Failed to update product status', 'error');
     } finally {
       setStatusUpdating(false);
     }
   };
 
   const handleDeleteConfirm = () => {
-    Alert.alert(
+    showAlert(
       t('products.deleteBtn'),
       t('products.deleteConfirm'),
       [
@@ -105,8 +108,7 @@ const ProductDetailScreen = () => {
           style: 'destructive',
           onPress: handleDeleteProduct,
         },
-      ],
-      { cancelable: true }
+      ]
     );
   };
 
@@ -117,14 +119,14 @@ const ProductDetailScreen = () => {
     try {
       const res = await api.deleteProduct(userToken, product.id);
       if (res.success) {
-        Alert.alert('Success', t('products.deleteSuccess'));
+        showAlert('Success', t('products.deleteSuccess'), 'success');
         navigation.goBack();
       } else {
         throw new Error(res.message || 'Failed to delete product');
       }
     } catch (err) {
       console.error('Delete product error:', err);
-      Alert.alert('Error', err.message || 'Could not delete product');
+      showAlert('Error', err.message || 'Could not delete product', 'error');
       setDeleting(false);
     }
   };

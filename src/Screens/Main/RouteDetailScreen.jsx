@@ -29,12 +29,14 @@ import {
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const RouteDetailScreen = () => {
   const navigation = useNavigation();
   const routeParams = useRoute();
   const { userToken } = useContext(AuthContext);
   const routeId = routeParams.params?.routeId;
+  const { showAlert } = useAlert();
 
   // State
   const [routeData, setRouteData] = useState(null);
@@ -60,7 +62,6 @@ const RouteDetailScreen = () => {
   const [effectiveFrom, setEffectiveFrom] = useState(getTodayString());
   const [effectiveTo, setEffectiveTo] = useState('');
   const [assignLoading, setAssignLoading] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
   const [activeDatePicker, setActiveDatePicker] = useState(null); // 'effectiveFrom' | 'effectiveTo' | null
 
@@ -141,7 +142,7 @@ const RouteDetailScreen = () => {
   );
 
   const handleDeleteRoute = () => {
-    Alert.alert(
+    showAlert(
       'Delete Route',
       'Are you sure you want to delete this route? Historical delivery records will be preserved.',
       [
@@ -153,13 +154,13 @@ const RouteDetailScreen = () => {
             try {
               const res = await api.deleteRoute(userToken, routeId);
               if (res.success) {
-                Alert.alert('Success', 'Route deleted successfully');
+                showAlert('Success', 'Route deleted successfully', 'success');
                 navigation.goBack();
               } else {
                 throw new Error(res.message || 'Failed to delete route');
               }
             } catch (err) {
-              Alert.alert('Error', err.message || 'Could not delete route');
+              showAlert('Error', err.message || 'Could not delete route', 'error');
             }
           },
         },
@@ -168,7 +169,7 @@ const RouteDetailScreen = () => {
   };
 
   const handleEndAssignment = (staffRouteId, staffName) => {
-    Alert.alert(
+    showAlert(
       'End Assignment',
       `Are you sure you want to remove ${staffName} from this route?`,
       [
@@ -180,13 +181,13 @@ const RouteDetailScreen = () => {
             try {
               const res = await api.endStaffAssignment(userToken, routeId, staffRouteId);
               if (res.success) {
-                Alert.alert('Success', 'Staff assignment ended successfully');
+                showAlert('Success', 'Staff assignment ended successfully', 'success');
                 fetchRouteDetail();
               } else {
                 throw new Error(res.message || 'Failed to end assignment');
               }
             } catch (err) {
-              Alert.alert('Error', err.message || 'Could not end assignment');
+              showAlert('Error', err.message || 'Could not end assignment', 'error');
             }
           },
         },
@@ -196,24 +197,24 @@ const RouteDetailScreen = () => {
 
   const handleAssignStaff = async () => {
     if (!selectedStaff) {
-      triggerToast('Please select a staff member', 'error');
+      showAlert('Required', 'Please select a staff member', 'warning');
       return;
     }
 
     if (!effectiveFrom.trim()) {
-      triggerToast('Start date is required (YYYY-MM-DD)', 'error');
+      showAlert('Required', 'Start date is required (YYYY-MM-DD)', 'warning');
       return;
     }
 
     // Basic date format validation YYYY-MM-DD
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(effectiveFrom)) {
-      triggerToast('Start date must be in YYYY-MM-DD format', 'error');
+      showAlert('Required', 'Start date must be in YYYY-MM-DD format', 'warning');
       return;
     }
 
     if (!isPermanent && effectiveTo.trim() && !dateRegex.test(effectiveTo)) {
-      triggerToast('End date must be in YYYY-MM-DD format', 'error');
+      showAlert('Required', 'End date must be in YYYY-MM-DD format', 'warning');
       return;
     }
 
@@ -227,7 +228,7 @@ const RouteDetailScreen = () => {
     try {
       const res = await api.assignStaff(userToken, routeId, body);
       if (res.success) {
-        Alert.alert('Success', 'Staff assigned to route successfully');
+        showAlert('Success', 'Staff assigned to route successfully', 'success');
         setAssignModalVisible(false);
         // Reset states
         setSelectedStaff(null);
@@ -240,7 +241,7 @@ const RouteDetailScreen = () => {
       }
     } catch (err) {
       console.error('Assign staff error:', err);
-      triggerToast(err.message || 'Error assigning staff', 'error');
+      showAlert('Error', err.message || 'Error assigning staff', 'error');
     } finally {
       setAssignLoading(false);
     }
@@ -272,13 +273,6 @@ const RouteDetailScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Toast */}
-      {toast.visible && (
-        <View style={[styles.toast, toast.type === 'success' ? styles.toastSuccess : styles.toastError]}>
-          <Text style={styles.toastText}>{toast.message}</Text>
-        </View>
-      )}
-
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>

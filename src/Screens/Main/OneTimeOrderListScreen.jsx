@@ -26,11 +26,13 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const OneTimeOrderListScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,7 +73,7 @@ const OneTimeOrderListScreen = () => {
   };
 
   const handleCancelOrder = (orderId) => {
-    Alert.alert(
+    showAlert(
       t('oneTimeOrders.title'),
       t('oneTimeOrders.confirmCancel'),
       [
@@ -83,13 +85,13 @@ const OneTimeOrderListScreen = () => {
             try {
               const res = await api.updateOneTimeOrderStatus(userToken, orderId, 'cancelled');
               if (res.success) {
-                Alert.alert(t('completeReg.success'), t('oneTimeOrders.orderCancelled'));
+                showAlert(t('completeReg.success'), t('oneTimeOrders.orderCancelled'), 'success');
                 fetchOrders(false);
               } else {
                 throw new Error(res.message || 'Could not cancel order');
               }
             } catch (err) {
-              Alert.alert('Error', err.message || 'An error occurred');
+              showAlert('Error', err.message || 'An error occurred', 'error');
             }
           },
         },

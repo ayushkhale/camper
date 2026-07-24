@@ -17,11 +17,13 @@ import { ChevronLeft, MapPin, Hash } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const AddRouteScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const routeToEdit = route.params?.route;
   const isEditing = !!routeToEdit;
@@ -29,18 +31,10 @@ const AddRouteScreen = () => {
   const [name, setName] = useState(routeToEdit?.name || '');
   const [areaCode, setAreaCode] = useState(routeToEdit?.areaCode || '');
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
-
-  const triggerToast = (message, type = 'error') => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => {
-      setToast({ visible: false, message: '', type });
-    }, 4000);
-  };
 
   const validateForm = () => {
     if (!name.trim()) {
-      triggerToast('Route name is required', 'error');
+      showAlert('Route Name Required', 'Route name is required', 'warning');
       return false;
     }
     return true;
@@ -59,7 +53,7 @@ const AddRouteScreen = () => {
       if (isEditing) {
         const res = await api.updateRoute(userToken, routeToEdit.id, body);
         if (res.success) {
-          Alert.alert('Success', 'Route updated successfully');
+          showAlert('Success', 'Route updated successfully', 'success');
           navigation.goBack();
         } else {
           throw new Error(res.message || 'Failed to update route');
@@ -67,7 +61,7 @@ const AddRouteScreen = () => {
       } else {
         const res = await api.createRoute(userToken, body);
         if (res.success) {
-          Alert.alert('Success', 'Route created successfully');
+          showAlert('Success', 'Route created successfully', 'success');
           navigation.goBack();
         } else {
           throw new Error(res.message || 'Failed to create route');
@@ -75,7 +69,7 @@ const AddRouteScreen = () => {
       }
     } catch (err) {
       console.error('Submit route error:', err);
-      triggerToast(err.message || 'Error saving route', 'error');
+      showAlert('Error', err.message || 'Error saving route', 'error');
     } finally {
       setLoading(false);
     }
@@ -83,12 +77,6 @@ const AddRouteScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Custom Toast Notification */}
-      {toast.visible && (
-        <View style={[styles.toast, toast.type === 'success' ? styles.toastSuccess : styles.toastError]}>
-          <Text style={styles.toastText}>{toast.message}</Text>
-        </View>
-      )}
 
       {/* Header Row - Matches AddCustomer Header Row */}
       <View style={styles.headerRow}>

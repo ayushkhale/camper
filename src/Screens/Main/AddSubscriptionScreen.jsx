@@ -21,12 +21,14 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const AddSubscriptionScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const editSub = route.params?.subscription || null;
   const initialCustomerId = route.params?.customerId || '';
@@ -121,6 +123,7 @@ const AddSubscriptionScreen = () => {
     const errorMsg = validate();
     if (errorMsg) {
       setApiError(errorMsg);
+      showAlert('Validation Error', errorMsg, 'warning');
       return;
     }
     
@@ -140,22 +143,25 @@ const AddSubscriptionScreen = () => {
       if (isEditMode) {
         const response = await api.updateSubscription(userToken, editSub.id, subData);
         if (response && response.success) {
-          Alert.alert('Success', 'Subscription updated successfully');
+          showAlert('Success', 'Subscription updated successfully', 'success');
           navigation.goBack();
         } else {
           setApiError(response.message || 'Failed to update subscription');
+          showAlert('Error', response.message || 'Failed to update subscription', 'error');
         }
       } else {
         const response = await api.createSubscription(userToken, subData);
         if (response && response.success) {
-          Alert.alert('Success', 'Subscription created successfully');
+          showAlert('Success', 'Subscription created successfully', 'success');
           navigation.goBack();
         } else {
           setApiError(response.message || 'Failed to create subscription');
+          showAlert('Error', response.message || 'Failed to create subscription', 'error');
         }
       }
     } catch (err) {
       setApiError(err.message || 'Something went wrong');
+      showAlert('Error', err.message || 'Something went wrong', 'error');
     } finally {
       setSubmitting(false);
     }

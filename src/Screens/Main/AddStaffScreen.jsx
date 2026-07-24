@@ -18,12 +18,14 @@ import { ChevronLeft, User, Phone, Mail, AlertCircle } from 'lucide-react-native
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const AddStaffScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const editStaff = route.params?.staff || null;
   const isEditMode = !!editStaff;
@@ -113,26 +115,30 @@ const AddStaffScreen = () => {
       if (isEditMode) {
         const response = await api.updateStaff(userToken, editStaff.id, staffData);
         if (response && response.success) {
-          Alert.alert('Success', t('staff.updateSuccess'));
+          showAlert('Success', t('staff.updateSuccess'), 'success');
           navigation.goBack();
         } else {
           setApiError(response.message || 'Failed to update staff');
+          showAlert('Error', response.message || 'Failed to update staff', 'error');
         }
       } else {
         const response = await api.addStaff(userToken, staffData);
         if (response && response.success) {
-          Alert.alert('Success', t('staff.addSuccess'));
+          showAlert('Success', t('staff.addSuccess'), 'success');
           navigation.goBack();
         } else {
           setApiError(response.message || 'Failed to add staff');
+          showAlert('Error', response.message || 'Failed to add staff', 'error');
         }
       }
     } catch (err) {
       const errorMsg = err.message || '';
       if (errorMsg.includes('already exists') || errorMsg.includes('already registered')) {
         setApiError(t('staff.phoneExists'));
+        showAlert('Phone Exists', t('staff.phoneExists'), 'error');
       } else {
         setApiError(errorMsg || 'Something went wrong');
+        showAlert('Error', errorMsg || 'Something went wrong', 'error');
       }
     } finally {
       setSubmitting(false);

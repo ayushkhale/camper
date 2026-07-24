@@ -36,12 +36,14 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const SubscriptionDetailScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const subscriptionId = route.params?.subscriptionId;
   const initialSubscription = route.params?.subscription;
@@ -173,7 +175,7 @@ const SubscriptionDetailScreen = () => {
   const handleRefresh = () => { setRefreshing(true); fetchSubscriptionData(false); };
 
   const handleAddPause = async () => {
-    if (!pauseFrom) { Alert.alert('Required', 'Please select a start date.'); return; }
+    if (!pauseFrom) { showAlert('Required', 'Please select a start date.', 'warning'); return; }
     setSubmittingPause(true);
     try {
       const res = await api.addPause(userToken, subscriptionId, {
@@ -181,23 +183,24 @@ const SubscriptionDetailScreen = () => {
         pauseTo: pauseTo || pauseFrom,
       });
       if (res.success) {
+        showAlert('Success', 'Subscription paused successfully', 'success');
         setPauseModalVisible(false);
         setPauseFrom(''); setPauseTo('');
         fetchSubscriptionData(false);
       } else {
-        Alert.alert('Error', res.message || 'Could not pause subscription.');
+        showAlert('Error', res.message || 'Could not pause subscription.', 'error');
       }
     } catch (err) {
-      Alert.alert('Error', err.message || 'An error occurred.');
+      showAlert('Error', err.message || 'An error occurred.', 'error');
     } finally {
       setSubmittingPause(false);
     }
   };
 
   const handleAddOverride = async () => {
-    if (!overrideFrom) { Alert.alert('Required', 'Please select a start date.'); return; }
+    if (!overrideFrom) { showAlert('Required', 'Please select a start date.', 'warning'); return; }
     if (overrideType === 'extra' && (!overrideQuantity || isNaN(overrideQuantity))) {
-      Alert.alert('Required', 'Enter a valid quantity.');
+      showAlert('Required', 'Enter a valid quantity.', 'warning');
       return;
     }
     setSubmittingException(true);
@@ -209,15 +212,16 @@ const SubscriptionDetailScreen = () => {
         overrideQuantity: overrideType === 'extra' ? parseInt(overrideQuantity) : undefined,
       });
       if (res.success) {
+        showAlert('Success', 'Subscription exception saved successfully', 'success');
         setSkipModalVisible(false);
         setOverrideFrom(''); setOverrideTo('');
         setOverrideType('skip'); setOverrideQuantity('');
         fetchSubscriptionData(false);
       } else {
-        Alert.alert('Error', res.message || 'Could not log exception.');
+        showAlert('Error', res.message || 'Could not log exception.', 'error');
       }
     } catch (err) {
-      Alert.alert('Error', err.message || 'An error occurred.');
+      showAlert('Error', err.message || 'An error occurred.', 'error');
     } finally {
       setSubmittingException(false);
     }
@@ -225,8 +229,8 @@ const SubscriptionDetailScreen = () => {
 
   const handleDeleteException = (item) => {
     const isFuture = item.to >= todayStr;
-    if (!isFuture) { Alert.alert('Cannot Delete', 'Past entries cannot be removed.'); return; }
-    Alert.alert(
+    if (!isFuture) { showAlert('Cannot Delete', 'Past entries cannot be removed.', 'warning'); return; }
+    showAlert(
       'Remove Entry',
       `Remove this ${item.type === 'pause' ? 'pause' : 'exception'}?`,
       [
@@ -238,10 +242,14 @@ const SubscriptionDetailScreen = () => {
               const res = item.type === 'pause'
                 ? await api.deletePause(userToken, subscriptionId, item.id)
                 : await api.deleteOverride(userToken, subscriptionId, item.id);
-              if (res.success) fetchSubscriptionData(false);
-              else Alert.alert('Error', res.message || 'Failed to delete.');
+              if (res.success) {
+                showAlert('Success', 'Entry removed successfully', 'success');
+                fetchSubscriptionData(false);
+              } else {
+                showAlert('Error', res.message || 'Failed to delete.', 'error');
+              }
             } catch (err) {
-              Alert.alert('Error', err.message);
+              showAlert('Error', err.message, 'error');
             }
           },
         },
@@ -250,7 +258,7 @@ const SubscriptionDetailScreen = () => {
   };
 
   const handleDeleteSubscription = () => {
-    Alert.alert(
+    showAlert(
       'Delete Subscription',
       'Are you sure you want to delete this subscription?',
       [
@@ -262,13 +270,13 @@ const SubscriptionDetailScreen = () => {
             try {
               const res = await api.deleteSubscription(userToken, subscriptionId);
               if (res.success) {
-                Alert.alert('Success', 'Subscription deleted successfully');
+                showAlert('Success', 'Subscription deleted successfully', 'success');
                 navigation.goBack();
               } else {
                 throw new Error(res.message || 'Failed to delete subscription');
               }
             } catch (err) {
-              Alert.alert('Error', err.message || 'Could not delete subscription');
+              showAlert('Error', err.message || 'Could not delete subscription', 'error');
             }
           },
         },

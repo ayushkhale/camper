@@ -18,6 +18,7 @@ import { ChevronLeft, Plus, Search, Trash2, Edit2, User, Phone, Mail, AlertCircl
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const getInitials = (name) => {
   if (!name) return '?';
@@ -30,6 +31,7 @@ const StaffManagementScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const [staffList, setStaffList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
@@ -86,16 +88,17 @@ const StaffManagementScreen = () => {
 
     try {
       await api.updateStaff(userToken, item.id, { status: nextStatus });
+      showAlert('Success', `Staff ${nextStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
     } catch (err) {
       setStaffList(previousList);
-      Alert.alert('Error', err.message || 'Failed to update status');
+      showAlert('Error', err.message || 'Failed to update status', 'error');
     } finally {
       setActionLoadingId(null);
     }
   };
 
   const handleDeleteStaff = (item) => {
-    Alert.alert(
+    showAlert(
       t('staff.remove'),
       `${t('staff.removeConfirm')}\n\nName: ${item.name}`,
       [
@@ -108,12 +111,13 @@ const StaffManagementScreen = () => {
             try {
               const res = await api.deleteStaff(userToken, item.id);
               if (res && res.success) {
+                showAlert('Success', t('staff.removeSuccess') || 'Staff removed successfully', 'success');
                 setStaffList(prev => prev.filter(staff => staff.id !== item.id));
               } else {
-                Alert.alert('Error', res.message || 'Failed to remove staff');
+                showAlert('Error', res.message || 'Failed to remove staff', 'error');
               }
             } catch (err) {
-              Alert.alert('Error', err.message || 'Failed to remove staff');
+              showAlert('Error', err.message || 'Failed to remove staff', 'error');
             } finally {
               setActionLoadingId(null);
             }

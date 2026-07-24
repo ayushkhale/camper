@@ -9,11 +9,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 import { Menu, LogOut, Globe, User, Edit3, X, Check } from 'lucide-react-native';
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
   const { logout, userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
   const navigation = useNavigation();
   
   const [loading, setLoading] = useState(true);
@@ -63,11 +65,11 @@ const SettingsScreen = () => {
       const updatedData = { name, businessName, city, address, email, pincode, country };
       const res = await api.updateVendorProfile(userToken, updatedData);
       if (res.success) {
-        Alert.alert('Success', 'Profile updated successfully');
+        showAlert('Success', 'Profile updated successfully', 'success');
         setIsEditing(false);
       }
     } catch (e) {
-      Alert.alert('Error', 'Failed to update profile');
+      showAlert('Error', 'Failed to update profile', 'error');
     } finally {
       setSaving(false);
     }

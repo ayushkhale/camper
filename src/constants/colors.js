@@ -27,7 +27,7 @@ export const COLORS = {
   borderLight: '#F1F5F9',
 
   // --- Status Indicators ---
-  success: '#084500ff',         // Green
+  success: '#129c00ff',         // Green
   successLight: '#ECFDF5',
   danger: '#980000ff',          // Red
   dangerLight: '#FEF2F2',

@@ -7,21 +7,16 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { 
-  ArrowLeft, 
-  FileText, 
-  User, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  CheckCircle2, 
-  Clock, 
+import {
+  ArrowLeft,
+  FileText,
+  Phone,
+  MapPin,
   AlertCircle,
-  ShieldCheck
+  CreditCard,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -31,11 +26,11 @@ const InvoiceDetailScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
-  
+
   const { invoiceId, invoice: initialInvoice } = route.params || {};
 
   const [invoiceData, setInvoiceData] = useState(initialInvoice || null);
-  const [loading, setLoading] = useState(!initialInvoice?.InvoiceLineItems);
+  const [loading, setLoading] = useState(!initialInvoice?.Deliveries && !initialInvoice?.InvoiceLineItems);
   const [error, setError] = useState(null);
 
   const fetchInvoiceDetail = async () => {
@@ -46,15 +41,13 @@ const InvoiceDetailScreen = () => {
     try {
       console.log('🔍 [INVOICE FETCH] Fetching invoice details for ID:', targetId);
       const res = await api.getInvoiceById(userToken, targetId);
-      
-      console.log('🧾 [INVOICE DETAILS RESPONSE]:', JSON.stringify(res, null, 2));
+      console.log('🧾 [INVOICE DETAILS RESPONSE]:', res);
 
       if (res && res.success && res.data) {
         setInvoiceData(res.data);
       } else if (res && (res.id || res.totalAmount)) {
         setInvoiceData(res);
       } else {
-        // Fallback to initial passed invoice if response doesn't wrap data expectedly
         if (initialInvoice) setInvoiceData(initialInvoice);
       }
     } catch (err) {
@@ -75,37 +68,83 @@ const InvoiceDetailScreen = () => {
     return `₹${num.toFixed(2)}`;
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    const str = String(dateStr).split('T')[0];
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const month = String(parts[1]).padStart(2, '0');
+      const day = String(parseInt(parts[2], 10)).padStart(2, '0');
+      return `${day}-${month}-${year}`;
+    }
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'paid':
-        return { label: 'PAID', bg: '#DCFCE7', text: '#15803D', border: '#86EFAC' };
+        return { label: 'PAID', bg: '#ECFDF5', text: '#129c00ff' };
       case 'partially_paid':
-        return { label: 'PARTIALLY PAID', bg: '#DBEAFE', text: '#1D4ED8', border: '#93C5FD' };
+        return { label: 'PARTIALLY\nPAID', bg: '#EFF6FF', text: '#1D4ED8' };
       default:
-        return { label: 'PENDING', bg: '#FEF3C7', text: '#B45309', border: '#FDE68A' };
+        return { label: 'UNPAID', bg: '#FEF2F2', text: '#980000ff' };
     }
   };
 
+  const getProductName = (item) => {
+    if (item.Subscription?.Product?.name) return item.Subscription.Product.name;
+    if (item.Product?.name) return item.Product.name;
+    if (item.productName) return item.productName;
+    if (item.name) return item.name;
+    if (item.description && !item.description.includes('Water Delivery') && !item.description.includes('Delivery Charge')) {
+      return item.description;
+    }
+    return 'Water Camper 20Ltr';
+  };
+
+  const getSubOrOrderTag = (item) => {
+    if (item.Subscription?.recurrencePattern) {
+      const pattern = item.Subscription.recurrencePattern;
+      if (pattern === 'daily') return 'Daily Subscription';
+      if (pattern === 'weekly') return 'Weekly Subscription';
+      if (pattern === 'alternate_days' || pattern === 'alternate') return 'Alternate Days Sub';
+      return `${pattern} Sub`;
+    }
+    if (item.subscriptionId || item.subscription_id) return 'Subscription Delivery';
+    if (item.oneTimeOrderId || item.oneTimeOrderItemId) return 'One-Time Order';
+    return 'Water Supply';
+  };
+
   const statusInfo = getStatusBadge(invoiceData?.status);
+  const deliveries = invoiceData?.Deliveries || invoiceData?.deliveries || [];
   const lineItems = invoiceData?.InvoiceLineItems || invoiceData?.lineItems || [];
+  
   const totalAmount = parseFloat(invoiceData?.totalAmount || 0);
   const amountPaid = parseFloat(invoiceData?.amountPaid || 0);
-  const balanceDue = totalAmount - amountPaid;
+  const balanceDue = Math.max(0, totalAmount - amountPaid);
+
+  const invoiceNum = invoiceData?.invoiceNumber || (invoiceData?.id ? `#${String(invoiceData.id).substring(0, 8).toUpperCase()}` : 'INV-001');
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header Bar */}
+      {/* Navigation Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
           <ArrowLeft size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Invoice Details</Text>
+        <Text style={styles.headerTitle}>Tax Invoice</Text>
       </View>
 
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading invoice details...</Text>
+          <Text style={styles.loadingText}>Loading invoice...</Text>
         </View>
       ) : !invoiceData ? (
         <View style={styles.centerContainer}>
@@ -114,117 +153,199 @@ const InvoiceDetailScreen = () => {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Direct Full-Screen Invoice Document */}
-          <View style={styles.invoiceContainer}>
-            
-            {/* Top Branding & Status Banner */}
-            <View style={styles.paperTopRow}>
-              <View>
-                <View style={styles.logoRow}>
-                  <FileText size={22} color={COLORS.primary} style={{ marginRight: 6 }} />
-                  <Text style={styles.brandTitle}>INVOICE</Text>
-                </View>
-                <Text style={styles.invoiceIdText}>
-                  #{String(invoiceData.id || '').substring(0, 8).toUpperCase()}
-                </Text>
+          
+          {/* Top Title & Status Header */}
+          <View style={styles.topRow}>
+            <View>
+              <View style={styles.brandRow}>
+                <FileText size={22} color={COLORS.primary} style={{ marginRight: 6 }} />
+                <Text style={styles.brandTitle}>TAX INVOICE</Text>
               </View>
-
-              <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg, borderColor: statusInfo.border }]}>
-                <Text style={[styles.statusBadgeText, { color: statusInfo.text }]}>
-                  {statusInfo.label}
-                </Text>
-              </View>
+              <Text style={styles.invoiceNumText}>{invoiceNum}</Text>
             </View>
 
-            <View style={styles.divider} />
-
-            {/* Dates & Billing Info Grid */}
-            <View style={styles.metaGrid}>
-              <View style={styles.metaCol}>
-                <Text style={styles.metaLabel}>Date Issued</Text>
-                <Text style={styles.metaValue}>
-                  {invoiceData.created_at ? new Date(invoiceData.created_at).toLocaleDateString() : 'N/A'}
-                </Text>
-              </View>
-              
-              <View style={styles.metaCol}>
-                <Text style={styles.metaLabel}>Billing Period</Text>
-                <Text style={styles.metaValue}>
-                  {invoiceData.periodStart && invoiceData.periodEnd ? (
-                    `${invoiceData.periodStart} to ${invoiceData.periodEnd}`
-                  ) : 'Monthly'}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.divider} />
-
-            {/* Customer Information (Billed To) */}
-            <View style={styles.billedToContainer}>
-              <Text style={styles.sectionHeader}>BILLED TO</Text>
-              <Text style={styles.customerName}>{invoiceData.Customer?.name || 'Customer'}</Text>
-              
-              {invoiceData.Customer?.phone && (
-                <View style={styles.infoRow}>
-                  <Phone size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-                  <Text style={styles.infoText}>{invoiceData.Customer.phone}</Text>
-                </View>
-              )}
-              
-              {invoiceData.Customer?.address && (
-                <View style={styles.infoRow}>
-                  <MapPin size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-                  <Text style={styles.infoText}>{invoiceData.Customer.address}</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Line Items Table */}
-            <View style={styles.tableContainer}>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableColHeader, { flex: 2 }]}>ITEM / DESCRIPTION</Text>
-                <Text style={[styles.tableColHeader, { flex: 1, textAlign: 'right' }]}>AMOUNT</Text>
-              </View>
-
-              {lineItems.length === 0 ? (
-                <View style={styles.tableRowEmpty}>
-                  <Text style={styles.emptyTableText}>Water Supply Delivery Charge</Text>
-                  <Text style={styles.emptyTableAmount}>{formatCurrency(totalAmount)}</Text>
-                </View>
-              ) : (
-                lineItems.map((item, idx) => (
-                  <View key={idx} style={[styles.tableRow, idx === lineItems.length - 1 && { borderBottomWidth: 0 }]}>
-                    <Text style={[styles.tableCellDesc, { flex: 2 }]}>
-                      {item.description || 'Water Delivery'}
-                    </Text>
-                    <Text style={[styles.tableCellAmount, { flex: 1, textAlign: 'right' }]}>
-                      {formatCurrency(item.amount)}
-                    </Text>
-                  </View>
-                ))
-              )}
-            </View>
-
-            {/* Financial Totals Breakdown */}
-            <View style={styles.totalsContainer}>
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Total Amount</Text>
-                <Text style={styles.totalValue}>{formatCurrency(totalAmount)}</Text>
-              </View>
-
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Amount Paid</Text>
-                <Text style={[styles.totalValue, { color: COLORS.success }]}>{formatCurrency(amountPaid)}</Text>
-              </View>
-
-              <View style={[styles.totalRow, styles.balanceDueRow]}>
-                <Text style={styles.balanceDueLabel}>Balance Due</Text>
-                <Text style={[styles.balanceDueValue, { color: balanceDue > 0 ? COLORS.danger : COLORS.success }]}>
-                  {formatCurrency(balanceDue)}
-                </Text>
-              </View>
+            <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
+              <Text style={[styles.statusBadgeText, { color: statusInfo.text }]}>
+                {statusInfo.label}
+              </Text>
             </View>
           </View>
+
+          <View style={styles.divider} />
+
+          {/* Customer & Invoice Meta Details */}
+          <View style={styles.metaSection}>
+            <View style={styles.metaRowGroup}>
+              <View style={{ flex: 1, paddingRight: 12 }}>
+                <Text style={styles.sectionLabel}>BILLED TO</Text>
+                <Text style={styles.customerName}>{invoiceData.Customer?.name || 'Customer'}</Text>
+                {!!invoiceData.Customer?.phone && (
+                  <View style={styles.infoRow}>
+                    <Phone size={13} color={COLORS.textSecondary} style={{ marginRight: 5 }} />
+                    <Text style={styles.infoText}>{invoiceData.Customer.phone}</Text>
+                  </View>
+                )}
+                {!!invoiceData.Customer?.address && (
+                  <View style={styles.infoRow}>
+                    <MapPin size={13} color={COLORS.textSecondary} style={{ marginRight: 5 }} />
+                    <Text style={styles.infoText}>{invoiceData.Customer.address}</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.sectionLabel}>DATE ISSUED</Text>
+                <Text style={styles.metaValueText}>{formatDate(invoiceData.created_at)}</Text>
+              </View>
+            </View>
+
+            {/* Billing Period Row */}
+            <View style={styles.periodRow}>
+              <Text style={styles.sectionLabel}>BILLING PERIOD</Text>
+              <Text style={styles.periodValueText}>
+                {invoiceData.periodStart && invoiceData.periodEnd
+                  ? `${formatDate(invoiceData.periodStart)}  to  ${formatDate(invoiceData.periodEnd)}`
+                  : 'Monthly'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Deliveries & Items Section Header */}
+          <View style={styles.itemsHeaderRow}>
+            <Text style={styles.itemsHeaderTitle}>
+              DELIVERIES ({deliveries.length > 0 ? deliveries.length : lineItems.length})
+            </Text>
+            <Text style={styles.itemsHeaderTotalLabel}>TOTAL</Text>
+          </View>
+
+          {/* Items List */}
+          {deliveries.length > 0 ? (
+            deliveries.map((item, idx) => {
+              const qty = parseInt(item.fullUnitsDelivered) || 1;
+              const rate = parseFloat(item.unitPriceCharged || 0);
+              const rowTotal = qty * rate;
+              const prodName = getProductName(item);
+              const subTag = getSubOrOrderTag(item);
+              const dateFormatted = formatDate(item.deliveryDate);
+
+              return (
+                <View key={item.id || idx} style={styles.deliveryRow}>
+                  <View style={styles.dateCol}>
+                    <Text style={styles.dateText}>{dateFormatted}</Text>
+                  </View>
+
+                  <View style={styles.itemMainCol}>
+                    <Text style={styles.productNameText}>{prodName}</Text>
+                    <View style={styles.subTagRow}>
+                      <Text style={styles.subTagText}>{subTag}</Text>
+                      {item.emptyUnitsCollected > 0 && (
+                        <Text style={styles.emptyCansText}>
+                          • Returned {item.emptyUnitsCollected} empty
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={styles.qtyPriceText}>
+                      Qty: {qty}  ×  {formatCurrency(rate)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.amountCol}>
+                    <Text style={styles.rowAmountText}>
+                      {formatCurrency(rowTotal > 0 ? rowTotal : rate)}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })
+          ) : lineItems.length > 0 ? (
+            lineItems.map((item, idx) => {
+              const qty = item.quantity || 1;
+              const rate = parseFloat(item.unitPrice || item.amount);
+              const rowTotal = parseFloat(item.amount);
+              const prodName = getProductName(item);
+              const dateFormatted = formatDate(item.createdAt || invoiceData.created_at);
+
+              return (
+                <View key={idx} style={styles.deliveryRow}>
+                  <View style={styles.dateCol}>
+                    <Text style={styles.dateText}>{dateFormatted}</Text>
+                  </View>
+
+                  <View style={styles.itemMainCol}>
+                    <Text style={styles.productNameText}>{prodName}</Text>
+                    <Text style={styles.subTagText}>Subscription Item</Text>
+                    <Text style={styles.qtyPriceText}>
+                      Qty: {qty}  ×  {formatCurrency(rate)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.amountCol}>
+                    <Text style={styles.rowAmountText}>{formatCurrency(rowTotal)}</Text>
+                  </View>
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.deliveryRow}>
+              <View style={styles.itemMainCol}>
+                <Text style={styles.productNameText}>Water Camper 20Ltr</Text>
+              </View>
+              <View style={styles.amountCol}>
+                <Text style={styles.rowAmountText}>{formatCurrency(totalAmount)}</Text>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.divider} />
+
+          {/* Financial Totals */}
+          <View style={styles.totalsBlock}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Subtotal</Text>
+              <Text style={styles.totalValue}>{formatCurrency(totalAmount)}</Text>
+            </View>
+
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Amount Paid</Text>
+              <Text style={[styles.totalValue, { color: COLORS.success }]}>{formatCurrency(amountPaid)}</Text>
+            </View>
+
+            <View style={[styles.totalRow, styles.balanceRow]}>
+              <Text style={styles.balanceLabel}>Balance Due</Text>
+              <Text style={[styles.balanceValue, { color: balanceDue > 0 ? COLORS.danger : COLORS.success }]}>
+                {formatCurrency(balanceDue)}
+              </Text>
+            </View>
+          </View>
+
+          {/* Record Payment Action Button */}
+          {invoiceData.status !== 'paid' && balanceDue > 0 && (
+            <TouchableOpacity
+              style={styles.payBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                navigation.navigate('MainDrawer', {
+                  screen: 'MainTabs',
+                  params: {
+                    screen: 'Payments',
+                    params: { customerId: invoiceData.CustomerId || invoiceData.Customer?.id, prefillAmount: balanceDue }
+                  }
+                });
+              }}
+            >
+              <CreditCard size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.payBtnText}>Record Payment ({formatCurrency(balanceDue)})</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Footer Note */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Thank you for your business!</Text>
+            <Text style={styles.footerSubtext}>Computer generated tax invoice. No signature required.</Text>
+          </View>
+
         </ScrollView>
       )}
     </SafeAreaView>
@@ -239,12 +360,12 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 12 : 16,
     paddingBottom: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#F1F5F9',
   },
   backButton: {
     marginRight: 16,
@@ -272,164 +393,183 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: 40,
   },
 
-  invoiceContainer: {
-    backgroundColor: '#FFFFFF',
-  },
-  paperTopRow: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  logoRow: {
+  brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   brandTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: 'Geologica-Bold',
     color: COLORS.primary,
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
-  invoiceIdText: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+  invoiceNumText: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
-    marginTop: 4,
+    marginTop: 3,
   },
   statusBadge: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
+    paddingVertical: 5,
+    borderRadius: 20,
   },
   statusBadgeText: {
-    fontSize: 11,
+    fontSize: 9,
     fontFamily: 'Geologica-Bold',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
+    textAlign: 'right',
+    lineHeight: 11,
   },
+
   divider: {
     height: 1,
     backgroundColor: '#F1F5F9',
-    marginVertical: 16,
+    marginVertical: 18,
   },
 
-  // Meta Grid
-  metaGrid: {
+  // Metadata Section
+  metaSection: {
+    gap: 12,
+  },
+  metaRowGroup: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  metaCol: {
-    flex: 1,
-  },
-  metaLabel: {
-    fontSize: 11,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  metaValue: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
-  },
-
-  // Billed To
-  billedToContainer: {
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    fontSize: 11,
+  sectionLabel: {
+    fontSize: 10,
     fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
     letterSpacing: 0.8,
-    marginBottom: 8,
+    marginBottom: 4,
+    textTransform: 'uppercase',
   },
   customerName: {
     fontSize: 17,
     fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
-    marginBottom: 6,
+    marginBottom: 3,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 2,
   },
   infoText: {
     fontSize: 13,
     fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
+  metaValueText: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.textPrimary,
+  },
+  periodRow: {
+    marginTop: 2,
+  },
+  periodValueText: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.textPrimary,
+    marginTop: 2,
+  },
 
-  // Line Items Table
-  tableContainer: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    overflow: 'hidden',
-    marginBottom: 20,
-    marginTop: 8,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  tableColHeader: {
-    fontSize: 11,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textSecondary,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  tableCellDesc: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPrimary,
-  },
-  tableCellAmount: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
-  },
-  tableRowEmpty: {
+  // Deliveries Table Section
+  itemsHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: '#0F172A',
+    marginBottom: 4,
   },
-  emptyTableText: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+  itemsHeaderTitle: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.textPrimary,
+    letterSpacing: 0.8,
+  },
+  itemsHeaderTotalLabel: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.textPrimary,
+    letterSpacing: 0.8,
+  },
+
+  // Structured Delivery Row
+  deliveryRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+  },
+  dateCol: {
+    width: 90,
+    paddingRight: 8,
+  },
+  dateText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
-  emptyTableAmount: {
-    fontSize: 13,
+  itemMainCol: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  productNameText: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.textPrimary,
+    lineHeight: 18,
+  },
+  subTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 3,
+    flexWrap: 'wrap',
+  },
+  subTagText: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.primary,
+  },
+  emptyCansText: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textSecondary,
+  },
+  qtyPriceText: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textPlaceholder,
+    marginTop: 4,
+  },
+  amountCol: {
+    width: 75,
+    alignItems: 'flex-end',
+  },
+  rowAmountText: {
+    fontSize: 14,
     fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
 
-  // Totals breakdown
-  totalsContainer: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 20,
+  // Totals Section
+  totalsBlock: {
+    marginTop: 4,
   },
   totalRow: {
     flexDirection: 'row',
@@ -447,27 +587,45 @@ const styles = StyleSheet.create({
     fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
-  balanceDueRow: {
+  balanceRow: {
     marginTop: 8,
-    paddingTop: 8,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
+    borderTopColor: '#F1F5F9',
     marginBottom: 0,
   },
-  balanceDueLabel: {
-    fontSize: 15,
+  balanceLabel: {
+    fontSize: 16,
     fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
-  balanceDueValue: {
-    fontSize: 18,
+  balanceValue: {
+    fontSize: 20,
     fontFamily: 'Geologica-Bold',
   },
 
-  // Footer
-  receiptFooter: {
+  // Record Payment Button
+  payBtn: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    paddingVertical: 15,
     alignItems: 'center',
-    paddingTop: 12,
+    justifyContent: 'center',
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  payBtnText: {
+    fontSize: 15,
+    fontFamily: 'Geologica-Bold',
+    color: '#FFFFFF',
+  },
+
+  // Footer
+  footer: {
+    alignItems: 'center',
+    marginTop: 12,
+    paddingTop: 14,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },

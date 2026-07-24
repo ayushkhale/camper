@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform, Modal } from 'react-native';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react-native';
 import { COLORS } from '../constants/colors';
 
@@ -12,6 +12,14 @@ export const AlertProvider = ({ children }) => {
     message: '',
     type: 'error',
     buttons: null,
+  });
+
+  // Minimal iOS Popup State
+  const [modalConfig, setModalConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    buttons: [{ text: 'OK' }],
   });
 
   const translateY = useRef(new Animated.Value(-120)).current;
@@ -27,6 +35,10 @@ export const AlertProvider = ({ children }) => {
       message = messageOrType;
       buttons = typeOrButtons;
       type = optionalType || 'warning';
+
+      // Automatically show iOS minimal popup dialog if buttons array is passed!
+      showPopup(title, message, buttons);
+      return;
     } else if (typeof messageOrType === 'string' && ['success', 'error', 'info', 'warning'].includes(typeOrButtons)) {
       title = titleOrMsg;
       message = messageOrType;
@@ -40,7 +52,7 @@ export const AlertProvider = ({ children }) => {
       type = messageOrType || 'error';
     }
 
-    setAlertConfig({ visible: true, title, message, type, buttons });
+    setAlertConfig({ visible: true, title, message, type, buttons: null });
 
     Animated.spring(translateY, {
       toValue: Platform.OS === 'ios' ? 50 : 20,
@@ -49,11 +61,9 @@ export const AlertProvider = ({ children }) => {
       friction: 10,
     }).start();
 
-    if (!buttons) {
-      setTimeout(() => {
-        hideAlert();
-      }, 3500);
-    }
+    setTimeout(() => {
+      hideAlert();
+    }, 3500);
   };
 
   const hideAlert = () => {
@@ -62,13 +72,28 @@ export const AlertProvider = ({ children }) => {
       duration: 220,
       useNativeDriver: true,
     }).start(() => {
-      setAlertConfig(prev => ({ ...prev, visible: false, buttons: null }));
+      setAlertConfig(prev => ({ ...prev, visible: false }));
     });
   };
 
+  const showPopup = (title, message, buttons = [{ text: 'OK' }]) => {
+    setModalConfig({
+      visible: true,
+      title: title || 'Notice',
+      message: message || '',
+      buttons: buttons && buttons.length > 0 ? buttons : [{ text: 'OK' }],
+    });
+  };
+
+  const hidePopup = () => {
+    setModalConfig(prev => ({ ...prev, visible: false }));
+  };
+
   return (
-    <AlertContext.Provider value={{ showAlert, hideAlert }}>
+    <AlertContext.Provider value={{ showAlert, hideAlert, showPopup, hidePopup }}>
       {children}
+      
+      {/* Toast Alert Banner */}
       {alertConfig.visible && (
         <Animated.View
           style={[
@@ -91,37 +116,60 @@ export const AlertProvider = ({ children }) => {
               {!!alertConfig.message && <Text style={styles.alertMessage}>{alertConfig.message}</Text>}
             </View>
 
-            {!alertConfig.buttons && (
-              <TouchableOpacity onPress={hideAlert} style={styles.closeBtn} activeOpacity={0.7}>
-                <X size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity onPress={hideAlert} style={styles.closeBtn} activeOpacity={0.7}>
+              <X size={18} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
+        </Animated.View>
+      )}
 
-          {alertConfig.buttons && alertConfig.buttons.length > 0 && (
-            <View style={styles.buttonsRow}>
-              {alertConfig.buttons.map((btn, idx) => (
+      {/* iOS Minimal Popup Dialog */}
+      <Modal
+        visible={modalConfig.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={hidePopup}
+      >
+        <View style={styles.iosOverlay}>
+          <View style={styles.iosDialog}>
+            <View style={styles.iosDialogContent}>
+              {!!modalConfig.title && (
+                <Text style={styles.iosTitle}>{modalConfig.title}</Text>
+              )}
+              <Text style={styles.iosMessage}>{modalConfig.message}</Text>
+            </View>
+
+            <View style={styles.iosDivider} />
+
+            <View style={styles.iosButtonsRow}>
+              {modalConfig.buttons.map((btn, idx) => (
                 <TouchableOpacity
                   key={idx}
                   style={[
-                    styles.actionBtn,
-                    btn.style === 'destructive' ? styles.destructiveBtn : styles.defaultBtn,
+                    styles.iosBtn,
+                    idx > 0 && styles.iosBtnBorderLeft,
                   ]}
                   onPress={() => {
-                    hideAlert();
+                    hidePopup();
                     if (btn.onPress) btn.onPress();
                   }}
-                  activeOpacity={0.8}
+                  activeOpacity={0.7}
                 >
-                  <Text style={[styles.actionBtnText, btn.style === 'destructive' && styles.destructiveText]}>
-                    {btn.text}
+                  <Text
+                    style={[
+                      styles.iosBtnText,
+                      btn.style === 'destructive' && styles.iosDestructiveText,
+                      btn.style === 'cancel' && styles.iosCancelText,
+                    ]}
+                  >
+                    {btn.text || 'OK'}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-          )}
-        </Animated.View>
-      )}
+          </View>
+        </View>
+      </Modal>
     </AlertContext.Provider>
   );
 };
@@ -150,7 +198,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   alertSuccess: {
-    backgroundColor: COLORS.success || '#108700ff',
+    backgroundColor: COLORS.success || '#129c00ff',
   },
   alertError: {
     backgroundColor: COLORS.danger || '#980000ff',
@@ -187,32 +235,77 @@ const styles = StyleSheet.create({
     padding: 4,
     marginLeft: 8,
   },
-  buttonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 12,
-    gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.2)',
-    paddingTop: 10,
+
+  // Minimal iOS Dialog Popup Styling
+  iosOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
   },
-  actionBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-  },
-  defaultBtn: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  destructiveBtn: {
+  iosDialog: {
+    width: '100%',
+    maxWidth: 290,
     backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 10,
   },
-  actionBtnText: {
-    fontSize: 13,
+  iosDialogContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 18,
+    alignItems: 'center',
+  },
+  iosTitle: {
+    fontSize: 16,
     fontFamily: 'Geologica-Bold',
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+    marginBottom: 6,
   },
-  destructiveText: {
-    color: COLORS.danger || '#980000ff',
+  iosMessage: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  iosDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    width: '100%',
+  },
+  iosButtonsRow: {
+    flexDirection: 'row',
+    height: 46,
+    width: '100%',
+  },
+  iosBtn: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+  },
+  iosBtnBorderLeft: {
+    borderLeftWidth: 1,
+    borderLeftColor: '#E2E8F0',
+  },
+  iosBtnText: {
+    fontSize: 15,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.primary,
+  },
+  iosDestructiveText: {
+    color: COLORS.danger,
+  },
+  iosCancelText: {
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textSecondary,
   },
 });
