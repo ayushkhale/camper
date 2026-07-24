@@ -462,7 +462,7 @@ const RouteDetailScreen = () => {
                 style={styles.inputBox}
                 onPress={() => setActiveDatePicker('effectiveFrom')}
               >
-                <Text style={{ color: COLORS.textPrimary, fontFamily: 'Inter-Medium', fontSize: 14 }}>
+                <Text style={{ color: COLORS.textPrimary, fontFamily: 'Geologica-Medium', fontSize: 14 }}>
                   {effectiveFrom}
                 </Text>
               </TouchableOpacity>
@@ -502,7 +502,7 @@ const RouteDetailScreen = () => {
                   style={styles.inputBox}
                   onPress={() => setActiveDatePicker('effectiveTo')}
                 >
-                  <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Inter-Medium', fontSize: 14 }}>
+                  <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Geologica-Medium', fontSize: 14 }}>
                     {effectiveTo || 'YYYY-MM-DD (Optional)'}
                   </Text>
                 </TouchableOpacity>
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
   },
   routeNameText: {
     fontSize: 20,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textPrimary,
   },
   areaContainer: {
@@ -611,15 +611,15 @@ const styles = StyleSheet.create({
   },
   areaLabel: {
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
     marginRight: 6,
   },
   areaValue: {
     fontSize: 13,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.primary,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
   assignBtnText: {
     color: '#FFFFFF',
     fontSize: 14.5,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textSecondary,
   },
   emptyCard: {
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   },
   emptyCardText: {
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
   staffCard: {
@@ -681,12 +681,12 @@ const styles = StyleSheet.create({
   },
   staffName: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textPrimary,
   },
   staffPhone: {
     fontSize: 12.5,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
     marginTop: 1,
   },
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
   endAssignBtn: {
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   endAssignText: {
     color: '#EF4444',
     fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
   },
   historyBadge: {
     paddingVertical: 4,
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
   historyBadgeText: {
     color: '#64748B',
     fontSize: 11,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   centerContainer: {
     flex: 1,
@@ -734,12 +734,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -778,7 +778,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     marginBottom: 6,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     fontWeight: '600',
   },
   dropdownTrigger: {
@@ -803,13 +803,13 @@ const styles = StyleSheet.create({
   selectedStaffText: {
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     fontWeight: '600',
   },
   placeholderText: {
     color: COLORS.textPlaceholder,
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Geologica-Regular',
   },
   dropdownContainer: {
     backgroundColor: '#FFFFFF',
@@ -829,7 +829,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 13.5,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginRight: 8,
@@ -837,7 +837,7 @@ const styles = StyleSheet.create({
   dropdownItemPhone: {
     fontSize: 12.5,
     color: COLORS.textSecondary,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Geologica-Regular',
   },
   dropdownEmpty: {
     padding: 16,
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
   dropdownEmptyText: {
     color: COLORS.textPlaceholder,
     fontSize: 13,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Geologica-Regular',
   },
   inputBox: {
     backgroundColor: '#F8FAFC',
@@ -860,7 +860,7 @@ const styles = StyleSheet.create({
   input: {
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     height: '100%',
   },
   toggleRow: {
@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: 13,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -887,7 +887,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: COLORS.textSecondary,
     marginRight: 6,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     fontWeight: '500',
   },
   checkboxSquare: {
@@ -918,7 +918,7 @@ const styles = StyleSheet.create({
   modalSaveText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: '700',
   },
   // Toast
@@ -939,7 +939,7 @@ const styles = StyleSheet.create({
   toastText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     fontWeight: '700',
     textAlign: 'center',
   },

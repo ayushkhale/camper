@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Truck, Package, Users, Bell } from 'lucide-react-native';
+import { Home, Truck, Users, Bell, CreditCard } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
@@ -9,7 +9,7 @@ import { AuthContext } from '../context/AuthContext';
 import { api } from '../services/api';
 import HomeScreen from '../Screens/Main/HomeScreen';
 import OrdersScreen from '../Screens/Main/OrdersScreen';
-import ProductCatalogScreen from '../Screens/Main/ProductCatalogScreen';
+import PaymentsScreen from '../Screens/Main/PaymentsScreen';
 import CustomerListScreen from '../Screens/Main/CustomerListScreen';
 
 const Tab = createBottomTabNavigator();
@@ -79,13 +79,13 @@ const MainTabs = () => {
         },
         tabBarLabelStyle: {
           fontSize: 10.5,
-          fontFamily: 'Inter-Medium',
+          fontFamily: 'Geologica-Medium',
         },
         tabBarIcon: ({ focused, color, size }) => {
           const iconSize = 20; // Reduced size
           if (route.name === 'Home') return <Home color={color} size={iconSize} />;
           if (route.name === 'Deliveries') return <Truck color={color} size={iconSize} />;
-          if (route.name === 'Products') return <Package color={color} size={iconSize} />;
+          if (route.name === 'Payments') return <CreditCard color={color} size={iconSize} />;
           if (route.name === 'Customers') return <Users color={color} size={iconSize} />;
         },
       })}
@@ -105,9 +105,9 @@ const MainTabs = () => {
         options={{ tabBarLabel: t('tabs.deliveries') }}
       />
       <Tab.Screen 
-        name="Products" 
-        component={ProductCatalogScreen} 
-        options={{ tabBarLabel: t('tabs.products') }}
+        name="Payments" 
+        component={PaymentsScreen} 
+        options={{ tabBarLabel: 'Payments' }}
       />
       <Tab.Screen 
         name="Customers" 

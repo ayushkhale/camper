@@ -14,25 +14,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { api } from '../../services/api';
+import { useAlert } from '../../context/AlertContext';
 
 const LoginScreen = ({ navigation }) => {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const { t, i18n } = useTranslation();
-
-  // Custom Toast state
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
-
-  const triggerToast = (message, type = 'error') => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => {
-      setToast({ visible: false, message: '', type });
-    }, 4000);
-  };
+  const { showAlert } = useAlert();
 
   const handleLoginRequest = async () => {
     if (!phone || phone.length !== 10) {
-      triggerToast(t('login.mobilePlaceholder'), 'error');
+      showAlert(t('login.mobilePlaceholder'), 'error');
       return;
     }
 
@@ -41,7 +33,7 @@ const LoginScreen = ({ navigation }) => {
       const fullPhone = `+91${phone}`;
       const response = await api.loginRequestOtp(fullPhone);
       if (response.success) {
-        triggerToast(t('register.success'), 'success');
+        showAlert(t('register.success'), 'success');
         setTimeout(() => {
           navigation.navigate('OtpVerification', {
             contextId: response.contextId,
@@ -52,9 +44,9 @@ const LoginScreen = ({ navigation }) => {
       }
     } catch (error) {
       if (error.message === 'TOO_MANY_REQUESTS') {
-        triggerToast(t('register.rateLimitError'), 'error');
+        showAlert(t('register.rateLimitError'), 'error');
       } else {
-        triggerToast(error.message || 'Something went wrong', 'error');
+        showAlert(error.message || 'Something went wrong', 'error');
       }
     } finally {
       setLoading(false);
@@ -63,12 +55,6 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Custom Toast Notification */}
-      {toast.visible && (
-        <View style={[styles.toast, toast.type === 'success' ? styles.toastSuccess : styles.toastError]}>
-          <Text style={styles.toastText}>{toast.message}</Text>
-        </View>
-      )}
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -8,6 +8,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
@@ -25,12 +29,16 @@ import {
   Play,
   Pause,
   Plus,
-  ChevronRight
+  ChevronRight,
+  FileText,
+  ShieldCheck,
+  X,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useTranslation } from 'react-i18next';
+import { useAlert } from '../../context/AlertContext';
 
 const CustomerDetailScreen = () => {
   const navigation = useNavigation();
@@ -38,12 +46,22 @@ const CustomerDetailScreen = () => {
   const { userToken } = useContext(AuthContext);
   const customerId = routeParams.params?.customerId;
   const { t } = useTranslation();
+  const { showAlert } = useAlert();
 
   const [customerData, setCustomerData] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [error, setError] = useState(null);
+
+  // Deposit States
+  const [depositData, setDepositData] = useState(null);
+  const [loadingDeposit, setLoadingDeposit] = useState(true);
+  const [depositModalVisible, setDepositModalVisible] = useState(false);
+  const [collectAmount, setCollectAmount] = useState('');
+  const [collectContainers, setCollectContainers] = useState('1');
+  const [collectNotes, setCollectNotes] = useState('');
+  const [submittingDeposit, setSubmittingDeposit] = useState(false);
 
   const fetchCustomerDetail = async () => {
     setLoading(true);
@@ -77,17 +95,32 @@ const CustomerDetailScreen = () => {
     }
   };
 
+  const fetchDepositData = async () => {
+    setLoadingDeposit(true);
+    try {
+      const res = await api.getDepositLedger(userToken, customerId);
+      if (res && res.success) {
+        setDepositData(res.data || null);
+      }
+    } catch (err) {
+      console.error('Error fetching customer deposit data:', err);
+    } finally {
+      setLoadingDeposit(false);
+    }
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       if (customerId) {
         fetchCustomerDetail();
         fetchSubscriptions();
+        fetchDepositData();
       }
     }, [customerId])
   );
 
   const handleDeleteCustomer = () => {
-    Alert.alert(
+    showAlert(
       t('customers.deleteCustomer'),
       t('customers.deleteConfirm'),
       [
@@ -99,13 +132,13 @@ const CustomerDetailScreen = () => {
             try {
               const res = await api.deleteCustomer(userToken, customerId);
               if (res.success) {
-                Alert.alert('Success', t('customers.deleteSuccess'));
+                showAlert('Success', t('customers.deleteSuccess'), 'success');
                 navigation.goBack();
               } else {
                 throw new Error(res.message || 'Failed to delete customer');
               }
             } catch (err) {
-              Alert.alert('Error', err.message || t('customers.deleteError'));
+              showAlert('Error', err.message || t('customers.deleteError'), 'error');
             }
           },
         },
@@ -323,7 +356,7 @@ const CustomerDetailScreen = () => {
           <View style={styles.divider} />
           
           <View style={styles.detailRow}>
-            <View style={[styles.detailIconBox, { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }]}>
+            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
               <MapPin size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
@@ -362,9 +395,201 @@ const CustomerDetailScreen = () => {
           </View>
         </View>
 
+        {/* Security Deposit Section */}
+        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Security Deposit</Text>
+
+        {loadingDeposit ? (
+          <View style={[styles.detailsCard, { padding: 20, alignItems: 'center' }]}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
+          </View>
+        ) : !depositData || (parseFloat(depositData.depositBalance || 0) === 0 && parseInt(depositData.containersHeld || 0) === 0) ? (
+          <TouchableOpacity
+            style={styles.subscriptionToggle}
+            onPress={() => setDepositModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.subscriptionToggleLeft}>
+              <View style={styles.subToggleIcon}>
+                <Plus size={18} color={COLORS.primary} />
+              </View>
+              <View>
+                <Text style={styles.subToggleTitle}>Add Security Deposit</Text>
+                <Text style={styles.subToggleSubtitle}>Collect container/jar deposit for this customer</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.detailsCard}>
+            <View style={styles.detailRow}>
+              <View style={[styles.detailIconBox, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
+                <ShieldCheck size={18} color="#16A34A" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Deposit Balance</Text>
+                <Text style={[styles.detailValue, { color: '#16A34A', fontFamily: 'Geologica-Bold' }]}>
+                  ₹{depositData.depositBalance || 0}
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.addMoreDepositBtn}
+                onPress={() => setDepositModalVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Plus size={14} color={COLORS.primary} style={{ marginRight: 4 }} />
+                <Text style={styles.addMoreDepositText}>Add More</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.detailRow}>
+              <View style={styles.detailIconBox}>
+                <Package size={18} color={COLORS.textSecondary} />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Containers/Jars Held</Text>
+                <Text style={styles.detailValue}>{depositData.containersHeld || 0} Jar(s)</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
 
 
       </ScrollView>
+
+      {/* Floating Action Buttons */}
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={styles.fabSecondary}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('MainDrawer', { 
+            screen: 'MainTabs', 
+            params: { 
+              screen: 'Payments', 
+              params: { preselectedCustomer: customerData } 
+            } 
+          })}
+        >
+          <IndianRupee size={24} color="#FFF" />
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.fabPrimary}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('GenerateInvoice', { customerId: customerData.id })}
+        >
+          <FileText size={26} color="#FFF" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Collect Deposit Modal */}
+      <Modal
+        visible={depositModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDepositModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Collect Security Deposit</Text>
+              <TouchableOpacity onPress={() => setDepositModalVisible(false)}>
+                <X size={22} color={COLORS.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalInputGroup}>
+              <Text style={styles.modalLabel}>Deposit Amount (₹) *</Text>
+              <View style={styles.modalInputContainer}>
+                <IndianRupee size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="e.g. 300"
+                  value={collectAmount}
+                  onChangeText={(val) => setCollectAmount(val.replace(/[^0-9.]/g, ''))}
+                  keyboardType="decimal-pad"
+                  placeholderTextColor={COLORS.textPlaceholder}
+                />
+              </View>
+            </View>
+
+            <View style={styles.modalInputGroup}>
+              <Text style={styles.modalLabel}>Containers/Jars Deposited</Text>
+              <View style={styles.modalInputContainer}>
+                <Package size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="e.g. 3"
+                  value={collectContainers}
+                  onChangeText={(val) => setCollectContainers(val.replace(/[^0-9]/g, ''))}
+                  keyboardType="number-pad"
+                  placeholderTextColor={COLORS.textPlaceholder}
+                />
+              </View>
+            </View>
+
+            <View style={styles.modalInputGroup}>
+              <Text style={styles.modalLabel}>Notes (Optional)</Text>
+              <View style={styles.modalInputContainer}>
+                <FileText size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="e.g. Deposit collected at customer detail"
+                  value={collectNotes}
+                  onChangeText={setCollectNotes}
+                  placeholderTextColor={COLORS.textPlaceholder}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, submittingDeposit && { opacity: 0.7 }]}
+              onPress={async () => {
+                if (!collectAmount || parseFloat(collectAmount) <= 0) {
+                  showAlert('Invalid Amount', 'Please enter a valid deposit amount', 'warning');
+                  return;
+                }
+                setSubmittingDeposit(true);
+                try {
+                  const res = await api.collectDeposit(userToken, {
+                    customerId: customerData.id,
+                    amount: parseFloat(collectAmount),
+                    containerCount: parseInt(collectContainers) || 1,
+                    notes: collectNotes.trim() || 'Deposit collected from customer details screen',
+                  });
+                  if (res && res.success) {
+                    showAlert('Success', 'Security deposit collected successfully!', 'success');
+                    setDepositModalVisible(false);
+                    setCollectAmount('');
+                    setCollectContainers('1');
+                    setCollectNotes('');
+                    fetchDepositData();
+                  } else {
+                    showAlert('Error', res.message || 'Failed to collect deposit', 'error');
+                  }
+                } catch (err) {
+                  showAlert('Error', err.message || 'Something went wrong', 'error');
+                } finally {
+                  setSubmittingDeposit(false);
+                }
+              }}
+              disabled={submittingDeposit}
+              activeOpacity={0.8}
+            >
+              {submittingDeposit ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.modalSubmitBtnText}>Collect Deposit</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -411,12 +636,12 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: '#C7D2FE',
+    borderColor: COLORS.border,
     overflow: 'hidden',
   },
   avatarImage: {
@@ -426,7 +651,7 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 20,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -442,11 +667,11 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
   },
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 12,
   },
@@ -459,7 +684,7 @@ const styles = StyleSheet.create({
   },
   sectionTitleFlex: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textSecondary,
     flex: 1,
     marginRight: 8,
@@ -467,7 +692,7 @@ const styles = StyleSheet.create({
   addBtnSmall: {
     width: 32,
     height: 32,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -501,13 +726,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textPrimary,
   },
   divider: {
@@ -535,16 +760,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     borderWidth: 1,
-    borderColor: '#E0E7FF',
+    borderColor: COLORS.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
   },
   subTitle: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
@@ -554,7 +779,7 @@ const styles = StyleSheet.create({
   },
   subMetaText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
   dot: {
@@ -608,16 +833,16 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     fontSize: 14,
   },
   subscriptionToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F0F4FF',
+    backgroundColor: COLORS.primaryLight,
     borderWidth: 1,
-    borderColor: '#C7D2FE',
+    borderColor: COLORS.border,
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
@@ -632,21 +857,134 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
   },
   subToggleTitle: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.primary,
     marginBottom: 2,
   },
   subToggleSubtitle: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
+  },
+  fabContainer: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    alignItems: 'center',
+    gap: 12,
+  },
+  fabPrimary: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  fabSecondary: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: COLORS.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  addMoreDepositBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  addMoreDepositText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.primary,
+  },
+
+  // Deposit Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.textPrimary,
+  },
+  modalInputGroup: {
+    marginBottom: 16,
+  },
+  modalLabel: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textSecondary,
+    marginBottom: 6,
+  },
+  modalInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  modalInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 14,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textPrimary,
+    padding: 0,
+  },
+  modalSubmitBtn: {
+    backgroundColor: COLORS.primary,
+    height: 50,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  modalSubmitBtnText: {
+    fontSize: 15,
+    fontFamily: 'Geologica-Bold',
+    color: '#FFFFFF',
   },
 });
 

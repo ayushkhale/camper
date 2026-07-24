@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     flex: 1,
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     fontSize: 15,
     paddingVertical: 0,
   },
@@ -341,12 +341,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -359,14 +359,14 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontSize: 14,
   },
   emptyIconContainer: {
     width: 72,
     height: 72,
     borderRadius: 20,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 18,
@@ -375,14 +375,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 13.5,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 25,
@@ -409,9 +409,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     borderWidth: 1,
-    borderColor: '#E0E7FF',
+    borderColor: COLORS.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -419,14 +419,14 @@ const styles = StyleSheet.create({
   avatarText: {
     color: COLORS.primary,
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
   infoContainer: {
     flex: 1,
   },
   staffName: {
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
     marginBottom: 4,
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
   switchContainer: {
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   },
   subActionText: {
     fontSize: 13,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
   },
   fab: {

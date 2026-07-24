@@ -146,20 +146,20 @@ const styles = StyleSheet.create({
   },
   businessName: {
     fontSize: 18,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: '#FFFFFF',
     fontWeight: '700',
     marginBottom: 4,
   },
   ownerName: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: '#CBD5E1',
     marginBottom: 2,
   },
   roleText: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Geologica-Regular',
     color: '#94A3B8',
   },
   avatarCircle: {
@@ -195,11 +195,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   activeMenuItem: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
   },
   itemText: {
     fontSize: 14.5,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
     fontWeight: '500',
   },

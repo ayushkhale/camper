@@ -1,62 +1,48 @@
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   FlatList,
-  Image,
+  TouchableOpacity,
   TextInput,
   ActivityIndicator,
   RefreshControl,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { Plus, Search, FileText, ChevronRight, AlertCircle, RefreshCw, Calendar, DollarSign } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import {
-  Plus,
-  Search,
-  Package,
-  ChevronRight,
-  AlertCircle,
-  RefreshCw,
-  RefreshCcw,
-} from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
-const ProductCatalogScreen = () => {
-  const { t } = useTranslation();
+const InvoiceListScreen = () => {
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
+  const { t } = useTranslation();
 
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all'); // all, pending, partially_paid, paid
 
-  const fetchProducts = async (isRefresh = false) => {
-    if (!userToken) return;
-    if (!isRefresh && products.length === 0) {
-      setLoading(true);
-    }
+  const fetchInvoices = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     setError(null);
-
     try {
-      const response = await api.listProducts(userToken);
-      if (response.success && Array.isArray(response.data)) {
-        setProducts(response.data);
-        filterList(response.data, searchQuery);
+      const res = await api.listInvoices(userToken);
+      if (res && res.success) {
+        setInvoices(res.data || []);
       } else {
-        throw new Error(response.message || 'Failed to fetch catalog');
+        throw new Error(res.message || 'Failed to fetch invoices');
       }
     } catch (err) {
-      console.error('Error fetching products:', err);
-      setError(err.message || 'Could not load products');
+      console.error('Error fetching invoices:', err);
+      setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -65,83 +51,86 @@ const ProductCatalogScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchProducts();
-    }, [userToken])
+      fetchInvoices(true);
+    }, [])
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchProducts(true);
+    fetchInvoices(false);
   };
 
-  const filterList = (list, query) => {
-    if (!query || query.trim() === '') {
-      setFilteredProducts(list);
-    } else {
-      const q = query.toLowerCase();
-      const filtered = list.filter(
-        (item) =>
-          (item.name && item.name.toLowerCase().includes(q)) ||
-          (item.unit && item.unit.toLowerCase().includes(q))
-      );
-      setFilteredProducts(filtered);
+  const getStatusColors = (status) => {
+    switch (status) {
+      case 'paid': return { dot: '#16A34A', text: '#15803D' };
+      case 'partially_paid': return { dot: '#3B82F6', text: '#1D4ED8' }; // Blue
+      case 'pending': return { dot: '#D97706', text: '#B45309' }; // Orange
+      default: return { dot: '#94A3B8', text: '#64748B' };
     }
   };
 
-  const handleSearchChange = (text) => {
-    setSearchQuery(text);
-    filterList(products, text);
-  };
+  const filteredInvoices = invoices.filter((item) => {
+    // 1. Status Filter
+    if (filterStatus !== 'all' && item.status !== filterStatus) {
+      return false;
+    }
+    // 2. Search Query Filter
+    const query = searchQuery.toLowerCase();
+    const customerMatch = item.Customer?.name?.toLowerCase().includes(query);
+    const idMatch = item.id?.toLowerCase().includes(query);
+    return customerMatch || idMatch;
+  });
 
-  const renderProductCard = ({ item }) => {
-    const isActive = item.isActive !== false;
-    const priceStr = `₹${parseFloat(item.price || 0).toLocaleString()}`;
-    const returnableStr = item.isReturnableContainer ? ' • Returnable' : '';
+  const renderInvoiceCard = ({ item }) => {
+    const statusColors = getStatusColors(item.status);
+    const dateFormatted = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
 
     return (
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.7}
-        onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+        onPress={() => navigation.navigate('InvoiceDetail', { invoiceId: item.id, invoice: item })}
       >
         <View style={styles.cardHeader}>
           <View style={styles.iconBox}>
-            {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
-            ) : (
-              <Package size={22} color={COLORS.primary} />
-            )}
+            <FileText size={22} color={COLORS.primary} />
           </View>
           <View style={styles.titleContainer}>
-            <Text style={styles.productName} numberOfLines={1}>
-              {item.name}
+            <Text style={styles.customerName} numberOfLines={1}>
+              {item.Customer?.name || 'Unknown Customer'}
             </Text>
-            <View style={styles.row}>
-              <Text style={styles.subText}>
-                {item.unit ? `Unit: ${item.unit}` : 'No Unit'}
-              </Text>
-            </View>
+            <Text style={styles.subText} numberOfLines={1}>
+              {item.periodStart} to {item.periodEnd}
+            </Text>
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} />
+          <View style={styles.statusBadge}>
+            <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
+            <Text style={[styles.statusText, { color: statusColors.text }]}>
+              {item.status === 'partially_paid' ? 'PARPAID' : (item.status || 'pending').replace('_', ' ').toUpperCase()}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.divider} />
 
         <View style={styles.cardFooter}>
           <View style={styles.metaContainer}>
-            {item.isReturnableContainer && (
-              <RefreshCcw size={13} color={COLORS.primary} style={{ marginRight: 4 }} />
-            )}
+            <Calendar size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
             <Text style={styles.metaText} numberOfLines={1}>
-              {priceStr}{returnableStr}
+              {dateFormatted}
             </Text>
           </View>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: isActive ? '#16A34A' : '#94A3B8' }]} />
-            <Text style={[styles.statusText, { color: isActive ? '#15803D' : '#64748B' }]}>
-              {isActive ? 'ACTIVE' : 'INACTIVE'}
-            </Text>
+          <View style={styles.amountContainer}>
+             <Text style={styles.amountText}>
+               ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
+             </Text>
+             {item.status !== 'paid' && parseFloat(item.amountPaid || 0) > 0 && (
+               <Text style={styles.paidSubText}>
+                 Paid: ₹{parseFloat(item.amountPaid).toFixed(2)}
+               </Text>
+             )}
           </View>
+          <ChevronRight size={18} color={COLORS.textPlaceholder} style={{marginLeft: 8}}/>
         </View>
       </TouchableOpacity>
     );
@@ -150,16 +139,10 @@ const ProductCatalogScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <View style={styles.contentWrapper}>
-        
+
         {/* Header */}
-        <View style={[styles.headerRow, { flexDirection: 'row', alignItems: 'center' }]}>
-          <TouchableOpacity 
-            style={{ marginRight: 12 }} 
-            onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
-          >
-            <ChevronRight size={24} color={COLORS.textPrimary} style={{ transform: [{ rotate: '180deg' }] }} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Product Catalog</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>{t('invoices.title', 'Invoices')}</Text>
         </View>
 
         {/* Search Box */}
@@ -168,35 +151,51 @@ const ProductCatalogScreen = () => {
             <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search products..."
+              placeholder="Search by customer or ID..."
               placeholderTextColor={COLORS.textPlaceholder}
               value={searchQuery}
-              onChangeText={handleSearchChange}
+              onChangeText={setSearchQuery}
             />
           </View>
+        </View>
+
+        {/* Status Filter Chips */}
+        <View style={styles.filterContainer}>
+          {['all', 'pending', 'partially_paid', 'paid'].map(status => (
+            <TouchableOpacity
+              key={status}
+              style={[styles.filterTab, filterStatus === status && styles.filterTabActive]}
+              onPress={() => setFilterStatus(status)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.filterTabText, filterStatus === status && styles.filterTabTextActive]}>
+                {status === 'partially_paid' ? 'PARPAID' : status.replace('_', ' ').toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading products...</Text>
+            <Text style={styles.loadingText}>Loading invoices...</Text>
           </View>
         ) : error ? (
           <View style={styles.centerContainer}>
             <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => fetchProducts()}>
+            <TouchableOpacity style={styles.retryButton} onPress={() => fetchInvoices(true)}>
               <RefreshCw size={16} color="#FFF" style={{ marginRight: 8 }} />
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <FlatList
-            data={filteredProducts}
+            data={filteredInvoices}
             keyExtractor={(item) => item.id || Math.random().toString()}
-            renderItem={renderProductCard}
+            renderItem={renderInvoiceCard}
             contentContainerStyle={
-              filteredProducts.length === 0 ? styles.emptyListContent : styles.listContent
+              filteredInvoices.length === 0 ? styles.emptyListContent : styles.listContent
             }
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -209,20 +208,20 @@ const ProductCatalogScreen = () => {
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Package size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>No Products Found</Text>
+                <FileText size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
+                <Text style={styles.emptyTitle}>No Invoices Found</Text>
                 <Text style={styles.emptySubtitle}>
-                  {searchQuery
-                    ? 'No products match your current search.'
-                    : 'Start by adding a new product to your catalog.'}
+                  {searchQuery || filterStatus !== 'all'
+                    ? 'No invoices match your current filter or search.'
+                    : 'You have no invoices yet.'}
                 </Text>
-                {!searchQuery && (
+                {!searchQuery && filterStatus === 'all' && (
                   <TouchableOpacity
                     style={styles.emptyAddBtn}
-                    onPress={() => navigation.navigate('AddProduct')}
+                    onPress={() => navigation.navigate('GenerateInvoice')}
                   >
                     <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.emptyAddBtnText}>Add Product</Text>
+                    <Text style={styles.emptyAddBtnText}>Generate Invoices</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -235,7 +234,7 @@ const ProductCatalogScreen = () => {
         <TouchableOpacity
           style={styles.fab}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('AddProduct')}
+          onPress={() => navigation.navigate('GenerateInvoice')}
         >
           <Plus size={26} color="#FFF" />
         </TouchableOpacity>
@@ -265,7 +264,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     paddingHorizontal: 24,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   searchBar: {
     flexDirection: 'row',
@@ -287,10 +286,38 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingVertical: 0,
   },
+  filterContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
+  filterTab: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginRight: 6,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterTabActive: {
+    backgroundColor: COLORS.primaryLight,
+    borderColor: COLORS.border,
+  },
+  filterTabText: {
+    fontSize: 10,
+    fontFamily: 'Geologica-Bold',
+    color: '#64748B',
+    letterSpacing: 0.5,
+  },
+  filterTabTextActive: {
+    color: COLORS.primary,
+  },
   listContent: {
     paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 90,
+    paddingBottom: 40,
   },
   emptyListContent: {
     flexGrow: 1,
@@ -321,31 +348,22 @@ const styles = StyleSheet.create({
     marginRight: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
-    overflow: 'hidden',
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
   },
   titleContainer: {
     flex: 1,
   },
-  productName: {
+  customerName: {
     fontSize: 15,
     fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
   subText: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Geologica-Bold',
+    fontWeight: 'bold',
+    marginTop: 4,
   },
   divider: {
     height: 1,
@@ -364,11 +382,24 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   metaText: {
-    fontSize: 13,
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textSecondary,
+    flexShrink: 1,
+  },
+  amountContainer: {
+    alignItems: 'flex-end',
+  },
+  amountText: {
+    fontSize: 15,
     fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
-    color: COLORS.primary,
-    flexShrink: 1,
+    color: COLORS.textPrimary,
+  },
+  paidSubText: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textSecondary,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -381,7 +412,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     letterSpacing: 0.5,
@@ -462,4 +493,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProductCatalogScreen;
+export default InvoiceListScreen;

@@ -499,14 +499,14 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: 28,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 6,
   },
   pageSubtitle: {
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
   },
   form: {
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   selectImageText: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
   selectedImageContainer: {
     width: '100%',
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     color: COLORS.textPrimary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     fontSize: 15,
     padding: 0,
   },
@@ -609,17 +609,17 @@ const styles = StyleSheet.create({
     height: 52,
   },
   checkboxOptionActive: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#C7D2FE',
+    backgroundColor: COLORS.primaryLight,
+    borderColor: COLORS.border,
   },
   checkboxLabel: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   checkboxLabelActive: {
     color: COLORS.primary,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
   checkboxSquare: {
     width: 20,
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
   // Photo Picker Modal Styles
   modalOverlay: {
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
   modalOptionBtn: {
@@ -695,7 +695,7 @@ const styles = StyleSheet.create({
   modalOptionText: {
     fontSize: 15,
     color: COLORS.textPrimary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   // Custom Toast Styles
   toast: {
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
   toastText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     textAlign: 'center',
   },
 });

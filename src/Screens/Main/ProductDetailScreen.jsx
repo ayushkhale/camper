@@ -248,7 +248,7 @@ const ProductDetailScreen = () => {
             <>
               <View style={styles.divider} />
               <View style={styles.detailRow}>
-                <View style={[styles.detailIconBox, { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }]}>
+                <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
                   <IndianRupee size={18} color={COLORS.primary} />
                 </View>
                 <View style={styles.detailContent}>
@@ -307,14 +307,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     color: COLORS.textSecondary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   errorText: {
     fontSize: 14,
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   retryButton: {
     backgroundColor: COLORS.primary,
@@ -368,12 +368,12 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: '#C7D2FE',
+    borderColor: COLORS.border,
     overflow: 'hidden',
   },
   avatarImage: {
@@ -385,13 +385,13 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   productName: {
     fontSize: 24,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
     marginBottom: 10,
   },
@@ -407,14 +407,14 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     letterSpacing: 0.5,
   },
 
   // Section details card
   sectionTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -448,13 +448,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
   divider: {
@@ -481,13 +481,13 @@ const styles = StyleSheet.create({
   },
   statusCardTitle: {
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
   statusCardSub: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
 });

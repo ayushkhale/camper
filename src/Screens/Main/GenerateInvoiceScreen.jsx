@@ -16,39 +16,33 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, User, Package, Calendar, Repeat, AlertCircle, CheckCircle, X, Hash, Search } from 'lucide-react-native';
+import { ChevronLeft, User, Calendar, AlertCircle, X, Search, FileText } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
-const AddSubscriptionScreen = () => {
+const GenerateInvoiceScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
 
-  const editSub = route.params?.subscription || null;
   const initialCustomerId = route.params?.customerId || '';
-  const isEditMode = !!editSub;
 
   const [customerId, setCustomerId] = useState(initialCustomerId);
-  const [productId, setProductId] = useState('');
-  const [baseQuantity, setBaseQuantity] = useState('1');
-  const [recurrencePattern, setRecurrencePattern] = useState('daily');
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [status, setStatus] = useState('active');
+  const [periodStart, setPeriodStart] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  const [periodEnd, setPeriodEnd] = useState(new Date().toISOString().split('T')[0]);
   
   const [customers, setCustomers] = useState([]);
-  const [products, setProducts] = useState([]);
-  
   const [apiError, setApiError] = useState('');
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   // Modals state
-  const [activeModal, setActiveModal] = useState(null); // 'customer', 'product', 'recurrence', 'status'
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [activeModal, setActiveModal] = useState(null); // 'customer'
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [modalSearch, setModalSearch] = useState('');
 
   const formatDateString = (date) => {
@@ -70,10 +64,17 @@ const AddSubscriptionScreen = () => {
     return new Date();
   };
 
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
+  const onStartDateChange = (event, selectedDate) => {
+    setShowStartDatePicker(false);
     if (selectedDate) {
-      setStartDate(formatDateString(selectedDate));
+      setPeriodStart(formatDateString(selectedDate));
+    }
+  };
+
+  const onEndDateChange = (event, selectedDate) => {
+    setShowEndDatePicker(false);
+    if (selectedDate) {
+      setPeriodEnd(formatDateString(selectedDate));
     }
   };
 
@@ -83,27 +84,13 @@ const AddSubscriptionScreen = () => {
 
   const fetchData = async () => {
     try {
-      const [custRes, prodRes] = await Promise.all([
-        api.listCustomers(userToken),
-        api.listProducts(userToken)
-      ]);
-      
-      if (custRes.success) setCustomers(custRes.data || []);
-      if (prodRes.success) setProducts(prodRes.data || []);
-
-      if (isEditMode && editSub) {
-        setCustomerId(editSub.customerId || editSub.Customer?.id || '');
-        setProductId(editSub.productId || editSub.Product?.id || '');
-        setBaseQuantity(editSub.baseQuantity?.toString() || '1');
-        setRecurrencePattern(editSub.recurrencePattern || 'daily');
-        if (editSub.startDate) {
-          setStartDate(editSub.startDate.split('T')[0]);
-        }
-        setStatus(editSub.status || 'active');
+      const custRes = await api.listCustomers(userToken);
+      if (custRes.success) {
+        setCustomers(custRes.data || []);
       }
     } catch (err) {
-      console.error('Error fetching data:', err);
-      setApiError('Failed to load customers or products');
+      console.error('Error fetching customers:', err);
+      setApiError('Failed to load customers');
     } finally {
       setLoadingData(false);
     }
@@ -111,9 +98,9 @@ const AddSubscriptionScreen = () => {
 
   const validate = () => {
     if (!customerId) return 'Please select a customer';
-    if (!productId) return 'Please select a product';
-    if (!baseQuantity || isNaN(baseQuantity) || parseInt(baseQuantity) < 1) return 'Please enter a valid quantity (min 1)';
-    if (!startDate || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return 'Start Date must be in YYYY-MM-DD format';
+    if (!periodStart || !/^\d{4}-\d{2}-\d{2}$/.test(periodStart)) return 'Start Date must be in YYYY-MM-DD format';
+    if (!periodEnd || !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd)) return 'End Date must be in YYYY-MM-DD format';
+    if (new Date(periodStart) > new Date(periodEnd)) return 'Start Date cannot be after End Date';
     return null;
   };
 
@@ -127,32 +114,16 @@ const AddSubscriptionScreen = () => {
     setSubmitting(true);
     setApiError('');
 
-    const subData = {
-      customerId,
-      productId,
-      baseQuantity: parseInt(baseQuantity),
-      recurrencePattern,
-      startDate,
-      status
-    };
+    const payload = { periodStart, periodEnd };
+    if (customerId) payload.customerId = customerId;
 
     try {
-      if (isEditMode) {
-        const response = await api.updateSubscription(userToken, editSub.id, subData);
-        if (response && response.success) {
-          Alert.alert('Success', 'Subscription updated successfully');
-          navigation.goBack();
-        } else {
-          setApiError(response.message || 'Failed to update subscription');
-        }
+      const response = await api.generateInvoices(userToken, payload);
+      if (response && response.success) {
+        Alert.alert('Success', response.message || 'Invoices generated successfully');
+        navigation.goBack();
       } else {
-        const response = await api.createSubscription(userToken, subData);
-        if (response && response.success) {
-          Alert.alert('Success', 'Subscription created successfully');
-          navigation.goBack();
-        } else {
-          setApiError(response.message || 'Failed to create subscription');
-        }
+        setApiError(response.message || 'Failed to generate invoices');
       }
     } catch (err) {
       setApiError(err.message || 'Something went wrong');
@@ -161,24 +132,9 @@ const AddSubscriptionScreen = () => {
     }
   };
 
-  const formatRecurrence = (pattern) => {
-    switch(pattern) {
-      case 'daily': return 'Daily';
-      case 'alternate_days': return 'Alternate Days';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
-      default: return pattern;
-    }
-  };
-
   const getCustomerName = (id) => {
     const c = customers.find(c => c.id === id);
-    return c ? c.name : 'Select Customer';
-  };
-
-  const getProductName = (id) => {
-    const p = products.find(p => p.id === id);
-    return p ? p.name : 'Select Product';
+    return c ? c.name : 'Select a Customer';
   };
 
   const renderModal = () => {
@@ -198,34 +154,6 @@ const AddSubscriptionScreen = () => {
       renderItemText = (item) => `${item.name} ${item.phone ? `(${item.phone})` : ''}`;
       onSelect = (item) => { setCustomerId(item.id); setActiveModal(null); setModalSearch(''); };
       showSearch = true;
-    } else if (activeModal === 'product') {
-      title = 'Select Product';
-      data = products;
-      currentVal = productId;
-      renderItemText = (item) => item.name;
-      onSelect = (item) => { setProductId(item.id); setActiveModal(null); setModalSearch(''); };
-      showSearch = true;
-    } else if (activeModal === 'recurrence') {
-      title = 'Select Frequency';
-      data = [
-        { id: 'daily', name: 'Daily' },
-        { id: 'alternate_days', name: 'Alternate Days' },
-        { id: 'weekly', name: 'Weekly' },
-        { id: 'monthly', name: 'Monthly' }
-      ];
-      currentVal = recurrencePattern;
-      renderItemText = (item) => item.name;
-      onSelect = (item) => { setRecurrencePattern(item.id); setActiveModal(null); };
-    } else if (activeModal === 'status') {
-      title = 'Select Status';
-      data = [
-        { id: 'active', name: 'Active' },
-        { id: 'paused', name: 'Paused' },
-        { id: 'ended', name: 'Ended' }
-      ];
-      currentVal = status;
-      renderItemText = (item) => item.name;
-      onSelect = (item) => { setStatus(item.id); setActiveModal(null); };
     }
 
     const filteredData = showSearch && modalSearch.trim()
@@ -277,7 +205,7 @@ const AddSubscriptionScreen = () => {
             ) : (
               <FlatList
                 data={filteredData}
-                keyExtractor={item => item.id}
+                keyExtractor={item => item.id || 'all'}
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => {
                   const selected = currentVal === item.id;
@@ -307,7 +235,7 @@ const AddSubscriptionScreen = () => {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder }}>{t('deliveries.updating')}</Text>
+        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder }}>Loading data...</Text>
       </SafeAreaView>
     );
   }
@@ -331,10 +259,10 @@ const AddSubscriptionScreen = () => {
 
           <View style={styles.titleContainer}>
             <Text style={styles.pageTitle}>
-              {isEditMode ? t('subscriptions.edit') : t('subscriptions.title')}
+              Generate Invoices
             </Text>
             <Text style={styles.pageSubtitle}>
-              {isEditMode ? 'Update subscription details' : 'Set up a recurring delivery schedule'}
+              Create bills for a specific period
             </Text>
           </View>
 
@@ -350,9 +278,8 @@ const AddSubscriptionScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('tabs.customers')} *</Text>
               <TouchableOpacity 
-                style={[styles.inputContainer, isEditMode && styles.inputDisabled]}
-                onPress={() => !isEditMode && setActiveModal('customer')}
-                disabled={isEditMode}
+                style={styles.inputContainer}
+                onPress={() => setActiveModal('customer')}
               >
                 <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <Text style={[styles.dropdownText, !customerId && { color: COLORS.textPlaceholder }]}>
@@ -361,87 +288,49 @@ const AddSubscriptionScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Product */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('oneTimeOrders.items')} *</Text>
-              <TouchableOpacity 
-                style={[styles.inputContainer, isEditMode && styles.inputDisabled]}
-                onPress={() => !isEditMode && setActiveModal('product')}
-                disabled={isEditMode}
-              >
-                <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                <Text style={[styles.dropdownText, !productId && { color: COLORS.textPlaceholder }]}>
-                  {getProductName(productId)}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Quantity */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('subscriptions.quantity')} *</Text>
-              <View style={styles.inputContainer}>
-                <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={baseQuantity}
-                  onChangeText={setBaseQuantity}
-                  keyboardType="number-pad"
-                  placeholderTextColor={COLORS.textPlaceholder}
-                />
-              </View>
-            </View>
-
-            {/* Frequency */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('subscriptions.frequency')} *</Text>
-              <TouchableOpacity 
-                style={styles.inputContainer}
-                onPress={() => setActiveModal('recurrence')}
-              >
-                <Repeat size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                <Text style={styles.dropdownText}>
-                  {formatRecurrence(recurrencePattern)}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
             {/* Start Date */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('subscriptions.startDate')} *</Text>
+              <Text style={styles.label}>Period Start Date *</Text>
               <TouchableOpacity 
                 style={styles.inputContainer}
-                onPress={() => setShowDatePicker(true)}
+                onPress={() => setShowStartDatePicker(true)}
               >
                 <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <Text style={styles.dropdownText}>
-                  {startDate}
+                  {periodStart}
                 </Text>
               </TouchableOpacity>
-              {showDatePicker && (
+              {showStartDatePicker && (
                 <DateTimePicker
-                  value={parseDateString(startDate)}
+                  value={parseDateString(periodStart)}
                   mode="date"
                   display="default"
-                  onChange={onDateChange}
+                  onChange={onStartDateChange}
                 />
               )}
             </View>
-
-            {/* Status (Edit Mode Only or Default Active) */}
-            {isEditMode && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>{t('products.status')}</Text>
-                <TouchableOpacity 
-                  style={styles.inputContainer}
-                  onPress={() => setActiveModal('status')}
-                >
-                  <CheckCircle size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                  <Text style={styles.dropdownText}>
-                    {status.toUpperCase()}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            
+            {/* End Date */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Period End Date *</Text>
+              <TouchableOpacity 
+                style={styles.inputContainer}
+                onPress={() => setShowEndDatePicker(true)}
+              >
+                <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <Text style={styles.dropdownText}>
+                  {periodEnd}
+                </Text>
+              </TouchableOpacity>
+              {showEndDatePicker && (
+                <DateTimePicker
+                  value={parseDateString(periodEnd)}
+                  mode="date"
+                  display="default"
+                  onChange={onEndDateChange}
+                />
+              )}
+            </View>
 
           </View>
         </ScrollView>
@@ -456,9 +345,12 @@ const AddSubscriptionScreen = () => {
             {submitting ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text style={styles.btnTextPrimary}>
-                {isEditMode ? t('deliveries.saveChanges') : t('subscriptions.title')}
-              </Text>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <FileText size={18} color="#FFFFFF" style={{marginRight: 8}} />
+                <Text style={styles.btnTextPrimary}>
+                  Generate Invoices
+                </Text>
+              </View>
             )}
           </TouchableOpacity>
         </View>
@@ -546,10 +438,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 52,
   },
-  inputDisabled: {
-    backgroundColor: '#F8FAFC',
-    opacity: 0.7,
-  },
   inputIcon: {
     marginRight: 8,
   },
@@ -558,14 +446,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: COLORS.textPrimary,
-  },
-  input: {
-    flex: 1,
-    height: '100%',
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPrimary,
-    padding: 0,
   },
   bottomBar: {
     backgroundColor: '#FFFFFF',
@@ -686,4 +566,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddSubscriptionScreen;
+export default GenerateInvoiceScreen;

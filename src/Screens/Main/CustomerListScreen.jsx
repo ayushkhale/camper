@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -28,6 +29,46 @@ const CustomerListScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+
+  const pulseAnim = React.useRef(new Animated.Value(0.35)).current;
+
+  useEffect(() => {
+    if (loading) {
+      const animation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 0.75,
+            duration: 750,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 0.35,
+            duration: 750,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      animation.start();
+      return () => animation.stop();
+    }
+  }, [loading]);
+
+  const renderCustomerSkeleton = () => (
+    <View style={{ paddingHorizontal: 20, paddingTop: 10, gap: 12 }}>
+      {[1, 2, 3, 4, 5].map((key) => (
+        <Animated.View key={key} style={[styles.skeletonCustomerCard, { opacity: pulseAnim }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.skeletonAvatar} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <View style={[styles.skeletonBar, { width: '55%', height: 16, marginBottom: 8 }]} />
+              <View style={[styles.skeletonBar, { width: '35%', height: 12 }]} />
+            </View>
+            <View style={[styles.skeletonBar, { width: 18, height: 18, borderRadius: 9 }]} />
+          </View>
+        </Animated.View>
+      ))}
+    </View>
+  );
 
   const fetchCustomers = async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -132,10 +173,7 @@ const CustomerListScreen = () => {
         </View>
 
         {loading ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading customers...</Text>
-          </View>
+          renderCustomerSkeleton()
         ) : error ? (
           <View style={styles.centerContainer}>
             <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
@@ -214,7 +252,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
@@ -238,7 +276,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     fontSize: 15,
     paddingVertical: 0,
   },
@@ -268,20 +306,20 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 44,
     height: 44,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
     borderWidth: 1,
-    borderColor: '#E0E7FF',
+    borderColor: COLORS.border,
   },
   titleContainer: {
     flex: 1,
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
@@ -293,7 +331,7 @@ const styles = StyleSheet.create({
   subText: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   divider: {
     height: 1,
@@ -313,7 +351,7 @@ const styles = StyleSheet.create({
   },
   routeText: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     color: COLORS.primary,
     flexShrink: 1,
@@ -330,7 +368,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
@@ -343,12 +381,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -363,7 +401,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     fontSize: 15,
   },
   emptyContainer: {
@@ -372,7 +410,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
@@ -381,7 +419,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textPlaceholder,
     textAlign: 'center',
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     marginBottom: 24,
   },
   emptyAddBtn: {
@@ -394,7 +432,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     fontSize: 15,
   },
   fab: {
@@ -407,6 +445,23 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  skeletonCustomerCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  skeletonAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E2E8F0',
+  },
+  skeletonBar: {
+    backgroundColor: '#E2E8F0',
+    borderRadius: 8,
   },
 });
 

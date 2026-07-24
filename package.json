@@ -10,6 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@expo-google-fonts/geologica": "^0.4.2",
+    "@fontsource/geologica": "^5.3.0",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@react-native-community/datetimepicker": "^9.1.0",
     "@react-native/new-app-screen": "0.86.0",

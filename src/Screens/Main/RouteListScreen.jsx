@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
   searchHeader: {
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     paddingVertical: 0,
   },
   listContent: {
@@ -264,26 +264,26 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 42,
     height: 42,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 21,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
     borderWidth: 1,
-    borderColor: '#E0E7FF',
+    borderColor: COLORS.border,
   },
   titleContainer: {
     flex: 1,
   },
   routeName: {
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
   areaCode: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     color: COLORS.primary,
     marginTop: 2,
@@ -300,11 +300,11 @@ const styles = StyleSheet.create({
   },
   staffCountText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
   staffCountValue: {
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     color: COLORS.primary,
   },
@@ -317,12 +317,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     fontSize: 14,
   },
   emptyContainer: {
@@ -357,14 +357,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     fontSize: 14.5,
   },
   fab: {

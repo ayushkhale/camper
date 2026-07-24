@@ -1,23 +1,24 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
-  TextInput, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  ScrollView, 
-  KeyboardAvoidingView, 
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
   Platform,
   Alert,
   Modal,
   FlatList,
-  PermissionsAndroid
+  PermissionsAndroid,
+  Animated,
 } from 'react-native';
 import Contacts from 'react-native-contacts';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, User, Phone, MapPin, AlertCircle, IndianRupee, X, Contact, Package, Repeat, Calendar, Plus, ChevronDown, ChevronUp, Hash, Search, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, User, Phone, MapPin, AlertCircle, IndianRupee, X, Contact, Package, Repeat, Calendar, Plus, ChevronDown, ChevronUp, Hash, Search, ChevronRight, FileText } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -38,14 +39,20 @@ const AddCustomerScreen = () => {
   const [address, setAddress] = useState('');
   const [creditLimit, setCreditLimit] = useState('');
   const [routeId, setRouteId] = useState('');
-  
+
+  // Deposit state (Module 3a)
+  const [addDeposit, setAddDeposit] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [containerCount, setContainerCount] = useState('1');
+  const [depositNotes, setDepositNotes] = useState('');
+
   const [routes, setRoutes] = useState([]);
   const [routeModalVisible, setRouteModalVisible] = useState(false);
-  
+
   const [nameError, setNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [apiError, setApiError] = useState('');
-  
+
   const [loadingRoutes, setLoadingRoutes] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -63,10 +70,47 @@ const AddCustomerScreen = () => {
 
   // Contacts Modal States
   const [contactModalVisible, setContactModalVisible] = useState(false);
+  const [loadingContacts, setLoadingContacts] = useState(false);
   const [contactsList, setContactsList] = useState([]);
   const [filteredContacts, setFilteredContacts] = useState([]);
-  const [loadingContacts, setLoadingContacts] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
+
+  const contactsPulseAnim = useRef(new Animated.Value(0.35)).current;
+
+  useEffect(() => {
+    if (loadingContacts) {
+      const animation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(contactsPulseAnim, {
+            toValue: 0.75,
+            duration: 750,
+            useNativeDriver: true,
+          }),
+          Animated.timing(contactsPulseAnim, {
+            toValue: 0.35,
+            duration: 750,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      animation.start();
+      return () => animation.stop();
+    }
+  }, [loadingContacts]);
+
+  const renderContactsSkeleton = () => (
+    <View style={{ paddingVertical: 12, gap: 12 }}>
+      {[1, 2, 3, 4, 5].map((key) => (
+        <Animated.View key={key} style={[styles.contactRow, { opacity: contactsPulseAnim }]}>
+          <View style={[styles.contactAvatar, { backgroundColor: '#E2E8F0' }]} />
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <View style={[styles.skeletonBar, { width: '55%', height: 16, marginBottom: 6 }]} />
+            <View style={[styles.skeletonBar, { width: '35%', height: 12 }]} />
+          </View>
+        </Animated.View>
+      ))}
+    </View>
+  );
 
   useEffect(() => {
     fetchRoutes();
@@ -101,7 +145,7 @@ const AddCustomerScreen = () => {
   useEffect(() => {
     if (isEditMode && editCustomer) {
       setName(editCustomer.name || '');
-      
+
       let rawPhone = editCustomer.phone || '';
       if (rawPhone.startsWith('+91') && rawPhone.length > 3) {
         rawPhone = rawPhone.substring(3);
@@ -115,7 +159,7 @@ const AddCustomerScreen = () => {
 
   const validate = () => {
     let isValid = true;
-    
+
     if (!name.trim()) {
       setNameError('Name is required');
       isValid = false;
@@ -140,7 +184,7 @@ const AddCustomerScreen = () => {
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    
+
     setSubmitting(true);
     setApiError('');
 
@@ -174,6 +218,21 @@ const AddCustomerScreen = () => {
         const response = await api.createCustomer(userToken, customerData);
         if (response && response.success) {
           const newCustomerId = response.data?.id;
+
+          // Collect Deposit if amount specified and toggle active (Module 3a)
+          if (addDeposit && newCustomerId && depositAmount && parseFloat(depositAmount) > 0) {
+            try {
+              await api.collectDeposit(userToken, {
+                customerId: newCustomerId,
+                amount: parseFloat(depositAmount),
+                containerCount: parseInt(containerCount) || 1,
+                notes: depositNotes.trim() || 'Deposit collected at onboarding',
+              });
+            } catch (depErr) {
+              console.error('Error collecting deposit during customer creation:', depErr);
+            }
+          }
+
           // If subscription fields are filled, create subscription too
           if (addSubscription && productId && newCustomerId) {
             try {
@@ -226,7 +285,7 @@ const AddCustomerScreen = () => {
   };
 
   const formatRecurrence = (pattern) => {
-    switch(pattern) {
+    switch (pattern) {
       case 'daily': return 'Daily';
       case 'alternate_days': return 'Alternate Days';
       case 'weekly': return 'Weekly';
@@ -257,7 +316,7 @@ const AddCustomerScreen = () => {
           return;
         }
       }
-      
+
       if (Platform.OS === 'ios') {
         const status = await Contacts.checkPermission();
         if (status === 'undefined' || status === 'denied') {
@@ -271,9 +330,9 @@ const AddCustomerScreen = () => {
 
       setContactModalVisible(true);
       setLoadingContacts(true);
-      
+
       const allContacts = await Contacts.getAll();
-      
+
       const formatted = allContacts
         .filter(c => c.phoneNumbers && c.phoneNumbers.length > 0)
         .map(c => ({
@@ -300,8 +359,8 @@ const AddCustomerScreen = () => {
       return;
     }
     const lower = text.toLowerCase();
-    const filtered = contactsList.filter(c => 
-      c.name.toLowerCase().includes(lower) || 
+    const filtered = contactsList.filter(c =>
+      c.name.toLowerCase().includes(lower) ||
       c.phone.replace(/[^0-9]/g, '').includes(lower)
     );
     setFilteredContacts(filtered);
@@ -330,7 +389,7 @@ const AddCustomerScreen = () => {
       animationType="slide"
       onRequestClose={() => setRouteModalVisible(false)}
     >
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.modalOverlay}
         activeOpacity={1}
         onPress={() => setRouteModalVisible(false)}
@@ -344,7 +403,7 @@ const AddCustomerScreen = () => {
               <X size={18} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
-          
+
           {loadingRoutes ? (
             <View style={{ padding: 30, alignItems: 'center' }}>
               <ActivityIndicator size="small" color={COLORS.primary} />
@@ -381,7 +440,7 @@ const AddCustomerScreen = () => {
               }}
             />
           )}
-          
+
           <TouchableOpacity
             style={styles.modalClearBtn}
             onPress={() => { setRouteId(''); setRouteModalVisible(false); }}
@@ -400,7 +459,7 @@ const AddCustomerScreen = () => {
       animationType="slide"
       onRequestClose={() => setContactModalVisible(false)}
     >
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.modalOverlay}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
@@ -425,12 +484,9 @@ const AddCustomerScreen = () => {
               placeholderTextColor={COLORS.textPlaceholder}
             />
           </View>
-          
+
           {loadingContacts ? (
-            <View style={{ padding: 40, alignItems: 'center' }}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text style={styles.modalEmptyText}>Loading contacts...</Text>
-            </View>
+            renderContactsSkeleton()
           ) : filteredContacts.length === 0 ? (
             <Text style={styles.modalEmptyText}>No contacts found.</Text>
           ) : (
@@ -467,11 +523,11 @@ const AddCustomerScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -500,8 +556,8 @@ const AddCustomerScreen = () => {
 
           <View style={styles.form}>
             {!isEditMode && (
-              <TouchableOpacity 
-                style={styles.importBtn} 
+              <TouchableOpacity
+                style={styles.importBtn}
                 onPress={handleImportContacts}
                 activeOpacity={0.7}
               >
@@ -583,23 +639,100 @@ const AddCustomerScreen = () => {
               </View>
             </View>
 
+
+
             {/* Route */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('customers.route')}</Text>
-              <TouchableOpacity 
-                style={[styles.inputContainer, { justifyContent: 'space-between' }]}
+              <TouchableOpacity
+                style={styles.inputContainer}
                 onPress={() => setRouteModalVisible(true)}
+                activeOpacity={0.7}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                  <Text style={[styles.input, { marginTop: 14, color: routeId ? COLORS.textPrimary : COLORS.textPlaceholder }]}>
-                    {routeId ? getRouteName(routeId) : t('customers.selectRoute')}
-                  </Text>
-                </View>
+                <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <Text style={[styles.dropdownText, !routeId && { color: COLORS.textPlaceholder }]}>
+                  {routeId ? getRouteName(routeId) : t('customers.selectRoute')}
+                </Text>
+                <ChevronDown size={18} color={COLORS.textPlaceholder} />
               </TouchableOpacity>
             </View>
 
           </View>
+
+          {/* Security Deposit Section - Collapsible Dropdown (Optional & Hidden) */}
+          {!isEditMode && (
+            <>
+              <TouchableOpacity
+                style={styles.subscriptionToggle}
+                onPress={() => setAddDeposit(!addDeposit)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.subscriptionToggleLeft}>
+                  <View style={styles.subToggleIcon}>
+                    <IndianRupee size={18} color={COLORS.primary} />
+                  </View>
+                  <View>
+                    <Text style={styles.subToggleTitle}>Add Security Deposit</Text>
+                    <Text style={styles.subToggleSubtitle}>Record container/jar deposit collected at onboarding</Text>
+                  </View>
+                </View>
+                {addDeposit
+                  ? <ChevronUp size={20} color={COLORS.textSecondary} />
+                  : <ChevronDown size={20} color={COLORS.textSecondary} />}
+              </TouchableOpacity>
+
+              {addDeposit && (
+                <View style={styles.subscriptionSection}>
+                  {/* Deposit Amount */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Deposit Amount (₹) *</Text>
+                    <View style={styles.inputContainer}>
+                      <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. 300"
+                        value={depositAmount}
+                        onChangeText={(val) => setDepositAmount(val.replace(/[^0-9.]/g, ''))}
+                        keyboardType="decimal-pad"
+                        placeholderTextColor={COLORS.textPlaceholder}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Container Count */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Containers/Jars Deposited</Text>
+                    <View style={styles.inputContainer}>
+                      <Package size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. 3"
+                        value={containerCount}
+                        onChangeText={(val) => setContainerCount(val.replace(/[^0-9]/g, ''))}
+                        keyboardType="number-pad"
+                        placeholderTextColor={COLORS.textPlaceholder}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Deposit Notes */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Deposit Notes (Optional)</Text>
+                    <View style={styles.inputContainer}>
+                      <FileText size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. 3 jar deposit collected at onboarding"
+                        value={depositNotes}
+                        onChangeText={setDepositNotes}
+                        placeholderTextColor={COLORS.textPlaceholder}
+                      />
+                    </View>
+                  </View>
+                </View>
+              )}
+            </>
+          )}
 
           {/* Subscription Section - only in add mode */}
           {!isEditMode && (
@@ -763,11 +896,11 @@ const AddCustomerScreen = () => {
               </View>
             </TouchableOpacity>
           </Modal>
-        
+
         </ScrollView>
         {/* Floating Bottom Bar */}
         <View style={styles.bottomBar}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.btn, styles.btnPrimary, submitting && styles.btnDisabled]}
             onPress={handleSubmit}
             disabled={submitting}
@@ -796,6 +929,20 @@ const styles = StyleSheet.create({
   keyboardAvoid: {
     flex: 1,
   },
+  depositSection: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 20,
+  },
+  sectionHeaderTitle: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.primary,
+    marginBottom: 12,
+  },
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: Platform.OS === 'ios' ? 10 : 20,
@@ -815,14 +962,14 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: 28,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 6,
   },
   pageSubtitle: {
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
   },
   errorBanner: {
@@ -841,7 +988,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.danger,
   },
   importBtn: {
@@ -858,7 +1005,7 @@ const styles = StyleSheet.create({
   importBtnText: {
     color: COLORS.primary,
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
   form: {
     marginBottom: 0,
@@ -887,7 +1034,7 @@ const styles = StyleSheet.create({
   },
   countryCode: {
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.primary,
     marginRight: 4,
   },
@@ -895,7 +1042,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.primary,
     padding: 0,
   },
@@ -904,13 +1051,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Geologica-Regular',
     color: COLORS.danger,
     marginTop: 4,
   },
   helperText: {
     fontSize: 11,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Geologica-Regular',
     color: COLORS.textPlaceholder,
     marginTop: 6,
     paddingHorizontal: 2,
@@ -937,7 +1084,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -995,13 +1142,13 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   modalRouteItemActive: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
   },
   modalRouteIcon: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1066,12 +1213,12 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
     borderWidth: 1,
-    borderColor: '#E0E7FF',
+    borderColor: COLORS.border,
   },
   contactAvatarText: {
     fontSize: 14,
@@ -1108,9 +1255,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F0F4FF',
+    backgroundColor: COLORS.primaryLight,
     borderWidth: 1,
-    borderColor: '#C7D2FE',
+    borderColor: COLORS.border,
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
@@ -1125,7 +1272,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -1154,6 +1301,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: COLORS.textPrimary,
+  },
+  skeletonBar: {
+    backgroundColor: '#E2E8F0',
+    borderRadius: 8,
   },
 });
 

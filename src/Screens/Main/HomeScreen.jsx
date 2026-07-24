@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  UserPlus, Package, MapPin, Users, Repeat, ShoppingBag
+  UserPlus, Package, MapPin, Users, Repeat, ShoppingBag, FileText, CreditCard, Truck, ChevronRight
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -26,6 +26,8 @@ const HomeScreen = () => {
 
   const [stats, setStats] = useState({ customers: 0, subscriptions: 0, routes: 0, oneTimeOrders: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [todaysDeliveries, setTodaysDeliveries] = useState([]);
+  const [loadingDeliveries, setLoadingDeliveries] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
@@ -50,7 +52,26 @@ const HomeScreen = () => {
         }
       };
 
+      const fetchDeliveries = async () => {
+        setLoadingDeliveries(true);
+        try {
+          const todayStr = new Date().toISOString().split('T')[0];
+          const res = await api.listDeliveries(userToken, todayStr);
+          if (isActive && res && res.success) {
+            const list = Array.isArray(res.data) 
+              ? res.data 
+              : (Array.isArray(res.data?.deliveries) ? res.data.deliveries : []);
+            setTodaysDeliveries(list);
+          }
+        } catch (err) {
+          console.error('Error fetching today deliveries:', err);
+        } finally {
+          if (isActive) setLoadingDeliveries(false);
+        }
+      };
+
       fetchStats();
+      fetchDeliveries();
       return () => { isActive = false; };
     }, [userToken])
   );
@@ -76,33 +97,71 @@ const HomeScreen = () => {
     }
   }, [loadingStats]);
 
-  const renderSkeleton = () => (
-    <View style={styles.overviewGrid}>
-      <View style={styles.overviewRow}>
-        <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
-          <View style={styles.skeletonTitle} />
-          <View style={styles.skeletonValue} />
-        </Animated.View>
-        <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
-          <View style={styles.skeletonTitle} />
-          <View style={styles.skeletonValue} />
+  const renderWholeScreenSkeleton = () => (
+    <View style={{ gap: 20 }}>
+      {/* 1. Today's Overview Skeleton */}
+      <View>
+        <View style={styles.skeletonBarTitle} />
+        <View style={styles.overviewGrid}>
+          <View style={styles.overviewRow}>
+            <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonValue} />
+            </Animated.View>
+            <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonValue} />
+            </Animated.View>
+          </View>
+          <View style={[styles.overviewRow, { marginBottom: 0 }]}>
+            <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonValue} />
+            </Animated.View>
+            <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonValue} />
+            </Animated.View>
+          </View>
+        </View>
+      </View>
+
+      {/* 2. Business Services Skeleton */}
+      <View>
+        <View style={styles.skeletonBarTitle} />
+        <Animated.View style={[styles.servicesCard, { opacity: pulseAnim }]}>
+          {[1, 2, 3, 4, 5, 6].map((key) => (
+            <View key={key} style={styles.serviceItem}>
+              <View style={[styles.skeletonCircle, { width: 44, height: 44, borderRadius: 22, backgroundColor: '#E2E8F0', marginBottom: 8 }]} />
+              <View style={[styles.skeletonBar, { width: 50, height: 12, backgroundColor: '#E2E8F0', borderRadius: 6 }]} />
+            </View>
+          ))}
         </Animated.View>
       </View>
-      <View style={[styles.overviewRow, { marginBottom: 0 }]}>
-        <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
-          <View style={styles.skeletonTitle} />
-          <View style={styles.skeletonValue} />
-        </Animated.View>
-        <Animated.View style={[styles.overviewCardQuart, { backgroundColor: '#F1F5F9', opacity: pulseAnim }]}>
-          <View style={styles.skeletonTitle} />
-          <View style={styles.skeletonValue} />
+
+      {/* 3. Today's Orders Skeleton */}
+      <View>
+        <View style={styles.skeletonBarTitle} />
+        <Animated.View style={[styles.todaysOrdersCardContainer, { padding: 16, opacity: pulseAnim }]}>
+          {[1, 2, 3].map((key) => (
+            <View key={key} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#CBD5E1', marginRight: 10 }} />
+                <View style={{ flex: 1 }}>
+                  <View style={[styles.skeletonBar, { width: '60%', height: 14, backgroundColor: '#E2E8F0', borderRadius: 6, marginBottom: 4 }]} />
+                  <View style={[styles.skeletonBar, { width: '40%', height: 11, backgroundColor: '#E2E8F0', borderRadius: 6 }]} />
+                </View>
+              </View>
+              <View style={[styles.skeletonBar, { width: 60, height: 20, backgroundColor: '#E2E8F0', borderRadius: 10 }]} />
+            </View>
+          ))}
         </Animated.View>
       </View>
     </View>
   );
 
   const features = [
-    { title: t('tabs.customers'), icon: Users, tab: 'Customers' },
+    { title: t('invoices.title', 'Invoices'), icon: FileText, screen: 'InvoiceList' },
     { title: t('subscriptions.title'), icon: Repeat, screen: 'SubscriptionList' },
     { title: t('deliveries.allRoutes'), icon: MapPin, screen: 'RouteList' },
     { title: t('products.title'), icon: Package, screen: 'ProductCatalog' },
@@ -114,97 +173,152 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* Today's Overview (Colorful Vertical Cards) */}
-        <Text style={styles.sectionTitle}>{t('home.overviewTitle') || 'Today\'s Overview'}</Text>
-        {loadingStats ? renderSkeleton() : (
-          <View style={styles.overviewGrid}>
-            <View style={styles.overviewRow}>
-              {/* Customers Card */}
-              <View style={styles.overviewCardQuart}>
-                <View style={styles.overviewImageBgPlaceholder} />
-                <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
-                  <Image
-                    source={require('../../../assets/customerstats.png')}
-                    style={{ width: 95, height: 95 }}
-                    resizeMode="contain"
-                  />
+        {(loadingStats || loadingDeliveries) ? (
+          renderWholeScreenSkeleton()
+        ) : (
+          <>
+            {/* Today's Overview (Colorful Vertical Cards) */}
+            <Text style={styles.sectionTitle}>{t('home.overviewTitle') || 'Today\'s Overview'}</Text>
+            <View style={styles.overviewGrid}>
+              <View style={styles.overviewRow}>
+                {/* Customers Card */}
+                <View style={styles.overviewCardQuart}>
+                  <View style={styles.overviewImageBgPlaceholder} />
+                  <View style={[styles.overviewIconAbsolute, { right: -2, bottom: -2, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                    <Image
+                      source={require('../../../assets/customerstats.png')}
+                      style={{ width: 90, height: 90 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <Text style={styles.overviewTitleDark}>{t('tabs.customers')}</Text>
+                  <Text style={styles.overviewValueDark}>{stats.customers}</Text>
                 </View>
-                <Text style={styles.overviewTitleDark}>{t('tabs.customers')}</Text>
-                <Text style={styles.overviewValueDark}>{stats.customers}</Text>
-              </View>
 
-              {/* Active Subs Card */}
-              <View style={styles.overviewCardQuart}>
-                <View style={styles.overviewImageBgPlaceholder} />
-                <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
-                  <Image
-                    source={require('../../../assets/activesubstat.png')}
-                    style={{ width: 95, height: 95 }}
-                    resizeMode="contain"
-                  />
+                {/* Active Subs Card */}
+                <View style={styles.overviewCardQuart}>
+                  <View style={styles.overviewImageBgPlaceholder} />
+                  <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                    <Image
+                      source={require('../../../assets/activesubstat.png')}
+                      style={{ width: 95, height: 95 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <Text style={styles.overviewTitleDark}>{t('customers.activeSubscriptions')}</Text>
+                  <Text style={styles.overviewValueDark}>{stats.subscriptions}</Text>
                 </View>
-                <Text style={styles.overviewTitleDark}>{t('customers.activeSubscriptions')}</Text>
-                <Text style={styles.overviewValueDark}>{stats.subscriptions}</Text>
+              </View>
+              <View style={[styles.overviewRow, { marginBottom: 0 }]}>
+                {/* Routes Card */}
+                <View style={styles.overviewCardQuart}>
+                  <View style={styles.overviewImageBgPlaceholder} />
+                  <View style={[styles.overviewIconAbsolute, { right: -15, bottom: -15, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                    <Image
+                      source={require('../../../assets/routestat.png')}
+                      style={{ width: 125, height: 125 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <Text style={styles.overviewTitleDark}>{t('deliveries.allRoutes')}</Text>
+                  <Text style={styles.overviewValueDark}>{stats.routes}</Text>
+                </View>
+
+                {/* One Time Orders Card */}
+                <View style={styles.overviewCardQuart}>
+                  <View style={styles.overviewImageBgPlaceholder} />
+                  <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                    <Image
+                      source={require('../../../assets/onetimestat.png')}
+                      style={{ width: 95, height: 95 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <Text style={styles.overviewTitleDark}>{t('oneTimeOrders.title')}</Text>
+                  <Text style={styles.overviewValueDark}>{stats.oneTimeOrders}</Text>
+                </View>
               </View>
             </View>
-            <View style={[styles.overviewRow, { marginBottom: 0 }]}>
-              {/* Routes Card */}
-              <View style={styles.overviewCardQuart}>
-                <View style={styles.overviewImageBgPlaceholder} />
-                <View style={[styles.overviewIconAbsolute, { right: -25, bottom: -25, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
-                  <Image
-                    source={require('../../../assets/routestat.png')}
-                    style={{ width: 140, height: 140 }}
-                    resizeMode="contain"
-                  />
-                </View>
-                <Text style={styles.overviewTitleDark}>{t('deliveries.allRoutes')}</Text>
-                <Text style={styles.overviewValueDark}>{stats.routes}</Text>
-              </View>
 
-              {/* One Time Orders Card */}
-              <View style={styles.overviewCardQuart}>
-                <View style={styles.overviewImageBgPlaceholder} />
-                <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
-                  <Image
-                    source={require('../../../assets/onetimestat.png')}
-                    style={{ width: 95, height: 95 }}
-                    resizeMode="contain"
-                  />
-                </View>
-                <Text style={styles.overviewTitleDark}>{t('oneTimeOrders.title')}</Text>
-                <Text style={styles.overviewValueDark}>{stats.oneTimeOrders}</Text>
-              </View>
+            {/* Business Services (White Card Grid) */}
+            <Text style={styles.sectionTitle}>{t('home.quickActionsTitle') || 'Business Services'}</Text>
+            <View style={styles.servicesCard}>
+              {features.map((feature, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.serviceItem}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    if (feature.tab) {
+                      navigation.navigate('MainDrawer', {
+                        screen: 'MainTabs',
+                        params: { screen: feature.tab },
+                      });
+                    } else {
+                      navigation.navigate(feature.screen);
+                    }
+                  }}
+                >
+                  <View style={styles.serviceIconWrap}>
+                    <feature.icon size={28} color={COLORS.secondary} strokeWidth={2} />
+                  </View>
+                  <Text style={styles.serviceText}>{feature.title}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          </View>
+
+            {/* Dedicated Today's Orders Card Section */}
+            <Text style={styles.sectionTitle}>Today's Orders</Text>
+            <View style={styles.todaysOrdersCardContainer}>
+              {!Array.isArray(todaysDeliveries) || todaysDeliveries.length === 0 ? (
+                <View style={styles.emptyOrdersBox}>
+                  <Truck size={32} color={COLORS.textPlaceholder} style={{ marginBottom: 8 }} />
+                  <Text style={styles.emptyOrdersText}>No orders scheduled for today.</Text>
+                </View>
+              ) : (
+                todaysDeliveries.slice(0, 5).map((item, idx) => {
+                  const statusColor = 
+                    item.status === 'delivered' ? COLORS.success :
+                    item.status === 'skipped' ? COLORS.danger : COLORS.warning;
+                  
+                  return (
+                    <View key={item.id || idx} style={[styles.orderCardItem, idx < Math.min(todaysDeliveries.length, 5) - 1 && styles.orderItemBorder]}>
+                      <View style={styles.orderCardLeft}>
+                        <View style={[styles.orderStatusDot, { backgroundColor: statusColor }]} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.orderCustomerName} numberOfLines={1}>
+                            {item.Customer?.name || 'Customer'}
+                          </Text>
+                          <Text style={styles.orderProductInfo} numberOfLines={1}>
+                            {item.Subscription?.Product?.name || 'Product'} • Qty: {item.Subscription?.baseQuantity || 1}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={[styles.orderStatusBadge, { backgroundColor: statusColor + '18' }]}>
+                        <Text style={[styles.orderStatusText, { color: statusColor }]}>
+                          {String(item.status || 'pending').toUpperCase()}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
+              {Array.isArray(todaysDeliveries) && todaysDeliveries.length > 5 && (
+                <TouchableOpacity 
+                  style={styles.viewMoreBtn}
+                  onPress={() => {
+                    navigation.navigate('MainDrawer', {
+                      screen: 'MainTabs',
+                      params: { screen: 'Deliveries' },
+                    });
+                  }}
+                >
+                  <Text style={styles.viewMoreText}>View All ({todaysDeliveries.length})</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </>
         )}
-
-        {/* Business Services (White Card Grid) */}
-        <Text style={styles.sectionTitle}>{t('home.quickActionsTitle') || 'Business Services'}</Text>
-        <View style={styles.servicesCard}>
-          {features.map((feature, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.serviceItem}
-              activeOpacity={0.7}
-              onPress={() => {
-                if (feature.tab) {
-                  navigation.navigate('MainDrawer', {
-                    screen: 'MainTabs',
-                    params: { screen: feature.tab },
-                  });
-                } else {
-                  navigation.navigate(feature.screen);
-                }
-              }}
-            >
-              <View style={styles.serviceIconWrap}>
-                <feature.icon size={28} color={COLORS.primary} strokeWidth={2} />
-              </View>
-              <Text style={styles.serviceText}>{feature.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
 
       </ScrollView>
     </SafeAreaView>
@@ -222,11 +336,84 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.primary,
     marginBottom: 16,
     marginTop: 10,
     marginLeft: 4,
+  },
+  todaysOrdersCardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 20,
+  },
+  emptyOrdersBox: {
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyOrdersText: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textPlaceholder,
+  },
+  orderCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  orderItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  orderCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    paddingRight: 12,
+  },
+  orderStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  orderCustomerName: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.textPrimary,
+    marginBottom: 2,
+  },
+  orderProductInfo: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textSecondary,
+  },
+  orderStatusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  orderStatusText: {
+    fontSize: 10,
+    fontFamily: 'Geologica-Bold',
+  },
+  viewMoreBtn: {
+    alignItems: 'center',
+    paddingTop: 12,
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  viewMoreText: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.primary,
   },
 
   // Overview Section
@@ -249,21 +436,22 @@ const styles = StyleSheet.create({
     padding: 16,
     flexDirection: 'column',
     overflow: 'hidden',
-    backgroundColor: 'rgba(14, 68, 168, 0.06)', // Low opacity primary
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   overviewTitleDark: {
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
-    fontWeight: '600',
-    color: COLORS.textPrimary,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.primary,
     marginBottom: 4,
     zIndex: 2,
   },
   overviewValueDark: {
     fontSize: 28,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.secondary,
     zIndex: 2,
   },
   overviewImageBgPlaceholder: {
@@ -272,7 +460,7 @@ const styles = StyleSheet.create({
     bottom: -20,
     width: 90,
     height: 90,
-    backgroundColor: 'rgba(14, 68, 168, 0.08)',
+    backgroundColor: COLORS.secondaryLight,
     borderRadius: 45,
     zIndex: 0,
   },
@@ -281,8 +469,7 @@ const styles = StyleSheet.create({
     right: -5,
     bottom: -5,
     zIndex: 1,
-    opacity: 0.06,
-    transform: [{ rotate: '-10deg' }],
+    opacity: 0.95,
   },
 
   // Business Services Grid
@@ -294,7 +481,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     borderWidth: 1,
-    borderColor: 'rgba(14, 68, 168, 0.12)',
+    borderColor: COLORS.border,
     // Soft M3 elevated shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -317,9 +504,16 @@ const styles = StyleSheet.create({
   },
   serviceText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: COLORS.textPrimary,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.primary,
     textAlign: 'center',
+  },
+  skeletonBarTitle: {
+    width: 140,
+    height: 18,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 8,
+    marginBottom: 14,
   },
   skeletonTitle: {
     width: '65%',

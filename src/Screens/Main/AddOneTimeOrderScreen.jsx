@@ -295,7 +295,7 @@ const AddOneTimeOrderScreen = () => {
               }}
               ListEmptyComponent={
                 <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Inter-Medium' }}>
+                  <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Geologica-Medium' }}>
                     No items available
                   </Text>
                 </View>
@@ -311,7 +311,7 @@ const AddOneTimeOrderScreen = () => {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder, fontFamily: 'Inter-Medium' }}>
+        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder, fontFamily: 'Geologica-Medium' }}>
           Loading form data...
         </Text>
       </SafeAreaView>
@@ -550,14 +550,14 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: 28,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 6,
   },
   pageSubtitle: {
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
   },
   errorBanner: {
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.danger,
   },
   form: {
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -610,14 +610,14 @@ const styles = StyleSheet.create({
   inputText: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
   },
   input: {
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -639,16 +639,16 @@ const styles = StyleSheet.create({
   addProductBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     borderWidth: 1,
-    borderColor: '#C7D2FE',
+    borderColor: COLORS.border,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   addProductBtnText: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.primary,
   },
   emptyProductsCard: {
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
   },
   emptyProductsText: {
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
   },
   itemsListContainer: {
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   },
   productItemName: {
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
     flex: 1,
     marginRight: 10,
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   },
   itemInputLabel: {
     fontSize: 11,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
@@ -719,13 +719,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 13,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
     padding: 0,
   },
   currencySymbol: {
     fontSize: 13,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
     marginRight: 4,
   },
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
   modalItem: {
@@ -788,13 +788,13 @@ const styles = StyleSheet.create({
   },
   modalItemText: {
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
     flex: 1,
   },
   modalItemTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
 });
 

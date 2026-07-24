@@ -21,6 +21,9 @@ import AddSubscriptionScreen from '../Screens/Main/AddSubscriptionScreen';
 import SubscriptionDetailScreen from '../Screens/Main/SubscriptionDetailScreen';
 import OneTimeOrderListScreen from '../Screens/Main/OneTimeOrderListScreen';
 import AddOneTimeOrderScreen from '../Screens/Main/AddOneTimeOrderScreen';
+import InvoiceListScreen from '../Screens/Main/InvoiceListScreen';
+import InvoiceDetailScreen from '../Screens/Main/InvoiceDetailScreen';
+import GenerateInvoiceScreen from '../Screens/Main/GenerateInvoiceScreen';
 import { AuthProvider, AuthContext } from '../context/AuthContext';
 import { COLORS } from '../constants/colors';
 
@@ -71,6 +74,9 @@ const RootNavigatorContent = () => {
           <Stack.Screen name="SubscriptionDetail" component={SubscriptionDetailScreen} />
           <Stack.Screen name="OneTimeOrderList" component={OneTimeOrderListScreen} />
           <Stack.Screen name="AddOneTimeOrder" component={AddOneTimeOrderScreen} />
+          <Stack.Screen name="InvoiceList" component={InvoiceListScreen} />
+          <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} />
+          <Stack.Screen name="GenerateInvoice" component={GenerateInvoiceScreen} />
         </>
       )}
     </Stack.Navigator>

@@ -302,14 +302,14 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: 28,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 6,
   },
   pageSubtitle: {
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
   },
   errorBanner: {
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.danger,
   },
   form: {
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
   },
   countryCode: {
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.primary,
     marginRight: 4,
   },
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -379,13 +379,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.danger,
     marginTop: 4,
   },
   helperText: {
     fontSize: 11,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
     marginTop: 6,
     paddingHorizontal: 2,
@@ -414,12 +414,12 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
   btnTextSecondary: {
     color: COLORS.textSecondary,
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
 });
 

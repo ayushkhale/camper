@@ -1,5 +1,5 @@
 
-const API_BASE_URL = 'http://192.168.1.30:3007';
+const API_BASE_URL = 'http://192.168.1.5:3007';
 
 const logRequest = (url, body) => {
   console.log(`🚀 [API Request] POST ${url}`);
@@ -402,4 +402,41 @@ export const api = {
   // Dashboard APIs
   getDashboardStats: (token) =>
     getRequest('/api/vendor/dashboard', token),
+
+  // ── INVOICES ─────────────────────────────────────────────────
+  generateInvoices: (token, data) =>
+    postRequest('/api/vendor/invoices/generate', data, token),
+
+  listInvoices: (token, { customerId, status, from, to } = {}) => {
+    let queryParams = [];
+    if (customerId) queryParams.push(`customerId=${encodeURIComponent(customerId)}`);
+    if (status) queryParams.push(`status=${encodeURIComponent(status)}`);
+    if (from) queryParams.push(`from=${encodeURIComponent(from)}`);
+    if (to) queryParams.push(`to=${encodeURIComponent(to)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return getRequest(`/api/vendor/invoices${queryString}`, token);
+  },
+
+  getInvoiceById: (token, id) =>
+    getRequest(`/api/vendor/invoices/${id}`, token),
+
+  // ── LEDGER ───────────────────────────────────────────────────
+  recordPayment: (token, data) =>
+    postRequest('/api/vendor/ledgers/payment', data, token),
+
+  getAccountStatement: (token, customerId) =>
+    getRequest(`/api/vendor/ledgers/account/${customerId}`, token),
+
+  // ── DEPOSITS ─────────────────────────────────────────────────
+  collectDeposit: (token, data) =>
+    postRequest('/api/vendor/deposits/collect', data, token),
+
+  settleDepositToBill: (token, data) =>
+    postRequest('/api/vendor/deposits/settle-to-bill', data, token),
+
+  refundDeposit: (token, data) =>
+    postRequest('/api/vendor/deposits/refund', data, token),
+
+  getDepositLedger: (token, customerId) =>
+    getRequest(`/api/vendor/deposits/${customerId}`, token),
 };

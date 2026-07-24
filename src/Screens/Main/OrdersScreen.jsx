@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -10,13 +10,15 @@ import {
   Modal,
   TextInput,
   Platform,
+  Animated,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
-  Truck, Package, CheckCircle, XCircle, ChevronRight, X, Play, Calendar, MapPin, AlertCircle
+  Truck, Package, CheckCircle, XCircle, ChevronRight, X, Play, Calendar, MapPin, AlertCircle, Edit2, Save, MoreVertical, Activity, FileText
 } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
+import DeliveryStatusSlider from '../../components/DeliveryStatusSlider';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -36,6 +38,115 @@ const getNext7Days = () => {
   }
   return days;
 };
+
+const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [fullUnits, setFullUnits] = useState(delivery.fullUnitsDelivered?.toString() || delivery.Subscription?.baseQuantity?.toString() || '0');
+  const [emptyUnits, setEmptyUnits] = useState(delivery.emptyUnitsCollected?.toString() || '0');
+  const [updating, setUpdating] = useState(false);
+  
+  const statusColors = getStatusColor(delivery.status);
+
+  const handleUpdate = async (status, full, empty) => {
+    setUpdating(true);
+    await onUpdateStatus(delivery.id, {
+      status,
+      fullUnitsDelivered: parseInt(full) || 0,
+      emptyUnitsCollected: parseInt(empty) || 0,
+    });
+    setUpdating(false);
+    setIsEditing(false);
+  };
+
+  const handleStatusChange = (newStatus) => {
+    handleUpdate(newStatus, fullUnits, emptyUnits);
+  };
+
+  return (
+    <View style={[styles.deliveryCardWrapper, isEditing && styles.deliveryCardEditing]}>
+      {updating && (
+        <View style={styles.cardUpdatingOverlay}>
+          <ActivityIndicator color={COLORS.primary} />
+        </View>
+      )}
+      
+      <View style={styles.cardHeader}>
+        <View style={styles.iconBox}>
+          <Truck size={22} color={COLORS.primary} />
+        </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.customerName} numberOfLines={1}>
+            {delivery.Customer?.name || 'Unknown Customer'}
+          </Text>
+          <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 4}}>
+            <Package size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+            <Text style={styles.subText} numberOfLines={1}>
+              {delivery.Subscription?.Product?.name || 'Product'} • Qty: {delivery.Subscription?.baseQuantity || 0}
+            </Text>
+          </View>
+        </View>
+        <TouchableOpacity style={{ padding: 4 }} onPress={() => setIsEditing(!isEditing)}>
+          <Edit2 size={16} color={COLORS.textSecondary} />
+        </TouchableOpacity>
+      </View>
+
+      {!isEditing ? (
+        <View style={styles.sliderSection}>
+          <View style={styles.sliderUnitsRow}>
+            <View style={[styles.sliderUnit, styles.sliderUnitEmpty]}>
+              <Text style={[styles.sliderUnitLabel, { color: '#DC2626' }]}>Empty Jars</Text>
+              <Text style={[styles.sliderUnitValue, { color: '#DC2626' }]}>{emptyUnits}</Text>
+            </View>
+            <View style={[styles.sliderUnit, styles.sliderUnitDelivered]}>
+              <Text style={[styles.sliderUnitLabel, { color: '#059669' }]}>Delivered</Text>
+              <Text style={[styles.sliderUnitValue, { color: '#059669' }]}>{fullUnits}</Text>
+            </View>
+          </View>
+          <DeliveryStatusSlider 
+            status={delivery.status} 
+            onStatusChange={handleStatusChange} 
+          />
+        </View>
+      ) : (
+        <View style={styles.inlineEditContainer}>
+          <View style={styles.inlineInputWrapper}>
+            <View style={styles.inlineInputGroup}>
+              <Text style={styles.inlineInputLabel}>Full Units</Text>
+              <TextInput
+                style={styles.inlineInput}
+                value={fullUnits}
+                onChangeText={setFullUnits}
+                keyboardType="numeric"
+                placeholder="0"
+              />
+            </View>
+            <View style={styles.inlineInputGroup}>
+              <Text style={styles.inlineInputLabel}>Empty Units</Text>
+              <TextInput
+                style={styles.inlineInput}
+                value={emptyUnits}
+                onChangeText={setEmptyUnits}
+                keyboardType="numeric"
+                placeholder="0"
+              />
+            </View>
+          </View>
+          <TouchableOpacity 
+            style={styles.inlineSaveBtn}
+            onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
+            activeOpacity={0.8}
+          >
+            <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
+            <Text style={styles.inlineSaveBtnText}>Save</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <View style={styles.bottomDivider} />
+    </View>
+  );
+};
+
 
 const OrdersScreen = () => {
   const { t } = useTranslation();
@@ -77,17 +188,57 @@ const OrdersScreen = () => {
   const [generating, setGenerating] = useState(false);
 
   // Modal State
-  const [selectedDelivery, setSelectedDelivery] = useState(null);
-  const [updateStatus, setUpdateStatus] = useState('delivered');
-  const [fullUnits, setFullUnits] = useState('0');
-  const [emptyUnits, setEmptyUnits] = useState('0');
-  const [updating, setUpdating] = useState(false);
+  const [activeFilterModal, setActiveFilterModal] = useState(null); // 'route' | 'status' | null
 
   // Filters State
   const [routes, setRoutes] = useState([]);
   const [selectedRouteId, setSelectedRouteId] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [activeFilterModal, setActiveFilterModal] = useState(null); // 'route' | 'status' | null
+  const [selectedStatus] = useState('pending');
+
+  const pulseAnim = useRef(new Animated.Value(0.35)).current;
+
+  useEffect(() => {
+    if (loadingDeliveries) {
+      const animation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 0.75,
+            duration: 750,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 0.35,
+            duration: 750,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      animation.start();
+      return () => animation.stop();
+    }
+  }, [loadingDeliveries]);
+
+  const renderDeliverySkeleton = () => (
+    <View style={{ gap: 16 }}>
+      {[1, 2, 3].map((key) => (
+        <Animated.View key={key} style={[styles.skeletonCard, { opacity: pulseAnim }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={styles.skeletonAvatar} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <View style={[styles.skeletonBar, { width: '55%', height: 16, marginBottom: 6 }]} />
+              <View style={[styles.skeletonBar, { width: '35%', height: 12 }]} />
+            </View>
+            <View style={[styles.skeletonBar, { width: 60, height: 24, borderRadius: 12 }]} />
+          </View>
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+            <View style={[styles.skeletonBox, { flex: 1, height: 48 }]} />
+            <View style={[styles.skeletonBox, { flex: 1, height: 48 }]} />
+          </View>
+          <View style={[styles.skeletonBar, { width: '100%', height: 48, borderRadius: 24 }]} />
+        </Animated.View>
+      ))}
+    </View>
+  );
 
   const fetchRoutes = async () => {
     try {
@@ -100,13 +251,15 @@ const OrdersScreen = () => {
     }
   };
 
-  const fetchDeliveries = async (dateStr, routeId = '', status = '') => {
+  const fetchDeliveries = async (dateStr, routeId = '') => {
     setLoadingDeliveries(true);
     try {
-      const statusParam = status === 'all' ? '' : status;
-      const res = await api.listDeliveries(userToken, dateStr, routeId, statusParam);
-      if (res.success) {
-        setDeliveries(res.data || []);
+      const res = await api.listDeliveries(userToken, dateStr, routeId, 'pending');
+      if (res && res.success) {
+        const rawList = Array.isArray(res.data) ? res.data : (res.data?.deliveries || []);
+        // Hide items whose status is delivered or skipped
+        const pendingOnly = rawList.filter(item => item.status !== 'delivered' && item.status !== 'skipped');
+        setDeliveries(pendingOnly);
       }
     } catch (err) {
       console.error('Error fetching deliveries:', err);
@@ -117,9 +270,9 @@ const OrdersScreen = () => {
 
   useEffect(() => {
     if (userToken) {
-      fetchDeliveries(selectedDate, selectedRouteId, selectedStatus);
+      fetchDeliveries(selectedDate, selectedRouteId);
     }
-  }, [selectedDate, selectedRouteId, selectedStatus, userToken]);
+  }, [selectedDate, selectedRouteId, userToken]);
 
   useEffect(() => {
     if (userToken) {
@@ -144,34 +297,21 @@ const OrdersScreen = () => {
     }
   };
 
-  const openUpdateModal = (delivery) => {
-    setSelectedDelivery(delivery);
-    setUpdateStatus(delivery.status === 'pending' ? 'delivered' : delivery.status);
-    setFullUnits(delivery.fullUnitsDelivered?.toString() || delivery.Subscription?.baseQuantity?.toString() || '0');
-    setEmptyUnits(delivery.emptyUnitsCollected?.toString() || '0');
-  };
-
-  const handleUpdateSubmit = async () => {
-    setUpdating(true);
+  const handleDeliveryUpdate = async (deliveryId, data) => {
     try {
-      const data = {
-        status: updateStatus,
-        fullUnitsDelivered: parseInt(fullUnits) || 0,
-        emptyUnitsCollected: parseInt(emptyUnits) || 0
-      };
-      const res = await api.updateDeliveryStatus(userToken, selectedDelivery.id, data);
-      if (res.success) {
-        setSelectedDelivery(null);
-        fetchDeliveries(selectedDate);
+      const res = await api.updateDeliveryStatus(userToken, deliveryId, data);
+      if (res && res.success) {
+        // Immediately remove delivered/skipped item from active pending list
+        setDeliveries(prev => prev.filter(d => d.id !== deliveryId));
+        fetchDeliveries(selectedDate, selectedRouteId);
       } else {
         Alert.alert('Error', res.message || 'Failed to update delivery');
       }
     } catch (err) {
       Alert.alert('Error', err.message);
-    } finally {
-      setUpdating(false);
     }
   };
+
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -202,50 +342,18 @@ const OrdersScreen = () => {
         
         {/* Header */}
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>{t('deliveries.title')}</Text>
+          <View>
+            <Text style={styles.headerTitle}>Today's deliveries</Text>
+            <Text style={styles.headerSubtitle}>Manage and track your daily delivery tasks</Text>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* Calendar Card Section */}
-          <View style={styles.calendarCard}>
-            <View style={styles.calendarHeader}>
-              <Text style={styles.calendarTitle}>
-                {new Date(selectedDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </Text>
-              <TouchableOpacity 
-                onPress={() => setShowDatePicker(true)}
-                style={styles.calendarIconBtn}
-                activeOpacity={0.7}
-              >
-                <Calendar size={18} color={COLORS.primary} />
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.calendarStrip}>
-              {calendarDays.map((day, index) => {
-                const isSelected = selectedDate === day.fullDate;
-                return (
-                  <TouchableOpacity 
-                    key={index}
-                    activeOpacity={0.8}
-                    style={[styles.dayItem, isSelected && styles.dayItemSelected]}
-                    onPress={() => setSelectedDate(day.fullDate)}
-                  >
-                    <Text style={[styles.dayName, isSelected && styles.dayNameSelected]}>{day.dayName}</Text>
-                    <View style={[styles.dayNumberCircle, isSelected && styles.dayNumberCircleSelected]}>
-                      <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{day.dayNumber}</Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* Filters Row */}
-          <View style={styles.filtersRow}>
+          {/* Filters Row - Route Filter Only */}
+          <View style={styles.filtersHorizontalRow}>
             <TouchableOpacity 
-              style={styles.filterDropdown} 
+              style={[styles.filterDropdown, { flex: 1 }]} 
               onPress={() => setActiveFilterModal('route')}
               activeOpacity={0.7}
             >
@@ -253,47 +361,30 @@ const OrdersScreen = () => {
               <Text style={styles.filterDropdownText} numberOfLines={1}>
                 {selectedRouteId ? (routes.find(r => r.id === selectedRouteId)?.name || 'Route') : t('deliveries.allRoutes')}
               </Text>
-              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 6, transform: [{ rotate: '90deg' }] }} />
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.filterDropdown, { marginLeft: 10 }]} 
-              onPress={() => setActiveFilterModal('status')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.filterDropdownText} numberOfLines={1}>
-                {selectedStatus === 'all' ? t('deliveries.allStatus') : t('deliveries.' + selectedStatus)}
-              </Text>
-              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 6, transform: [{ rotate: '90deg' }] }} />
+              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
             </TouchableOpacity>
           </View>
 
-          {/* Deliveries Actions Row */}
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>{t('deliveries.taskList')}</Text>
-            <TouchableOpacity 
-              style={styles.generateBtn} 
-              onPress={handleGenerateDeliveries}
-              disabled={generating}
-              activeOpacity={0.7}
-            >
-              {generating ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
-              ) : (
-                <>
-                  <Play size={13} color={COLORS.primary} style={{ marginRight: 4 }} />
-                  <Text style={styles.generateBtnText}>{t('deliveries.generate')}</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+          {/* Generate Button */}
+          <TouchableOpacity 
+            style={styles.generateBtnThick} 
+            onPress={handleGenerateDeliveries}
+            disabled={generating}
+            activeOpacity={0.7}
+          >
+            {generating ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <FileText size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.generateBtnTextThick}>Generate Deliveries</Text>
+              </>
+            )}
+          </TouchableOpacity>
 
           <View style={styles.deliveriesContainer}>
             {loadingDeliveries ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={styles.loadingText}>Loading deliveries...</Text>
-              </View>
+              renderDeliverySkeleton()
             ) : deliveries.length === 0 ? (
               <View style={styles.emptyCard}>
                 <Truck size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
@@ -301,148 +392,20 @@ const OrdersScreen = () => {
                 <Text style={styles.emptySubtitle}>{t('deliveries.emptyDeliveriesSub')}</Text>
               </View>
             ) : (
-              getGroupedDeliveries().map((group, groupIdx) => (
-                <View key={groupIdx} style={styles.routeGroup}>
-                  <View style={styles.routeHeader}>
-                    <Text style={styles.routeTitle}>{group.routeName.toUpperCase()}</Text>
-                    <View style={styles.routeBadge}>
-                      <Text style={styles.routeBadgeText}>{group.items.length} {t('deliveries.trips')}</Text>
-                    </View>
-                  </View>
-
-                  {group.items.map((delivery) => {
-                    const statusColors = getStatusColor(delivery.status);
-                    return (
-                      <TouchableOpacity 
-                        key={delivery.id} 
-                        style={styles.deliveryCard}
-                        activeOpacity={0.7}
-                        onPress={() => openUpdateModal(delivery)}
-                      >
-                        <View style={styles.cardHeader}>
-                          <View style={styles.iconBox}>
-                            <Truck size={22} color={COLORS.primary} />
-                          </View>
-                          <View style={styles.titleContainer}>
-                            <Text style={styles.customerName} numberOfLines={1}>
-                              {delivery.Customer?.name || 'Unknown Customer'}
-                            </Text>
-                            <Text style={styles.subText} numberOfLines={1}>
-                              {delivery.Customer?.address || 'No address provided'}
-                            </Text>
-                          </View>
-                          <View style={styles.statusBadge}>
-                            <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
-                            <Text style={[styles.statusText, { color: statusColors.text }]}>
-                              {delivery.status.toUpperCase()}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.divider} />
-
-                        <View style={styles.cardFooter}>
-                          <View style={styles.metaContainer}>
-                            <Package size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-                            <Text style={styles.metaText} numberOfLines={1}>
-                              {delivery.Subscription?.Product?.name || 'Product'}
-                            </Text>
-                          </View>
-                          <Text style={styles.qtyText}>
-                            Qty: {delivery.Subscription?.baseQuantity || 0}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+              deliveries.map((delivery) => (
+                <DeliveryCard 
+                  key={delivery.id} 
+                  delivery={delivery} 
+                  onUpdateStatus={handleDeliveryUpdate}
+                  getStatusColor={getStatusColor}
+                  t={t}
+                />
               ))
             )}
           </View>
 
         </ScrollView>
       </View>
-
-      {/* Update Delivery Modal */}
-      {selectedDelivery && (
-        <Modal
-          visible={true}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setSelectedDelivery(null)}
-        >
-          <TouchableOpacity 
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setSelectedDelivery(null)}
-          >
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Update Delivery</Text>
-                <TouchableOpacity onPress={() => setSelectedDelivery(null)}>
-                  <X size={22} color={COLORS.textSecondary} />
-                </TouchableOpacity>
-              </View>
-              
-              <Text style={styles.modalSubtitle}>
-                {selectedDelivery.Customer?.name} • {selectedDelivery.Subscription?.Product?.name || 'Item'}
-              </Text>
-
-              <Text style={styles.inputLabel}>Status</Text>
-              <View style={styles.statusRow}>
-                {['pending', 'delivered', 'skipped'].map(st => (
-                  <TouchableOpacity
-                    key={st}
-                    style={[styles.statusOption, updateStatus === st && styles.statusOptionActive]}
-                    onPress={() => setUpdateStatus(st)}
-                  >
-                    <Text style={[styles.statusOptionText, updateStatus === st && styles.statusOptionTextActive]}>
-                      {st.toUpperCase()}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.inputLabel}>{t('deliveries.fullDelivered')}</Text>
-              <View style={styles.inputContainer}>
-                <Package size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
-                <TextInput
-                  style={styles.textInput}
-                  value={fullUnits}
-                  onChangeText={setFullUnits}
-                  keyboardType="numeric"
-                  placeholder="0"
-                />
-              </View>
-
-              <Text style={styles.inputLabel}>{t('deliveries.emptyCollected')}</Text>
-              <View style={styles.inputContainer}>
-                <Package size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
-                <TextInput
-                  style={styles.textInput}
-                  value={emptyUnits}
-                  onChangeText={setEmptyUnits}
-                  keyboardType="numeric"
-                  placeholder="0"
-                />
-              </View>
-
-              <TouchableOpacity 
-                style={styles.submitBtn} 
-                onPress={handleUpdateSubmit}
-                disabled={updating}
-                activeOpacity={0.85}
-              >
-                {updating ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.submitBtnText}>{t('deliveries.saveChanges')}</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </Modal>
-      )}
 
       {/* Route & Status Filter Modals */}
       {activeFilterModal === 'route' && (
@@ -469,7 +432,7 @@ const OrdersScreen = () => {
                   style={styles.filterModalItem} 
                   onPress={() => { setSelectedRouteId(''); setActiveFilterModal(null); }}
                 >
-                  <Text style={[styles.filterModalItemText, !selectedRouteId && { color: COLORS.primary, fontFamily: 'Inter-Bold' }]}>
+                  <Text style={[styles.filterModalItemText, !selectedRouteId && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
                     All Routes
                   </Text>
                 </TouchableOpacity>
@@ -479,7 +442,7 @@ const OrdersScreen = () => {
                     style={styles.filterModalItem} 
                     onPress={() => { setSelectedRouteId(r.id); setActiveFilterModal(null); }}
                   >
-                    <Text style={[styles.filterModalItemText, selectedRouteId === r.id && { color: COLORS.primary, fontFamily: 'Inter-Bold' }]}>
+                    <Text style={[styles.filterModalItemText, selectedRouteId === r.id && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
                       {r.name}
                     </Text>
                   </TouchableOpacity>
@@ -490,40 +453,7 @@ const OrdersScreen = () => {
         </Modal>
       )}
 
-      {activeFilterModal === 'status' && (
-        <Modal
-          visible={true}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setActiveFilterModal(null)}
-        >
-          <TouchableOpacity 
-            style={styles.modalOverlay} 
-            activeOpacity={1} 
-            onPress={() => setActiveFilterModal(null)}
-          >
-            <View style={styles.filterModalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Status</Text>
-                <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
-                  <X size={22} color={COLORS.textSecondary} />
-                </TouchableOpacity>
-              </View>
-              {['all', 'pending', 'delivered', 'skipped'].map((statusOption) => (
-                <TouchableOpacity 
-                  key={statusOption}
-                  style={styles.filterModalItem} 
-                  onPress={() => { setSelectedStatus(statusOption); setActiveFilterModal(null); }}
-                >
-                  <Text style={[styles.filterModalItemText, selectedStatus === statusOption && { color: COLORS.primary, fontFamily: 'Inter-Bold' }]}>
-                    {statusOption === 'all' ? 'All Status' : statusOption.toUpperCase()}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </TouchableOpacity>
-        </Modal>
-      )}
+
 
       {showDatePicker && (
         <DateTimePicker
@@ -548,14 +478,32 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 24 : 16,
   },
   headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 24,
     marginBottom: 20,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontFamily: 'Geologica-Medium',
+    marginTop: 4,
+  },
+  topHeaderIconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -577,16 +525,38 @@ const styles = StyleSheet.create({
   },
   calendarTitle: {
     fontSize: 15,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.primary,
+  },
+  calHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  calHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  todayPill: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  todayPillText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
     color: COLORS.primary,
   },
   calendarIconBtn: {
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
   },
   calendarStrip: {
     paddingRight: 10,
@@ -594,21 +564,21 @@ const styles = StyleSheet.create({
   dayItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 52,
-    height: 72,
-    borderRadius: 14,
-    backgroundColor: '#F8FAFC',
+    width: 58,
+    height: 76,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#F1F5F9',
   },
   dayItemSelected: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: '#1D4ED8',
+    borderColor: '#1D4ED8',
   },
   dayName: {
-    fontSize: 11,
-    fontFamily: 'Inter-Medium',
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -617,72 +587,60 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   dayNumberCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   dayNumberCircleSelected: {
-    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 2,
+    borderBottomColor: '#FFFFFF',
+    paddingBottom: 2,
   },
   dayNumber: {
-    fontSize: 13,
-    fontFamily: 'Inter-Bold',
+    fontSize: 18,
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
   dayNumberSelected: {
-    color: COLORS.primary,
+    color: '#FFFFFF',
   },
-  filtersRow: {
+  filtersHorizontalRow: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   filterDropdown: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderRadius: 14,
-    height: 46,
+    height: 48,
     paddingHorizontal: 12,
   },
   filterDropdownText: {
     fontSize: 13,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
     flex: 1,
   },
-  sectionHeaderRow: {
+  generateBtnThick: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 14,
+    backgroundColor: '#1D4ED8',
+    height: 52,
+    borderRadius: 14,
+    marginBottom: 20,
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.textPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  generateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEF2FF',
-    borderWidth: 1,
-    borderColor: '#C7D2FE',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  generateBtnText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.primary,
+  generateBtnTextThick: {
+    fontSize: 15,
+    fontFamily: 'Geologica-Bold',
+    color: '#FFFFFF',
   },
   loadingContainer: {
     paddingVertical: 30,
@@ -691,7 +649,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
   },
   deliveriesContainer: {
@@ -708,13 +666,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPlaceholder,
     textAlign: 'center',
   },
@@ -728,32 +686,84 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   routeTitle: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.primary,
-    letterSpacing: 1,
+    fontSize: 13,
+    fontFamily: 'Geologica-Bold',
+    color: '#1D4ED8',
+    letterSpacing: 0.5,
+    borderBottomWidth: 2,
+    borderBottomColor: '#1D4ED8',
+    paddingBottom: 4,
   },
   routeBadge: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#C7D2FE',
+    borderColor: '#DBEAFE',
     paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   routeBadgeText: {
     fontSize: 11,
-    fontFamily: 'Inter-Bold',
-    color: COLORS.primary,
+    fontFamily: 'Geologica-Bold',
+    color: '#1D4ED8',
   },
-  deliveryCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    marginBottom: 12,
+  sliderSection: {
+    marginTop: 8,
+  },
+  sliderUnitsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  sliderUnit: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginHorizontal: 3,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 14,
+  },
+  sliderUnitEmpty: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FCA5A5',
+  },
+  sliderUnitDelivered: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#6EE7B7',
+  },
+  sliderUnitLabel: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
+  },
+  sliderUnitValue: {
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+  },
+  cardUpdatingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    zIndex: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
+  },
+  deliveryCardWrapper: {
+    paddingHorizontal: 0,
     paddingVertical: 14,
+  },
+  deliveryCardEditing: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+  },
+  bottomDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginTop: 20,
+    marginBottom: 6,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -762,26 +772,26 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 44,
     height: 44,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
     borderWidth: 1,
-    borderColor: '#E0E7FF',
+    borderColor: COLORS.border,
   },
   titleContainer: {
     flex: 1,
   },
   customerName: {
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
   subText: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     marginTop: 2,
   },
   statusBadge: {
@@ -796,7 +806,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     letterSpacing: 0.5,
   },
   divider: {
@@ -817,14 +827,76 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
     flexShrink: 1,
   },
   qtyText: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.primary,
+  },
+  editToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  editToggleText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.primary,
+    marginLeft: 4,
+  },
+  inlineEditContainer: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  inlineInputWrapper: {
+    flexDirection: 'row',
+    gap: 12,
+    flex: 1,
+    marginRight: 12,
+  },
+  inlineInputGroup: {
+    flex: 1,
+  },
+  inlineInputLabel: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  inlineInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    height: 40,
+    paddingHorizontal: 10,
+    fontSize: 14,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textPrimary,
+  },
+  inlineSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    height: 40,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  inlineSaveBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontFamily: 'Geologica-Bold',
   },
 
   // Modals
@@ -850,18 +922,18 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
   modalSubtitle: {
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -880,12 +952,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   statusOptionActive: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#C7D2FE',
+    backgroundColor: COLORS.primaryLight,
+    borderColor: COLORS.border,
   },
   statusOptionText: {
     fontSize: 11,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
   },
   statusOptionTextActive: {
@@ -906,7 +978,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -921,7 +993,7 @@ const styles = StyleSheet.create({
   submitBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
   filterModalContent: {
     width: '100%',
@@ -938,8 +1010,29 @@ const styles = StyleSheet.create({
   },
   filterModalItemText: {
     fontSize: 14.5,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
+  },
+  skeletonCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  skeletonAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E2E8F0',
+  },
+  skeletonBar: {
+    backgroundColor: '#E2E8F0',
+    borderRadius: 8,
+  },
+  skeletonBox: {
+    backgroundColor: '#F1F5F9',
+    borderRadius: 14,
   },
 });
 

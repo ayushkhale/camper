@@ -403,7 +403,7 @@ const SubscriptionDetailScreen = () => {
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={[styles.detailIconBox, { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }]}>
+            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
               <Calendar size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
@@ -632,14 +632,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     color: COLORS.textSecondary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   errorText: {
     fontSize: 14,
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   retryButton: {
     backgroundColor: COLORS.primary,
@@ -693,25 +693,25 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: '#C7D2FE',
+    borderColor: COLORS.border,
     overflow: 'hidden',
   },
   avatarFallback: {
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   productName: {
     fontSize: 20,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -727,13 +727,13 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
   },
 
   // Section details card
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 12,
   },
@@ -765,13 +765,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.textPrimary,
   },
   divider: {
@@ -788,7 +788,7 @@ const styles = StyleSheet.create({
   emptyHistoryText: {
     fontSize: 13,
     color: COLORS.textSecondary,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   logRow: {
     flexDirection: 'row',
@@ -804,12 +804,12 @@ const styles = StyleSheet.create({
   },
   logBadgeText: {
     fontSize: 11,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
   },
   logDates: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
   },
 
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
   },
   pausePillText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
   editQtyPillBtn: {
@@ -855,7 +855,7 @@ const styles = StyleSheet.create({
   },
   editQtyPillText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
 
@@ -882,7 +882,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
   },
   modalClose: {
@@ -890,7 +890,7 @@ const styles = StyleSheet.create({
   },
   modalLabel: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
   },
   dateSelectorText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
   },
   reasonInput: {
@@ -938,7 +938,7 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
   },
   confirmBtn: {
@@ -946,7 +946,7 @@ const styles = StyleSheet.create({
   },
   confirmBtnText: {
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.background,
   },
   confirmPauseBtn: {
@@ -954,7 +954,7 @@ const styles = StyleSheet.create({
   },
   confirmPauseBtnText: {
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
     color: COLORS.background,
   },
 
@@ -978,12 +978,12 @@ const styles = StyleSheet.create({
   },
   typeOptionText: {
     fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
   },
   typeOptionTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Geologica-Bold',
   },
 });
 
