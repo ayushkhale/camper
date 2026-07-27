@@ -302,26 +302,32 @@ const AddCustomerScreen = () => {
   };
 
   const handleImportContacts = async () => {
+    setContactModalVisible(true);
+    setLoadingContacts(true);
+    setContactSearch('');
+
     try {
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-          PermissionsAndroid.PERMISSIONS.READ_CONTACTS
+          {
+            title: 'Contacts Permission',
+            message: 'This app needs access to your contacts to import customer details.',
+            buttonPositive: 'OK',
+          }
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          showAlert('Permission denied', 'Cannot access contacts', 'warning');
+          showAlert('Permission Denied', 'Cannot access contacts without permission', 'warning');
           setLoadingContacts(false);
           setContactModalVisible(false);
           return;
         }
-      }
-
-      if (Platform.OS === 'ios') {
+      } else if (Platform.OS === 'ios') {
         const status = await Contacts.checkPermission();
-        if (status === 'undefined' || status === 'denied') {
+        if (status === 'undefined' || status === 'denied' || status === 'notAuthorized') {
           const res = await Contacts.requestPermission();
           if (res !== 'authorized') {
-            showAlert('Permission denied', 'Cannot access contacts', 'warning');
+            showAlert('Permission Denied', 'Cannot access contacts without permission', 'warning');
             setLoadingContacts(false);
             setContactModalVisible(false);
             return;
@@ -329,17 +335,19 @@ const AddCustomerScreen = () => {
         }
       }
 
-      setLoadingContacts(true);
-
       const allContacts = await Contacts.getAll();
 
-      const formatted = allContacts
+      const formatted = (allContacts || [])
         .filter(c => c.phoneNumbers && c.phoneNumbers.length > 0)
-        .map(c => ({
-          id: c.recordID,
-          name: c.displayName || `${c.givenName || ''} ${c.familyName || ''}`.trim() || 'Unknown',
-          phone: c.phoneNumbers[0].number
-        }))
+        .map(c => {
+          const rawPhone = c.phoneNumbers[0].number || '';
+          const cleanPhone = rawPhone.replace(/\s+/g, '').replace(/-/g, '');
+          return {
+            id: c.recordID || String(Math.random()),
+            name: c.displayName || `${c.givenName || ''} ${c.familyName || ''}`.trim() || 'Unknown',
+            phone: cleanPhone,
+          };
+        })
         .sort((a, b) => a.name.localeCompare(b.name));
 
       setContactsList(formatted);
@@ -610,10 +618,10 @@ const AddCustomerScreen = () => {
             {/* Address */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('customers.address')}</Text>
-              <View style={[styles.inputContainer, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
-                <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+              <View style={[styles.inputContainer, { height: 100, alignItems: 'flex-start', paddingVertical: 12 }]}>
+                <MapPin size={20} color={COLORS.textPlaceholder} style={[styles.inputIcon, { marginTop: Platform.OS === 'ios' ? 0 : 2 }]} />
                 <TextInput
-                  style={[styles.input, { height: 60 }]}
+                  style={[styles.input, { height: 76, textAlignVertical: 'top' }]}
                   placeholder={t('customers.addressPlaceholder')}
                   value={address}
                   onChangeText={setAddress}
@@ -650,7 +658,7 @@ const AddCustomerScreen = () => {
                 activeOpacity={0.7}
               >
                 <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                <Text style={[styles.dropdownText, !routeId && { color: COLORS.textPlaceholder }]}>
+                <Text style={[styles.dropdownText, !routeId && { color: COLORS.textPlaceholder }]} numberOfLines={1}>
                   {routeId ? getRouteName(routeId) : t('customers.selectRoute')}
                 </Text>
                 <ChevronDown size={18} color={COLORS.textPlaceholder} />
@@ -671,9 +679,9 @@ const AddCustomerScreen = () => {
                   <View style={styles.subToggleIcon}>
                     <IndianRupee size={18} color={COLORS.primary} />
                   </View>
-                  <View>
-                    <Text style={styles.subToggleTitle}>Add Security Deposit</Text>
-                    <Text style={styles.subToggleSubtitle}>Record container/jar deposit collected at onboarding</Text>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={styles.subToggleTitle} numberOfLines={1}>Add Security Deposit</Text>
+                    <Text style={styles.subToggleSubtitle} numberOfLines={2}>Record container/jar deposit collected at onboarding</Text>
                   </View>
                 </View>
                 {addDeposit
@@ -746,9 +754,9 @@ const AddCustomerScreen = () => {
                   <View style={styles.subToggleIcon}>
                     <Plus size={18} color={COLORS.primary} />
                   </View>
-                  <View>
-                    <Text style={styles.subToggleTitle}>{t('customers.addSubscription')}</Text>
-                    <Text style={styles.subToggleSubtitle}>{t('customers.addSubDesc')}</Text>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={styles.subToggleTitle} numberOfLines={1}>{t('customers.addSubscription')}</Text>
+                    <Text style={styles.subToggleSubtitle} numberOfLines={2}>{t('customers.addSubDesc')}</Text>
                   </View>
                 </View>
                 {addSubscription
@@ -766,7 +774,7 @@ const AddCustomerScreen = () => {
                       onPress={() => setProductModalVisible(true)}
                     >
                       <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                      <Text style={[styles.dropdownText, !productId && { color: COLORS.textPlaceholder }]}>
+                      <Text style={[styles.dropdownText, !productId && { color: COLORS.textPlaceholder }]} numberOfLines={1}>
                         {productId ? getProductName(productId) : t('customers.selectProduct')}
                       </Text>
                     </TouchableOpacity>
@@ -795,7 +803,7 @@ const AddCustomerScreen = () => {
                       onPress={() => setRecurrenceModalVisible(true)}
                     >
                       <Repeat size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                      <Text style={styles.dropdownText}>
+                      <Text style={styles.dropdownText} numberOfLines={1}>
                         {formatRecurrence(recurrencePattern)}
                       </Text>
                     </TouchableOpacity>
@@ -809,7 +817,7 @@ const AddCustomerScreen = () => {
                       onPress={() => setShowDatePicker(true)}
                     >
                       <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                      <Text style={styles.dropdownText}>
+                      <Text style={styles.dropdownText} numberOfLines={1}>
                         {startDate}
                       </Text>
                     </TouchableOpacity>
@@ -1299,7 +1307,7 @@ const styles = StyleSheet.create({
   dropdownText: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: 'Geologica-Medium',
     color: COLORS.textPrimary,
   },
   skeletonBar: {

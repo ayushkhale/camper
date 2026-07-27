@@ -3,12 +3,12 @@
 
 export const COLORS = {
   // --- Core Brand ---
-  primary: '#0e44a8',         // Premium deep navy/indigo
+  primary: '#2553a8ff',         // Premium deep navy/indigo
   primaryLight: '#E8F1FA',    // Light accent bg for navy
-  primaryDark: '#03004D',
-  secondary: '#b86e00ff',     // Orange secondary accent
+  primaryDark: '#2a26a3ff',
+  secondary: '#c98652ff',     // Orange secondary accent
   secondaryLight: '#FFF3EB',
-  accent: '#d04500ff',
+  accent: '#dc743fff',
 
   // --- Backgrounds & Surfaces ---
   background: '#FFFFFF',      // Clean off-white background
@@ -27,7 +27,7 @@ export const COLORS = {
   borderLight: '#F1F5F9',
 
   // --- Status Indicators ---
-  success: '#129c00ff',         // Green
+  success: '#0b5f00ff',         // Green
   successLight: '#ECFDF5',
   danger: '#980000ff',          // Red
   dangerLight: '#FEF2F2',

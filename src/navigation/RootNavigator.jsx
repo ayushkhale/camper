@@ -6,6 +6,7 @@ import AuthStack from './AuthStack';
 import MainDrawer from './MainDrawer';
 import CompleteRegistrationScreen from '../Screens/Auth/CompleteRegistrationScreen';
 import StaffManagementScreen from '../Screens/Main/StaffManagementScreen';
+import PastDeliveriesScreen from '../Screens/Main/PastDeliveriesScreen';
 import AddStaffScreen from '../Screens/Main/AddStaffScreen';
 import ProductCatalogScreen from '../Screens/Main/ProductCatalogScreen';
 import AddProductScreen from '../Screens/Main/AddProductScreen';
@@ -77,6 +78,7 @@ const RootNavigatorContent = () => {
           <Stack.Screen name="InvoiceList" component={InvoiceListScreen} />
           <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} />
           <Stack.Screen name="GenerateInvoice" component={GenerateInvoiceScreen} />
+          <Stack.Screen name="PastDeliveries" component={PastDeliveriesScreen} />
         </>
       )}
     </Stack.Navigator>

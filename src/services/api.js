@@ -366,6 +366,14 @@ export const api = {
     return getRequest(`/api/vendor/deliveries${queryString}`, token);
   },
 
+  trackDeliveries: (token, { date, routeId = '', status = '' } = {}) => {
+    let queryParams = [`date=${encodeURIComponent(date)}`];
+    if (routeId) queryParams.push(`routeId=${encodeURIComponent(routeId)}`);
+    if (status) queryParams.push(`status=${encodeURIComponent(status)}`);
+    const queryString = `?${queryParams.join('&')}`;
+    return getRequest(`/api/vendor/deliveries/track${queryString}`, token);
+  },
+
   updateDeliveryStatus: (token, id, statusData) =>
     patchRequest(`/api/vendor/deliveries/${id}/status`, statusData, token),
 
@@ -398,6 +406,9 @@ export const api = {
 
   updateOneTimeOrderStatus: (token, id, status) =>
     patchRequest(`/api/vendor/one-time-orders/${id}/status`, { status }, token),
+
+  fulfillOneTimeOrder: (token, id, deliveryDate) =>
+    postRequest(`/api/vendor/one-time-orders/${id}/fulfill`, { deliveryDate }, token),
 
   // Dashboard APIs
   getDashboardStats: (token) =>

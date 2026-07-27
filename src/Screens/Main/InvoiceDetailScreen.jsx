@@ -7,7 +7,10 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Share,
+  Linking,
 } from 'react-native';
+import RNPrint from 'react-native-print';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import {
@@ -17,6 +20,8 @@ import {
   MapPin,
   AlertCircle,
   CreditCard,
+  MessageCircle,
+  Printer,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -130,6 +135,141 @@ const InvoiceDetailScreen = () => {
   const balanceDue = Math.max(0, totalAmount - amountPaid);
 
   const invoiceNum = invoiceData?.invoiceNumber || (invoiceData?.id ? `#${String(invoiceData.id).substring(0, 8).toUpperCase()}` : 'INV-001');
+
+  const handleWhatsAppShare = async () => {
+    try {
+      const customerName = invoiceData?.Customer?.name || 'Customer';
+      let message = `*INVOICE ${invoiceNum}*\n`;
+      message += `Date: ${formatDate(invoiceData?.created_at)}\n`;
+      message += `Customer: ${customerName}\n\n`;
+      message += `*Items:*\n`;
+      
+      const allItems = deliveries.length > 0 ? deliveries : lineItems;
+      if (allItems.length > 0) {
+        allItems.forEach(item => {
+          const qty = item.fullUnitsDelivered || item.quantity || 1;
+          const rate = item.unitPriceCharged || item.unitPrice || item.amount || 0;
+          message += `- ${getProductName(item)} (x${qty}) = ${formatCurrency(rate * qty)}\n`;
+        });
+      } else {
+        message += `- Water Camper 20Ltr = ${formatCurrency(totalAmount)}\n`;
+      }
+      
+      message += `\n*Total:* ${formatCurrency(totalAmount)}\n`;
+      message += `*Paid:* ${formatCurrency(amountPaid)}\n`;
+      message += `*Balance Due: ${formatCurrency(balanceDue)}*\n\n`;
+      message += `Thank you for your business!`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `whatsapp://send?text=${encodedMessage}`;
+      
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        await Share.share({ message });
+      }
+    } catch (error) {
+      console.error('Error sharing invoice:', error);
+    }
+  };
+
+  const handlePrint = async () => {
+    try {
+      const customerName = invoiceData?.Customer?.name || 'Customer';
+      let itemsHtml = '';
+      const allItems = deliveries.length > 0 ? deliveries : lineItems;
+      
+      if (allItems.length > 0) {
+        allItems.forEach(item => {
+          const qty = item.fullUnitsDelivered || item.quantity || 1;
+          const rate = item.unitPriceCharged || item.unitPrice || item.amount || 0;
+          itemsHtml += `
+            <tr>
+              <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${getProductName(item)}</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569;">${qty}</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #0f172a; font-weight: bold;">${formatCurrency(rate * qty)}</td>
+            </tr>
+          `;
+        });
+      } else {
+        itemsHtml += `
+          <tr>
+            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #1e293b;">Water Camper 20Ltr</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569;">1</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #0f172a; font-weight: bold;">${formatCurrency(totalAmount)}</td>
+          </tr>
+        `;
+      }
+
+      const htmlContent = `
+        <html>
+          <head>
+            <style>
+              body { font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif; padding: 40px; color: #333; }
+              .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #2563eb; padding-bottom: 20px; }
+              .title { font-size: 24px; font-weight: bold; color: #1e3a8a; letter-spacing: 0.5px; }
+              .subtitle { font-size: 16px; color: #64748b; margin-top: 5px; }
+              .details { margin-bottom: 40px; line-height: 1.6; display: flex; justify-content: space-between; }
+              table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+              th { padding: 12px; border-bottom: 2px solid #cbd5e1; text-align: left; color: #64748b; font-size: 14px; text-transform: uppercase; }
+              th:nth-child(2) { text-align: center; }
+              th:nth-child(3) { text-align: right; }
+              .totals { margin-left: auto; width: 300px; text-align: right; font-size: 16px; line-height: 2; }
+              .totals-row { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding: 5px 0; }
+              .balance { font-size: 20px; font-weight: bold; color: #0f172a; background-color: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; }
+              .footer { margin-top: 60px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="title">Invoice</div>
+              <div class="subtitle">${invoiceNum}</div>
+            </div>
+            
+            <div class="details">
+              <div>
+                <strong style="color:#475569">Billed To:</strong><br>
+                <span style="font-size:18px; color:#0f172a; font-weight:bold;">${customerName}</span>
+              </div>
+              <div style="text-align:right">
+                <strong style="color:#475569">Date:</strong><br>
+                <span style="font-size:16px; color:#0f172a;">${formatDate(invoiceData?.created_at)}</span>
+              </div>
+            </div>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Qty</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+            </table>
+            
+            <div class="totals">
+              <div class="totals-row"><span>Subtotal:</span> <span>${formatCurrency(totalAmount)}</span></div>
+              <div class="totals-row"><span>Amount Paid:</span> <span>${formatCurrency(amountPaid)}</span></div>
+              <div class="balance"><span>Balance Due:</span> <span>${formatCurrency(balanceDue)}</span></div>
+            </div>
+            
+            <div class="footer">
+              <strong>Thank you for your business!</strong><br>
+              Computer generated tax invoice. No signature required.
+            </div>
+          </body>
+        </html>
+      `;
+
+      await RNPrint.print({ html: htmlContent });
+    } catch (error) {
+      console.error('Error printing invoice:', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -339,6 +479,27 @@ const InvoiceDetailScreen = () => {
               <Text style={styles.payBtnText}>Record Payment ({formatCurrency(balanceDue)})</Text>
             </TouchableOpacity>
           )}
+
+          {/* Action Buttons: WhatsApp & Print */}
+          <View style={styles.actionRow}>
+            <TouchableOpacity 
+              style={[styles.actionBtn, { backgroundColor: '#Ecfdf5', borderColor: '#d1fae5' }]} 
+              activeOpacity={0.7}
+              onPress={handleWhatsAppShare}
+            >
+              <MessageCircle size={20} color="#059669" style={{ marginRight: 8 }} />
+              <Text style={[styles.actionBtnText, { color: '#059669' }]}>WhatsApp</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.actionBtn, { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' }]} 
+              activeOpacity={0.7}
+              onPress={handlePrint}
+            >
+              <Printer size={20} color="#475569" style={{ marginRight: 8 }} />
+              <Text style={[styles.actionBtnText, { color: '#475569' }]}>Print PDF</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Footer Note */}
           <View style={styles.footer}>
@@ -619,6 +780,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Geologica-Bold',
     color: '#FFFFFF',
+  },
+
+  // WhatsApp & Print Actions
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    marginBottom: 20,
+    gap: 12,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  actionBtnText: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
   },
 
   // Footer

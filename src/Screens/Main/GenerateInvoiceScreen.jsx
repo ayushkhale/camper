@@ -121,21 +121,39 @@ const GenerateInvoiceScreen = () => {
     if (customerId) payload.customerId = customerId;
 
     try {
+      console.log('--- GenerateInvoiceScreen: Payload ---', payload);
       const response = await api.generateInvoices(userToken, payload);
+      console.log('--- GenerateInvoiceScreen: Response ---', JSON.stringify(response, null, 2));
       const msg = response?.message || '';
+
+      const customerName = customerId ? getCustomerName(customerId) : '';
+      const searchQuery = customerName !== 'Select a Customer' ? customerName : '';
+
+      const navigateToInvoice = () => {
+        if (response.data?.invoices && response.data.invoices.length === 1) {
+          const inv = response.data.invoices[0];
+          navigation.replace('InvoiceDetail', { invoiceId: inv.id, invoice: inv });
+        } else {
+          navigation.navigate('InvoiceList', { searchQuery });
+        }
+      };
 
       if (response && response.success && (response.data?.invoicesGenerated === undefined || response.data?.invoicesGenerated > 0)) {
         showAlert('Success', msg || 'Invoices generated successfully', 'success');
-        navigation.goBack();
+        navigateToInvoice();
       } else {
-        const displayMsg = msg || 'All invoices have already been generated for selected date range.';
-        setApiError(displayMsg);
-        showPopup('Notice', displayMsg, [{ text: 'OK' }]);
+        showAlert('Notice', 'Invoice already generated for this period. Redirecting...', 'info');
+        setTimeout(() => {
+          navigation.navigate('InvoiceList', { searchQuery });
+        }, 1500);
       }
     } catch (err) {
-      const displayMsg = err.message || 'All invoices have already been generated for selected date range.';
-      setApiError(displayMsg);
-      showPopup('Notice', displayMsg, [{ text: 'OK' }]);
+      const customerName = customerId ? getCustomerName(customerId) : '';
+      const searchQuery = customerName !== 'Select a Customer' ? customerName : '';
+      showAlert('Notice', 'Invoice already generated for this period. Redirecting...', 'info');
+      setTimeout(() => {
+        navigation.navigate('InvoiceList', { searchQuery });
+      }, 1500);
     } finally {
       setSubmitting(false);
     }

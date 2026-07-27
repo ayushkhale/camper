@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import { Plus, Search, FileText, ChevronRight, AlertCircle, RefreshCw, Calendar, DollarSign } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -28,13 +28,21 @@ const InvoiceListScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const route = useRoute();
   const [filterStatus, setFilterStatus] = useState('all'); // all, pending, partially_paid, paid
+
+  React.useEffect(() => {
+    if (route.params?.searchQuery) {
+      setSearchQuery(route.params.searchQuery);
+    }
+  }, [route.params?.searchQuery]);
 
   const fetchInvoices = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     setError(null);
     try {
       const res = await api.listInvoices(userToken);
+      console.log('--- InvoiceListScreen: fetchInvoices Response ---', JSON.stringify(res, null, 2));
       if (res && res.success) {
         setInvoices(res.data || []);
       } else {

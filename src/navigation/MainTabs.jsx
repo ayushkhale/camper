@@ -71,7 +71,7 @@ const MainTabs = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarInactiveTintColor: COLORS.primary,
         tabBarStyle: {
           paddingTop: 5,
           paddingBottom: 5,
@@ -81,12 +81,21 @@ const MainTabs = () => {
           fontSize: 10.5,
           fontFamily: 'Geologica-Medium',
         },
-        tabBarIcon: ({ focused, color, size }) => {
-          const iconSize = 20; // Reduced size
-          if (route.name === 'Home') return <Home color={color} size={iconSize} />;
-          if (route.name === 'Deliveries') return <Truck color={color} size={iconSize} />;
-          if (route.name === 'Payments') return <CreditCard color={color} size={iconSize} />;
-          if (route.name === 'Customers') return <Users color={color} size={iconSize} />;
+        tabBarIcon: ({ focused }) => {
+          const iconSize = 20;
+          const strokeWidth = focused ? 2.4 : 1.8;
+          const iconColor = focused ? '#FFFFFF' : COLORS.primary;
+
+          let IconComponent = Home;
+          if (route.name === 'Deliveries') IconComponent = Truck;
+          if (route.name === 'Payments') IconComponent = CreditCard;
+          if (route.name === 'Customers') IconComponent = Users;
+
+          return (
+            <View style={[styles.tabIconWrapper, focused && styles.tabIconWrapperActive]}>
+              <IconComponent color={iconColor} size={iconSize} strokeWidth={strokeWidth} />
+            </View>
+          );
         },
       })}
     >
@@ -139,6 +148,16 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: COLORS.primaryLight,
+  },
+  tabIconWrapper: {
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabIconWrapperActive: {
+    backgroundColor: COLORS.secondary,
   },
 });
 

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  UserPlus, Package, MapPin, Users, Repeat, ShoppingBag, FileText, CreditCard, Truck, ChevronRight
+  UserPlus, Package, MapPin, Users, Repeat, ShoppingBag, FileText, CreditCard, Truck, ChevronRight, Calendar
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -164,9 +164,9 @@ const HomeScreen = () => {
     { title: t('invoices.title', 'Invoices'), icon: FileText, screen: 'InvoiceList' },
     { title: t('subscriptions.title'), icon: Repeat, screen: 'SubscriptionList' },
     { title: t('deliveries.allRoutes'), icon: MapPin, screen: 'RouteList' },
-    { title: t('products.title'), icon: Package, screen: 'ProductCatalog' },
-    { title: t('staff.title'), icon: UserPlus, screen: 'StaffManagement' },
-    { title: t('oneTimeOrders.title'), icon: ShoppingBag, screen: 'OneTimeOrderList' },
+    { title: 'Products', icon: Package, screen: 'ProductCatalog' },
+    { title: 'Past Deliveries', icon: Calendar, screen: 'PastDeliveries' },
+    { title: '1 Time Orders', icon: ShoppingBag, screen: 'OneTimeOrderList' },
   ];
 
   return (
@@ -184,14 +184,14 @@ const HomeScreen = () => {
                 {/* Customers Card */}
                 <View style={styles.overviewCardQuart}>
                   <View style={styles.overviewImageBgPlaceholder} />
-                  <View style={[styles.overviewIconAbsolute, { right: -2, bottom: -2, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                  <View style={[styles.overviewIconAbsolute, { right: -5, bottom: -5, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
                     <Image
                       source={require('../../../assets/customerstats.png')}
-                      style={{ width: 90, height: 90 }}
+                      style={{ width: 65, height: 65 }}
                       resizeMode="contain"
                     />
                   </View>
-                  <Text style={styles.overviewTitleDark}>{t('tabs.customers')}</Text>
+                  <Text style={styles.overviewTitleDark} numberOfLines={2}>{t('tabs.customers')}</Text>
                   <Text style={styles.overviewValueDark}>{stats.customers}</Text>
                 </View>
 
@@ -201,11 +201,11 @@ const HomeScreen = () => {
                   <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
                     <Image
                       source={require('../../../assets/activesubstat.png')}
-                      style={{ width: 95, height: 95 }}
+                      style={{ width: 70, height: 70 }}
                       resizeMode="contain"
                     />
                   </View>
-                  <Text style={styles.overviewTitleDark}>{t('customers.activeSubscriptions')}</Text>
+                  <Text style={styles.overviewTitleDark} numberOfLines={2}>{t('customers.activeSubscriptions')}</Text>
                   <Text style={styles.overviewValueDark}>{stats.subscriptions}</Text>
                 </View>
               </View>
@@ -213,14 +213,14 @@ const HomeScreen = () => {
                 {/* Routes Card */}
                 <View style={styles.overviewCardQuart}>
                   <View style={styles.overviewImageBgPlaceholder} />
-                  <View style={[styles.overviewIconAbsolute, { right: -15, bottom: -15, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
+                  <View style={[styles.overviewIconAbsolute, { right: -10, bottom: -10, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
                     <Image
                       source={require('../../../assets/routestat.png')}
-                      style={{ width: 125, height: 125 }}
+                      style={{ width: 85, height: 85 }}
                       resizeMode="contain"
                     />
                   </View>
-                  <Text style={styles.overviewTitleDark}>{t('deliveries.allRoutes')}</Text>
+                  <Text style={styles.overviewTitleDark} numberOfLines={2}>{t('deliveries.allRoutes')}</Text>
                   <Text style={styles.overviewValueDark}>{stats.routes}</Text>
                 </View>
 
@@ -230,11 +230,11 @@ const HomeScreen = () => {
                   <View style={[styles.overviewIconAbsolute, { right: 0, bottom: 0, opacity: 0.95, transform: [{ rotate: '0deg' }] }]}>
                     <Image
                       source={require('../../../assets/onetimestat.png')}
-                      style={{ width: 95, height: 95 }}
+                      style={{ width: 70, height: 70 }}
                       resizeMode="contain"
                     />
                   </View>
-                  <Text style={styles.overviewTitleDark}>{t('oneTimeOrders.title')}</Text>
+                  <Text style={styles.overviewTitleDark} numberOfLines={2}>{t('oneTimeOrders.title')}</Text>
                   <Text style={styles.overviewValueDark}>{stats.oneTimeOrders}</Text>
                 </View>
               </View>
@@ -445,14 +445,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Geologica-Medium',
     color: COLORS.primary,
     marginBottom: 4,
-    zIndex: 2,
+    zIndex: 10,
+    maxWidth: '85%',
   },
   overviewValueDark: {
-    fontSize: 28,
+    fontSize: 26,
     fontFamily: 'Geologica-Bold',
     fontWeight: 'bold',
     color: COLORS.secondary,
-    zIndex: 2,
+    zIndex: 10,
   },
   overviewImageBgPlaceholder: {
     position: 'absolute',

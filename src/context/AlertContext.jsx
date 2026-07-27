@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform, Modal } from 'react-native';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/colors';
 
 const AlertContext = createContext();
@@ -23,6 +24,7 @@ export const AlertProvider = ({ children }) => {
   });
 
   const translateY = useRef(new Animated.Value(-120)).current;
+  const insets = useSafeAreaInsets();
 
   const showAlert = (titleOrMsg, messageOrType, typeOrButtons, optionalType) => {
     let title = '';
@@ -54,10 +56,13 @@ export const AlertProvider = ({ children }) => {
 
     setAlertConfig({ visible: true, title, message, type, buttons: null });
 
+    const topInset = insets.top > 0 ? insets.top : (Platform.OS === 'ios' ? 50 : 20);
+
     Animated.spring(translateY, {
-      toValue: Platform.OS === 'ios' ? 50 : 20,
+      toValue: topInset + 10,
       useNativeDriver: true,
       tension: 80,
+
       friction: 10,
     }).start();
 

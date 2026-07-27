@@ -11,8 +11,10 @@ import {
   RefreshControl,
   Alert,
   Platform,
+  Modal,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   ChevronLeft,
   Plus,
@@ -21,6 +23,8 @@ import {
   Trash2,
   Calendar,
   Search,
+  X,
+  Truck,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -40,14 +44,76 @@ const OneTimeOrderListScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
+  const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
+  const [activeOrder, setActiveOrder] = useState(null);
+  const [fulfillmentDate, setFulfillmentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [deliveryUpdating, setDeliveryUpdating] = useState(false);
+
+  const formatDateString = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const parseDateString = (str) => {
+    if (!str) return new Date();
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+    return new Date();
+  };
+
+  const handleDateChange = (event, selectedDateObj) => {
+    setShowDatePicker(false);
+    if (selectedDateObj) {
+      setFulfillmentDate(formatDateString(selectedDateObj));
+    }
+  };
+
+  const handleFulfillClick = (orderItem) => {
+    setActiveOrder(orderItem);
+    setFulfillmentDate(new Date().toISOString().split('T')[0]);
+    setDeliveryModalVisible(true);
+  };
+
+  const submitFulfillment = async () => {
+    if (!activeOrder) return;
+    setDeliveryUpdating(true);
+    try {
+      const res = await api.fulfillOneTimeOrder(userToken, activeOrder.id, fulfillmentDate);
+      if (res && res.success) {
+        showAlert('Success', res.message || 'Order fulfilled successfully.', 'success');
+        setDeliveryModalVisible(false);
+        setActiveOrder(null);
+        fetchOrders(false);
+      } else {
+        throw new Error(res.message || 'Failed to fulfill order');
+      }
+    } catch (err) {
+      showAlert('Error', err.message, 'error');
+    } finally {
+      setDeliveryUpdating(false);
+    }
+  };
+
   const fetchOrders = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     setError('');
     try {
       const res = await api.listOneTimeOrders(userToken);
       if (res.success) {
-        // Sort by date descending (newest first)
-        const sorted = (res.data || []).sort((a, b) => b.orderFrom.localeCompare(a.orderFrom));
+        // Sort: pending first, then by date descending
+        const sorted = (res.data || []).sort((a, b) => {
+          if (a.status === 'pending' && b.status !== 'pending') return -1;
+          if (a.status !== 'pending' && b.status === 'pending') return 1;
+          return b.orderFrom.localeCompare(a.orderFrom);
+        });
         setOrders(sorted);
       } else {
         throw new Error(res.message || 'Failed to fetch one-time orders');
@@ -192,6 +258,17 @@ const OneTimeOrderListScreen = () => {
             )}
           </View>
         </View>
+
+        {item.status === 'pending' && (
+          <TouchableOpacity
+            style={styles.deliverBlockBtn}
+            onPress={() => handleFulfillClick(item)}
+            activeOpacity={0.7}
+          >
+            <Truck size={16} color={COLORS.primary} />
+            <Text style={styles.deliverBlockBtnText}>Fulfill Order</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -277,6 +354,64 @@ const OneTimeOrderListScreen = () => {
           <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
+
+      {/* Fulfillment Modal */}
+      <Modal
+        visible={deliveryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeliveryModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.deliveryModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Fulfill Order</Text>
+              <TouchableOpacity onPress={() => setDeliveryModalVisible(false)} disabled={deliveryUpdating}>
+                <X size={22} color={COLORS.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {activeOrder && (
+              <View style={styles.deliveryDetails}>
+                <Text style={styles.deliveryCustomerName}>{activeOrder.Customer?.name || 'Customer'}</Text>
+                
+                <View style={styles.inlineInputGroup}>
+                  <Text style={styles.inlineInputLabel}>Delivery Date</Text>
+                  <TouchableOpacity 
+                    style={styles.datePickerBtn}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Calendar size={18} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
+                    <Text style={styles.datePickerBtnText}>{fulfillmentDate}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity 
+                  style={[styles.saveBtn, deliveryUpdating && { opacity: 0.7 }]}
+                  onPress={submitFulfillment}
+                  disabled={deliveryUpdating}
+                >
+                  {deliveryUpdating ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text style={styles.saveBtnText}>Approve Fulfill</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={parseDateString(fulfillmentDate)}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+        />
+      )}
+
     </SafeAreaView>
   );
 };
@@ -447,6 +582,103 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  deliverBlockBtn: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    height: 44,
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 14,
+  },
+  deliverBlockBtnText: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.primary,
+    marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  deliveryModalContent: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    width: '100%',
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.textPrimary,
+  },
+  deliveryDetails: {
+    marginTop: 8,
+  },
+  deliveryCustomerName: {
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: COLORS.primary,
+    marginBottom: 16,
+  },
+  inlineInputGroup: {
+    marginBottom: 16,
+  },
+  inlineInputLabel: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textSecondary,
+    marginBottom: 6,
+  },
+  inlineInput: {
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+    fontSize: 15,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textPrimary,
+  },
+  datePickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+    backgroundColor: '#F8FAFC',
+  },
+  datePickerBtnText: {
+    fontSize: 15,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textPrimary,
+  },
+  saveBtn: {
+    backgroundColor: '#16A34A',
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  saveBtnText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontFamily: 'Geologica-Bold',
   },
   centerContainer: {
     flex: 1,

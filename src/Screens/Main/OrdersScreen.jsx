@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
-  Truck, Package, CheckCircle, XCircle, ChevronRight, X, Play, Calendar, MapPin, AlertCircle, Edit2, Save, MoreVertical, Activity, FileText
+  Truck, Package, CheckSquare, XCircle, ChevronRight, ChevronDown, ChevronUp, X, Play, Calendar, MapPin, AlertCircle, Edit2, Save, MoreVertical, Activity, FileText
 } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
@@ -42,8 +42,19 @@ const getNext7Days = () => {
 
 const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [fullUnits, setFullUnits] = useState(delivery.fullUnitsDelivered?.toString() || delivery.Subscription?.baseQuantity?.toString() || '0');
-  const [emptyUnits, setEmptyUnits] = useState(delivery.emptyUnitsCollected?.toString() || '0');
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const expectedTotal = (delivery.expectedSubscriptionUnits || 0) + (delivery.expectedAddonUnits || 0);
+  const defaultFull = (delivery.status === 'pending' && (!delivery.fullUnitsDelivered || delivery.fullUnitsDelivered === 0))
+    ? (expectedTotal > 0 ? expectedTotal.toString() : (delivery.Subscription?.baseQuantity?.toString() || '0'))
+    : (delivery.fullUnitsDelivered?.toString() || '0');
+    
+  const defaultEmpty = (delivery.status === 'pending' && (!delivery.emptyUnitsCollected || delivery.emptyUnitsCollected === 0))
+    ? (delivery.expectedEmptyCollections?.toString() || '0')
+    : (delivery.emptyUnitsCollected?.toString() || '0');
+
+  const [fullUnits, setFullUnits] = useState(defaultFull);
+  const [emptyUnits, setEmptyUnits] = useState(defaultEmpty);
   const [updating, setUpdating] = useState(false);
   
   const statusColors = getStatusColor(delivery.status);
@@ -57,6 +68,9 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
     });
     setUpdating(false);
     setIsEditing(false);
+    if (status !== 'pending') {
+      setIsExpanded(false);
+    }
   };
 
   const handleStatusChange = (newStatus) => {
@@ -71,7 +85,11 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
         </View>
       )}
       
-      <View style={styles.cardHeader}>
+      <TouchableOpacity 
+        style={styles.cardHeader} 
+        onPress={() => setIsExpanded(!isExpanded)}
+        activeOpacity={0.7}
+      >
         <View style={styles.iconBox}>
           <Truck size={22} color={COLORS.primary} />
         </View>
@@ -86,60 +104,96 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
             </Text>
           </View>
         </View>
-        <TouchableOpacity style={{ padding: 4 }} onPress={() => setIsEditing(!isEditing)}>
-          <Edit2 size={16} color={COLORS.textSecondary} />
-        </TouchableOpacity>
-      </View>
-
-      {!isEditing ? (
-        <View style={styles.sliderSection}>
-          <View style={styles.sliderUnitsRow}>
-            <View style={[styles.sliderUnit, styles.sliderUnitEmpty]}>
-              <Text style={[styles.sliderUnitLabel, { color: '#DC2626' }]}>Empty Jars</Text>
-              <Text style={[styles.sliderUnitValue, { color: '#DC2626' }]}>{emptyUnits}</Text>
-            </View>
-            <View style={[styles.sliderUnit, styles.sliderUnitDelivered]}>
-              <Text style={[styles.sliderUnitLabel, { color: '#059669' }]}>Delivered</Text>
-              <Text style={[styles.sliderUnitValue, { color: '#059669' }]}>{fullUnits}</Text>
-            </View>
+        
+        <View style={styles.headerActions}>
+          {delivery.status === 'pending' && (
+            <TouchableOpacity 
+              style={styles.quickDeliverBtn}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleStatusChange('delivered');
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.quickDeliverBtnText}>Mark as Done</Text>
+            </TouchableOpacity>
+          )}
+          
+          <View style={styles.expandIconContainer}>
+            {isExpanded ? (
+              <ChevronUp size={22} color={COLORS.textSecondary} />
+            ) : (
+              <ChevronDown size={22} color={COLORS.textSecondary} />
+            )}
           </View>
-          <DeliveryStatusSlider 
-            status={delivery.status} 
-            onStatusChange={handleStatusChange} 
-          />
         </View>
-      ) : (
-        <View style={styles.inlineEditContainer}>
-          <View style={styles.inlineInputWrapper}>
-            <View style={styles.inlineInputGroup}>
-              <Text style={styles.inlineInputLabel}>Full Units</Text>
-              <TextInput
-                style={styles.inlineInput}
-                value={fullUnits}
-                onChangeText={setFullUnits}
-                keyboardType="numeric"
-                placeholder="0"
-              />
-            </View>
-            <View style={styles.inlineInputGroup}>
-              <Text style={styles.inlineInputLabel}>Empty Units</Text>
-              <TextInput
-                style={styles.inlineInput}
-                value={emptyUnits}
-                onChangeText={setEmptyUnits}
-                keyboardType="numeric"
-                placeholder="0"
-              />
-            </View>
+      </TouchableOpacity>
+
+      {isExpanded && (
+        <View style={styles.expandedContent}>
+          <View style={styles.editToggleRow}>
+            <TouchableOpacity 
+              style={styles.editToggleBtn} 
+              onPress={() => setIsEditing(!isEditing)}
+            >
+              <Edit2 size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }}/>
+              <Text style={styles.editToggleText}>
+                {isEditing ? 'Cancel Edit' : 'Edit Units manually'}
+              </Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity 
-            style={styles.inlineSaveBtn}
-            onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
-            activeOpacity={0.8}
-          >
-            <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
-            <Text style={styles.inlineSaveBtnText}>Save</Text>
-          </TouchableOpacity>
+
+          {!isEditing ? (
+            <View style={styles.sliderSection}>
+              <View style={styles.sliderUnitsRow}>
+                <View style={[styles.sliderUnit, styles.sliderUnitEmpty]}>
+                  <Text style={[styles.sliderUnitLabel, { color: COLORS.textSecondary }]}>Empty Jars</Text>
+                  <Text style={[styles.sliderUnitValue, { color: COLORS.textPrimary }]}>{emptyUnits}</Text>
+                </View>
+                <View style={[styles.sliderUnit, styles.sliderUnitDelivered]}>
+                  <Text style={[styles.sliderUnitLabel, { color: COLORS.primary }]}>Delivered</Text>
+                  <Text style={[styles.sliderUnitValue, { color: COLORS.primary }]}>{fullUnits}</Text>
+                </View>
+              </View>
+              <DeliveryStatusSlider 
+                status={delivery.status} 
+                onStatusChange={handleStatusChange} 
+              />
+            </View>
+          ) : (
+            <View style={styles.inlineEditContainer}>
+              <View style={styles.inlineInputWrapper}>
+                <View style={styles.inlineInputGroup}>
+                  <Text style={styles.inlineInputLabel}>Full Units</Text>
+                  <TextInput
+                    style={styles.inlineInput}
+                    value={fullUnits}
+                    onChangeText={setFullUnits}
+                    keyboardType="numeric"
+                    placeholder="0"
+                  />
+                </View>
+                <View style={styles.inlineInputGroup}>
+                  <Text style={styles.inlineInputLabel}>Empty Units</Text>
+                  <TextInput
+                    style={styles.inlineInput}
+                    value={emptyUnits}
+                    onChangeText={setEmptyUnits}
+                    keyboardType="numeric"
+                    placeholder="0"
+                  />
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.inlineSaveBtn}
+                onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
+                activeOpacity={0.8}
+              >
+                <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
+                <Text style={styles.inlineSaveBtnText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
 
@@ -195,7 +249,7 @@ const OrdersScreen = () => {
   // Filters State
   const [routes, setRoutes] = useState([]);
   const [selectedRouteId, setSelectedRouteId] = useState('');
-  const [selectedStatus] = useState('pending');
+  const [selectedStatus, setSelectedStatus] = useState('pending'); // Default: 'pending'
 
   const pulseAnim = useRef(new Animated.Value(0.35)).current;
 
@@ -253,15 +307,24 @@ const OrdersScreen = () => {
     }
   };
 
-  const fetchDeliveries = async (dateStr, routeId = '') => {
+  const fetchDeliveries = async (dateStr, routeId = '', statusFilter = selectedStatus) => {
     setLoadingDeliveries(true);
     try {
-      const res = await api.listDeliveries(userToken, dateStr, routeId, 'pending');
+      const apiStatus = statusFilter === 'completed' ? 'delivered' : (statusFilter === 'all' ? '' : statusFilter);
+      const res = await api.listDeliveries(userToken, dateStr, routeId, apiStatus);
       if (res && res.success) {
-        const rawList = Array.isArray(res.data) ? res.data : (res.data?.deliveries || []);
-        // Hide items whose status is delivered or skipped
-        const pendingOnly = rawList.filter(item => item.status !== 'delivered' && item.status !== 'skipped');
-        setDeliveries(pendingOnly);
+        let rawList = Array.isArray(res.data) ? res.data : (res.data?.deliveries || []);
+
+        if (statusFilter === 'pending') {
+          rawList = rawList.filter(item => item.status === 'pending');
+        } else if (statusFilter === 'completed') {
+          rawList = rawList.filter(item => item.status === 'delivered' || item.status === 'completed');
+        }
+        
+        // Filter out one-time orders from this daily view screen
+        rawList = rawList.filter(item => !item.oneTimeOrderId);
+        
+        setDeliveries(rawList);
       }
     } catch (err) {
       console.error('Error fetching deliveries:', err);
@@ -272,9 +335,9 @@ const OrdersScreen = () => {
 
   useEffect(() => {
     if (userToken) {
-      fetchDeliveries(selectedDate, selectedRouteId);
+      fetchDeliveries(selectedDate, selectedRouteId, selectedStatus);
     }
-  }, [selectedDate, selectedRouteId, userToken]);
+  }, [selectedDate, selectedRouteId, selectedStatus, userToken]);
 
   useEffect(() => {
     if (userToken) {
@@ -303,9 +366,10 @@ const OrdersScreen = () => {
     try {
       const res = await api.updateDeliveryStatus(userToken, deliveryId, data);
       if (res && res.success) {
-        // Immediately remove delivered/skipped item from active pending list
-        setDeliveries(prev => prev.filter(d => d.id !== deliveryId));
-        fetchDeliveries(selectedDate, selectedRouteId);
+        if (selectedStatus === 'pending') {
+          setDeliveries(prev => prev.filter(d => d.id !== deliveryId));
+        }
+        fetchDeliveries(selectedDate, selectedRouteId, selectedStatus);
       } else {
         showAlert('Error', res.message || 'Failed to update delivery', 'error');
       }
@@ -352,8 +416,9 @@ const OrdersScreen = () => {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* Filters Row - Route Filter Only */}
+          {/* Filters Row - Route Dropdown (Left) & Status Dropdown (Right) */}
           <View style={styles.filtersHorizontalRow}>
+            {/* Route Filter Dropdown */}
             <TouchableOpacity 
               style={[styles.filterDropdown, { flex: 1 }]} 
               onPress={() => setActiveFilterModal('route')}
@@ -362,6 +427,19 @@ const OrdersScreen = () => {
               <MapPin size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
               <Text style={styles.filterDropdownText} numberOfLines={1}>
                 {selectedRouteId ? (routes.find(r => r.id === selectedRouteId)?.name || 'Route') : t('deliveries.allRoutes')}
+              </Text>
+              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
+            </TouchableOpacity>
+
+            {/* Status Filter Dropdown (Horizontally Right: Pending, Completed, All) */}
+            <TouchableOpacity 
+              style={[styles.filterDropdown, { flex: 1 }]} 
+              onPress={() => setActiveFilterModal('status')}
+              activeOpacity={0.7}
+            >
+              <Truck size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
+              <Text style={styles.filterDropdownText} numberOfLines={1}>
+                {selectedStatus === 'pending' ? 'Pending' : selectedStatus === 'completed' ? 'Completed' : 'All'}
               </Text>
               <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
             </TouchableOpacity>
@@ -449,6 +527,62 @@ const OrdersScreen = () => {
                     </Text>
                   </TouchableOpacity>
                 ))}
+              </ScrollView>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
+
+      {/* Status Filter Modal (Pending, Completed, All in last) */}
+      {activeFilterModal === 'status' && (
+        <Modal
+          visible={true}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setActiveFilterModal(null)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay} 
+            activeOpacity={1} 
+            onPress={() => setActiveFilterModal(null)}
+          >
+            <View style={styles.filterModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Status</Text>
+                <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
+                  <X size={22} color={COLORS.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {/* 1. Pending (Default) */}
+                <TouchableOpacity 
+                  style={styles.filterModalItem} 
+                  onPress={() => { setSelectedStatus('pending'); setActiveFilterModal(null); }}
+                >
+                  <Text style={[styles.filterModalItemText, selectedStatus === 'pending' && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
+                    Pending
+                  </Text>
+                </TouchableOpacity>
+
+                {/* 2. Completed */}
+                <TouchableOpacity 
+                  style={styles.filterModalItem} 
+                  onPress={() => { setSelectedStatus('completed'); setActiveFilterModal(null); }}
+                >
+                  <Text style={[styles.filterModalItemText, selectedStatus === 'completed' && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
+                    Completed
+                  </Text>
+                </TouchableOpacity>
+
+                {/* 3. All (In Last) */}
+                <TouchableOpacity 
+                  style={styles.filterModalItem} 
+                  onPress={() => { setSelectedStatus('all'); setActiveFilterModal(null); }}
+                >
+                  <Text style={[styles.filterModalItemText, selectedStatus === 'all' && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
+                    All
+                  </Text>
+                </TouchableOpacity>
               </ScrollView>
             </View>
           </TouchableOpacity>
@@ -608,6 +742,7 @@ const styles = StyleSheet.create({
   filtersHorizontalRow: {
     flexDirection: 'row',
     marginBottom: 12,
+    gap: 10,
   },
   filterDropdown: {
     flexDirection: 'row',
@@ -678,6 +813,49 @@ const styles = StyleSheet.create({
     color: COLORS.textPlaceholder,
     textAlign: 'center',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  quickDeliverBtn: {
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
+  },
+  quickDeliverBtnText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
+    color: '#16A34A',
+  },
+  expandIconContainer: {
+    padding: 2,
+    marginLeft: 4,
+  },
+  expandedContent: {
+    marginTop: 8,
+  },
+  editToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  editToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+  },
+  editToggleText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: COLORS.textSecondary,
+  },
   routeGroup: {
     marginBottom: 24,
   },
@@ -729,12 +907,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   sliderUnitEmpty: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FCA5A5',
+    backgroundColor: COLORS.surfaceMuted,
+    borderColor: '#E2E8F0',
   },
   sliderUnitDelivered: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#6EE7B7',
+    backgroundColor: COLORS.primaryLight,
+    borderColor: '#BFDBFE',
   },
   sliderUnitLabel: {
     fontSize: 12,
