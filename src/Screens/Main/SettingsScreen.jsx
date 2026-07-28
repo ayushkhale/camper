@@ -1,6 +1,6 @@
 import React, { useState, useContext, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image, Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -10,7 +10,7 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
-import { Menu, LogOut, Globe, User, Edit3, X, Check } from 'lucide-react-native';
+import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink } from 'lucide-react-native';
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
@@ -267,6 +267,28 @@ const SettingsScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
+
+            <TouchableOpacity 
+              style={[styles.prefRow, { marginTop: 12 }]} 
+              onPress={() => Linking.openURL('https://docs.google.com/document/d/e/2PACX-1vRYAhcFS9ilQgfefLBlDoGwhAQGbPdlLBGc8mIyGSiS-Ho_L1kQv1Gp0PWKU7JeTlTP22aUfuPqI10i/pub')}
+            >
+              <View style={styles.prefLeft}>
+                <Shield size={20} color={COLORS.textSecondary} style={{ marginRight: 10 }} />
+                <Text style={styles.prefLabel}>Privacy Policy</Text>
+              </View>
+              <ExternalLink size={16} color={COLORS.textPlaceholder} />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.prefRow, { marginTop: 12 }]} 
+              onPress={() => Linking.openURL('https://docs.google.com/document/d/e/2PACX-1vR4_iNcbJV3YstWuk7ZibvNSdqbFLpYu10iVqAWjg7y8HsqvzgxfeoTcvl-nF_kIGUf77OKuoWuibzY/pub')}
+            >
+              <View style={styles.prefLeft}>
+                <Trash2 size={20} color={COLORS.danger} style={{ marginRight: 10 }} />
+                <Text style={[styles.prefLabel, { color: COLORS.danger }]}>Delete Account</Text>
+              </View>
+              <ExternalLink size={16} color={COLORS.danger} />
+            </TouchableOpacity>
 
             <TouchableOpacity style={[styles.prefRow, { borderBottomWidth: 0, marginTop: 12 }]} onPress={logout}>
               <View style={styles.prefLeft}>

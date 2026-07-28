@@ -13,15 +13,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
-  ArrowLeft,
   Calendar as CalendarIcon,
+  Search,
+  Filter,
+  MapPin,
+  CheckCircle,
+  XCircle,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  MapPin,
+  Package,
   Truck,
   Phone,
   CheckCircle2,
-  XCircle,
   Clock,
   Eye,
   X,
@@ -177,9 +181,10 @@ const PastDeliveriesScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
-          <ArrowLeft size={24} color={COLORS.textPrimary} />
+          <ChevronLeft size={28} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Past Deliveries</Text>
+        <Text style={styles.headerTitle}>All Deliveries</Text>
+        <View style={styles.headerRightSpacing} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -458,6 +463,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 12 : 16,
     paddingBottom: 16,
@@ -466,12 +472,18 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F1F5F9',
   },
   backButton: {
-    marginRight: 16,
+    padding: 4,
+    marginLeft: -4,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerRightSpacing: {
+    width: 32,
   },
   scrollContent: {
     paddingHorizontal: 20,

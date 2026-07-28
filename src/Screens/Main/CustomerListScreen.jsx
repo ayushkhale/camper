@@ -141,19 +141,22 @@ const CustomerListScreen = () => {
               {item.Route ? item.Route.name : 'No Route'}
             </Text>
           </View>
-            <View style={styles.statusBadge}>
-              <View style={[styles.statusDot, { backgroundColor: item.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
-              <Text style={[styles.statusText, { color: item.status === 'active' ? '#15803D' : '#64748B' }]}>
-                {item.status.toUpperCase()}
-              </Text>
-            </View>
+          <View style={styles.statusBadge}>
+            <View style={[styles.statusDot, { backgroundColor: item.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
+            <Text style={[styles.statusText, { color: item.status === 'active' ? '#15803D' : '#64748B' }]}>
+              {item.status.toUpperCase()}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { paddingTop: Platform.OS === 'android' ? 15 : 0 }]}
+      edges={Platform.OS === 'ios' ? ['top', 'left', 'right'] : ['left', 'right']}
+    >
       <View style={styles.contentWrapper}>
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>{t('customers.title')}</Text>
@@ -244,7 +247,7 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 24 : 16,
+    paddingTop: 8,
   },
   headerRow: {
     paddingHorizontal: 24,
@@ -437,14 +440,19 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
   skeletonCustomerCard: {
     backgroundColor: '#FFFFFF',

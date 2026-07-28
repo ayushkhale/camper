@@ -536,7 +536,7 @@ const AddCustomerScreen = () => {
         style={styles.keyboardAvoid}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 60 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -952,9 +952,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'ios' ? 10 : 20,
-    paddingBottom: 40,
+    padding: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
   headerRow: {
     flexDirection: 'row',
@@ -1073,7 +1073,8 @@ const styles = StyleSheet.create({
   bottomBar: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 60,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },

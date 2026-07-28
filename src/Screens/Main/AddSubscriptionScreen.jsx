@@ -576,7 +576,8 @@ const styles = StyleSheet.create({
   bottomBar: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 60,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },

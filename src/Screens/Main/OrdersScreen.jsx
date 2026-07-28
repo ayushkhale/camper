@@ -97,16 +97,16 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
           <Text style={styles.customerName} numberOfLines={1}>
             {delivery.Customer?.name || 'Unknown Customer'}
           </Text>
-          <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 4}}>
+          <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 4, flexShrink: 1}}>
             <Package size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-            <Text style={styles.subText} numberOfLines={1}>
+            <Text style={[styles.subText, { flexShrink: 1 }]} numberOfLines={1}>
               {delivery.Subscription?.Product?.name || 'Product'} • Qty: {delivery.Subscription?.baseQuantity || 0}
             </Text>
           </View>
         </View>
         
         <View style={styles.headerActions}>
-          {delivery.status === 'pending' && (
+          {delivery.status === 'pending' && !isExpanded && (
             <TouchableOpacity 
               style={styles.quickDeliverIconBtn}
               onPress={(e) => {
@@ -197,7 +197,6 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
         </View>
       )}
 
-      <View style={styles.bottomDivider} />
     </View>
   );
 };
@@ -403,7 +402,10 @@ const OrdersScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView 
+      style={[styles.container, { paddingTop: Platform.OS === 'android' ? 15 : 0 }]} 
+      edges={Platform.OS === 'ios' ? ['top', 'left', 'right'] : ['left', 'right']}
+    >
       <View style={styles.contentWrapper}>
         
         {/* Header */}
@@ -453,10 +455,10 @@ const OrdersScreen = () => {
             activeOpacity={0.7}
           >
             {generating ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color="#1D4ED8" />
             ) : (
               <>
-                <FileText size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <FileText size={18} color="#1D4ED8" style={{ marginRight: 8 }} />
                 <Text style={styles.generateBtnTextThick}>Generate Deliveries</Text>
               </>
             )}
@@ -611,7 +613,7 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 24 : 16,
+    paddingTop: 8,
   },
   headerRow: {
     flexDirection: 'row',
@@ -764,20 +766,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1D4ED8',
-    height: 52,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    height: 48,
     borderRadius: 14,
     marginBottom: 20,
-    shadowColor: '#1D4ED8',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   generateBtnTextThick: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: 'Geologica-Bold',
-    color: '#FFFFFF',
+    color: '#1D4ED8',
   },
   loadingContainer: {
     paddingVertical: 30,
@@ -925,19 +924,24 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   deliveryCardWrapper: {
-    paddingHorizontal: 0,
-    paddingVertical: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   deliveryCardEditing: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    paddingHorizontal: 14,
+    borderColor: '#E2E8F0',
   },
   bottomDivider: {
-    height: 1,
-    backgroundColor: '#E2E8F0',
-    marginTop: 20,
-    marginBottom: 6,
+    display: 'none',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -1189,10 +1193,10 @@ const styles = StyleSheet.create({
   },
   skeletonCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#F1F5F9',
   },
   skeletonAvatar: {
     width: 44,

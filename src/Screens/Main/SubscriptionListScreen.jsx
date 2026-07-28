@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Search, Package, ChevronRight, AlertCircle, RefreshCw, Repeat, User, Calendar } from 'lucide-react-native';
+import { Plus, Search, AlertCircle, RefreshCw, Package, MapPin, Calendar, Clock, ChevronLeft, ChevronRight, Repeat, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -138,10 +138,12 @@ const SubscriptionListScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <View style={styles.contentWrapper}>
-
-        {/* Header */}
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>Subscriptions</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <ChevronLeft size={28} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('subscriptions.title', 'Subscriptions')}</Text>
+          <View style={styles.headerRightSpacing} />
         </View>
 
         {/* Search Box */}
@@ -252,14 +254,26 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 24 : 16,
   },
   headerRow: {
-    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
     marginBottom: 20,
+  },
+  backButton: {
+    padding: 4,
+    marginLeft: -4,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerRightSpacing: {
+    width: 32,
   },
   searchContainer: {
     paddingHorizontal: 24,
@@ -471,14 +485,19 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
 

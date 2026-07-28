@@ -8,10 +8,11 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Search, MapPin, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react-native';
+import { MapPin, Plus, Search, ChevronRight, AlertCircle, RefreshCw, ChevronLeft } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -105,7 +106,11 @@ const RouteListScreen = () => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <ChevronLeft size={28} color={COLORS.textPrimary} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Delivery Routes</Text>
+        <View style={styles.headerRightSpacing} />
       </View>
 
       {/* Search Header */}
@@ -205,11 +210,23 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backButton: {
+    padding: 4,
+    marginLeft: -4,
   },
   headerTitle: {
     fontSize: 22,
     fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerRightSpacing: {
+    width: 32,
   },
   searchHeader: {
     paddingHorizontal: 20,
@@ -384,19 +401,19 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
-    right: 20,
-    width: 54,
-    height: 54,
-    borderRadius: 18,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
 

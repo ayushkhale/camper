@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
-import { Plus, Search, FileText, ChevronRight, AlertCircle, RefreshCw, Calendar, DollarSign } from 'lucide-react-native';
+import { Plus, Search, FileText, ChevronRight, AlertCircle, RefreshCw, Calendar, DollarSign, ChevronLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -129,16 +129,16 @@ const InvoiceListScreen = () => {
             </Text>
           </View>
           <View style={styles.amountContainer}>
-             <Text style={styles.amountText}>
-               ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
-             </Text>
-             {item.status !== 'paid' && parseFloat(item.amountPaid || 0) > 0 && (
-               <Text style={styles.paidSubText}>
-                 Paid: ₹{parseFloat(item.amountPaid).toFixed(2)}
-               </Text>
-             )}
+            <Text style={styles.amountText}>
+              ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
+            </Text>
+            {item.status !== 'paid' && parseFloat(item.amountPaid || 0) > 0 && (
+              <Text style={styles.paidSubText}>
+                Paid: ₹{parseFloat(item.amountPaid).toFixed(2)}
+              </Text>
+            )}
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} style={{marginLeft: 8}}/>
+          <ChevronRight size={18} color={COLORS.textPlaceholder} style={{ marginLeft: 8 }} />
         </View>
       </TouchableOpacity>
     );
@@ -150,7 +150,11 @@ const InvoiceListScreen = () => {
 
         {/* Header */}
         <View style={styles.headerRow}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <ChevronLeft size={28} color={COLORS.textPrimary} />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('invoices.title', 'Invoices')}</Text>
+          <View style={styles.headerRightSpacing} />
         </View>
 
         {/* Search Box */}
@@ -261,14 +265,26 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 24 : 16,
   },
   headerRow: {
-    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
     marginBottom: 20,
+  },
+  backButton: {
+    padding: 4,
+    marginLeft: -4,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerRightSpacing: {
+    width: 32,
   },
   searchContainer: {
     paddingHorizontal: 24,
@@ -490,14 +506,19 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
 

@@ -12,13 +12,14 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Search,
   Package,
   ChevronRight,
+  ChevronLeft,
   AlertCircle,
   RefreshCw,
   RefreshCcw,
@@ -152,14 +153,12 @@ const ProductCatalogScreen = () => {
       <View style={styles.contentWrapper}>
         
         {/* Header */}
-        <View style={[styles.headerRow, { flexDirection: 'row', alignItems: 'center' }]}>
-          <TouchableOpacity 
-            style={{ marginRight: 12 }} 
-            onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
-          >
-            <ChevronRight size={24} color={COLORS.textPrimary} style={{ transform: [{ rotate: '180deg' }] }} />
+        <View style={styles.headerRow}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}>
+            <ChevronLeft size={28} color={COLORS.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Product Catalog</Text>
+          <View style={styles.headerRightSpacing} />
         </View>
 
         {/* Search Box */}
@@ -254,14 +253,26 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 24 : 16,
   },
   headerRow: {
-    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
     marginBottom: 20,
+  },
+  backButton: {
+    padding: 4,
+    marginLeft: -4,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     fontFamily: 'Geologica-Bold',
     color: COLORS.textPrimary,
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerRightSpacing: {
+    width: 32,
   },
   searchContainer: {
     paddingHorizontal: 24,
@@ -451,14 +462,19 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
 

@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 10,
-    paddingBottom: 40,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 60,
   },
   titleContainer: {
     marginBottom: 32,

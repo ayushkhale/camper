@@ -22,6 +22,7 @@ import {
   User,
   Phone,
   MapPin,
+  Route,
   IndianRupee,
   Clock,
   Package,
@@ -334,8 +335,8 @@ const CustomerDetailScreen = () => {
         
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Phone size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
+              <Phone size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.phone_label')}</Text>
@@ -346,8 +347,8 @@ const CustomerDetailScreen = () => {
           <View style={styles.divider} />
           
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <MapPin size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
+              <MapPin size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.address_label')}</Text>
@@ -359,7 +360,7 @@ const CustomerDetailScreen = () => {
           
           <View style={styles.detailRow}>
             <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
-              <MapPin size={18} color={COLORS.primary} />
+              <Route size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.assignedRoute')}</Text>
@@ -373,8 +374,8 @@ const CustomerDetailScreen = () => {
         
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <IndianRupee size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
+              <IndianRupee size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.creditLimit_label')}</Text>
@@ -385,8 +386,8 @@ const CustomerDetailScreen = () => {
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Clock size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
+              <Clock size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.customerSince')}</Text>
@@ -446,8 +447,8 @@ const CustomerDetailScreen = () => {
             <View style={styles.divider} />
 
             <View style={styles.detailRow}>
-              <View style={styles.detailIconBox}>
-                <Package size={18} color={COLORS.textSecondary} />
+              <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
+                <Package size={18} color={COLORS.primary} />
               </View>
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Containers/Jars Held</Text>
@@ -877,23 +878,23 @@ const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    alignItems: 'center',
+    alignItems: 'flex-end',
     gap: 12,
   },
   fabPrimary: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
   fabSecondary: {
     width: 48,

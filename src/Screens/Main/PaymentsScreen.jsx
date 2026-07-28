@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { 
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, 
-  TextInput, FlatList, ActivityIndicator, Alert, Modal, ScrollView, Animated
+import {
+  View, Text, StyleSheet, TouchableOpacity,
+  TextInput, FlatList, ActivityIndicator, Alert, Modal, ScrollView, Animated, Platform
 } from 'react-native';
-import { 
-  CreditCard, User, FileText, CheckCircle, ChevronDown, 
-  X, Search, DollarSign
-} from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { User, ChevronDown, DollarSign, FileText, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, X, Search } from 'lucide-react-native';
+import Svg, { Path, Defs, LinearGradient, Stop, Rect, Circle } from 'react-native-svg';
 import { COLORS } from '../../constants/colors';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../context/AuthContext';
@@ -28,7 +27,7 @@ const PaymentsScreen = () => {
   const { showAlert } = useAlert();
 
   const [activeTab, setActiveTab] = useState('record'); // 'record' | 'statement'
-  
+
   // Customer Selection State
   const [customers, setCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
@@ -172,8 +171,8 @@ const PaymentsScreen = () => {
       return;
     }
     const lower = text.toLowerCase();
-    const filtered = customers.filter(c => 
-      (c.name && c.name.toLowerCase().includes(lower)) || 
+    const filtered = customers.filter(c =>
+      (c.name && c.name.toLowerCase().includes(lower)) ||
       (c.phone && c.phone.includes(lower))
     );
     setFilteredCustomers(filtered);
@@ -279,8 +278,8 @@ const PaymentsScreen = () => {
               data={filteredCustomers}
               keyExtractor={item => item.id || Math.random().toString()}
               renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.customerListItem} 
+                <TouchableOpacity
+                  style={styles.customerListItem}
                   onPress={() => selectCustomer(item)}
                 >
                   <View style={styles.customerListIcon}>
@@ -336,8 +335,8 @@ const PaymentsScreen = () => {
           placeholderTextColor={COLORS.textPlaceholder}
         />
 
-        <TouchableOpacity 
-          style={[styles.primaryBtn, (!selectedCustomer || !amount) && styles.primaryBtnDisabled]} 
+        <TouchableOpacity
+          style={[styles.primaryBtn, (!selectedCustomer || !amount) && styles.primaryBtnDisabled]}
           onPress={handleRecordPayment}
           disabled={submittingPayment || !selectedCustomer || !amount}
         >
@@ -373,24 +372,40 @@ const PaymentsScreen = () => {
 
     return (
       <View style={{ flex: 1 }}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Account Summary</Text>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryCol}>
-              <Text style={styles.summaryLabel}>Total Charged</Text>
-              <Text style={[styles.summaryVal, { color: '#FFF' }]}>{formatCurrency(summary.totalCharged)}</Text>
-            </View>
-            <View style={styles.summaryCol}>
-              <Text style={styles.summaryLabel}>Total Paid</Text>
-              <Text style={[styles.summaryVal, { color: '#E2E8F0' }]}>{formatCurrency(summary.totalPaid)}</Text>
-            </View>
+        <View style={[styles.summaryCard, { paddingVertical: 12, paddingHorizontal: 16, marginBottom: 8 }]}>
+          <View style={StyleSheet.absoluteFill}>
+            <Svg height="100%" width="100%" viewBox="0 0 400 60" preserveAspectRatio="none">
+              <Defs>
+                <LinearGradient id="pieGrad1" x1="0" y1="0" x2="1" y2="1">
+                  <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.25" />
+                  <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.05" />
+                </LinearGradient>
+                <LinearGradient id="pieGrad2" x1="1" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.35" />
+                  <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.1" />
+                </LinearGradient>
+              </Defs>
+              <Circle cx="340" cy="30" r="40" fill="none" stroke="url(#pieGrad1)" strokeWidth="15" strokeDasharray="150 100" strokeDashoffset="40" />
+              <Circle cx="340" cy="30" r="40" fill="none" stroke="url(#pieGrad2)" strokeWidth="15" strokeDasharray="100 150" strokeDashoffset="-100" />
+              <Circle cx="340" cy="30" r="15" fill="url(#pieGrad1)" />
+              <Circle cx="20" cy="60" r="20" fill="url(#pieGrad2)" />
+            </Svg>
           </View>
-          <View style={[styles.summaryRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', paddingTop: 16 }]}>
-            <View style={styles.summaryCol}>
-              <Text style={styles.summaryLabel}>{owesMoney ? 'Amount Due' : 'Balance'}</Text>
-              <Text style={[styles.summaryValLarge, { color: owesMoney ? '#FECACA' : '#86EFAC' }]}>
-                {formatCurrency(summary.outstandingBalance)}
-              </Text>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 1 }}>
+            <View style={{ flexDirection: 'row', gap: 16 }}>
+              <View>
+                <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>Total Charged</Text>
+                <Text style={{ fontSize: 13, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
+              </View>
+              <View>
+                <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>Total Paid</Text>
+                <Text style={{ fontSize: 13, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
+              </View>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>{owesMoney ? 'Amount Due' : 'Balance'}</Text>
+              <Text style={{ fontSize: 16, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.outstandingBalance)}</Text>
             </View>
           </View>
         </View>
@@ -437,15 +452,18 @@ const PaymentsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView 
+      style={[styles.container, { paddingTop: Platform.OS === 'android' ? 15 : 0 }]} 
+      edges={Platform.OS === 'ios' ? ['top', 'left', 'right'] : ['left', 'right']}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Payments & Ledger</Text>
       </View>
 
       {/* Customer Selector */}
-      <TouchableOpacity 
-        style={styles.customerSelector} 
+      <TouchableOpacity
+        style={styles.customerSelector}
         onPress={() => setShowCustomerModal(true)}
       >
         <View style={styles.customerSelectorLeft}>
@@ -462,14 +480,14 @@ const PaymentsScreen = () => {
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'record' && styles.tabBtnActive]}
           onPress={() => handleTabSwitch('record')}
         >
           <DollarSign size={16} color={activeTab === 'record' ? COLORS.primary : COLORS.textSecondary} style={{ marginRight: 6 }} />
           <Text style={[styles.tabText, activeTab === 'record' && styles.tabTextActive]}>Record Payment</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'statement' && styles.tabBtnActive]}
           onPress={() => handleTabSwitch('statement')}
         >
@@ -495,7 +513,6 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 10,
     paddingBottom: 16,
   },
   headerTitle: {
@@ -729,22 +746,23 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   summaryCard: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#D97706',
     marginHorizontal: 16,
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-    marginBottom: 20,
+    borderRadius: 8,
+    padding: 20,
+    shadowColor: '#D97706',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 16,
+    overflow: 'hidden',
   },
   summaryTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'Geologica-Medium',
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: 16,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -756,17 +774,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   summaryLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Geologica-Medium',
-    color: 'rgba(255,255,255,0.7)',
-    marginBottom: 4,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 2,
   },
   summaryVal: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Geologica-Bold',
   },
   summaryValLarge: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: 'Geologica-Bold',
   },
   statementListTitle: {
@@ -829,7 +847,7 @@ const styles = StyleSheet.create({
   },
   skeletonSummaryCard: {
     backgroundColor: COLORS.primary,
-    borderRadius: 20,
+    borderRadius: 8,
     padding: 20,
     height: 140,
   },
