@@ -25,12 +25,228 @@ import {
   Search,
   X,
   Truck,
+  ChevronDown,
+  ChevronUp,
+  Edit2,
+  Save,
+  CheckSquare,
 } from 'lucide-react-native';
+import DeliveryStatusSlider from '../../components/DeliveryStatusSlider';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+
+
+const OneTimeOrderCard = ({ item, onUpdateStatus, getStatusColors, formatDisplayDate, onCancelOrder }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  const statusColors = getStatusColors(item.status);
+  const dateDisplay = item.orderFrom === item.orderTo 
+    ? formatDisplayDate(item.orderFrom) 
+    : `${formatDisplayDate(item.orderFrom)} → ${formatDisplayDate(item.orderTo)}`;
+  
+  const expectedQty = (item.OneTimeOrderItems || []).reduce((acc, current) => {
+    return acc + (parseInt(current.quantity) || 0);
+  }, 0);
+
+  const defaultFull = (item.status === 'pending' && !item.fullUnitsDelivered)
+    ? (expectedQty > 0 ? String(expectedQty) : '0')
+    : String(item.fullUnitsDelivered || 0);
+    
+  const defaultEmpty = (item.status === 'pending' && !item.emptyUnitsCollected)
+    ? '0'
+    : String(item.emptyUnitsCollected || 0);
+
+  const [fullUnits, setFullUnits] = useState(defaultFull);
+  const [emptyUnits, setEmptyUnits] = useState(defaultEmpty);
+
+  const totalOrderPrice = (item.OneTimeOrderItems || []).reduce((acc, current) => {
+    const price = parseFloat(current.unitPrice) || 0;
+    const qty = parseInt(current.quantity) || 0;
+    return acc + (price * qty);
+  }, 0);
+
+  const itemsCount = (item.OneTimeOrderItems || []).length;
+  const itemsSummary = (item.OneTimeOrderItems || [])
+    .map(itm => `${itm.Product?.name || 'Item'} (x${itm.quantity})`)
+    .join(', ');
+
+  const handleUpdate = async (status, full, empty) => {
+    setUpdating(true);
+    await onUpdateStatus(item.id, {
+      deliveryDate: new Date().toISOString().split('T')[0],
+      status,
+      fullUnitsDelivered: parseInt(full) || 0,
+      emptyUnitsCollected: parseInt(empty) || 0,
+    });
+    setUpdating(false);
+    setIsEditing(false);
+    if (status !== 'pending') {
+      setIsExpanded(false);
+    }
+  };
+
+  const handleStatusChange = (newStatus) => {
+    handleUpdate(newStatus, fullUnits, emptyUnits);
+  };
+
+  return (
+    <View style={[styles.card, isEditing && styles.cardEditing]}>
+      {updating && (
+        <View style={styles.cardUpdatingOverlay}>
+          <ActivityIndicator color="#1D4ED8" />
+        </View>
+      )}
+      
+      <TouchableOpacity 
+        style={styles.cardHeader} 
+        onPress={() => setIsExpanded(!isExpanded)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.iconBox}>
+          <ShoppingBag size={22} color="#1D4ED8" />
+        </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.customerName} numberOfLines={1}>
+            {item.Customer?.name || 'Unknown Customer'}
+          </Text>
+          <View style={styles.row}>
+            <Text style={styles.subText} numberOfLines={1}>
+              {itemsCount === 1 ? itemsSummary : `${itemsCount} Products: ${itemsSummary}`}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.headerActions}>
+          {item.status === 'pending' ? (
+            <TouchableOpacity 
+              style={styles.quickDeliverIconBtn}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleStatusChange('delivered');
+              }}
+              activeOpacity={0.7}
+            >
+              <CheckSquare size={24} color="#16A34A" />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.statusBadge}>
+              <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
+              <Text style={[styles.statusText, { color: statusColors.text }]}>
+                {item.status.toUpperCase()}
+              </Text>
+            </View>
+          )}
+          
+          <View style={styles.expandIconContainer}>
+            {isExpanded ? (
+              <ChevronUp size={22} color="#64748B" />
+            ) : (
+              <ChevronDown size={22} color="#64748B" />
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      <View style={styles.divider} />
+
+      <View style={styles.cardFooter}>
+        <View style={styles.metaContainer}>
+          <Calendar size={14} color="#64748B" style={{ marginRight: 4 }} />
+          <Text style={styles.metaText} numberOfLines={1}>
+            {dateDisplay}
+          </Text>
+        </View>
+
+        <View style={styles.footerRight}>
+          <Text style={styles.totalPrice}>₹{totalOrderPrice.toFixed(2)}</Text>
+          
+          {item.status === 'pending' && onCancelOrder && (
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => onCancelOrder(item.id)}
+              activeOpacity={0.7}
+            >
+              <Trash2 size={14} color="#EF4444" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {isExpanded && item.status === 'pending' && (
+        <View style={styles.expandedContent}>
+          <View style={styles.editToggleRow}>
+            <TouchableOpacity 
+              style={styles.editToggleBtn} 
+              onPress={() => setIsEditing(!isEditing)}
+            >
+              <Edit2 size={14} color="#64748B" style={{ marginRight: 6 }}/>
+              <Text style={styles.editToggleText}>
+                {isEditing ? 'Cancel Edit' : 'Edit Units manually'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {!isEditing ? (
+            <View style={styles.sliderSection}>
+              <View style={styles.sliderUnitsRow}>
+                <View style={[styles.sliderUnit, styles.sliderUnitEmpty]}>
+                  <Text style={[styles.sliderUnitLabel, { color: '#64748B' }]}>Empty Jars</Text>
+                  <Text style={[styles.sliderUnitValue, { color: '#0F172A' }]}>{emptyUnits}</Text>
+                </View>
+                <View style={[styles.sliderUnit, styles.sliderUnitDelivered]}>
+                  <Text style={[styles.sliderUnitLabel, { color: '#1D4ED8' }]}>Delivered</Text>
+                  <Text style={[styles.sliderUnitValue, { color: '#1D4ED8' }]}>{fullUnits}</Text>
+                </View>
+              </View>
+              <DeliveryStatusSlider 
+                status={item.status} 
+                onStatusChange={handleStatusChange} 
+              />
+            </View>
+          ) : (
+            <View style={styles.inlineEditContainer}>
+              <View style={styles.inlineInputWrapper}>
+                <View style={styles.inlineInputGroup}>
+                  <Text style={styles.inlineInputLabel}>Full Units</Text>
+                  <TextInput
+                    style={styles.inlineInput}
+                    value={fullUnits}
+                    onChangeText={setFullUnits}
+                    keyboardType="numeric"
+                    placeholder="0"
+                  />
+                </View>
+                <View style={styles.inlineInputGroup}>
+                  <Text style={styles.inlineInputLabel}>Empty Units</Text>
+                  <TextInput
+                    style={styles.inlineInput}
+                    value={emptyUnits}
+                    onChangeText={setEmptyUnits}
+                    keyboardType="numeric"
+                    placeholder="0"
+                  />
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.inlineSaveBtn}
+                onPress={() => handleUpdate('delivered', fullUnits, emptyUnits)}
+                activeOpacity={0.8}
+              >
+                <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
+                <Text style={styles.inlineSaveBtnText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
+    </View>
+  );
+};
 
 const OneTimeOrderListScreen = () => {
   const { t } = useTranslation();
@@ -44,63 +260,19 @@ const OneTimeOrderListScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
-  const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
-  const [activeOrder, setActiveOrder] = useState(null);
-  const [fulfillmentDate, setFulfillmentDate] = useState(new Date().toISOString().split('T')[0]);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [deliveryUpdating, setDeliveryUpdating] = useState(false);
-
-  const formatDateString = (date) => {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
-  const parseDateString = (str) => {
-    if (!str) return new Date();
-    const parts = str.split('-');
-    if (parts.length === 3) {
-      const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const day = parseInt(parts[2], 10);
-      return new Date(year, month, day);
-    }
-    return new Date();
-  };
-
-  const handleDateChange = (event, selectedDateObj) => {
-    setShowDatePicker(false);
-    if (selectedDateObj) {
-      setFulfillmentDate(formatDateString(selectedDateObj));
-    }
-  };
-
-  const handleFulfillClick = (orderItem) => {
-    setActiveOrder(orderItem);
-    setFulfillmentDate(new Date().toISOString().split('T')[0]);
-    setDeliveryModalVisible(true);
-  };
-
-  const submitFulfillment = async () => {
-    if (!activeOrder) return;
-    setDeliveryUpdating(true);
+  const handleUpdateStatus = async (orderId, payload) => {
     try {
-      const res = await api.fulfillOneTimeOrder(userToken, activeOrder.id, fulfillmentDate);
+      const res = await api.fulfillOneTimeOrder(userToken, orderId, payload);
       if (res && res.success) {
-        showAlert('Success', res.message || 'Order fulfilled successfully.', 'success');
-        setDeliveryModalVisible(false);
-        setActiveOrder(null);
         fetchOrders(false);
       } else {
-        throw new Error(res.message || 'Failed to fulfill order');
+        showAlert('Error', res.message || 'Failed to fulfill order', 'error');
       }
     } catch (err) {
       showAlert('Error', err.message, 'error');
-    } finally {
-      setDeliveryUpdating(false);
     }
   };
+
 
   const fetchOrders = async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -130,6 +302,7 @@ const OneTimeOrderListScreen = () => {
   useFocusEffect(
     useCallback(() => {
       fetchOrders(true);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userToken])
   );
 
@@ -192,86 +365,15 @@ const OneTimeOrderListScreen = () => {
     return customerMatch || itemMatch;
   });
 
-  const renderOrderItem = ({ item }) => {
-    const statusColors = getStatusColors(item.status);
-    const dateDisplay = item.orderFrom === item.orderTo 
-      ? formatDisplayDate(item.orderFrom) 
-      : `${formatDisplayDate(item.orderFrom)} → ${formatDisplayDate(item.orderTo)}`;
-    
-    // Calculate total price of order
-    const totalOrderPrice = (item.OneTimeOrderItems || []).reduce((acc, current) => {
-      const price = parseFloat(current.unitPrice) || 0;
-      const qty = parseInt(current.quantity) || 0;
-      return acc + (price * qty);
-    }, 0);
-
-    const itemsCount = (item.OneTimeOrderItems || []).length;
-    const itemsSummary = (item.OneTimeOrderItems || [])
-      .map(itm => `${itm.Product?.name || 'Item'} (x${itm.quantity})`)
-      .join(', ');
-
-    return (
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View style={styles.iconBox}>
-            <ShoppingBag size={22} color={COLORS.primary} />
-          </View>
-          <View style={styles.titleContainer}>
-            <Text style={styles.customerName} numberOfLines={1}>
-              {item.Customer?.name || 'Unknown Customer'}
-            </Text>
-            <View style={styles.row}>
-              <Text style={styles.subText} numberOfLines={1}>
-                {itemsCount === 1 ? itemsSummary : `${itemsCount} Products: ${itemsSummary}`}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
-            <Text style={[styles.statusText, { color: statusColors.text }]}>
-              {item.status.toUpperCase()}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.cardFooter}>
-          <View style={styles.metaContainer}>
-            <Calendar size={14} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-            <Text style={styles.metaText} numberOfLines={1}>
-              {dateDisplay}
-            </Text>
-          </View>
-
-          <View style={styles.footerRight}>
-            <Text style={styles.totalPrice}>₹{totalOrderPrice.toFixed(2)}</Text>
-            
-            {item.status === 'pending' && (
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => handleCancelOrder(item.id)}
-                activeOpacity={0.7}
-              >
-                <Trash2 size={14} color={COLORS.danger} />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {item.status === 'pending' && (
-          <TouchableOpacity
-            style={styles.deliverBlockBtn}
-            onPress={() => handleFulfillClick(item)}
-            activeOpacity={0.7}
-          >
-            <Truck size={16} color={COLORS.primary} />
-            <Text style={styles.deliverBlockBtnText}>Fulfill Order</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
+  const renderOrderItem = ({ item }) => (
+    <OneTimeOrderCard 
+      item={item} 
+      onUpdateStatus={handleUpdateStatus} 
+      getStatusColors={getStatusColors} 
+      formatDisplayDate={formatDisplayDate} 
+      onCancelOrder={handleCancelOrder}
+    />
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -355,62 +457,6 @@ const OneTimeOrderListScreen = () => {
         </TouchableOpacity>
       )}
 
-      {/* Fulfillment Modal */}
-      <Modal
-        visible={deliveryModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDeliveryModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.deliveryModalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Fulfill Order</Text>
-              <TouchableOpacity onPress={() => setDeliveryModalVisible(false)} disabled={deliveryUpdating}>
-                <X size={22} color={COLORS.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            {activeOrder && (
-              <View style={styles.deliveryDetails}>
-                <Text style={styles.deliveryCustomerName}>{activeOrder.Customer?.name || 'Customer'}</Text>
-                
-                <View style={styles.inlineInputGroup}>
-                  <Text style={styles.inlineInputLabel}>Delivery Date</Text>
-                  <TouchableOpacity 
-                    style={styles.datePickerBtn}
-                    onPress={() => setShowDatePicker(true)}
-                  >
-                    <Calendar size={18} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
-                    <Text style={styles.datePickerBtnText}>{fulfillmentDate}</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity 
-                  style={[styles.saveBtn, deliveryUpdating && { opacity: 0.7 }]}
-                  onPress={submitFulfillment}
-                  disabled={deliveryUpdating}
-                >
-                  {deliveryUpdating ? (
-                    <ActivityIndicator size="small" color="#FFF" />
-                  ) : (
-                    <Text style={styles.saveBtnText}>Approve Fulfill</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={parseDateString(fulfillmentDate)}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-        />
-      )}
 
     </SafeAreaView>
   );
@@ -482,6 +528,135 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 60,
   },
+
+  cardEditing: {
+    borderColor: '#3B82F6',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardUpdatingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    zIndex: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  quickDeliverIconBtn: {
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+  },
+  expandIconContainer: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  expandedContent: {
+    paddingTop: 12,
+    paddingHorizontal: 4,
+  },
+  editToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 12,
+  },
+  editToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  editToggleText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: 'Geologica-Medium',
+  },
+  sliderSection: {
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  sliderUnitsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  sliderUnit: {
+    alignItems: 'center',
+  },
+  sliderUnitLabel: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    marginBottom: 4,
+  },
+  sliderUnitValue: {
+    fontSize: 20,
+    fontFamily: 'Geologica-Bold',
+  },
+  inlineEditContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 8,
+  },
+  inlineInputWrapper: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  inlineInputGroup: {
+    flex: 1,
+  },
+  inlineInputLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: 'Geologica-Medium',
+    marginBottom: 6,
+  },
+  inlineInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    height: 44,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  inlineSaveBtn: {
+    backgroundColor: '#1D4ED8',
+    flexDirection: 'row',
+    height: 44,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  inlineSaveBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
+  },
+
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
@@ -600,86 +775,7 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     marginLeft: 8,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  deliveryModalContent: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    width: '100%',
-    padding: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
-  },
-  deliveryDetails: {
-    marginTop: 8,
-  },
-  deliveryCustomerName: {
-    fontSize: 16,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.primary,
-    marginBottom: 16,
-  },
-  inlineInputGroup: {
-    marginBottom: 16,
-  },
-  inlineInputLabel: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
-    marginBottom: 6,
-  },
-  inlineInput: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 44,
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPrimary,
-  },
-  datePickerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 48,
-    backgroundColor: '#F8FAFC',
-  },
-  datePickerBtnText: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPrimary,
-  },
-  saveBtn: {
-    backgroundColor: '#16A34A',
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  saveBtnText: {
-    color: '#FFF',
-    fontSize: 15,
-    fontFamily: 'Geologica-Bold',
-  },
+
   centerContainer: {
     flex: 1,
     justifyContent: 'center',

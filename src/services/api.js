@@ -407,8 +407,8 @@ export const api = {
   updateOneTimeOrderStatus: (token, id, status) =>
     patchRequest(`/api/vendor/one-time-orders/${id}/status`, { status }, token),
 
-  fulfillOneTimeOrder: (token, id, deliveryDate) =>
-    postRequest(`/api/vendor/one-time-orders/${id}/fulfill`, { deliveryDate }, token),
+  fulfillOneTimeOrder: (token, id, data) =>
+    postRequest(`/api/vendor/one-time-orders/${id}/fulfill`, data, token),
 
   // Dashboard APIs
   getDashboardStats: (token) =>

@@ -108,14 +108,14 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
         <View style={styles.headerActions}>
           {delivery.status === 'pending' && (
             <TouchableOpacity 
-              style={styles.quickDeliverBtn}
+              style={styles.quickDeliverIconBtn}
               onPress={(e) => {
                 e.stopPropagation();
                 handleStatusChange('delivered');
               }}
               activeOpacity={0.7}
             >
-              <Text style={styles.quickDeliverBtnText}>Mark as Done</Text>
+              <CheckSquare size={24} color="#16A34A" />
             </TouchableOpacity>
           )}
           
@@ -818,18 +818,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  quickDeliverBtn: {
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  quickDeliverIconBtn: {
+    padding: 6,
     borderRadius: 8,
+    backgroundColor: '#DCFCE7',
     borderWidth: 1,
-    borderColor: '#DCFCE7',
-  },
-  quickDeliverBtnText: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Bold',
-    color: '#16A34A',
+    borderColor: '#BBF7D0',
   },
   expandIconContainer: {
     padding: 2,

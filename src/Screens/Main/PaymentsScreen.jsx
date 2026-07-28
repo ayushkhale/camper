@@ -133,6 +133,22 @@ const PaymentsScreen = () => {
     }
   }, [route.params?.preselectedCustomer]);
 
+  // Handle route params from InvoiceDetailScreen
+  useEffect(() => {
+    if (customers.length > 0 && route.params?.customerId) {
+      const foundCustomer = customers.find(c => c.id === route.params.customerId || c.id === Number(route.params.customerId) || String(c.id) === String(route.params.customerId));
+      if (foundCustomer && (!selectedCustomer || selectedCustomer.id !== foundCustomer.id)) {
+        selectCustomer(foundCustomer);
+      }
+    }
+  }, [route.params?.customerId, customers]);
+
+  useEffect(() => {
+    if (route.params?.prefillAmount) {
+      setAmount(String(route.params.prefillAmount));
+    }
+  }, [route.params?.prefillAmount]);
+
   const fetchCustomers = async () => {
     if (!userToken) return;
     setLoadingCustomers(true);

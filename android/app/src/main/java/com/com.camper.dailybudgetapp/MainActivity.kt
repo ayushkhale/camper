@@ -1,4 +1,4 @@
-package com.camper.compunic
+package com.camper.dailybudgetapp
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-na
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Truck, Users, Bell, CreditCard } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
 import { AuthContext } from '../context/AuthContext';
@@ -65,6 +66,7 @@ const HomeHeader = () => {
 
 const MainTabs = () => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -74,8 +76,8 @@ const MainTabs = () => {
         tabBarInactiveTintColor: COLORS.primary,
         tabBarStyle: {
           paddingTop: 5,
-          paddingBottom: 5,
-          height: 60,
+          paddingBottom: Math.max(5, insets.bottom),
+          height: 60 + Math.max(0, insets.bottom - 5),
         },
         tabBarLabelStyle: {
           fontSize: 10.5,
