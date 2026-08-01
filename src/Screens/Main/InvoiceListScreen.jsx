@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import { Plus, Search, FileText, ChevronRight, AlertCircle, RefreshCw, Calendar, DollarSign, ChevronLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import CurvedHeader from '../../components/CurvedHeader';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -129,11 +130,25 @@ const InvoiceListScreen = () => {
             </Text>
           </View>
           <View style={styles.amountContainer}>
-            <Text style={styles.amountText}>
-              ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
-            </Text>
+            {parseFloat(item.previousDues || 0) > 0 ? (
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={[styles.paidSubText, { color: '#64748B', marginBottom: 2 }]}>
+                  Prev. Due: ₹{parseFloat(item.previousDues).toFixed(2)}
+                </Text>
+                <Text style={[styles.paidSubText, { color: '#64748B', marginBottom: 4 }]}>
+                  Current: ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
+                </Text>
+                <Text style={[styles.amountText, { color: COLORS.primary }]}>
+                  Total: ₹{(parseFloat(item.previousDues || 0) + parseFloat(item.totalAmount || 0)).toFixed(2)}
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.amountText}>
+                ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
+              </Text>
+            )}
             {item.status !== 'paid' && parseFloat(item.amountPaid || 0) > 0 && (
-              <Text style={styles.paidSubText}>
+              <Text style={[styles.paidSubText, { marginTop: 4 }]}>
                 Paid: ₹{parseFloat(item.amountPaid).toFixed(2)}
               </Text>
             )}
@@ -146,16 +161,14 @@ const InvoiceListScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <CurvedHeader
+        title={t('invoices.title', 'Invoices')}
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={130}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
       <View style={styles.contentWrapper}>
-
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <ChevronLeft size={28} color={COLORS.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t('invoices.title', 'Invoices')}</Text>
-          <View style={styles.headerRightSpacing} />
-        </View>
 
         {/* Search Box */}
         <View style={styles.searchContainer}>

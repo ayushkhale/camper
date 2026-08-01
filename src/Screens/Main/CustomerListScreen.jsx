@@ -12,12 +12,13 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Search, User, ChevronRight, AlertCircle, RefreshCw, MapPin, Phone } from 'lucide-react-native';
+import { useNavigation, useFocusEffect, DrawerActions } from '@react-navigation/native';
+import { Plus, Search, User, ChevronRight, AlertCircle, RefreshCw, MapPin, Phone, Menu } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const CustomerListScreen = () => {
   const navigation = useNavigation();
@@ -153,14 +154,19 @@ const CustomerListScreen = () => {
   };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { paddingTop: Platform.OS === 'android' ? 15 : 0 }]}
-      edges={Platform.OS === 'ios' ? ['top', 'left', 'right'] : ['left', 'right']}
-    >
+    <View style={styles.container}>
+      <CurvedHeader 
+        title={
+          <View>
+            <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('customers.title')}</Text>
+          </View>
+        }
+        leftIcon={<Menu size={24} color="#FFF" />}
+        onLeftPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        height={110}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
       <View style={styles.contentWrapper}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>{t('customers.title')}</Text>
-        </View>
 
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
@@ -236,7 +242,7 @@ const CustomerListScreen = () => {
           <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -248,16 +254,6 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
     paddingTop: 8,
-  },
-  headerRow: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
   },
   searchContainer: {
     paddingHorizontal: 24,
@@ -285,7 +281,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 24,
-    paddingBottom: 90,
+    paddingBottom: 120,
   },
   emptyListContent: {
     flexGrow: 1,
@@ -440,7 +436,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 40 : 50,
+    bottom: Platform.OS === 'ios' ? 120 : 130,
     right: 24,
     width: 60,
     height: 60,

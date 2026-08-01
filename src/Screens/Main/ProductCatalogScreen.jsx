@@ -27,6 +27,7 @@ import {
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const ProductCatalogScreen = () => {
   const { t } = useTranslation();
@@ -149,18 +150,16 @@ const ProductCatalogScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Product Catalog</Text>}
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
+      
       <View style={styles.contentWrapper}>
-        
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}>
-            <ChevronLeft size={28} color={COLORS.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Product Catalog</Text>
-          <View style={styles.headerRightSpacing} />
-        </View>
-
         {/* Search Box */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
@@ -239,44 +238,22 @@ const ProductCatalogScreen = () => {
           <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   contentWrapper: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 24 : 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  backButton: {
-    padding: 4,
-    marginLeft: -4,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-    flex: 1,
-  },
-  headerRightSpacing: {
-    width: 32,
   },
   searchContainer: {
     paddingHorizontal: 24,
     marginBottom: 16,
+    marginTop: 10,
   },
   searchBar: {
     flexDirection: 'row',

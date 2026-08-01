@@ -37,9 +37,10 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
 
 
-const OneTimeOrderCard = ({ item, onUpdateStatus, getStatusColors, formatDisplayDate, onCancelOrder }) => {
+const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, formatDisplayDate, onCancelOrder }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -107,8 +108,8 @@ const OneTimeOrderCard = ({ item, onUpdateStatus, getStatusColors, formatDisplay
         onPress={() => setIsExpanded(!isExpanded)}
         activeOpacity={0.7}
       >
-        <View style={styles.iconBox}>
-          <ShoppingBag size={22} color="#1D4ED8" />
+        <View style={styles.iconBoxOptionC}>
+          <Text style={styles.iconBoxTextOptionC}>{index}</Text>
         </View>
         <View style={styles.titleContainer}>
           <Text style={styles.customerName} numberOfLines={1}>
@@ -122,6 +123,20 @@ const OneTimeOrderCard = ({ item, onUpdateStatus, getStatusColors, formatDisplay
         </View>
 
         <View style={styles.headerActions}>
+          {item.status === 'pending' && !isExpanded && (
+            <TouchableOpacity 
+              style={[styles.quickDeliverIconBtn, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', marginRight: 6 }]}
+              onPress={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+                setIsEditing(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Edit2 size={20} color="#EA580C" />
+            </TouchableOpacity>
+          )}
+
           {item.status === 'pending' && !isExpanded ? (
             <TouchableOpacity 
               style={styles.quickDeliverIconBtn}
@@ -131,15 +146,17 @@ const OneTimeOrderCard = ({ item, onUpdateStatus, getStatusColors, formatDisplay
               }}
               activeOpacity={0.7}
             >
-              <CheckSquare size={24} color="#16A34A" />
+              <CheckSquare size={20} color="#16A34A" />
             </TouchableOpacity>
           ) : (
-            <View style={styles.statusBadge}>
-              <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
-              <Text style={[styles.statusText, { color: statusColors.text }]}>
-                {item.status.toUpperCase()}
-              </Text>
-            </View>
+            item.status !== 'pending' && (
+              <View style={styles.statusBadge}>
+                <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
+                <Text style={[styles.statusText, { color: statusColors.text }]}>
+                  {item.status.toUpperCase()}
+                </Text>
+              </View>
+            )
           )}
           
           <View style={styles.expandIconContainer}>
@@ -179,17 +196,6 @@ const OneTimeOrderCard = ({ item, onUpdateStatus, getStatusColors, formatDisplay
 
       {isExpanded && item.status === 'pending' && (
         <View style={styles.expandedContent}>
-          <View style={styles.editToggleRow}>
-            <TouchableOpacity 
-              style={styles.editToggleBtn} 
-              onPress={() => setIsEditing(!isEditing)}
-            >
-              <Edit2 size={14} color="#64748B" style={{ marginRight: 6 }}/>
-              <Text style={styles.editToggleText}>
-                {isEditing ? 'Cancel Edit' : 'Edit Units manually'}
-              </Text>
-            </TouchableOpacity>
-          </View>
 
           {!isEditing ? (
             <View style={styles.sliderSection}>
@@ -365,9 +371,10 @@ const OneTimeOrderListScreen = () => {
     return customerMatch || itemMatch;
   });
 
-  const renderOrderItem = ({ item }) => (
+  const renderOrderItem = ({ item, index }) => (
     <OneTimeOrderCard 
       item={item} 
+      index={index + 1}
       onUpdateStatus={handleUpdateStatus} 
       getStatusColors={getStatusColors} 
       formatDisplayDate={formatDisplayDate} 
@@ -376,18 +383,24 @@ const OneTimeOrderListScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={
+          <Text 
+            numberOfLines={1} 
+            adjustsFontSizeToFit 
+            style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
+          >
+            {t('oneTimeOrders.title', 'One-Time Orders')}
+          </Text>
+        }
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 35 }}
+      />
+      
       <View style={styles.contentWrapper}>
-        
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <ChevronLeft size={28} color={COLORS.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t('oneTimeOrders.title')}</Text>
-          <View style={styles.headerRightSpacing} />
-        </View>
-
         {/* Search Box */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
@@ -418,7 +431,7 @@ const OneTimeOrderListScreen = () => {
         ) : (
           <FlatList
             data={filteredOrders}
-            keyExtractor={(item) => item.id}
+            keyExtractor={item => String(item.id)}
             renderItem={renderOrderItem}
             contentContainerStyle={
               filteredOrders.length === 0 ? styles.emptyListContent : styles.listContent
@@ -458,44 +471,22 @@ const OneTimeOrderListScreen = () => {
       )}
 
 
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   contentWrapper: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 24 : 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  backButton: {
-    padding: 4,
-    marginLeft: -4,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-    flex: 1,
-  },
-  headerRightSpacing: {
-    width: 32,
   },
   searchContainer: {
     paddingHorizontal: 24,
     marginBottom: 16,
+    marginTop: 10,
   },
   searchBar: {
     flexDirection: 'row',
@@ -670,19 +661,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  iconBox: {
-    width: 44,
-    height: 44,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 22,
+  iconBoxOptionC: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    marginRight: 12,
+  },
+  iconBoxTextOptionC: {
+    color: '#1D4ED8',
+    fontFamily: 'Geologica-Bold',
+    fontSize: 14,
   },
   titleContainer: {
     flex: 1,
+    marginRight: 8,
   },
   customerName: {
     fontSize: 15,

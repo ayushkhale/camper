@@ -12,16 +12,19 @@ import {
   Platform,
   Alert,
   Modal,
-  FlatList
+  FlatList,
+  TouchableWithoutFeedback
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, User, Calendar, AlertCircle, X, Search, FileText } from 'lucide-react-native';
+import { ChevronLeft, ChevronDown, Check, X, Search, User, Filter, AlertCircle, FileText, Calendar } from 'lucide-react-native';
+import CurvedHeader from '../../components/CurvedHeader';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import AddCustomerModal from '../../components/modals/AddCustomerModal';
 
 const GenerateInvoiceScreen = () => {
   const { t } = useTranslation();
@@ -40,12 +43,14 @@ const GenerateInvoiceScreen = () => {
   const [apiError, setApiError] = useState('');
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [preSummary, setPreSummary] = useState(null);
 
   // Modals state
   const [activeModal, setActiveModal] = useState(null); // 'customer'
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [modalSearch, setModalSearch] = useState('');
+  const [addCustomerVisible, setAddCustomerVisible] = useState(false);
 
   const formatDateString = (date) => {
     const yyyy = date.getFullYear();
@@ -83,6 +88,33 @@ const GenerateInvoiceScreen = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    fetchPreSummary();
+  }, [customerId]);
+
+  const fetchPreSummary = async () => {
+    try {
+      const res = await api.getUninvoicedPreSummary(userToken, customerId);
+      if (res.success && res.data) {
+        let totalUninvoiced = 0;
+        let totalEst = 0;
+        res.data.forEach(item => {
+          totalUninvoiced += (item.uninvoicedDeliveries || 0);
+          totalEst += (item.estimatedTotal || 0);
+        });
+        if (totalUninvoiced > 0) {
+          setPreSummary({ deliveries: totalUninvoiced, total: totalEst });
+        } else {
+          setPreSummary(null);
+        }
+      } else {
+        setPreSummary(null);
+      }
+    } catch (err) {
+      console.log('Error fetching pre-summary', err);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -160,7 +192,7 @@ const GenerateInvoiceScreen = () => {
   };
 
   const getCustomerName = (id) => {
-    const c = customers.find(c => c.id === id);
+    const c = customers.find(c => String(c.id) === String(id));
     return c ? c.name : 'Select a Customer';
   };
 
@@ -198,12 +230,11 @@ const GenerateInvoiceScreen = () => {
         animationType="slide"
         onRequestClose={() => { setActiveModal(null); setModalSearch(''); }}
       >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => { setActiveModal(null); setModalSearch(''); }}
-        >
-          <View style={[styles.modalContent, { maxHeight: '80%' }]} onStartShouldSetResponder={() => true}>
+        <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+          <TouchableWithoutFeedback onPress={() => { setActiveModal(null); setModalSearch(''); }}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+          </TouchableWithoutFeedback>
+          <View style={[styles.modalContent, { maxHeight: '80%' }]}>
             <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{title}</Text>
@@ -225,6 +256,15 @@ const GenerateInvoiceScreen = () => {
               </View>
             )}
             
+            {activeModal === 'customer' && (
+              <TouchableOpacity 
+                style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
+                onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
+              >
+                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Customer</Text>
+              </TouchableOpacity>
+            )}
+            
             {filteredData.length === 0 ? (
               <Text style={styles.modalEmptyText}>
                 No options found.
@@ -232,6 +272,7 @@ const GenerateInvoiceScreen = () => {
             ) : (
               <FlatList
                 data={filteredData}
+                keyboardShouldPersistTaps="handled"
                 keyExtractor={item => item.id || 'all'}
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => {
@@ -253,7 +294,7 @@ const GenerateInvoiceScreen = () => {
               />
             )}
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     );
   };
@@ -273,16 +314,18 @@ const GenerateInvoiceScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
       >
+        <CurvedHeader
+          title="Generate Invoices"
+          leftIcon={<ChevronLeft size={28} color="#FFF" />}
+          onLeftPress={() => navigation.goBack()}
+          height={130}
+          contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        />
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <ChevronLeft size={28} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-          </View>
 
           <View style={styles.titleContainer}>
             <Text style={styles.pageTitle}>
@@ -297,6 +340,25 @@ const GenerateInvoiceScreen = () => {
             <View style={styles.errorBanner}>
               <AlertCircle size={20} color={COLORS.primary} style={styles.errorIcon} />
               <Text style={styles.errorBannerText}>{apiError}</Text>
+            </View>
+          ) : null}
+
+          {preSummary ? (
+            <View style={styles.preSummaryCard}>
+              <View style={styles.preSummaryHeader}>
+                <FileText size={18} color="#0EA5E9" style={{marginRight: 6}} />
+                <Text style={styles.preSummaryTitle}>Pending to be Invoiced</Text>
+              </View>
+              <View style={styles.preSummaryRow}>
+                <View style={styles.preSummaryStat}>
+                  <Text style={styles.preSummaryLabel}>Deliveries</Text>
+                  <Text style={styles.preSummaryValue}>{preSummary.deliveries}</Text>
+                </View>
+                <View style={styles.preSummaryStat}>
+                  <Text style={styles.preSummaryLabel}>Estimated Total</Text>
+                  <Text style={[styles.preSummaryValue, { color: '#16A34A' }]}>₹{preSummary.total}</Text>
+                </View>
+              </View>
             </View>
           ) : null}
 
@@ -383,6 +445,16 @@ const GenerateInvoiceScreen = () => {
         </View>
       </KeyboardAvoidingView>
       {renderModal()}
+
+      <AddCustomerModal 
+        visible={addCustomerVisible}
+        onClose={() => setAddCustomerVisible(false)}
+        onSuccess={(newCustomer) => {
+          setAddCustomerVisible(false);
+          setCustomers(prev => [...prev, newCustomer]);
+          setCustomerId(newCustomer.id);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -442,6 +514,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Geologica-Medium',
     color: COLORS.danger,
+  },
+  preSummaryCard: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  preSummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  preSummaryTitle: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
+    color: '#0369A1',
+  },
+  preSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  preSummaryStat: {
+    flex: 1,
+  },
+  preSummaryLabel: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: '#0284C7',
+    marginBottom: 4,
+  },
+  preSummaryValue: {
+    fontSize: 20,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
   },
   form: {
     marginBottom: 0,

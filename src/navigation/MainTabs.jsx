@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Truck, Users, Bell, CreditCard, Menu } from 'lucide-react-native';
+import { Home, Truck, Users, Bell, CreditCard, Menu, Droplet } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import HomeScreen from '../Screens/Main/HomeScreen';
 import OrdersScreen from '../Screens/Main/OrdersScreen';
 import PaymentsScreen from '../Screens/Main/PaymentsScreen';
 import CustomerListScreen from '../Screens/Main/CustomerListScreen';
+import CurvedHeader from '../components/CurvedHeader';
 
 const Tab = createBottomTabNavigator();
 
@@ -40,30 +41,28 @@ const HomeHeader = () => {
   const vendorLogo = profile?.logoUrl || profile?.imageUrl || user?.logoUrl || user?.imageUrl;
 
   return (
-    <View style={styles.header}>
-      <TouchableOpacity
-        onPress={() => navigation.toggleDrawer()}
-        activeOpacity={0.7}
-      >
-        <Menu color="#000000" size={28} strokeWidth={2} />
-      </TouchableOpacity>
-
-      <View style={styles.logoContainer}>
-        <Image
-          source={i18n.language === 'hi' ? require('../../assets/hindilogo.png') : require('../../assets/englishlogo.png')}
-          style={{ height: 38, width: 130 }}
-          resizeMode="contain"
-        />
-      </View>
-
-      <TouchableOpacity onPress={() => navigation.navigate('MainDrawer', { screen: 'Settings' })} activeOpacity={0.7}>
-        {vendorLogo ? (
-          <Image source={{ uri: vendorLogo }} style={styles.vendorAvatar} />
+    <CurvedHeader
+      height={120}
+      contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      leftIcon={<Menu color="#FFF" size={28} strokeWidth={2} />}
+      onLeftPress={() => navigation.toggleDrawer()}
+      title={
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Droplet color="#FFF" fill="#FFF" size={20} style={{ marginRight: 6 }} />
+          <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Medium', letterSpacing: 0.5 }}>
+            Camper
+          </Text>
+        </View>
+      }
+      rightIcon={
+        vendorLogo ? (
+          <Image source={{ uri: vendorLogo }} style={[styles.vendorAvatar, { borderColor: '#FFF', borderWidth: 2 }]} />
         ) : (
-          <Image source={require('../../assets/customerfallback.png')} style={styles.vendorAvatar} />
-        )}
-      </TouchableOpacity>
-    </View>
+          <Image source={require('../../assets/customerfallback.png')} style={[styles.vendorAvatar, { borderColor: '#FFF', borderWidth: 2 }]} />
+        )
+      }
+      onRightPress={() => navigation.navigate('MainDrawer', { screen: 'Settings' })}
+    />
   );
 };
 
@@ -81,12 +80,20 @@ const MainTabs = () => {
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#F1F5F9',
+          borderLeftWidth: 1,
+          borderRightWidth: 1,
+          borderColor: '#E2E8F0',
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          position: 'absolute', // Required for rounded corners to show over content
+          bottom: 0,
+          left: 0,
+          right: 0,
           elevation: 8,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.04,
-          shadowRadius: 6,
+          shadowOpacity: 0.05,
+          shadowRadius: 10,
           paddingTop: 8,
           paddingBottom: Math.max(20, insets.bottom), // Force min 20px padding
           height: 70 + Math.max(0, insets.bottom), // Force larger height
@@ -105,9 +112,10 @@ const MainTabs = () => {
           if (route.name === 'Payments') IconComponent = CreditCard;
           if (route.name === 'Customers') IconComponent = Users;
 
-          // Premium Golden Color for active state
-          const activeColor = '#D97706';
-          const color = focused ? activeColor : '#94A3B8';
+          // Match the image: Blue for active, Slate for inactive
+          const activeColor = '#1D4ED8'; // Deep blue matching the image
+          const inactiveColor = '#64748B'; // Slate gray
+          const color = focused ? activeColor : inactiveColor;
 
           return <IconComponent color={color} size={iconSize} strokeWidth={strokeWidth} />;
         },
@@ -117,8 +125,9 @@ const MainTabs = () => {
           if (route.name === 'Payments') label = 'Payments';
           if (route.name === 'Customers') label = t('tabs.customers');
 
-          const activeColor = '#D97706';
-          const color = focused ? activeColor : '#94A3B8';
+          const activeColor = '#1D4ED8';
+          const inactiveColor = '#64748B';
+          const color = focused ? activeColor : inactiveColor;
 
           return (
             <Text style={{

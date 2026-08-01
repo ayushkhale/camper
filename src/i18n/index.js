@@ -534,7 +534,7 @@ const resources = {
 const LANGUAGE_KEY = 'app_language';
 
 const initI18n = async () => {
-  let savedLanguage = 'hi';
+  let savedLanguage = 'en';
   try {
     const value = await AsyncStorage.getItem(LANGUAGE_KEY);
     if (value !== null) {

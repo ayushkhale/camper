@@ -30,11 +30,241 @@ import {
   Eye,
   X,
   Check,
+  CheckSquare,
+  Edit2,
+  ChevronUp,
+  Save,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
 import { api } from '../../services/api';
+import CurvedHeader from '../../components/CurvedHeader';
+import DeliveryStatusSlider from '../../components/DeliveryStatusSlider';
+import { TextInput } from 'react-native';
+
+const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewOnly }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const expectedTotal = (delivery.expectedSubscriptionUnits || 0) + (delivery.expectedAddonUnits || 0);
+
+  let defaultFull;
+  if (isViewOnly && delivery.status === 'pending') {
+    defaultFull = '0';
+  } else if (delivery.status === 'pending' && (!delivery.fullUnitsDelivered || delivery.fullUnitsDelivered === 0)) {
+    defaultFull = (expectedTotal > 0 ? expectedTotal.toString() : (delivery.Subscription?.baseQuantity?.toString() || '0'));
+  } else {
+    defaultFull = (delivery.fullUnitsDelivered?.toString() || '0');
+  }
+    
+  let defaultEmpty;
+  if (isViewOnly && delivery.status === 'pending') {
+    defaultEmpty = '0';
+  } else if (delivery.status === 'pending' && (!delivery.emptyUnitsCollected || delivery.emptyUnitsCollected === 0)) {
+    defaultEmpty = (delivery.expectedEmptyCollections?.toString() || '0');
+  } else {
+    defaultEmpty = (delivery.emptyUnitsCollected?.toString() || '0');
+  }
+
+  const [fullUnits, setFullUnits] = useState(defaultFull);
+  const [emptyUnits, setEmptyUnits] = useState(defaultEmpty);
+  const [updating, setUpdating] = useState(false);
+  
+  const handleUpdate = async (status, full, empty) => {
+    setUpdating(true);
+    await onUpdateStatus(delivery.id, {
+      status,
+      fullUnitsDelivered: parseInt(full) || 0,
+      emptyUnitsCollected: parseInt(empty) || 0,
+    });
+    setUpdating(false);
+    setIsEditing(false);
+    if (status !== 'pending') {
+      setIsExpanded(false);
+    }
+  };
+
+  const handleStatusChange = (newStatus) => {
+    handleUpdate(newStatus, fullUnits, emptyUnits);
+  };
+
+  return (
+    <View style={[styles.deliveryCardWrapperOptionC, isExpanded && styles.deliveryCardExpandedOptionC]}>
+      {updating && (
+        <View style={styles.cardUpdatingOverlay}>
+          <ActivityIndicator color={COLORS.primary} />
+        </View>
+      )}
+      
+      <TouchableOpacity 
+        style={styles.cardHeaderOptionC} 
+        onPress={() => setIsExpanded(!isExpanded)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.iconBoxOptionC}>
+          <Text style={styles.iconBoxTextOptionC}>{index}</Text>
+        </View>
+        <View style={styles.titleContainerOptionC}>
+          <Text style={styles.customerNameOptionC} numberOfLines={1}>
+            {delivery.Customer?.name || 'Unknown Customer'}
+          </Text>
+          <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 4}}>
+            <Package size={12} color="#64748B" style={{ marginRight: 4 }} />
+            <Text style={styles.subTextOptionC} numberOfLines={1}>
+              {delivery.Subscription?.Product?.name || 'Water Camper 20Ltr'} • Qty: {delivery.Subscription?.baseQuantity || 1}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.headerActionsOptionC}>
+          {!isViewOnly && delivery.status === 'pending' && !isExpanded && (
+            <TouchableOpacity 
+              style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', marginRight: 6 }]}
+              onPress={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+                setIsEditing(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Edit2 size={20} color="#EA580C" />
+            </TouchableOpacity>
+          )}
+
+          {!isViewOnly && delivery.status === 'pending' && !isExpanded && (
+            <TouchableOpacity 
+              style={styles.quickDeliverIconBtnOptionC}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleStatusChange('delivered');
+              }}
+              activeOpacity={0.7}
+            >
+              <CheckSquare size={22} color="#10B981" />
+            </TouchableOpacity>
+          )}
+          {!isViewOnly && delivery.status === 'delivered' && !isExpanded && (
+             <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#ECFDF5', borderColor: '#10B981' }]}>
+               <CheckSquare size={22} color="#10B981" />
+             </View>
+          )}
+          {!isViewOnly && delivery.status === 'skipped' && !isExpanded && (
+             <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }]}>
+               <XCircle size={22} color="#EF4444" />
+             </View>
+          )}
+
+          {isViewOnly && (
+             <View style={[styles.statusBadgePill, 
+                delivery.status === 'delivered' ? { backgroundColor: '#ECFDF5', borderColor: '#10B981' } :
+                (delivery.status === 'skipped' || delivery.status === 'pending') ? { backgroundColor: '#FEF2F2', borderColor: '#EF4444' } :
+                { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }
+             ]}>
+               <Text style={[styles.statusBadgeText, 
+                  delivery.status === 'delivered' ? { color: '#10B981' } :
+                  (delivery.status === 'skipped' || delivery.status === 'pending') ? { color: '#EF4444' } :
+                  { color: '#B45309' }
+               ]}>
+                 {delivery.status === 'pending' ? 'UNDELIVERED' : delivery.status.toUpperCase()}
+               </Text>
+             </View>
+          )}
+          
+          <View style={styles.expandIconContainerOptionC}>
+            {isExpanded ? (
+              <ChevronUp size={20} color="#334155" />
+            ) : (
+              <ChevronDown size={20} color="#334155" />
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {isExpanded && (
+        <View style={styles.expandedContentOptionC}>
+          {isViewOnly ? (
+            <View style={styles.viewOnlyDetailsContainer}>
+              {!!delivery.Customer?.phone && (
+                <View style={styles.detailRow}>
+                  <Phone size={14} color="#64748B" />
+                  <Text style={styles.detailText}>{delivery.Customer.phone}</Text>
+                </View>
+              )}
+              {!!delivery.Customer?.address && (
+                <View style={styles.detailRow}>
+                  <MapPin size={14} color="#64748B" />
+                  <Text style={styles.detailText}>{delivery.Customer.address}</Text>
+                </View>
+              )}
+              <View style={[styles.sliderUnitsRowOptionC, { marginTop: 12, marginBottom: 0 }]}>
+                <View style={styles.sliderUnitOptionC}>
+                  <Text style={styles.sliderUnitLabelOptionC}>Empty Ret.</Text>
+                  <Text style={styles.sliderUnitValueOptionC}>{emptyUnits}</Text>
+                </View>
+                <View style={[styles.sliderUnitOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>Delivered</Text>
+                  <Text style={[styles.sliderUnitValueOptionC, { color: '#0B409C' }]}>{fullUnits}</Text>
+                </View>
+              </View>
+            </View>
+          ) : !isEditing ? (
+            <View style={styles.sliderSectionOptionC}>
+              <View style={styles.sliderUnitsRowOptionC}>
+                <View style={styles.sliderUnitOptionC}>
+                  <Text style={styles.sliderUnitLabelOptionC}>Empty Jars</Text>
+                  <Text style={styles.sliderUnitValueOptionC}>{emptyUnits}</Text>
+                </View>
+                <View style={[styles.sliderUnitOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>Delivered</Text>
+                  <Text style={[styles.sliderUnitValueOptionC, { color: '#0B409C' }]}>{fullUnits}</Text>
+                </View>
+              </View>
+              <DeliveryStatusSlider 
+                status={delivery.status} 
+                onStatusChange={handleStatusChange} 
+              />
+            </View>
+          ) : (
+            <View style={styles.inlineEditContainerOptionC}>
+              <View style={styles.inlineInputWrapperOptionC}>
+                <View style={styles.inlineInputGroupOptionC}>
+                  <Text style={styles.inlineInputLabelOptionC}>Empty Jars</Text>
+                  <TextInput
+                    style={styles.inlineInputOptionC}
+                    value={emptyUnits}
+                    onChangeText={setEmptyUnits}
+                    keyboardType="numeric"
+                    placeholder="0"
+                  />
+                </View>
+                <View style={styles.inlineInputGroupOptionC}>
+                  <Text style={styles.inlineInputLabelOptionC}>Delivered</Text>
+                  <TextInput
+                    style={[styles.inlineInputOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: '#0B409C' }]}
+                    value={fullUnits}
+                    onChangeText={setFullUnits}
+                    keyboardType="numeric"
+                    placeholder="0"
+                  />
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.inlineSaveBtnOptionC}
+                onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
+                activeOpacity={0.8}
+              >
+                <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
+                <Text style={styles.inlineSaveBtnTextOptionC}>Save Changes</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
+    </View>
+  );
+};
+
 
 const PastDeliveriesScreen = () => {
   const navigation = useNavigation();
@@ -140,7 +370,7 @@ const PastDeliveriesScreen = () => {
   };
 
   // Update status for actual generated pending deliveries
-  const handleUpdateStatus = async (deliveryId, newStatus) => {
+  const handleUpdateStatus = async (deliveryId, data) => {
     if (String(deliveryId).startsWith('preview-')) {
       showAlert('Notice', 'Status updates are disabled for future preview deliveries.', 'info');
       return;
@@ -148,9 +378,9 @@ const PastDeliveriesScreen = () => {
 
     setActionLoadingId(deliveryId);
     try {
-      const res = await api.updateDeliveryStatus(userToken, deliveryId, { status: newStatus });
+      const res = await api.updateDeliveryStatus(userToken, deliveryId, data);
       if (res && res.success) {
-        showAlert('Success', `Delivery marked as ${newStatus}`, 'success');
+        showAlert('Success', `Delivery marked as ${data.status}`, 'success');
         fetchTrackingData();
       } else {
         showAlert('Error', res.message || 'Failed to update delivery status', 'error');
@@ -176,16 +406,31 @@ const PastDeliveriesScreen = () => {
     }
   };
 
+  const totalDeliveries = counts.total || 0;
+  const completedDeliveries = counts.delivered || 0;
+  const pendingDeliveries = counts.pending || 0;
+  const deliveryProgress = totalDeliveries === 0 ? 0 : Math.round((completedDeliveries / totalDeliveries) * 100);
+
+  const todayStr = formatDateString(new Date());
+  const isPastDate = selectedDate !== todayStr;
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
-          <ChevronLeft size={28} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Deliveries</Text>
-        <View style={styles.headerRightSpacing} />
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={
+          <Text 
+            numberOfLines={1} 
+            adjustsFontSizeToFit 
+            style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
+          >
+            All Deliveries
+          </Text>
+        }
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
@@ -200,7 +445,14 @@ const PastDeliveriesScreen = () => {
             <Text style={styles.dateDisplayText}>{formatDisplayDate(selectedDate)}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.dateNavBtn} onPress={handleNextDay} activeOpacity={0.7}>
+          <TouchableOpacity 
+            style={[styles.dateNavBtn, !isPastDate && { opacity: 0.3 }]} 
+            onPress={() => {
+              if (isPastDate) handleNextDay();
+            }} 
+            activeOpacity={isPastDate ? 0.7 : 1}
+            disabled={!isPastDate}
+          >
             <ChevronRight size={20} color={COLORS.textPrimary} />
           </TouchableOpacity>
         </View>
@@ -210,59 +462,63 @@ const PastDeliveriesScreen = () => {
             value={new Date(selectedDate)}
             mode="date"
             display={Platform.OS === 'ios' ? 'inline' : 'default'}
+            maximumDate={new Date()}
             onChange={handleDateChange}
           />
         )}
 
         {/* Filters Row: Route & Status */}
-        <View style={styles.filtersHorizontalRow}>
-          {/* Route Dropdown */}
-          <TouchableOpacity 
-            style={[styles.filterDropdown, { flex: 1 }]} 
-            onPress={() => setActiveFilterModal('route')}
-            activeOpacity={0.7}
-          >
-            <MapPin size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-            <Text style={styles.filterDropdownText} numberOfLines={1}>
-              {selectedRouteId ? (routes.find(r => r.id === selectedRouteId)?.name || 'Route') : 'All Routes'}
-            </Text>
-            <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
-          </TouchableOpacity>
+        {!isPastDate && (
+          <View style={styles.filtersHorizontalRow}>
+            {/* Route Dropdown */}
+            <TouchableOpacity 
+              style={[styles.filterDropdown, { flex: 1 }]} 
+              onPress={() => setActiveFilterModal('route')}
+              activeOpacity={0.7}
+            >
+              <MapPin size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
+              <Text style={styles.filterDropdownText} numberOfLines={1}>
+                {selectedRouteId ? (routes.find(r => String(r.id) === String(selectedRouteId))?.name || 'Route') : 'All Routes'}
+              </Text>
+              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
+            </TouchableOpacity>
 
-          {/* Status Dropdown */}
-          <TouchableOpacity 
-            style={[styles.filterDropdown, { flex: 1 }]} 
-            onPress={() => setActiveFilterModal('status')}
-            activeOpacity={0.7}
-          >
-            <Truck size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-            <Text style={styles.filterDropdownText} numberOfLines={1}>
-              {selectedStatus === 'all' ? 'All Status' : selectedStatus.toUpperCase()}
-            </Text>
-            <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
-          </TouchableOpacity>
-        </View>
-
-        {/* 4 Summary Stat Cards (Exact Overview Design) */}
-        <View style={styles.statsGrid}>
-          <View style={styles.overviewStyleStatCard}>
-            <Text style={styles.overviewStatTitle}>Total Orders</Text>
-            <Text style={styles.overviewStatValue}>{counts.total || 0}</Text>
+            {/* Status Dropdown */}
+            <TouchableOpacity 
+              style={[styles.filterDropdown, { flex: 1 }]} 
+              onPress={() => setActiveFilterModal('status')}
+              activeOpacity={0.7}
+            >
+              <Truck size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
+              <Text style={styles.filterDropdownText} numberOfLines={1}>
+                {selectedStatus === 'all' ? 'All Status' : selectedStatus.toUpperCase()}
+              </Text>
+              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
+            </TouchableOpacity>
           </View>
+        )}
 
-          <View style={styles.overviewStyleStatCard}>
-            <Text style={styles.overviewStatTitle}>Completed</Text>
-            <Text style={styles.overviewStatValue}>{counts.delivered || 0}</Text>
-          </View>
-
-          <View style={styles.overviewStyleStatCard}>
-            <Text style={styles.overviewStatTitle}>Pending</Text>
-            <Text style={styles.overviewStatValue}>{counts.pending || 0}</Text>
-          </View>
-
-          <View style={styles.overviewStyleStatCard}>
-            <Text style={styles.overviewStatTitle}>Skipped</Text>
-            <Text style={styles.overviewStatValue}>{counts.skipped || 0}</Text>
+        {/* Progress Bar Card */}
+        <View style={styles.linearProgressCard}>
+          <View style={styles.linearProgressInner}>
+            <View style={styles.linearProgressMain}>
+              <View style={styles.linearProgressHeader}>
+                <Text style={styles.linearProgressStats}>
+                  <Text style={styles.linearProgressStatsBig}>{completedDeliveries}</Text> <Text style={styles.linearProgressStatsSmall}>/ {totalDeliveries} Completed</Text>
+                </Text>
+                <Text style={styles.linearProgressPercent}>{deliveryProgress}%</Text>
+              </View>
+              <View style={styles.linearProgressBarBg}>
+                <View style={[styles.linearProgressBarFill, { width: `${deliveryProgress}%` }]} />
+              </View>
+            </View>
+            
+            <View style={styles.linearProgressDivider} />
+            
+            <View style={styles.linearProgressPending}>
+              <Text style={styles.linearProgressPendingNum}>{pendingDeliveries}</Text>
+              <Text style={styles.linearProgressPendingText}>Pending</Text>
+            </View>
           </View>
         </View>
 
@@ -281,108 +537,16 @@ const PastDeliveriesScreen = () => {
             <Text style={styles.emptySubtitle}>No records match the selected date and filters.</Text>
           </View>
         ) : (
-          deliveries.map((item, idx) => {
-            const isPreview = String(item.id).startsWith('preview-');
-            const statusBadge = getStatusBadge(item.status, isPreview);
-            const customerName = item.Customer?.name || 'Unknown Customer';
-            const phone = item.Customer?.phone || '';
-            const address = item.Customer?.address || '';
-            const productName = item.Subscription?.Product?.name || item.Product?.name || 'Water Can 20L';
-
-            const expectedUnits = item.expectedSubscriptionUnits || item.expectedAddonUnits || 1;
-            const fullDelivered = item.fullUnitsDelivered || 0;
-            const emptyCollected = item.emptyUnitsCollected || 0;
-
-            return (
-              <View key={item.id || idx} style={styles.deliveryCard}>
-                {/* Card Top Row */}
-                <View style={styles.cardTopRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.customerNameText}>{customerName}</Text>
-                    {!!phone && (
-                      <View style={styles.infoRow}>
-                        <Phone size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                        <Text style={styles.infoText}>{phone}</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={[styles.statusBadgePill, { backgroundColor: statusBadge.bg, borderColor: statusBadge.border }]}>
-                    <Text style={[styles.statusBadgeText, { color: statusBadge.text }]}>
-                      {statusBadge.label}
-                    </Text>
-                  </View>
-                </View>
-
-                {!!address && (
-                  <View style={[styles.infoRow, { marginTop: 4 }]}>
-                    <MapPin size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                    <Text style={styles.infoText} numberOfLines={2}>{address}</Text>
-                  </View>
-                )}
-
-                <View style={styles.cardDivider} />
-
-                {/* Product & Qty Row */}
-                <View style={styles.productDetailsRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.productNameText}>{productName}</Text>
-                    <Text style={styles.expectedQtyText}>Expected Qty: {expectedUnits}</Text>
-                  </View>
-
-                  <View style={styles.qtyStatsGroup}>
-                    <View style={styles.qtyStatBox}>
-                      <Text style={styles.qtyStatLabel}>Delivered</Text>
-                      <Text style={[styles.qtyStatValue, { color: COLORS.primary }]}>{fullDelivered}</Text>
-                    </View>
-
-                    <View style={styles.qtyStatBox}>
-                      <Text style={styles.qtyStatLabel}>Empty Ret.</Text>
-                      <Text style={[styles.qtyStatValue, { color: COLORS.textSecondary }]}>{emptyCollected}</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Status Update Actions for Pending Non-Preview Deliveries */}
-                {item.status === 'pending' && !isPreview && (
-                  <View style={styles.actionsRow}>
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.actionBtnSuccess]}
-                      onPress={() => handleUpdateStatus(item.id, 'delivered')}
-                      disabled={actionLoadingId === item.id}
-                      activeOpacity={0.8}
-                    >
-                      {actionLoadingId === item.id ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
-                      ) : (
-                        <>
-                          <Check size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                          <Text style={styles.actionBtnText}>Mark Delivered</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.actionBtnDanger]}
-                      onPress={() => handleUpdateStatus(item.id, 'skipped')}
-                      disabled={actionLoadingId === item.id}
-                      activeOpacity={0.8}
-                    >
-                      <X size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                      <Text style={styles.actionBtnText}>Mark Skipped</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                {isPreview && (
-                  <View style={styles.previewNoticeRow}>
-                    <Eye size={13} color={COLORS.primary} style={{ marginRight: 6 }} />
-                    <Text style={styles.previewNoticeText}>Future Preview • Status updates disabled</Text>
-                  </View>
-                )}
-              </View>
-            );
-          })
+          deliveries.map((item, idx) => (
+            <DeliveryCard 
+              key={item.id || idx} 
+              delivery={item} 
+              index={idx + 1}
+              onUpdateStatus={async (id, data) => await handleUpdateStatus(id, data)}
+              getStatusColor={() => {}}
+              isViewOnly={isPastDate}
+            />
+          ))
         )}
 
       </ScrollView>
@@ -451,7 +615,7 @@ const PastDeliveriesScreen = () => {
           </TouchableOpacity>
         </Modal>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -650,10 +814,191 @@ const styles = StyleSheet.create({
     fontFamily: 'Geologica-Bold',
     letterSpacing: 0.5,
   },
+  deliveryCardWrapperOptionC: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  cardHeaderOptionC: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  iconBoxOptionC: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  iconBoxTextOptionC: {
+    color: '#0B409C',
+    fontFamily: 'Geologica-Bold',
+    fontSize: 18,
+  },
+  titleContainerOptionC: {
+    flex: 1,
+    marginRight: 12,
+  },
+  customerNameOptionC: {
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+  },
+  subTextOptionC: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#64748B',
+    flexShrink: 1,
+  },
+  headerActionsOptionC: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  quickDeliverIconBtnOptionC: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deliveryCardExpandedOptionC: {
+    borderColor: '#E2E8F0',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  expandIconContainerOptionC: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  expandedContentOptionC: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  sliderSectionOptionC: {
+    width: '100%',
+  },
+  sliderUnitsRowOptionC: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  sliderUnitOptionC: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  sliderUnitLabelOptionC: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#475569',
+  },
+  sliderUnitValueOptionC: {
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+  },
+  inlineEditContainerOptionC: {
+    marginTop: 4,
+  },
+  inlineInputWrapperOptionC: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  inlineInputGroupOptionC: {
+    flex: 1,
+  },
+  inlineInputLabelOptionC: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: '#64748B',
+    marginBottom: 6,
+    marginLeft: 4,
+  },
+  inlineInputOptionC: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+  },
+  inlineSaveBtnOptionC: {
+    flexDirection: 'row',
+    backgroundColor: '#0B409C',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inlineSaveBtnTextOptionC: {
+    color: '#FFF',
+    fontFamily: 'Geologica-Bold',
+    fontSize: 15,
+  },
+  cardUpdatingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    zIndex: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   cardDivider: {
     height: 1,
     backgroundColor: '#F1F5F9',
-    marginVertical: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  viewOnlyDetailsContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  detailText: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#475569',
+    flex: 1,
   },
 
   // Product & Qty Row
@@ -731,9 +1076,89 @@ const styles = StyleSheet.create({
     borderTopColor: '#F1F5F9',
   },
   previewNoticeText: {
-    fontSize: 11,
-    fontFamily: 'Geologica-Medium',
     color: COLORS.primary,
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+  },
+
+  // Linear Progress Card Styles
+  linearProgressCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  linearProgressInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  linearProgressMain: {
+    flex: 1,
+  },
+  linearProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  linearProgressStats: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  linearProgressStatsBig: {
+    fontSize: 20,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+  },
+  linearProgressStatsSmall: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#64748B',
+  },
+  linearProgressPercent: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
+    color: '#64748B',
+  },
+  linearProgressBarBg: {
+    height: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    width: '100%',
+    overflow: 'hidden',
+  },
+  linearProgressBarFill: {
+    height: '100%',
+    backgroundColor: '#0B409C',
+    borderRadius: 4,
+  },
+  linearProgressDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 20,
+  },
+  linearProgressPending: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 50,
+  },
+  linearProgressPendingNum: {
+    fontSize: 18,
+    fontFamily: 'Geologica-Bold',
+    color: '#F97316',
+  },
+  linearProgressPendingText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: '#F97316',
   },
 
   // Modals

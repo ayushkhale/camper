@@ -41,9 +41,10 @@ const CustomDrawerContent = (props) => {
 
   // Only list screens that actually exist and are registered in navigation
   const menuItems = [
-    { title: t('tabs.home'), type: 'navigate', screen: 'MainTabs' },
+    { title: t('tabs.home'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Home' } },
     { title: t('deliveries.allRoutes'), type: 'navigate', screen: 'RouteList' },
-    { title: t('tabs.customers'), type: 'navigate', screen: 'CustomerList' },
+    { title: t('tabs.customers'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Customers' } },
+    { title: 'Customer Sequence', type: 'navigate', screen: 'RouteBuilder' },
     { title: t('subscriptions.title'), type: 'navigate', screen: 'SubscriptionList' },
     { title: t('oneTimeOrders.title'), type: 'navigate', screen: 'OneTimeOrderList' },
     { title: t('products.title'), type: 'navigate', screen: 'ProductCatalog' },
@@ -55,7 +56,7 @@ const CustomDrawerContent = (props) => {
   const handlePress = (item) => {
     navigation.closeDrawer();
     if (item.type === 'navigate') {
-      navigation.navigate(item.screen);
+      navigation.navigate(item.screen, item.params);
     } else if (item.type === 'logout') {
       Alert.alert(t('settings.logout'), t('settings.logoutConfirm'), [
         { text: t('staff.cancel'), style: 'cancel' },
@@ -67,13 +68,13 @@ const CustomDrawerContent = (props) => {
   const vendorAccount = profile?.VendorAccounts?.[0];
   const businessName = vendorAccount?.businessName || user?.businessName || 'My Business';
   const ownerName = profile?.name || user?.ownerName || 'Owner Account';
-  const roleDisplay = profile?.role 
-    ? (profile.role.charAt(0).toUpperCase() + profile.role.slice(1)) 
+  const roleDisplay = profile?.role
+    ? (profile.role.charAt(0).toUpperCase() + profile.role.slice(1))
     : (user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Admin');
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left']}>
-      {/* Deep Indigo Premium Header */}
+      {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <View style={styles.headerLeft}>
           <Text style={styles.businessName} numberOfLines={1}>
@@ -92,14 +93,29 @@ const CustomDrawerContent = (props) => {
       </View>
 
       {/* Navigation List of Existing Screens */}
-      <ScrollView 
+      <ScrollView
         style={styles.menuScroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.menuContent}
       >
         {menuItems.map((item, index) => {
-          const isActive = props.state && item.type === 'navigate' && props.state.routeNames[props.state.index] === item.screen;
-          
+          let isActive = false;
+          if (props.state && item.type === 'navigate') {
+            const currentRoute = props.state.routes[props.state.index];
+            isActive = currentRoute.name === item.screen;
+            
+            if (isActive && item.params?.screen) {
+              if (currentRoute.state) {
+                // Check nested tab state
+                const tabState = currentRoute.state;
+                isActive = tabState.routeNames[tabState.index] === item.params.screen;
+              } else {
+                // If nested state isn't initialized yet, default tab is Home
+                isActive = item.params.screen === 'Home';
+              }
+            }
+          }
+
           return (
             <TouchableOpacity
               key={index}
@@ -108,7 +124,7 @@ const CustomDrawerContent = (props) => {
               onPress={() => handlePress(item)}
             >
               <Text style={[
-                styles.itemText, 
+                styles.itemText,
                 isActive && styles.activeItemText,
                 item.type === 'logout' && { color: COLORS.danger }
               ]}>
@@ -131,14 +147,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   header: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#0B409C',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingBottom: 24,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.primary,
+    borderBottomColor: '#0B409C',
   },
   headerLeft: {
     flex: 1,

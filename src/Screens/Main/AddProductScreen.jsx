@@ -29,9 +29,9 @@ import {
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
-import { api } from '../../services/api';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const AddProductScreen = () => {
   const { t } = useTranslation();
@@ -239,15 +239,20 @@ const AddProductScreen = () => {
   const displayImageUri = selectedImage?.uri || existingImageUrl;
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-
-      {/* Header Row - Matches AddCustomer Header Row */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRightSpacing} />
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={
+          <View>
+            <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>
+              {isEditing ? 'Edit Product' : 'Add Product'}
+            </Text>
+          </View>
+        }
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -258,15 +263,6 @@ const AddProductScreen = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Title Container */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>
-              {isEditing ? 'Edit Product' : 'Add Product'}
-            </Text>
-            <Text style={styles.pageSubtitle}>
-              {isEditing ? 'Update catalog details' : 'Create a new product listing'}
-            </Text>
-          </View>
 
           {/* Form Area - flat direct inputs */}
           <View style={styles.form}>
@@ -454,52 +450,22 @@ const AddProductScreen = () => {
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   keyboardView: {
     flex: 1,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 10 : 14,
-    paddingBottom: 4,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerRightSpacing: {
-    width: 32,
-  },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 10,
+    paddingTop: 16,
     paddingBottom: 40,
-  },
-  titleContainer: {
-    marginBottom: 32,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 6,
-  },
-  pageSubtitle: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
   },
   form: {
     marginBottom: 0,

@@ -12,8 +12,8 @@ function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>
+        <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#0B409C' }} edges={['top']}>
           <AlertProvider>
             <RootNavigator />
           </AlertProvider>

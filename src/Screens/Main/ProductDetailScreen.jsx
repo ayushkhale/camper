@@ -30,6 +30,7 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const ProductDetailScreen = () => {
   const { t } = useTranslation();
@@ -154,32 +155,35 @@ const ProductDetailScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* ── Header Actions (Identical to Customer Detail Screen) ── */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => navigation.navigate('EditProduct', { product })}
-          >
-            <Edit size={18} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerActionBtn, { borderColor: '#E2E8F0', backgroundColor: '#FFF5F5' }]}
-            onPress={handleDeleteConfirm}
-            disabled={deleting}
-          >
-            {deleting ? (
-              <ActivityIndicator size="small" color="#E53E3E" />
-            ) : (
-              <Trash2 size={18} color="#E53E3E" />
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Product Details</Text>}
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        rightIcon={
+          <View style={{ flexDirection: 'row', gap: 12, marginRight: 16 }}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EditProduct', { product })}
+              style={styles.headerActionBtnDark}
+            >
+              <Edit size={18} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleDeleteConfirm}
+              disabled={deleting}
+              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(229, 62, 62, 0.2)' }]}
+            >
+              {deleting ? (
+                <ActivityIndicator size="small" color="#FFD1D1" />
+              ) : (
+                <Trash2 size={18} color="#FFD1D1" />
+              )}
+            </TouchableOpacity>
+          </View>
+        }
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
@@ -289,14 +293,22 @@ const ProductDetailScreen = () => {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
+  },
+  headerActionBtnDark: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   centerContainer: {
     flex: 1,
@@ -330,33 +342,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  // Header Actions
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerActionBtn: {
-    marginLeft: 12,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 10,
-    borderRadius: 14,
-  },
   scrollContent: {
     paddingHorizontal: 24,
+    paddingTop: 24,
     paddingBottom: 40,
   },
 

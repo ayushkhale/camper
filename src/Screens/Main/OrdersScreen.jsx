@@ -11,14 +11,17 @@ import {
   TextInput,
   Platform,
   Animated,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
-  Truck, Package, CheckSquare, XCircle, ChevronRight, ChevronDown, ChevronUp, X, Play, Calendar, MapPin, AlertCircle, Edit2, Save, MoreVertical, Activity, FileText
+  Truck, Package, CheckSquare, XCircle, ChevronRight, ChevronDown, ChevronUp, X, Play, Calendar, MapPin, AlertCircle, Edit2, Save, MoreVertical, Activity, FileText, Menu, User
 } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
+import { useNavigation, useFocusEffect, DrawerActions } from '@react-navigation/native';
 import DeliveryStatusSlider from '../../components/DeliveryStatusSlider';
+import CurvedHeader from '../../components/CurvedHeader';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -40,7 +43,7 @@ const getNext7Days = () => {
   return days;
 };
 
-const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
+const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -57,8 +60,6 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
   const [emptyUnits, setEmptyUnits] = useState(defaultEmpty);
   const [updating, setUpdating] = useState(false);
   
-  const statusColors = getStatusColor(delivery.status);
-
   const handleUpdate = async (status, full, empty) => {
     setUpdating(true);
     await onUpdateStatus(delivery.id, {
@@ -78,7 +79,7 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
   };
 
   return (
-    <View style={[styles.deliveryCardWrapper, isEditing && styles.deliveryCardEditing]}>
+    <View style={[styles.deliveryCardWrapperOptionC, isExpanded && styles.deliveryCardExpandedOptionC]}>
       {updating && (
         <View style={styles.cardUpdatingOverlay}>
           <ActivityIndicator color={COLORS.primary} />
@@ -86,73 +87,86 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
       )}
       
       <TouchableOpacity 
-        style={styles.cardHeader} 
+        style={styles.cardHeaderOptionC} 
         onPress={() => setIsExpanded(!isExpanded)}
         activeOpacity={0.7}
       >
-        <View style={styles.iconBox}>
-          <Truck size={22} color={COLORS.primary} />
+        <View style={styles.iconBoxOptionC}>
+          <Text style={styles.iconBoxTextOptionC}>{index}</Text>
         </View>
-        <View style={styles.titleContainer}>
-          <Text style={styles.customerName} numberOfLines={1}>
+        <View style={styles.titleContainerOptionC}>
+          <Text style={styles.customerNameOptionC} numberOfLines={1}>
             {delivery.Customer?.name || 'Unknown Customer'}
           </Text>
-          <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 4, flexShrink: 1}}>
-            <Package size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-            <Text style={[styles.subText, { flexShrink: 1 }]} numberOfLines={1}>
-              {delivery.Subscription?.Product?.name || 'Product'} • Qty: {delivery.Subscription?.baseQuantity || 0}
+          <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 4}}>
+            <Package size={12} color="#64748B" style={{ marginRight: 4 }} />
+            <Text style={styles.subTextOptionC} numberOfLines={1}>
+              {delivery.Subscription?.Product?.name || 'Water Camper 20Ltr'} • Qty: {delivery.Subscription?.baseQuantity || 1}
             </Text>
           </View>
         </View>
         
-        <View style={styles.headerActions}>
+        <View style={styles.headerActionsOptionC}>
           {delivery.status === 'pending' && !isExpanded && (
             <TouchableOpacity 
-              style={styles.quickDeliverIconBtn}
+              style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', marginRight: 6 }]}
+              onPress={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+                setIsEditing(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Edit2 size={20} color="#EA580C" />
+            </TouchableOpacity>
+          )}
+
+          {delivery.status === 'pending' && !isExpanded && (
+            <TouchableOpacity 
+              style={styles.quickDeliverIconBtnOptionC}
               onPress={(e) => {
                 e.stopPropagation();
                 handleStatusChange('delivered');
               }}
               activeOpacity={0.7}
             >
-              <CheckSquare size={24} color="#16A34A" />
+              <CheckSquare size={22} color="#10B981" />
             </TouchableOpacity>
           )}
+          {delivery.status === 'delivered' && !isExpanded && (
+             <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#ECFDF5', borderColor: '#10B981' }]}>
+               <CheckSquare size={22} color="#10B981" />
+             </View>
+          )}
+          {delivery.status === 'skipped' && !isExpanded && (
+             <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }]}>
+               <XCircle size={22} color="#EF4444" />
+             </View>
+          )}
           
-          <View style={styles.expandIconContainer}>
+          <View style={styles.expandIconContainerOptionC}>
             {isExpanded ? (
-              <ChevronUp size={22} color={COLORS.textSecondary} />
+              <ChevronUp size={20} color="#334155" />
             ) : (
-              <ChevronDown size={22} color={COLORS.textSecondary} />
+              <ChevronDown size={20} color="#334155" />
             )}
           </View>
         </View>
       </TouchableOpacity>
 
       {isExpanded && (
-        <View style={styles.expandedContent}>
-          <View style={styles.editToggleRow}>
-            <TouchableOpacity 
-              style={styles.editToggleBtn} 
-              onPress={() => setIsEditing(!isEditing)}
-            >
-              <Edit2 size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }}/>
-              <Text style={styles.editToggleText}>
-                {isEditing ? 'Cancel Edit' : 'Edit Units manually'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.expandedContentOptionC}>
 
           {!isEditing ? (
-            <View style={styles.sliderSection}>
-              <View style={styles.sliderUnitsRow}>
-                <View style={[styles.sliderUnit, styles.sliderUnitEmpty]}>
-                  <Text style={[styles.sliderUnitLabel, { color: COLORS.textSecondary }]}>Empty Jars</Text>
-                  <Text style={[styles.sliderUnitValue, { color: COLORS.textPrimary }]}>{emptyUnits}</Text>
+            <View style={styles.sliderSectionOptionC}>
+              <View style={styles.sliderUnitsRowOptionC}>
+                <View style={styles.sliderUnitOptionC}>
+                  <Text style={styles.sliderUnitLabelOptionC}>Empty Jars</Text>
+                  <Text style={styles.sliderUnitValueOptionC}>{emptyUnits}</Text>
                 </View>
-                <View style={[styles.sliderUnit, styles.sliderUnitDelivered]}>
-                  <Text style={[styles.sliderUnitLabel, { color: COLORS.primary }]}>Delivered</Text>
-                  <Text style={[styles.sliderUnitValue, { color: COLORS.primary }]}>{fullUnits}</Text>
+                <View style={[styles.sliderUnitOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>Delivered</Text>
+                  <Text style={[styles.sliderUnitValueOptionC, { color: '#0B409C' }]}>{fullUnits}</Text>
                 </View>
               </View>
               <DeliveryStatusSlider 
@@ -161,36 +175,36 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
               />
             </View>
           ) : (
-            <View style={styles.inlineEditContainer}>
-              <View style={styles.inlineInputWrapper}>
-                <View style={styles.inlineInputGroup}>
-                  <Text style={styles.inlineInputLabel}>Full Units</Text>
+            <View style={styles.inlineEditContainerOptionC}>
+              <View style={styles.inlineInputWrapperOptionC}>
+                <View style={styles.inlineInputGroupOptionC}>
+                  <Text style={styles.inlineInputLabelOptionC}>Empty Jars</Text>
                   <TextInput
-                    style={styles.inlineInput}
-                    value={fullUnits}
-                    onChangeText={setFullUnits}
-                    keyboardType="numeric"
-                    placeholder="0"
-                  />
-                </View>
-                <View style={styles.inlineInputGroup}>
-                  <Text style={styles.inlineInputLabel}>Empty Units</Text>
-                  <TextInput
-                    style={styles.inlineInput}
+                    style={styles.inlineInputOptionC}
                     value={emptyUnits}
                     onChangeText={setEmptyUnits}
                     keyboardType="numeric"
                     placeholder="0"
                   />
                 </View>
+                <View style={styles.inlineInputGroupOptionC}>
+                  <Text style={styles.inlineInputLabelOptionC}>Delivered</Text>
+                  <TextInput
+                    style={[styles.inlineInputOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: '#0B409C' }]}
+                    value={fullUnits}
+                    onChangeText={setFullUnits}
+                    keyboardType="numeric"
+                    placeholder="0"
+                  />
+                </View>
               </View>
               <TouchableOpacity 
-                style={styles.inlineSaveBtn}
+                style={styles.inlineSaveBtnOptionC}
                 onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
                 activeOpacity={0.8}
               >
                 <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
-                <Text style={styles.inlineSaveBtnText}>Save</Text>
+                <Text style={styles.inlineSaveBtnTextOptionC}>Save Changes</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -204,11 +218,13 @@ const DeliveryCard = ({ delivery, onUpdateStatus, getStatusColor, t }) => {
 
 const OrdersScreen = () => {
   const { t } = useTranslation();
-  const { userToken } = useContext(AuthContext);
+  const navigation = useNavigation();
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
+  
+  const vendorLogo = user?.logoUrl || user?.imageUrl;
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [calendarDays] = useState(getNext7Days());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const formatDateString = (date) => {
@@ -238,7 +254,7 @@ const OrdersScreen = () => {
   };
 
   // Deliveries State
-  const [deliveries, setDeliveries] = useState([]);
+  const [allDeliveries, setAllDeliveries] = useState([]);
   const [loadingDeliveries, setLoadingDeliveries] = useState(false);
   const [generating, setGenerating] = useState(false);
 
@@ -274,22 +290,15 @@ const OrdersScreen = () => {
   }, [loadingDeliveries]);
 
   const renderDeliverySkeleton = () => (
-    <View style={{ gap: 16 }}>
+    <View style={{ gap: 12 }}>
       {[1, 2, 3].map((key) => (
-        <Animated.View key={key} style={[styles.skeletonCard, { opacity: pulseAnim }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <View style={styles.skeletonAvatar} />
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <View style={[styles.skeletonBar, { width: '55%', height: 16, marginBottom: 6 }]} />
-              <View style={[styles.skeletonBar, { width: '35%', height: 12 }]} />
-            </View>
-            <View style={[styles.skeletonBar, { width: 60, height: 24, borderRadius: 12 }]} />
+        <Animated.View key={key} style={[styles.skeletonCardOptionC, { opacity: pulseAnim }]}>
+          <View style={styles.skeletonAvatarOptionC} />
+          <View style={{ flex: 1, marginLeft: 16 }}>
+            <View style={[styles.skeletonTitle, { width: 120, height: 16, marginBottom: 8, marginTop: 0 }]} />
+            <View style={[styles.skeletonTitle, { width: 160, height: 12, marginTop: 0 }]} />
           </View>
-          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
-            <View style={[styles.skeletonBox, { flex: 1, height: 48 }]} />
-            <View style={[styles.skeletonBox, { flex: 1, height: 48 }]} />
-          </View>
-          <View style={[styles.skeletonBar, { width: '100%', height: 48, borderRadius: 24 }]} />
+          <View style={[styles.skeletonValue, { width: 44, height: 44, borderRadius: 12, backgroundColor: '#E2E8F0' }]} />
         </Animated.View>
       ))}
     </View>
@@ -306,24 +315,17 @@ const OrdersScreen = () => {
     }
   };
 
-  const fetchDeliveries = async (dateStr, routeId = '', statusFilter = selectedStatus) => {
+  const fetchDeliveries = async (dateStr, routeId = '') => {
     setLoadingDeliveries(true);
     try {
-      const apiStatus = statusFilter === 'completed' ? 'delivered' : (statusFilter === 'all' ? '' : statusFilter);
-      const res = await api.listDeliveries(userToken, dateStr, routeId, apiStatus);
+      const res = await api.listDeliveries(userToken, dateStr, routeId, '');
       if (res && res.success) {
         let rawList = Array.isArray(res.data) ? res.data : (res.data?.deliveries || []);
-
-        if (statusFilter === 'pending') {
-          rawList = rawList.filter(item => item.status === 'pending');
-        } else if (statusFilter === 'completed') {
-          rawList = rawList.filter(item => item.status === 'delivered' || item.status === 'completed');
-        }
         
         // Filter out one-time orders from this daily view screen
         rawList = rawList.filter(item => !item.oneTimeOrderId);
         
-        setDeliveries(rawList);
+        setAllDeliveries(rawList);
       }
     } catch (err) {
       console.error('Error fetching deliveries:', err);
@@ -334,9 +336,9 @@ const OrdersScreen = () => {
 
   useEffect(() => {
     if (userToken) {
-      fetchDeliveries(selectedDate, selectedRouteId, selectedStatus);
+      fetchDeliveries(selectedDate, selectedRouteId);
     }
-  }, [selectedDate, selectedRouteId, selectedStatus, userToken]);
+  }, [selectedDate, selectedRouteId, userToken]);
 
   useEffect(() => {
     if (userToken) {
@@ -365,10 +367,8 @@ const OrdersScreen = () => {
     try {
       const res = await api.updateDeliveryStatus(userToken, deliveryId, data);
       if (res && res.success) {
-        if (selectedStatus === 'pending') {
-          setDeliveries(prev => prev.filter(d => d.id !== deliveryId));
-        }
-        fetchDeliveries(selectedDate, selectedRouteId, selectedStatus);
+        setAllDeliveries(prev => prev.map(d => d.id === deliveryId ? { ...d, status: data.status } : d));
+        fetchDeliveries(selectedDate, selectedRouteId);
       } else {
         showAlert('Error', res.message || 'Failed to update delivery', 'error');
       }
@@ -388,7 +388,7 @@ const OrdersScreen = () => {
 
   const getGroupedDeliveries = () => {
     const groups = {};
-    deliveries.forEach(d => {
+    filteredDeliveries.forEach(d => {
       const routeName = d.Customer?.Route?.name || 'Unassigned Route';
       if (!groups[routeName]) {
         groups[routeName] = [];
@@ -401,83 +401,112 @@ const OrdersScreen = () => {
     }));
   };
 
+  const filteredDeliveries = allDeliveries.filter(item => {
+    if (selectedStatus === 'pending') return item.status === 'pending';
+    if (selectedStatus === 'completed') return item.status === 'delivered' || item.status === 'completed';
+    return true;
+  });
+
+  const totalDeliveries = Array.isArray(allDeliveries) ? allDeliveries.length : 0;
+  const completedDeliveries = Array.isArray(allDeliveries) 
+    ? allDeliveries.filter(d => (d.status || '').toUpperCase() === 'DELIVERED' || (d.status || '').toUpperCase() === 'COMPLETED').length 
+    : 0;
+  const pendingDeliveries = totalDeliveries - completedDeliveries;
+  const deliveryProgress = totalDeliveries === 0 ? 0 : Math.round((completedDeliveries / totalDeliveries) * 100);
+
   return (
-    <SafeAreaView 
-      style={[styles.container, { paddingTop: Platform.OS === 'android' ? 15 : 0 }]} 
-      edges={Platform.OS === 'ios' ? ['top', 'left', 'right'] : ['left', 'right']}
-    >
+    <View style={styles.container}>
+      <CurvedHeader 
+        title="Today's Deliveries" 
+        leftIcon={<Menu size={24} color="#FFF" />}
+        onLeftPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
       <View style={styles.contentWrapper}>
-        
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.headerTitle}>Today's deliveries</Text>
-            <Text style={styles.headerSubtitle}>Manage and track your daily delivery tasks</Text>
-          </View>
-        </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* Filters Row - Route Dropdown (Left) & Status Dropdown (Right) */}
-          <View style={styles.filtersHorizontalRow}>
-            {/* Route Filter Dropdown */}
-            <TouchableOpacity 
-              style={[styles.filterDropdown, { flex: 1 }]} 
-              onPress={() => setActiveFilterModal('route')}
-              activeOpacity={0.7}
-            >
-              <MapPin size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-              <Text style={styles.filterDropdownText} numberOfLines={1}>
-                {selectedRouteId ? (routes.find(r => r.id === selectedRouteId)?.name || 'Route') : t('deliveries.allRoutes')}
-              </Text>
-              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
-            </TouchableOpacity>
+          <View style={styles.topFiltersContainerOptionC}>
+            <View style={styles.filterRowOptionC}>
+              <TouchableOpacity 
+                style={styles.filterBtnOptionC} 
+                onPress={() => setActiveFilterModal('route')}
+                activeOpacity={0.7}
+              >
+                <MapPin size={16} color="#334155" style={{ marginRight: 8 }} />
+                <Text style={styles.filterBtnTextOptionC} numberOfLines={1}>
+                  {selectedRouteId ? (routes.find(r => String(r.id) === String(selectedRouteId))?.name || 'Route') : t('deliveries.allRoutes')}
+                </Text>
+              </TouchableOpacity>
 
-            {/* Status Filter Dropdown (Horizontally Right: Pending, Completed, All) */}
+              <TouchableOpacity 
+                style={styles.filterBtnOptionC} 
+                onPress={() => setActiveFilterModal('status')}
+                activeOpacity={0.7}
+              >
+                <Truck size={16} color="#334155" style={{ marginRight: 8 }} />
+                <Text style={styles.filterBtnTextOptionC} numberOfLines={1}>
+                  {selectedStatus === 'pending' ? 'Pending' : selectedStatus === 'completed' ? 'Completed' : 'All'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity 
-              style={[styles.filterDropdown, { flex: 1 }]} 
-              onPress={() => setActiveFilterModal('status')}
+              style={styles.generateBtnOptionC} 
+              onPress={handleGenerateDeliveries}
+              disabled={generating}
               activeOpacity={0.7}
             >
-              <Truck size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-              <Text style={styles.filterDropdownText} numberOfLines={1}>
-                {selectedStatus === 'pending' ? 'Pending' : selectedStatus === 'completed' ? 'Completed' : 'All'}
-              </Text>
-              <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
+              {generating ? (
+                <ActivityIndicator size="small" color="#0B409C" />
+              ) : (
+                <>
+                  <FileText size={18} color="#0B409C" style={{ marginRight: 8 }} />
+                  <Text style={styles.generateBtnTextOptionC}>Generate Deliveries</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
 
-          {/* Generate Button */}
-          <TouchableOpacity 
-            style={styles.generateBtnThick} 
-            onPress={handleGenerateDeliveries}
-            disabled={generating}
-            activeOpacity={0.7}
-          >
-            {generating ? (
-              <ActivityIndicator size="small" color="#1D4ED8" />
-            ) : (
-              <>
-                <FileText size={18} color="#1D4ED8" style={{ marginRight: 8 }} />
-                <Text style={styles.generateBtnTextThick}>Generate Deliveries</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <View style={styles.linearProgressCard}>
+            <View style={styles.linearProgressInner}>
+              <View style={styles.linearProgressMain}>
+                <View style={styles.linearProgressHeader}>
+                  <Text style={styles.linearProgressStats}>
+                    <Text style={styles.linearProgressStatsBig}>{completedDeliveries}</Text> <Text style={styles.linearProgressStatsSmall}>/ {totalDeliveries} Completed</Text>
+                  </Text>
+                  <Text style={styles.linearProgressPercent}>{deliveryProgress}%</Text>
+                </View>
+                <View style={styles.linearProgressBarBg}>
+                  <View style={[styles.linearProgressBarFill, { width: `${deliveryProgress}%` }]} />
+                </View>
+              </View>
+              
+              <View style={styles.linearProgressDivider} />
+              
+              <View style={styles.linearProgressPending}>
+                <Text style={styles.linearProgressPendingNum}>{pendingDeliveries}</Text>
+                <Text style={styles.linearProgressPendingText}>Pending</Text>
+              </View>
+            </View>
+          </View>
 
           <View style={styles.deliveriesContainer}>
             {loadingDeliveries ? (
               renderDeliverySkeleton()
-            ) : deliveries.length === 0 ? (
+            ) : filteredDeliveries.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Truck size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
+                <Truck size={48} color="#94A3B8" style={{ marginBottom: 16 }} />
                 <Text style={styles.emptyTitle}>{t('deliveries.emptyDeliveries')}</Text>
                 <Text style={styles.emptySubtitle}>{t('deliveries.emptyDeliveriesSub')}</Text>
               </View>
             ) : (
-              deliveries.map((delivery) => (
+              filteredDeliveries.map((delivery, idx) => (
                 <DeliveryCard 
                   key={delivery.id} 
                   delivery={delivery} 
+                  index={idx + 1}
                   onUpdateStatus={handleDeliveryUpdate}
                   getStatusColor={getStatusColor}
                   t={t}
@@ -602,7 +631,7 @@ const OrdersScreen = () => {
         />
       )}
 
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -645,7 +674,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   calendarCard: {
     backgroundColor: COLORS.surface,
@@ -1014,20 +1043,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Geologica-Bold',
     color: COLORS.primary,
   },
-  editToggleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  editToggleText: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.primary,
-    marginLeft: 4,
-  },
+
   inlineEditContainer: {
     marginTop: 14,
     paddingTop: 14,
@@ -1211,6 +1227,325 @@ const styles = StyleSheet.create({
   skeletonBox: {
     backgroundColor: '#F1F5F9',
     borderRadius: 14,
+  },
+  
+  // ===================== NEW OPTION C STYLES ===================== //
+  avatarContainerHeader: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topFiltersContainerOptionC: {
+    marginBottom: 20,
+    gap: 12,
+  },
+  filterRowOptionC: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  filterBtnOptionC: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingVertical: 12,
+  },
+  filterBtnTextOptionC: {
+    color: '#0F172A',
+    fontFamily: 'Geologica-Bold',
+    fontSize: 14,
+  },
+  generateBtnOptionC: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: 12,
+    paddingVertical: 14,
+  },
+  generateBtnTextOptionC: {
+    color: '#0B409C',
+    fontFamily: 'Geologica-Bold',
+    fontSize: 15,
+  },
+
+  // Skeleton
+  skeletonCardOptionC: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  skeletonAvatarOptionC: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E2E8F0',
+  },
+
+  // Delivery Card Option C
+  deliveryCardWrapperOptionC: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  deliveryCardExpandedOptionC: {
+    borderColor: '#E2E8F0',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  cardHeaderOptionC: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  iconBoxOptionC: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  iconBoxTextOptionC: {
+    color: '#0B409C',
+    fontFamily: 'Geologica-Bold',
+    fontSize: 18,
+  },
+  titleContainerOptionC: {
+    flex: 1,
+    marginRight: 12,
+  },
+  customerNameOptionC: {
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+  },
+  subTextOptionC: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#64748B',
+    flexShrink: 1,
+  },
+  headerActionsOptionC: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  quickDeliverIconBtnOptionC: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  expandIconContainerOptionC: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Expanded Content
+  expandedContentOptionC: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  editToggleRowOptionC: {
+    alignItems: 'flex-end',
+    marginBottom: 12,
+  },
+  editToggleBtnOptionC: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  editToggleTextOptionC: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: '#0B409C',
+  },
+  sliderSectionOptionC: {
+    width: '100%',
+  },
+  sliderUnitsRowOptionC: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  sliderUnitOptionC: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  sliderUnitLabelOptionC: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#475569',
+  },
+  sliderUnitValueOptionC: {
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+  },
+
+  // Inline Edit
+  inlineEditContainerOptionC: {
+    marginTop: 4,
+  },
+  inlineInputWrapperOptionC: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  inlineInputGroupOptionC: {
+    flex: 1,
+  },
+  inlineInputLabelOptionC: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: '#64748B',
+    marginBottom: 6,
+    marginLeft: 4,
+  },
+  inlineInputOptionC: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+  },
+  inlineSaveBtnOptionC: {
+    flexDirection: 'row',
+    backgroundColor: '#0B409C',
+    borderRadius: 12,
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  inlineSaveBtnTextOptionC: {
+    color: '#FFFFFF',
+    fontFamily: 'Geologica-Bold',
+    fontSize: 14,
+  },
+
+  // Linear Progress Card Styles
+  linearProgressCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  linearProgressInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  linearProgressMain: {
+    flex: 1,
+  },
+  linearProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  linearProgressStats: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  linearProgressStatsBig: {
+    fontSize: 20,
+    fontFamily: 'Geologica-Bold',
+    color: '#0F172A',
+  },
+  linearProgressStatsSmall: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#64748B',
+  },
+  linearProgressPercent: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Bold',
+    color: '#64748B',
+  },
+  linearProgressBarBg: {
+    height: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    width: '100%',
+    overflow: 'hidden',
+  },
+  linearProgressBarFill: {
+    height: '100%',
+    backgroundColor: '#0B409C',
+    borderRadius: 4,
+  },
+  linearProgressDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 20,
+  },
+  linearProgressPending: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 50,
+  },
+  linearProgressPendingNum: {
+    fontSize: 18,
+    fontFamily: 'Geologica-Bold',
+    color: '#F97316',
+  },
+  linearProgressPendingText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: '#F97316',
   },
 });
 

@@ -15,6 +15,7 @@ import {
   FlatList,
   PermissionsAndroid,
   Animated,
+  TouchableWithoutFeedback
 } from 'react-native';
 import Contacts from 'react-native-contacts';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -25,6 +26,9 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
+import AddRouteModal from '../../components/modals/AddRouteModal';
+import AddProductModal from '../../components/modals/AddProductModal';
 
 const AddCustomerScreen = () => {
   const navigation = useNavigation();
@@ -39,7 +43,7 @@ const AddCustomerScreen = () => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [creditLimit, setCreditLimit] = useState('');
+  const [openingBalance, setOpeningBalance] = useState('');
   const [routeId, setRouteId] = useState('');
 
   // Deposit state (Module 3a)
@@ -69,6 +73,8 @@ const AddCustomerScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [recurrenceModalVisible, setRecurrenceModalVisible] = useState(false);
+  const [addRouteVisible, setAddRouteVisible] = useState(false);
+  const [addProductInlineVisible, setAddProductInlineVisible] = useState(false);
 
   // Contacts Modal States
   const [contactModalVisible, setContactModalVisible] = useState(false);
@@ -154,7 +160,7 @@ const AddCustomerScreen = () => {
       }
       setPhone(rawPhone);
       setAddress(editCustomer.address || '');
-      setCreditLimit(editCustomer.creditLimit?.toString() || '');
+      setOpeningBalance(editCustomer.openingBalance?.toString() || editCustomer.creditLimit?.toString() || '');
       setRouteId(editCustomer.routeId || '');
     }
   }, [isEditMode, editCustomer]);
@@ -199,7 +205,7 @@ const AddCustomerScreen = () => {
     const customerData = {
       name: name.trim(),
       address: address.trim() || undefined,
-      creditLimit: creditLimit ? parseFloat(creditLimit) : undefined,
+      openingBalance: openingBalance ? parseFloat(openingBalance) : 0,
       routeId: routeId || undefined,
     };
 
@@ -397,12 +403,11 @@ const AddCustomerScreen = () => {
       animationType="slide"
       onRequestClose={() => setRouteModalVisible(false)}
     >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setRouteModalVisible(false)}
-      >
-        <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+      <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+        <TouchableWithoutFeedback onPress={() => setRouteModalVisible(false)}>
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+        </TouchableWithoutFeedback>
+        <View style={styles.modalContent}>
           {/* Handle bar */}
           <View style={styles.modalHandle} />
           <View style={styles.modalHeader}>
@@ -411,6 +416,13 @@ const AddCustomerScreen = () => {
               <X size={18} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity 
+            style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
+            onPress={() => { setRouteModalVisible(false); setAddRouteVisible(true); }}
+          >
+            <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Route</Text>
+          </TouchableOpacity>
 
           {loadingRoutes ? (
             <View style={{ padding: 30, alignItems: 'center' }}>
@@ -421,6 +433,7 @@ const AddCustomerScreen = () => {
           ) : (
             <FlatList
               data={routes}
+              keyboardShouldPersistTaps="handled"
               keyExtractor={item => item.id}
               style={{ maxHeight: 320 }}
               showsVerticalScrollIndicator={false}
@@ -456,7 +469,7 @@ const AddCustomerScreen = () => {
             <Text style={styles.modalClearBtnText}>{t('customers.clearRoute')}</Text>
           </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     </Modal>
   );
 
@@ -500,6 +513,7 @@ const AddCustomerScreen = () => {
           ) : (
             <FlatList
               data={filteredContacts}
+              keyboardShouldPersistTaps="handled"
               keyExtractor={item => item.id}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 12 }}
@@ -631,19 +645,26 @@ const AddCustomerScreen = () => {
               </View>
             </View>
 
-            {/* Credit Limit */}
+            {/* Opening Balance */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('customers.creditLimit')}</Text>
-              <View style={styles.inputContainer}>
+              <Text style={styles.label}>Opening Balance</Text>
+              <View style={[styles.inputContainer, isEditMode && { backgroundColor: '#F3F4F6' }]}>
                 <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 1500"
-                  value={creditLimit}
-                  onChangeText={(val) => setCreditLimit(val.replace(/[^0-9.]/g, ''))}
+                  value={openingBalance}
+                  onChangeText={(val) => setOpeningBalance(val.replace(/[^0-9.]/g, ''))}
                   keyboardType="decimal-pad"
                   placeholderTextColor={COLORS.textPlaceholder}
+                  editable={!isEditMode}
                 />
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingHorizontal: 6, backgroundColor: '#FFFBEB', paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#FEF3C7' }}>
+                <AlertCircle size={14} color="#D97706" style={{ marginRight: 6 }} />
+                <Text style={{ fontSize: 11.5, fontFamily: 'Geologica-Medium', color: '#D97706' }}>
+                  Note: Opening balance once saved cannot be changed.
+                </Text>
               </View>
             </View>
 
@@ -842,14 +863,25 @@ const AddCustomerScreen = () => {
             animationType="slide"
             onRequestClose={() => setProductModalVisible(false)}
           >
-            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setProductModalVisible(false)}>
-              <View style={[styles.modalContent, { maxHeight: '70%' }]} onStartShouldSetResponder={() => true}>
+            <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+              <TouchableWithoutFeedback onPress={() => setProductModalVisible(false)}>
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+              </TouchableWithoutFeedback>
+              <View style={[styles.modalContent, { maxHeight: '70%' }]}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>{t('customers.selectProduct')}</Text>
                   <TouchableOpacity onPress={() => setProductModalVisible(false)}>
                     <X size={24} color={COLORS.textPlaceholder} />
                   </TouchableOpacity>
                 </View>
+
+                <TouchableOpacity 
+                  style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
+                  onPress={() => { setProductModalVisible(false); setAddProductInlineVisible(true); }}
+                >
+                  <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Product</Text>
+                </TouchableOpacity>
+
                 {loadingProducts ? (
                   <ActivityIndicator size="small" color={COLORS.primary} style={{ padding: 20 }} />
                 ) : products.length === 0 ? (
@@ -857,6 +889,7 @@ const AddCustomerScreen = () => {
                 ) : (
                   <FlatList
                     data={products}
+                    keyboardShouldPersistTaps="handled"
                     keyExtractor={item => item.id}
                     style={{ maxHeight: 300 }}
                     renderItem={({ item }) => (
@@ -872,7 +905,7 @@ const AddCustomerScreen = () => {
                   />
                 )}
               </View>
-            </TouchableOpacity>
+            </View>
           </Modal>
 
           {/* Recurrence Modal */}
@@ -882,8 +915,11 @@ const AddCustomerScreen = () => {
             animationType="slide"
             onRequestClose={() => setRecurrenceModalVisible(false)}
           >
-            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setRecurrenceModalVisible(false)}>
-              <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+              <TouchableWithoutFeedback onPress={() => setRecurrenceModalVisible(false)}>
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+              </TouchableWithoutFeedback>
+              <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>{t('customers.selectFrequency')}</Text>
                   <TouchableOpacity onPress={() => setRecurrenceModalVisible(false)}>
@@ -902,7 +938,7 @@ const AddCustomerScreen = () => {
                   </TouchableOpacity>
                 ))}
               </View>
-            </TouchableOpacity>
+            </View>
           </Modal>
 
         </ScrollView>
@@ -925,6 +961,26 @@ const AddCustomerScreen = () => {
       </KeyboardAvoidingView>
       {renderRouteModal()}
       {renderContactsModal()}
+
+      <AddRouteModal 
+        visible={addRouteVisible}
+        onClose={() => setAddRouteVisible(false)}
+        onSuccess={(newRoute) => {
+          setAddRouteVisible(false);
+          setRoutes(prev => [...prev, newRoute]);
+          setRouteId(newRoute.id);
+        }}
+      />
+      
+      <AddProductModal 
+        visible={addProductInlineVisible}
+        onClose={() => setAddProductInlineVisible(false)}
+        onSuccess={(newProduct) => {
+          setAddProductInlineVisible(false);
+          setProducts(prev => [...prev, newProduct]);
+          setProductId(newProduct.id);
+        }}
+      />
     </SafeAreaView>
   );
 };

@@ -22,7 +22,9 @@ import {
   CreditCard,
   MessageCircle,
   Printer,
+  ChevronLeft,
 } from 'lucide-react-native';
+import CurvedHeader from '../../components/CurvedHeader';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -103,6 +105,7 @@ const InvoiceDetailScreen = () => {
   };
 
   const getProductName = (item) => {
+    if (item.description?.toLowerCase().includes('opening balance')) return item.description;
     if (item.Subscription?.Product?.name) return item.Subscription.Product.name;
     if (item.Product?.name) return item.Product.name;
     if (item.productName) return item.productName;
@@ -114,8 +117,8 @@ const InvoiceDetailScreen = () => {
   };
 
   const getSubOrOrderTag = (item) => {
-    if (item.Subscription?.recurrencePattern) {
-      const pattern = item.Subscription.recurrencePattern;
+    if (item.Subscription?.recurrencePattern || item.Subscription?.recurrence_pattern) {
+      const pattern = item.Subscription.recurrencePattern || item.Subscription.recurrence_pattern;
       if (pattern === 'daily') return 'Daily Subscription';
       if (pattern === 'weekly') return 'Weekly Subscription';
       if (pattern === 'alternate_days' || pattern === 'alternate') return 'Alternate Days Sub';
@@ -130,9 +133,12 @@ const InvoiceDetailScreen = () => {
   const deliveries = invoiceData?.Deliveries || invoiceData?.deliveries || [];
   const lineItems = invoiceData?.InvoiceLineItems || invoiceData?.lineItems || [];
   
-  const totalAmount = parseFloat(invoiceData?.totalAmount || 0);
+  const previousDues = parseFloat(invoiceData?.previousDues || 0);
+  const currentCharges = parseFloat(invoiceData?.totalAmount || 0);
   const amountPaid = parseFloat(invoiceData?.amountPaid || 0);
-  const balanceDue = Math.max(0, totalAmount - amountPaid);
+  
+  const grandTotal = currentCharges + previousDues;
+  const balanceDue = Math.max(0, grandTotal - amountPaid);
 
   const invoiceNum = invoiceData?.invoiceNumber || (invoiceData?.id ? `#${String(invoiceData.id).substring(0, 8).toUpperCase()}` : 'INV-001');
 
@@ -144,7 +150,12 @@ const InvoiceDetailScreen = () => {
       message += `Customer: ${customerName}\n\n`;
       message += `*Items:*\n`;
       
-      const allItems = deliveries.length > 0 ? deliveries : lineItems;
+      let allItems = deliveries.length > 0 ? deliveries : lineItems;
+      const openingBalanceItem = lineItems.find(item => item.description?.toLowerCase().includes('opening balance'));
+      if (deliveries.length > 0 && openingBalanceItem) {
+        allItems = [openingBalanceItem, ...deliveries];
+      }
+      
       if (allItems.length > 0) {
         allItems.forEach(item => {
           const qty = item.fullUnitsDelivered || item.quantity || 1;
@@ -152,10 +163,12 @@ const InvoiceDetailScreen = () => {
           message += `- ${getProductName(item)} (x${qty}) = ${formatCurrency(rate * qty)}\n`;
         });
       } else {
-        message += `- Water Camper 20Ltr = ${formatCurrency(totalAmount)}\n`;
+        message += `- Water Camper 20Ltr = ${formatCurrency(currentCharges)}\n`;
       }
       
-      message += `\n*Total:* ${formatCurrency(totalAmount)}\n`;
+      message += `\n*Previous Balance:* ${formatCurrency(previousDues)}\n`;
+      message += `*Current Charges:* ${formatCurrency(currentCharges)}\n`;
+      message += `*Grand Total:* ${formatCurrency(grandTotal)}\n`;
       message += `*Paid:* ${formatCurrency(amountPaid)}\n`;
       message += `*Balance Due: ${formatCurrency(balanceDue)}*\n\n`;
       message += `Thank you for your business!`;
@@ -178,88 +191,276 @@ const InvoiceDetailScreen = () => {
     try {
       const customerName = invoiceData?.Customer?.name || 'Customer';
       let itemsHtml = '';
-      const allItems = deliveries.length > 0 ? deliveries : lineItems;
       
+      let allItems = deliveries.length > 0 ? deliveries : lineItems;
+      const openingBalanceItem = lineItems.find(item => item.description?.toLowerCase().includes('opening balance'));
+      if (deliveries.length > 0 && openingBalanceItem) {
+        allItems = [openingBalanceItem, ...deliveries];
+      }
+      
+      let renderedRows = 0;
       if (allItems.length > 0) {
-        allItems.forEach(item => {
+        allItems.forEach((item, index) => {
+          renderedRows++;
           const qty = item.fullUnitsDelivered || item.quantity || 1;
           const rate = item.unitPriceCharged || item.unitPrice || item.amount || 0;
           itemsHtml += `
             <tr>
-              <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${getProductName(item)}</td>
-              <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569;">${qty}</td>
-              <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #0f172a; font-weight: bold;">${formatCurrency(rate * qty)}</td>
+              <td style="border-right: 1px solid #000; padding: 4px; text-align: center;">${index + 1}</td>
+              <td style="border-right: 1px solid #000; padding: 4px;">${getProductName(item)}</td>
+              <td style="border-right: 1px solid #000; padding: 4px; text-align: center;">${qty}</td>
+              <td style="border-right: 1px solid #000; padding: 4px; text-align: right;">${formatCurrency(rate)}</td>
+              <td style="padding: 4px; text-align: right;">${formatCurrency(rate * qty)}</td>
             </tr>
           `;
         });
       } else {
+        renderedRows = 1;
         itemsHtml += `
           <tr>
-            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #1e293b;">Water Camper 20Ltr</td>
-            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569;">1</td>
-            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #0f172a; font-weight: bold;">${formatCurrency(totalAmount)}</td>
+            <td style="border-right: 1px solid #000; padding: 4px; text-align: center;">1</td>
+            <td style="border-right: 1px solid #000; padding: 4px;">Water Camper 20Ltr</td>
+            <td style="border-right: 1px solid #000; padding: 4px; text-align: center;">1</td>
+            <td style="border-right: 1px solid #000; padding: 4px; text-align: right;">${formatCurrency(currentCharges)}</td>
+            <td style="padding: 4px; text-align: right;">${formatCurrency(currentCharges)}</td>
           </tr>
         `;
       }
+      
+      const minRows = 15;
+      const totalPages = Math.ceil(renderedRows / 25) || 1;
+      
+      if (renderedRows < minRows) {
+        const rowsToAdd = minRows - renderedRows;
+        for(let i = 0; i < rowsToAdd; i++) {
+          itemsHtml += `
+            <tr>
+              <td style="border-right: 1px solid #000; padding: 4px; color: transparent;">-</td>
+              <td style="border-right: 1px solid #000; padding: 4px; color: transparent;">-</td>
+              <td style="border-right: 1px solid #000; padding: 4px; color: transparent;">-</td>
+              <td style="border-right: 1px solid #000; padding: 4px; color: transparent;">-</td>
+              <td style="padding: 4px; color: transparent;">-</td>
+            </tr>
+          `;
+        }
+      }
 
       const htmlContent = `
+        <!DOCTYPE html>
         <html>
           <head>
+            <meta charset="utf-8">
             <style>
-              body { font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif; padding: 40px; color: #333; }
-              .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #2563eb; padding-bottom: 20px; }
-              .title { font-size: 24px; font-weight: bold; color: #1e3a8a; letter-spacing: 0.5px; }
-              .subtitle { font-size: 16px; color: #64748b; margin-top: 5px; }
-              .details { margin-bottom: 40px; line-height: 1.6; display: flex; justify-content: space-between; }
-              table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-              th { padding: 12px; border-bottom: 2px solid #cbd5e1; text-align: left; color: #64748b; font-size: 14px; text-transform: uppercase; }
-              th:nth-child(2) { text-align: center; }
-              th:nth-child(3) { text-align: right; }
-              .totals { margin-left: auto; width: 300px; text-align: right; font-size: 16px; line-height: 2; }
-              .totals-row { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding: 5px 0; }
-              .balance { font-size: 20px; font-weight: bold; color: #0f172a; background-color: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; }
-              .footer { margin-top: 60px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+              body { 
+                font-family: Arial, Helvetica, sans-serif; 
+                margin: 0; 
+                padding: 0;
+                color: #000; 
+                font-size: 11px;
+                background-color: #fff;
+                counter-reset: page;
+              }
+              @page {
+                size: A4;
+                margin: 10mm;
+              }
+              .invoice-box {
+                width: 100%;
+                border: 1px solid #000;
+                box-sizing: border-box;
+              }
+              tr { page-break-inside: avoid; }
+              thead { display: table-header-group; }
+              tfoot { display: table-footer-group; }
+              .tax-title {
+                text-align: center;
+                font-weight: bold;
+                font-size: 16px;
+                padding: 5px;
+                border-bottom: 1px solid #000;
+                letter-spacing: 1px;
+              }
+              .info-grid {
+                display: flex;
+                border-bottom: 1px solid #000;
+              }
+              .info-left, .info-right {
+                flex: 1;
+                padding: 8px;
+              }
+              .info-left {
+                border-right: 1px solid #000;
+              }
+              .info-block {
+                margin-bottom: 10px;
+              }
+              .info-block strong {
+                display: block;
+                margin-bottom: 2px;
+                font-size: 10px;
+              }
+              .customer-name {
+                font-weight: bold;
+                font-size: 13px;
+              }
+              table { 
+                width: 100%; 
+                border-collapse: collapse; 
+              }
+              th { 
+                border-bottom: 1px solid #000;
+                border-right: 1px solid #000;
+                padding: 6px 4px; 
+                text-align: left; 
+                font-weight: bold;
+              }
+              th:last-child {
+                border-right: none;
+              }
+              th:nth-child(1) { text-align: center; width: 40px; }
+              th:nth-child(3) { text-align: center; width: 60px; }
+              th:nth-child(4) { text-align: right; width: 80px; }
+              th:nth-child(5) { text-align: right; width: 100px; }
+              
+              .items-row {
+                min-height: 200px; /* Force minimum height for tally look */
+                vertical-align: top;
+              }
+              .items-row td {
+                padding-bottom: 10px; /* Space out items */
+              }
+              
+              .totals-section {
+                border-top: 1px solid #000;
+                display: flex;
+              }
+              .totals-left {
+                flex: 1;
+                border-right: 1px solid #000;
+                padding: 8px;
+              }
+              .totals-right {
+                width: 250px;
+              }
+              .total-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 4px 8px;
+                border-bottom: 1px solid #ccc;
+              }
+              .total-row:last-child {
+                border-bottom: none;
+              }
+              .total-row.bold {
+                font-weight: bold;
+                border-top: 1px solid #000;
+                border-bottom: 1px solid #000;
+                font-size: 12px;
+                padding: 6px 8px;
+              }
+              .footer {
+                text-align: center;
+                font-size: 10px;
+                border-top: 1px solid #000;
+                padding: 8px 0;
+                position: fixed;
+                bottom: 5px;
+                left: 10px;
+                right: 10px;
+                background-color: white;
+              }
+              .page-number::before {
+                counter-increment: page;
+                content: counter(page) "/${totalPages}";
+              }
             </style>
           </head>
           <body>
-            <div class="header">
-              <div class="title">Invoice</div>
-              <div class="subtitle">${invoiceNum}</div>
-            </div>
-            
-            <div class="details">
-              <div>
-                <strong style="color:#475569">Billed To:</strong><br>
-                <span style="font-size:18px; color:#0f172a; font-weight:bold;">${customerName}</span>
+            <div class="invoice-box">
+              <div class="tax-title">TAX INVOICE</div>
+              
+              <div class="info-grid">
+                <div class="info-left">
+                  <div class="info-block">
+                    <strong>Billed To:</strong>
+                    <div class="customer-name">${customerName}</div>
+                    ${invoiceData?.Customer?.phone ? `<div>Ph: ${invoiceData.Customer.phone}</div>` : ''}
+                    ${invoiceData?.Customer?.address ? `<div>${invoiceData.Customer.address}</div>` : ''}
+                  </div>
+                </div>
+                
+                <div class="info-right">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div>
+                      <strong>Invoice No.</strong>
+                      <div>${invoiceNum}</div>
+                    </div>
+                    <div style="text-align: right;">
+                      <strong>Dated</strong>
+                      <div>${formatDate(invoiceData?.created_at)}</div>
+                    </div>
+                  </div>
+                  
+                  <div style="margin-top: 15px;">
+                    <strong>Billing Period</strong>
+                    <div>
+                      ${invoiceData?.periodStart && invoiceData?.periodEnd 
+                        ? `${formatDate(invoiceData.periodStart)} to ${formatDate(invoiceData.periodEnd)}` 
+                        : 'Monthly'}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div style="text-align:right">
-                <strong style="color:#475569">Date:</strong><br>
-                <span style="font-size:16px; color:#0f172a;">${formatDate(invoiceData?.created_at)}</span>
+              
+              <table>
+                <thead>
+                  <tr>
+                    <th>Sl No.</th>
+                    <th>Description of Goods</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody class="items-row">
+                  ${itemsHtml}
+                </tbody>
+              </table>
+              
+              <div class="totals-section">
+                <div class="totals-left">
+                  <strong>Declaration</strong><br>
+                  We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
+                </div>
+                <div class="totals-right">
+                  <div class="total-row">
+                    <span>Sub Total</span>
+                    <span>${formatCurrency(currentCharges)}</span>
+                  </div>
+                  <div class="total-row">
+                    <span>Prev Balance</span>
+                    <span>${formatCurrency(previousDues)}</span>
+                  </div>
+                  <div class="total-row bold">
+                    <span>Grand Total</span>
+                    <span>${formatCurrency(grandTotal)}</span>
+                  </div>
+                  <div class="total-row">
+                    <span>Amount Paid</span>
+                    <span>${formatCurrency(amountPaid)}</span>
+                  </div>
+                  <div class="total-row bold" style="border-top: none;">
+                    <span>Balance Due</span>
+                    <span>${formatCurrency(balanceDue)}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <table>
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Qty</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemsHtml}
-              </tbody>
-            </table>
-            
-            <div class="totals">
-              <div class="totals-row"><span>Subtotal:</span> <span>${formatCurrency(totalAmount)}</span></div>
-              <div class="totals-row"><span>Amount Paid:</span> <span>${formatCurrency(amountPaid)}</span></div>
-              <div class="balance"><span>Balance Due:</span> <span>${formatCurrency(balanceDue)}</span></div>
-            </div>
-            
-            <div class="footer">
-              <strong>Thank you for your business!</strong><br>
-              Computer generated tax invoice. No signature required.
+              
+              <div class="footer">
+                <span style="float: left;">Computer Generated Invoice</span>
+                <span class="page-number" style="float: right;"></span>
+                <div style="clear: both;"></div>
+              </div>
             </div>
           </body>
         </html>
@@ -273,13 +474,13 @@ const InvoiceDetailScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Navigation Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
-          <ArrowLeft size={24} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tax Invoice</Text>
-      </View>
+      <CurvedHeader
+        title="Tax Invoice"
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={130}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
 
       {loading ? (
         <View style={styles.centerContainer}>
@@ -292,171 +493,157 @@ const InvoiceDetailScreen = () => {
           <Text style={styles.errorText}>Invoice not found.</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 4 }]} showsVerticalScrollIndicator={false}>
           
-          {/* Top Title & Status Header */}
-          <View style={styles.topRow}>
-            <View>
-              <View style={styles.brandRow}>
-                <FileText size={22} color={COLORS.primary} style={{ marginRight: 6 }} />
-                <Text style={styles.brandTitle}>TAX INVOICE</Text>
-              </View>
-              <Text style={styles.invoiceNumText}>{invoiceNum}</Text>
-            </View>
-
-            <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
-              <Text style={[styles.statusBadgeText, { color: statusInfo.text }]}>
-                {statusInfo.label}
-              </Text>
-            </View>
+          {/* Action Buttons: WhatsApp & Print */}
+          <View style={styles.actionRow}>
+            <TouchableOpacity 
+              style={[styles.actionBtn, { backgroundColor: '#Ecfdf5', borderColor: '#d1fae5' }]} 
+              activeOpacity={0.7}
+              onPress={handleWhatsAppShare}
+            >
+              <MessageCircle size={20} color="#059669" style={{ marginRight: 8 }} />
+              <Text style={[styles.actionBtnText, { color: '#059669' }]}>Share on WhatsApp</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.actionBtn, { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' }]} 
+              activeOpacity={0.7}
+              onPress={handlePrint}
+            >
+              <Printer size={20} color="#475569" style={{ marginRight: 8 }} />
+              <Text style={[styles.actionBtnText, { color: '#475569' }]}>Print Invoice</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.divider} />
-
-          {/* Customer & Invoice Meta Details */}
-          <View style={styles.metaSection}>
-            <View style={styles.metaRowGroup}>
-              <View style={{ flex: 1, paddingRight: 12 }}>
-                <Text style={styles.sectionLabel}>BILLED TO</Text>
-                <Text style={styles.customerName}>{invoiceData.Customer?.name || 'Customer'}</Text>
-                {!!invoiceData.Customer?.phone && (
-                  <View style={styles.infoRow}>
-                    <Phone size={13} color={COLORS.textSecondary} style={{ marginRight: 5 }} />
-                    <Text style={styles.infoText}>{invoiceData.Customer.phone}</Text>
-                  </View>
-                )}
-                {!!invoiceData.Customer?.address && (
-                  <View style={styles.infoRow}>
-                    <MapPin size={13} color={COLORS.textSecondary} style={{ marginRight: 5 }} />
-                    <Text style={styles.infoText}>{invoiceData.Customer.address}</Text>
-                  </View>
-                )}
+          {/* Tally Style Invoice View */}
+          <View style={{ borderWidth: 1, borderColor: '#000', marginHorizontal: 0, marginTop: 4, marginBottom: 24, backgroundColor: '#FFF' }}>
+            <Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 16, padding: 8, borderBottomWidth: 1, borderBottomColor: '#000', letterSpacing: 1, color: '#000' }}>TAX INVOICE</Text>
+            
+            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000' }}>
+              <View style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 8 }}>
+                <Text style={{ fontSize: 10, color: '#000', marginBottom: 2, fontWeight: 'bold' }}>Billed To:</Text>
+                <Text style={{ fontWeight: 'bold', fontSize: 13, color: '#000' }}>{invoiceData.Customer?.name || 'Customer'}</Text>
+                {!!invoiceData.Customer?.phone && <Text style={{ fontSize: 11, color: '#000', marginTop: 2 }}>Ph: {invoiceData.Customer.phone}</Text>}
+                {!!invoiceData.Customer?.address && <Text style={{ fontSize: 11, color: '#000', marginTop: 2 }}>{invoiceData.Customer.address}</Text>}
               </View>
-
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.sectionLabel}>DATE ISSUED</Text>
-                <Text style={styles.metaValueText}>{formatDate(invoiceData.created_at)}</Text>
+              <View style={{ flex: 1, padding: 8 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <View>
+                    <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>Invoice No.</Text>
+                    <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>{invoiceNum}</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>Dated</Text>
+                    <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>{formatDate(invoiceData.created_at)}</Text>
+                  </View>
+                </View>
+                <View>
+                  <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>Billing Period</Text>
+                  <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>
+                    {invoiceData.periodStart && invoiceData.periodEnd
+                      ? `${formatDate(invoiceData.periodStart)} to ${formatDate(invoiceData.periodEnd)}`
+                      : 'Monthly'}
+                  </Text>
+                </View>
               </View>
             </View>
 
-            {/* Billing Period Row */}
-            <View style={styles.periodRow}>
-              <Text style={styles.sectionLabel}>BILLING PERIOD</Text>
-              <Text style={styles.periodValueText}>
-                {invoiceData.periodStart && invoiceData.periodEnd
-                  ? `${formatDate(invoiceData.periodStart)}  to  ${formatDate(invoiceData.periodEnd)}`
-                  : 'Monthly'}
-              </Text>
+            {/* Table Header */}
+            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000', backgroundColor: '#F9FAFB' }}>
+              <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'center', color: '#000' }}>Sl</Text>
+              <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, color: '#000' }}>Description of Goods</Text>
+              <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'center', color: '#000' }}>Qty</Text>
+              <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'right', color: '#000' }}>Rate</Text>
+              <Text style={{ width: 70, padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'right', color: '#000' }}>Amount</Text>
             </View>
-          </View>
 
-          <View style={styles.divider} />
-
-          {/* Deliveries & Items Section Header */}
-          <View style={styles.itemsHeaderRow}>
-            <Text style={styles.itemsHeaderTitle}>
-              DELIVERIES ({deliveries.length > 0 ? deliveries.length : lineItems.length})
-            </Text>
-            <Text style={styles.itemsHeaderTotalLabel}>TOTAL</Text>
-          </View>
-
-          {/* Items List */}
-          {deliveries.length > 0 ? (
-            deliveries.map((item, idx) => {
-              const qty = parseInt(item.fullUnitsDelivered) || 1;
-              const rate = parseFloat(item.unitPriceCharged || 0);
-              const rowTotal = qty * rate;
-              const prodName = getProductName(item);
-              const subTag = getSubOrOrderTag(item);
-              const dateFormatted = formatDate(item.deliveryDate);
-
-              return (
-                <View key={item.id || idx} style={styles.deliveryRow}>
-                  <View style={styles.dateCol}>
-                    <Text style={styles.dateText}>{dateFormatted}</Text>
-                  </View>
-
-                  <View style={styles.itemMainCol}>
-                    <Text style={styles.productNameText}>{prodName}</Text>
-                    <View style={styles.subTagRow}>
-                      <Text style={styles.subTagText}>{subTag}</Text>
-                      {item.emptyUnitsCollected > 0 && (
-                        <Text style={styles.emptyCansText}>
-                          • Returned {item.emptyUnitsCollected} empty
-                        </Text>
-                      )}
+            {/* Table Body */}
+            {(() => {
+              const elements = [];
+              let allItems = deliveries.length > 0 ? deliveries : lineItems;
+              const openingBalanceItem = lineItems.find(item => item.description?.toLowerCase().includes('opening balance'));
+              if (deliveries.length > 0 && openingBalanceItem) {
+                allItems = [openingBalanceItem, ...deliveries];
+              }
+              let renderedRows = 0;
+              
+              if (allItems.length > 0) {
+                allItems.forEach((item, idx) => {
+                  renderedRows++;
+                  const qty = item.fullUnitsDelivered || item.quantity || 1;
+                  const rate = parseFloat(item.unitPriceCharged || item.unitPrice || item.amount || 0);
+                  const rowTotal = qty * rate;
+                  elements.push(
+                    <View key={item.id || idx} style={{ flexDirection: 'row', minHeight: 28 }}>
+                      <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: '#000' }}>{idx + 1}</Text>
+                      <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, color: '#000' }}>{getProductName(item)}</Text>
+                      <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: '#000' }}>{qty}</Text>
+                      <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'right', color: '#000' }}>{formatCurrency(rate)}</Text>
+                      <Text style={{ width: 70, padding: 6, fontSize: 11, textAlign: 'right', color: '#000' }}>{formatCurrency(rowTotal)}</Text>
                     </View>
-                    <Text style={styles.qtyPriceText}>
-                      Qty: {qty}  ×  {formatCurrency(rate)}
-                    </Text>
+                  );
+                });
+              } else {
+                renderedRows = 1;
+                elements.push(
+                  <View key="empty-fallback" style={{ flexDirection: 'row', minHeight: 28 }}>
+                    <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: '#000' }}>1</Text>
+                    <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, color: '#000' }}>Water Camper 20Ltr</Text>
+                    <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: '#000' }}>1</Text>
+                    <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'right', color: '#000' }}>{formatCurrency(currentCharges)}</Text>
+                    <Text style={{ width: 70, padding: 6, fontSize: 11, textAlign: 'right', color: '#000' }}>{formatCurrency(currentCharges)}</Text>
                   </View>
+                );
+              }
+              
+              const minRows = 15;
+              if (renderedRows < minRows) {
+                const rowsToAdd = minRows - renderedRows;
+                for(let i = 0; i < rowsToAdd; i++) {
+                  elements.push(
+                    <View key={`empty-${i}`} style={{ flexDirection: 'row', minHeight: 28 }}>
+                      <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: 'transparent' }}>-</Text>
+                      <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, color: 'transparent' }}>-</Text>
+                      <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: 'transparent' }}>-</Text>
+                      <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'right', color: 'transparent' }}>-</Text>
+                      <Text style={{ width: 70, padding: 6, fontSize: 11, textAlign: 'right', color: 'transparent' }}>-</Text>
+                    </View>
+                  );
+                }
+              }
+              
+              return elements;
+            })()}
 
-                  <View style={styles.amountCol}>
-                    <Text style={styles.rowAmountText}>
-                      {formatCurrency(rowTotal > 0 ? rowTotal : rate)}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })
-          ) : lineItems.length > 0 ? (
-            lineItems.map((item, idx) => {
-              const qty = item.quantity || 1;
-              const rate = parseFloat(item.unitPrice || item.amount);
-              const rowTotal = parseFloat(item.amount);
-              const prodName = getProductName(item);
-              const dateFormatted = formatDate(item.createdAt || invoiceData.created_at);
-
-              return (
-                <View key={idx} style={styles.deliveryRow}>
-                  <View style={styles.dateCol}>
-                    <Text style={styles.dateText}>{dateFormatted}</Text>
-                  </View>
-
-                  <View style={styles.itemMainCol}>
-                    <Text style={styles.productNameText}>{prodName}</Text>
-                    <Text style={styles.subTagText}>Subscription Item</Text>
-                    <Text style={styles.qtyPriceText}>
-                      Qty: {qty}  ×  {formatCurrency(rate)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.amountCol}>
-                    <Text style={styles.rowAmountText}>{formatCurrency(rowTotal)}</Text>
-                  </View>
-                </View>
-              );
-            })
-          ) : (
-            <View style={styles.deliveryRow}>
-              <View style={styles.itemMainCol}>
-                <Text style={styles.productNameText}>Water Camper 20Ltr</Text>
+            {/* Totals Section */}
+            <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#000' }}>
+              <View style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 8 }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 10, color: '#000', marginBottom: 2 }}>Declaration</Text>
+                <Text style={{ fontSize: 9, color: '#000', lineHeight: 12 }}>We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</Text>
               </View>
-              <View style={styles.amountCol}>
-                <Text style={styles.rowAmountText}>{formatCurrency(totalAmount)}</Text>
+              <View style={{ width: 180 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 6, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
+                  <Text style={{ fontSize: 11, color: '#000' }}>Sub Total</Text>
+                  <Text style={{ fontSize: 11, color: '#000' }}>{formatCurrency(currentCharges)}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 6, borderBottomWidth: 1, borderBottomColor: '#000' }}>
+                  <Text style={{ fontSize: 11, color: '#000' }}>Prev Balance</Text>
+                  <Text style={{ fontSize: 11, color: '#000' }}>{formatCurrency(previousDues)}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 8, borderBottomWidth: 1, borderBottomColor: '#000' }}>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>Grand Total</Text>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{formatCurrency(grandTotal)}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 6, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
+                  <Text style={{ fontSize: 11, color: '#000' }}>Amount Paid</Text>
+                  <Text style={{ fontSize: 11, color: '#000' }}>{formatCurrency(amountPaid)}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 8 }}>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>Balance Due</Text>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{formatCurrency(balanceDue)}</Text>
+                </View>
               </View>
-            </View>
-          )}
-
-          <View style={styles.divider} />
-
-          {/* Financial Totals */}
-          <View style={styles.totalsBlock}>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Subtotal</Text>
-              <Text style={styles.totalValue}>{formatCurrency(totalAmount)}</Text>
-            </View>
-
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Amount Paid</Text>
-              <Text style={[styles.totalValue, { color: COLORS.success }]}>{formatCurrency(amountPaid)}</Text>
-            </View>
-
-            <View style={[styles.totalRow, styles.balanceRow]}>
-              <Text style={styles.balanceLabel}>Balance Due</Text>
-              <Text style={[styles.balanceValue, { color: balanceDue > 0 ? COLORS.danger : COLORS.success }]}>
-                {formatCurrency(balanceDue)}
-              </Text>
             </View>
           </View>
 
@@ -480,26 +667,6 @@ const InvoiceDetailScreen = () => {
             </TouchableOpacity>
           )}
 
-          {/* Action Buttons: WhatsApp & Print */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity 
-              style={[styles.actionBtn, { backgroundColor: '#Ecfdf5', borderColor: '#d1fae5' }]} 
-              activeOpacity={0.7}
-              onPress={handleWhatsAppShare}
-            >
-              <MessageCircle size={20} color="#059669" style={{ marginRight: 8 }} />
-              <Text style={[styles.actionBtnText, { color: '#059669' }]}>WhatsApp</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.actionBtn, { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' }]} 
-              activeOpacity={0.7}
-              onPress={handlePrint}
-            >
-              <Printer size={20} color="#475569" style={{ marginRight: 8 }} />
-              <Text style={[styles.actionBtnText, { color: '#475569' }]}>Print PDF</Text>
-            </TouchableOpacity>
-          </View>
 
           {/* Footer Note */}
           <View style={styles.footer}>

@@ -25,11 +25,13 @@ import {
   History,
   Check,
   ChevronRight,
+  ListOrdered,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const RouteDetailScreen = () => {
   const navigation = useNavigation();
@@ -272,32 +274,34 @@ const RouteDetailScreen = () => {
   const pastAssignments = staffRoutes.filter((sr) => sr.effectiveTo !== null);
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ArrowLeft size={22} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Route Details</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => navigation.navigate('AddRoute', { route: routeData })}
-            activeOpacity={0.7}
-          >
-            <Edit size={18} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerActionBtn, { marginLeft: 8 }]}
-            onPress={handleDeleteRoute}
-            activeOpacity={0.7}
-          >
-            <Trash2 size={18} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Route Details</Text>}
+        leftIcon={<ArrowLeft size={24} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        rightIcon={
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
+              onPress={() => navigation.navigate('AddRoute', { route: routeData })}
+              activeOpacity={0.7}
+            >
+              <Edit size={18} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(239,68,68,0.2)' }]}
+              onPress={handleDeleteRoute}
+              activeOpacity={0.7}
+            >
+              <Trash2 size={18} color="#FECACA" />
+            </TouchableOpacity>
+          </View>
+        }
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]} showsVerticalScrollIndicator={false}>
         {/* Info card */}
         <View style={styles.infoCard}>
           <Text style={styles.routeNameText}>{routeData.name}</Text>
@@ -395,7 +399,7 @@ const RouteDetailScreen = () => {
             setAssignModalVisible(false);
           }}
         >
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+        <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Assign Staff Member</Text>
@@ -515,7 +519,7 @@ const RouteDetailScreen = () => {
                 <Text style={styles.modalSaveText}>Assign Staff</Text>
               )}
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
 
@@ -532,7 +536,7 @@ const RouteDetailScreen = () => {
           onChange={onDatePickerChange}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -575,10 +579,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerActionBtnDark: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   infoCard: {
     backgroundColor: '#FFFFFF',

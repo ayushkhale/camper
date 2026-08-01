@@ -13,7 +13,7 @@ import {
   FlatList,
   ActivityIndicator
 } from 'react-native';
-import { ChevronDown } from 'lucide-react-native';
+import { ChevronDown, LogOut } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -21,7 +21,7 @@ import { api } from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 
 const CompleteRegistrationScreen = () => {
-  const { userToken, login } = useContext(AuthContext);
+  const { userToken, login, logout } = useContext(AuthContext);
   const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
@@ -160,6 +160,14 @@ const CompleteRegistrationScreen = () => {
           <Text style={styles.toastText}>{toast.message}</Text>
         </View>
       )}
+
+      {/* Header with Logout */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <LogOut size={20} color={COLORS.danger} />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -347,6 +355,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'ios' ? 8 : 16,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  logoutText: {
+    color: COLORS.danger,
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginLeft: 6,
   },
   keyboardView: {
     flex: 1,

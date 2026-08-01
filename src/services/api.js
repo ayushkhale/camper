@@ -1,6 +1,9 @@
 
 const API_BASE_URL = 'http://192.168.1.5:3007';
 
+// const API_BASE_URL = 'https://api-camper.compunic.co.in';
+
+
 const logRequest = (url, body) => {
   console.log(`🚀 [API Request] POST ${url}`);
   if (body) {
@@ -333,6 +336,27 @@ export const api = {
   deleteCustomer: (token, id) =>
     deleteRequest(`/api/vendor/customers/${id}`, token),
 
+  updateCustomerSequence: (token, sequences) =>
+    patchRequest('/api/vendor/customers/sequence', { sequences }, token),
+
+  getCustomerDeliveries: (token, customerId, { from, to, status, invoiced } = {}) => {
+    let queryParams = [];
+    if (from) queryParams.push(`from=${encodeURIComponent(from)}`);
+    if (to) queryParams.push(`to=${encodeURIComponent(to)}`);
+    if (status) queryParams.push(`status=${encodeURIComponent(status)}`);
+    if (invoiced) queryParams.push(`invoiced=${encodeURIComponent(invoiced)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return getRequest(`/api/vendor/customers/${customerId}/deliveries${queryString}`, token);
+  },
+
+  getCustomerJarCollections: (token, customerId, { from, to } = {}) => {
+    let queryParams = [];
+    if (from) queryParams.push(`from=${encodeURIComponent(from)}`);
+    if (to) queryParams.push(`to=${encodeURIComponent(to)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return getRequest(`/api/vendor/customers/${customerId}/jar-collections${queryString}`, token);
+  },
+
   // Subscriptions APIs
   listSubscriptions: (token, customerId = '', status = '') => {
     let queryParams = [];
@@ -415,6 +439,11 @@ export const api = {
     getRequest('/api/vendor/dashboard', token),
 
   // ── INVOICES ─────────────────────────────────────────────────
+  getUninvoicedPreSummary: (token, customerId = '') => {
+    const queryString = customerId ? `?customerId=${encodeURIComponent(customerId)}` : '';
+    return getRequest(`/api/vendor/invoices/pre-summary${queryString}`, token);
+  },
+
   generateInvoices: (token, data) =>
     postRequest('/api/vendor/invoices/generate', data, token),
 

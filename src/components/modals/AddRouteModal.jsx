@@ -5,32 +5,25 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
-  Alert,
   Platform,
   KeyboardAvoidingView,
+  Modal
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, MapPin, Hash } from 'lucide-react-native';
+import { MapPin, Hash, X } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useTranslation } from 'react-i18next';
 import { useAlert } from '../../context/AlertContext';
-import CurvedHeader from '../../components/CurvedHeader';
 
-const AddRouteScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
+const AddRouteModal = ({ visible, onClose, onSuccess }) => {
   const { userToken } = useContext(AuthContext);
   const { showAlert } = useAlert();
+  const { t } = useTranslation();
 
-  const routeToEdit = route.params?.route;
-  const isEditing = !!routeToEdit;
-
-  const [name, setName] = useState(routeToEdit?.name || '');
-  const [areaCode, setAreaCode] = useState(routeToEdit?.areaCode || '');
+  const [name, setName] = useState('');
+  const [areaCode, setAreaCode] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
@@ -51,22 +44,14 @@ const AddRouteScreen = () => {
     };
 
     try {
-      if (isEditing) {
-        const res = await api.updateRoute(userToken, routeToEdit.id, body);
-        if (res.success) {
-          showAlert('Success', 'Route updated successfully', 'success');
-          navigation.goBack();
-        } else {
-          throw new Error(res.message || 'Failed to update route');
-        }
+      const res = await api.createRoute(userToken, body);
+      if (res.success && res.data) {
+        showAlert('Success', 'Route created successfully', 'success');
+        setName('');
+        setAreaCode('');
+        onSuccess(res.data);
       } else {
-        const res = await api.createRoute(userToken, body);
-        if (res.success) {
-          showAlert('Success', 'Route created successfully', 'success');
-          navigation.goBack();
-        } else {
-          throw new Error(res.message || 'Failed to create route');
-        }
+        throw new Error(res.message || 'Failed to create route');
       }
     } catch (err) {
       console.error('Submit route error:', err);
@@ -77,27 +62,26 @@ const AddRouteScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{isEditing ? 'Edit Route' : 'Create Route'}</Text>}
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
-        onLeftPress={() => navigation.goBack()}
-        height={120}
-        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
-      />
-
-      <KeyboardAvoidingView
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView 
+        style={styles.modalOverlay}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
       >
-        <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Form Area - flat direct inputs */}
+        <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+          <View style={styles.modalHandle} />
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Create New Route</Text>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={onClose}>
+              <X size={18} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.form}>
-            {/* Route Name Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Route Name *</Text>
               <View style={styles.inputContainer}>
@@ -112,7 +96,6 @@ const AddRouteScreen = () => {
               </View>
             </View>
 
-            {/* Area Code Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Area Code (Optional)</Text>
               <View style={styles.inputContainer}>
@@ -128,10 +111,7 @@ const AddRouteScreen = () => {
               </View>
             </View>
           </View>
-        </ScrollView>
 
-        {/* Bottom Actions Bar (Matches AddCustomerScreen) */}
-        <View style={styles.bottomBar}>
           <TouchableOpacity
             style={[styles.btn, styles.btnPrimary, loading && styles.btnDisabled]}
             activeOpacity={0.85}
@@ -141,68 +121,64 @@ const AddRouteScreen = () => {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.btnTextPrimary}>
-                {isEditing ? 'Save Changes' : 'Create Route'}
-              </Text>
+              <Text style={styles.btnTextPrimary}>Create Route</Text>
             )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
   },
-  keyboardView: {
-    flex: 1,
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
   },
-  headerRow: {
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E2E8F0',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 10 : 14,
-    paddingBottom: 4,
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerRightSpacing: {
-    width: 32,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: 120,
-  },
-  titleContainer: {
-    marginBottom: 32,
-  },
-  pageTitle: {
-    fontSize: 28,
+  modalTitle: {
+    fontSize: 18,
     fontFamily: 'Geologica-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
-    marginBottom: 6,
   },
-  pageSubtitle: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   form: {
-    marginBottom: 0,
+    marginBottom: 24,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Geologica-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
@@ -228,14 +204,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     padding: 0,
   },
-  bottomBar: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 60,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
   btn: {
     height: 52,
     borderRadius: 16,
@@ -253,27 +221,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Geologica-Bold',
   },
-  // Custom Toast Styles
-  toast: {
-    position: 'absolute',
-    top: 16,
-    left: 24,
-    right: 24,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    zIndex: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toastError: { backgroundColor: COLORS.danger },
-  toastSuccess: { backgroundColor: COLORS.success },
-  toastText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
-    textAlign: 'center',
-  },
 });
 
-export default AddRouteScreen;
+export default AddRouteModal;

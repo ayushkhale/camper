@@ -13,6 +13,7 @@ import {
   Alert,
   Modal,
   FlatList,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
@@ -32,6 +33,9 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import AddCustomerModal from '../../components/modals/AddCustomerModal';
+import AddProductModal from '../../components/modals/AddProductModal';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const AddOneTimeOrderScreen = () => {
   const { t } = useTranslation();
@@ -55,6 +59,9 @@ const AddOneTimeOrderScreen = () => {
   // Modals / DatePickers state
   const [activeModal, setActiveModal] = useState(null); // 'customer' | 'product'
   const [activeDatePicker, setActiveDatePicker] = useState(null); // 'orderFrom' | 'orderTo' | null
+
+  const [addCustomerVisible, setAddCustomerVisible] = useState(false);
+  const [addProductVisible, setAddProductVisible] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -120,7 +127,7 @@ const AddOneTimeOrderScreen = () => {
   const formatDisplayDate = (str) => {
     if (!str) return '—';
     const [y, m, d] = str.split('-');
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${d} ${months[parseInt(m) - 1]} ${y}`;
   };
 
@@ -240,8 +247,8 @@ const AddOneTimeOrderScreen = () => {
 
     let title = '';
     let data = [];
-    let onSelect = () => {};
-    let renderItemText = () => {};
+    let onSelect = () => { };
+    let renderItemText = () => { };
     let currentVal = null;
 
     if (activeModal === 'customer') {
@@ -269,12 +276,11 @@ const AddOneTimeOrderScreen = () => {
         animationType="slide"
         onRequestClose={() => setActiveModal(null)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setActiveModal(null)}
-        >
-          <View style={[styles.modalContent, { maxHeight: '70%' }]} onStartShouldSetResponder={() => true}>
+        <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+          <TouchableWithoutFeedback onPress={() => setActiveModal(null)}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+          </TouchableWithoutFeedback>
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{title}</Text>
               <TouchableOpacity onPress={() => setActiveModal(null)}>
@@ -282,9 +288,28 @@ const AddOneTimeOrderScreen = () => {
               </TouchableOpacity>
             </View>
 
+            {activeModal === 'customer' && (
+              <TouchableOpacity
+                style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
+                onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
+              >
+                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Customer</Text>
+              </TouchableOpacity>
+            )}
+
+            {activeModal === 'product' && (
+              <TouchableOpacity
+                style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
+                onPress={() => { setActiveModal(null); setAddProductVisible(true); }}
+              >
+                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Product</Text>
+              </TouchableOpacity>
+            )}
+
             <FlatList
               data={data}
-              keyExtractor={(item) => item.id}
+              keyboardShouldPersistTaps="handled"
+              keyExtractor={item => String(item.id)}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => {
                 const isSelected = item.id === currentVal;
@@ -308,7 +333,7 @@ const AddOneTimeOrderScreen = () => {
               }
             />
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     );
   };
@@ -325,14 +350,23 @@ const AddOneTimeOrderScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header Row - Matches AddCustomer Header Row */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRightSpacing} />
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={
+          <View>
+            <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>
+              {t('oneTimeOrders.newOrder', 'New Order')}
+            </Text>
+            {/* <Text style={{ color: '#E2E8F0', fontSize: 13, fontFamily: 'Geologica-Regular', marginTop: 2 }}>
+              Create a one-time product delivery
+            </Text> */}
+          </View>
+        }
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -350,15 +384,7 @@ const AddOneTimeOrderScreen = () => {
             </View>
           ) : null}
 
-          {/* Title Container */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>{t('oneTimeOrders.newOrder')}</Text>
-            <Text style={styles.pageSubtitle}>Create a one-time product delivery</Text>
-          </View>
-
-          {/* Form Direct Inputs */}
           <View style={styles.form}>
-            {/* Customer Dropdown */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Customer *</Text>
               <TouchableOpacity
@@ -373,7 +399,6 @@ const AddOneTimeOrderScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Date Pickers Row */}
             <View style={styles.dateRow}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                 <Text style={styles.label}>Start Date *</Text>
@@ -519,7 +544,27 @@ const AddOneTimeOrderScreen = () => {
           onChange={onDatePickerChange}
         />
       )}
-    </SafeAreaView>
+
+      <AddCustomerModal
+        visible={addCustomerVisible}
+        onClose={() => setAddCustomerVisible(false)}
+        onSuccess={(newCust) => {
+          setAddCustomerVisible(false);
+          setCustomers(prev => [...prev, newCust]);
+          setCustomerId(newCust.id);
+        }}
+      />
+
+      <AddProductModal
+        visible={addProductVisible}
+        onClose={() => setAddProductVisible(false)}
+        onSuccess={(newProd) => {
+          setAddProductVisible(false);
+          setProducts(prev => [...prev, newProd]);
+          handleAddProductItem(newProd);
+        }}
+      />
+    </View>
   );
 };
 
@@ -528,21 +573,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 10 : 14,
-    paddingBottom: 4,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerRightSpacing: {
-    width: 32,
-  },
   keyboardAvoid: {
     flex: 1,
   },
@@ -550,21 +580,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 10,
     paddingBottom: 40,
-  },
-  titleContainer: {
-    marginBottom: 32,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 6,
-  },
-  pageSubtitle: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
   },
   errorBanner: {
     flexDirection: 'row',

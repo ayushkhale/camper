@@ -10,18 +10,20 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
-import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink } from 'lucide-react-native';
+import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink, Database } from 'lucide-react-native';
+import { seedDatabase } from '../../utils/seedDatabase';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
   const { logout, userToken } = useContext(AuthContext);
   const { showAlert } = useAlert();
   const navigation = useNavigation();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [city, setCity] = useState('');
@@ -30,7 +32,7 @@ const SettingsScreen = () => {
   const [pincode, setPincode] = useState('');
   const [country, setCountry] = useState('');
   const [categoryName, setCategoryName] = useState('');
-  
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -80,6 +82,29 @@ const SettingsScreen = () => {
     await AsyncStorage.setItem('app_language', lng);
   };
 
+  const handleSeed = async () => {
+    showAlert(
+      'Seed Database',
+      'This will create 10 dummy products, customers, and subscriptions. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Seed',
+          onPress: async () => {
+            setLoading(true);
+            const res = await seedDatabase(userToken);
+            setLoading(false);
+            if (res.success) {
+              showAlert('Success', res.message, 'success');
+            } else {
+              showAlert('Error', res.message, 'error');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -96,29 +121,46 @@ const SettingsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={
+          <Text 
+            numberOfLines={1} 
+            adjustsFontSizeToFit 
+            style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
+          >
+            {t('drawer.settings', 'Settings')}
+          </Text>
+        }
+        leftIcon={<Menu size={28} color="#FFF" />}
+        onLeftPress={() => navigation.toggleDrawer()}
+        rightIcon={
+          <TouchableOpacity
+            onPress={() => isEditing ? setIsEditing(false) : setIsEditing(true)}
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: isEditing ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+            }}
+          >
+            <Text style={{ color: '#FFF', fontFamily: 'Geologica-Medium', fontSize: 14 }}>
+              {isEditing ? 'Cancel' : 'Edit'}
+            </Text>
+          </TouchableOpacity>
+        }
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
+
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer} 
-          keyboardShouldPersistTaps="handled" 
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          
-          {/* Top Header Controls */}
-          <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuIconButton}>
-              <Menu size={28} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              onPress={() => isEditing ? setIsEditing(false) : setIsEditing(true)} 
-              style={styles.editActionBtn}
-            >
-              <Text style={isEditing ? styles.cancelText : styles.editActionText}>
-                {isEditing ? 'Cancel' : 'Edit'}
-              </Text>
-            </TouchableOpacity>
-          </View>
 
           {/* Profile Hero Section */}
           <View style={styles.profileHero}>
@@ -132,7 +174,7 @@ const SettingsScreen = () => {
           {/* Form Fields */}
           <View style={styles.formContainer}>
             <Text style={styles.sectionTitle}>Business Information</Text>
-            
+
             <Text style={styles.inputLabel}>Full Name</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
               <TextInput
@@ -245,7 +287,7 @@ const SettingsScreen = () => {
 
           {/* Preferences Section */}
           <Text style={[styles.sectionTitle, { marginTop: 32 }]}>App Settings</Text>
-          
+
           <View style={styles.preferencesContainer}>
             <View style={styles.prefRow}>
               <View style={styles.prefLeft}>
@@ -253,14 +295,14 @@ const SettingsScreen = () => {
                 <Text style={styles.prefLabel}>{t('settings.language')}</Text>
               </View>
               <View style={styles.languageRow}>
-                <TouchableOpacity 
-                  style={[styles.langChip, i18n.language === 'en' && styles.activeLangChip]} 
+                <TouchableOpacity
+                  style={[styles.langChip, i18n.language === 'en' && styles.activeLangChip]}
                   onPress={() => changeLanguage('en')}
                 >
                   <Text style={[styles.langChipText, i18n.language === 'en' && styles.activeLangChipText]}>EN</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.langChip, i18n.language === 'hi' && styles.activeLangChip]} 
+                <TouchableOpacity
+                  style={[styles.langChip, i18n.language === 'hi' && styles.activeLangChip]}
                   onPress={() => changeLanguage('hi')}
                 >
                   <Text style={[styles.langChipText, i18n.language === 'hi' && styles.activeLangChipText]}>HI</Text>
@@ -268,8 +310,8 @@ const SettingsScreen = () => {
               </View>
             </View>
 
-            <TouchableOpacity 
-              style={[styles.prefRow, { marginTop: 12 }]} 
+            <TouchableOpacity
+              style={[styles.prefRow, { marginTop: 12 }]}
               onPress={() => Linking.openURL('https://docs.google.com/document/d/e/2PACX-1vRYAhcFS9ilQgfefLBlDoGwhAQGbPdlLBGc8mIyGSiS-Ho_L1kQv1Gp0PWKU7JeTlTP22aUfuPqI10i/pub')}
             >
               <View style={styles.prefLeft}>
@@ -279,8 +321,18 @@ const SettingsScreen = () => {
               <ExternalLink size={16} color={COLORS.textPlaceholder} />
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            {/* <TouchableOpacity 
               style={[styles.prefRow, { marginTop: 12 }]} 
+              onPress={handleSeed}
+            >
+              <View style={styles.prefLeft}>
+                <Database size={20} color={COLORS.primary} style={{ marginRight: 10 }} />
+                <Text style={[styles.prefLabel, { color: COLORS.primary }]}>Seed Test Data (10x)</Text>
+              </View>
+            </TouchableOpacity> */}
+
+            <TouchableOpacity
+              style={[styles.prefRow, { marginTop: 12 }]}
               onPress={() => Linking.openURL('https://docs.google.com/document/d/e/2PACX-1vR4_iNcbJV3YstWuk7ZibvNSdqbFLpYu10iVqAWjg7y8HsqvzgxfeoTcvl-nF_kIGUf77OKuoWuibzY/pub')}
             >
               <View style={styles.prefLeft}>
@@ -300,14 +352,14 @@ const SettingsScreen = () => {
 
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   keyboardView: {
     flex: 1,
@@ -323,16 +375,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: Platform.OS === 'ios' ? 24 : 16,
     paddingBottom: 40,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  menuIconButton: {
-    padding: 4,
-    marginLeft: -4,
   },
   editActionBtn: {
     paddingVertical: 8,
@@ -350,8 +392,8 @@ const styles = StyleSheet.create({
   },
   profileHero: {
     alignItems: 'center',
-    marginBottom: 36,
-    marginTop: 10,
+    marginTop: 20,
+    marginBottom: 30,
   },
   avatarContainer: {
     width: 84,

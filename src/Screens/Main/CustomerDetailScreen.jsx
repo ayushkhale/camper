@@ -17,8 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
   ArrowLeft,
-  Trash2,
   Edit,
+  Trash2,
   User,
   Phone,
   MapPin,
@@ -40,6 +40,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const CustomerDetailScreen = () => {
   const navigation = useNavigation();
@@ -186,7 +187,7 @@ const CustomerDetailScreen = () => {
   };
 
   const formatRecurrence = (pattern) => {
-    switch(pattern) {
+    switch (pattern) {
       case 'daily': return 'Daily';
       case 'alternate_days': return 'Alternate Days';
       case 'weekly': return 'Weekly';
@@ -222,31 +223,33 @@ const CustomerDetailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      
-      {/* Header Actions */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => navigation.navigate('AddCustomer', { customer: customerData })}
-          >
-            <Edit size={18} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerActionBtn, { borderColor: '#E2E8F0', backgroundColor: '#FFF5F5' }]}
-            onPress={handleDeleteCustomer}
-          >
-            <Trash2 size={18} color="#E53E3E" />
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Customer Detail</Text>}
+        leftIcon={<ArrowLeft size={24} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        rightIcon={
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity
+              style={styles.headerActionBtnDark}
+              onPress={() => navigation.navigate('AddCustomer', { customer: customerData })}
+            >
+              <Edit size={18} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(239,68,68,0.2)' }]}
+              onPress={handleDeleteCustomer}
+            >
+              <Trash2 size={18} color="#FECACA" />
+            </TouchableOpacity>
+          </View>
+        }
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]} showsVerticalScrollIndicator={false}>
+
         {/* Profile Hero Section */}
         <View style={styles.profileHero}>
           <View style={styles.avatarContainer}>
@@ -263,6 +266,15 @@ const CustomerDetailScreen = () => {
               {customerData.status.toUpperCase()}
             </Text>
           </View>
+          
+          <TouchableOpacity 
+            style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', backgroundColor: '#EFF6FF', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}
+            onPress={() => navigation.navigate('CustomerHistory', { customerId: customerData.id })}
+            activeOpacity={0.7}
+          >
+            <Clock size={16} color="#3B82F6" style={{ marginRight: 6 }} />
+            <Text style={{ fontSize: 13, fontFamily: 'Geologica-Medium', color: '#1D4ED8' }}>View History</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Subscriptions */}
@@ -291,11 +303,11 @@ const CustomerDetailScreen = () => {
           </TouchableOpacity>
         ) : (
           subscriptions.map((sub) => {
-            const statusColor = sub.status === 'active' 
-              ? { dot: '#16A34A', text: '#15803D' } 
-              : sub.status === 'paused' 
-              ? { dot: '#D97706', text: '#B45309' } 
-              : { dot: '#94A3B8', text: '#64748B' };
+            const statusColor = sub.status === 'active'
+              ? { dot: '#16A34A', text: '#15803D' }
+              : sub.status === 'paused'
+                ? { dot: '#D97706', text: '#B45309' }
+                : { dot: '#94A3B8', text: '#64748B' };
 
             return (
               <TouchableOpacity
@@ -317,7 +329,7 @@ const CustomerDetailScreen = () => {
                     </Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.statusBadge}>
                   <View style={[styles.statusDot, { backgroundColor: statusColor.dot }]} />
                   <Text style={[styles.statusText, { color: statusColor.text }]}>
@@ -332,7 +344,7 @@ const CustomerDetailScreen = () => {
 
         {/* Contact Details */}
         <Text style={styles.sectionTitle}>{t('customers.contactAndLocation')}</Text>
-        
+
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
             <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
@@ -343,9 +355,9 @@ const CustomerDetailScreen = () => {
               <Text style={styles.detailValue}>{customerData.phone || 'Not Provided'}</Text>
             </View>
           </View>
-          
+
           <View style={styles.divider} />
-          
+
           <View style={styles.detailRow}>
             <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
               <MapPin size={18} color={COLORS.primary} />
@@ -357,7 +369,7 @@ const CustomerDetailScreen = () => {
           </View>
 
           <View style={styles.divider} />
-          
+
           <View style={styles.detailRow}>
             <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
               <Route size={18} color={COLORS.primary} />
@@ -371,15 +383,15 @@ const CustomerDetailScreen = () => {
 
         {/* Account Details */}
         <Text style={[styles.sectionTitle, { marginTop: 8 }]}>{t('customers.accountOverview')}</Text>
-        
+
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
             <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
               <IndianRupee size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>{t('customers.creditLimit_label')}</Text>
-              <Text style={styles.detailValue}>{customerData.creditLimit ? `₹${customerData.creditLimit}` : 'None'}</Text>
+              <Text style={styles.detailLabel}>Opening Balance</Text>
+              <Text style={styles.detailValue}>{customerData.openingBalance || customerData.creditLimit ? `₹${customerData.openingBalance || customerData.creditLimit}` : '₹0'}</Text>
             </View>
           </View>
 
@@ -434,7 +446,7 @@ const CustomerDetailScreen = () => {
                   ₹{depositData.depositBalance || 0}
                 </Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.addMoreDepositBtn}
                 onPress={() => setDepositModalVisible(true)}
                 activeOpacity={0.7}
@@ -467,17 +479,17 @@ const CustomerDetailScreen = () => {
         <TouchableOpacity
           style={styles.fabSecondary}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('MainDrawer', { 
-            screen: 'MainTabs', 
-            params: { 
-              screen: 'Payments', 
-              params: { preselectedCustomer: customerData } 
-            } 
+          onPress={() => navigation.navigate('MainDrawer', {
+            screen: 'MainTabs',
+            params: {
+              screen: 'Payments',
+              params: { preselectedCustomer: customerData }
+            }
           })}
         >
           <IndianRupee size={24} color="#FFF" />
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={styles.fabPrimary}
           activeOpacity={0.85}
@@ -593,7 +605,7 @@ const CustomerDetailScreen = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -618,21 +630,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  headerActionBtn: {
-    marginLeft: 12,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  headerActionBtnDark: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
     padding: 10,
     borderRadius: 14,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   profileHero: {
     alignItems: 'center',
-    marginTop: 12,
     marginBottom: 36,
   },
   avatarContainer: {
@@ -936,6 +944,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 110,
   },
   modalHeader: {
     flexDirection: 'row',

@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
-  ArrowLeft,
+  ChevronLeft,
   Trash2,
   Edit,
   User,
@@ -37,6 +37,7 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const SubscriptionDetailScreen = () => {
   const { t } = useTranslation();
@@ -317,31 +318,42 @@ const SubscriptionDetailScreen = () => {
   const isPaused = subscription.status === 'paused';
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* ── Header Actions (Identical to Customer Detail Screen) ── */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => navigation.navigate('AddSubscription', { subscription })}
+    <View style={styles.container}>
+      <CurvedHeader
+        title={
+          <Text 
+            numberOfLines={1} 
+            adjustsFontSizeToFit 
+            style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
           >
-            <Edit size={18} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerActionBtn, { borderColor: '#E2E8F0', backgroundColor: '#FFF5F5' }]}
-            onPress={handleDeleteSubscription}
-          >
-            <Trash2 size={18} color="#E53E3E" />
-          </TouchableOpacity>
-        </View>
-      </View>
+            {t('subscriptions.details', 'Subscription Details')}
+          </Text>
+        }
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        rightIcon={
+          <View style={{ flexDirection: 'row', gap: 12, marginRight: 16 }}>
+            <TouchableOpacity
+              style={styles.headerActionBtnDark}
+              onPress={() => navigation.navigate('AddSubscription', { subscription })}
+            >
+              <Edit size={18} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(229, 62, 62, 0.2)' }]}
+              onPress={handleDeleteSubscription}
+            >
+              <Trash2 size={18} color="#FFD1D1" />
+            </TouchableOpacity>
+          </View>
+        }
+        height={130}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* ── Profile Hero Section (Identical to Customer Detail Screen) ── */}
+        {/* ── Profile Hero Section ── */}
         <View style={styles.profileHero}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatarFallback}>
@@ -493,7 +505,7 @@ const SubscriptionDetailScreen = () => {
       {/* Pause Modal */}
       <Modal visible={pauseModalVisible} transparent animationType="fade" onRequestClose={() => setPauseModalVisible(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPauseModalVisible(false)}>
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Pause Subscription</Text>
               <TouchableOpacity style={styles.modalClose} onPress={() => setPauseModalVisible(false)}>
@@ -529,14 +541,14 @@ const SubscriptionDetailScreen = () => {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
 
       {/* Skip / Change Qty Modal */}
       <Modal visible={skipModalVisible} transparent animationType="fade" onRequestClose={() => setSkipModalVisible(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSkipModalVisible(false)}>
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+          <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Log Exception</Text>
               <TouchableOpacity style={styles.modalClose} onPress={() => setSkipModalVisible(false)}>
@@ -603,7 +615,7 @@ const SubscriptionDetailScreen = () => {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
 
@@ -620,7 +632,7 @@ const SubscriptionDetailScreen = () => {
           onChange={onDatePickerChange}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -628,6 +640,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  headerActionBtnDark: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   centerContainer: {
     flex: 1,
@@ -830,7 +850,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 16,
+    paddingBottom: Platform.OS === 'ios' ? 80 : 85,
     backgroundColor: COLORS.surface,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',

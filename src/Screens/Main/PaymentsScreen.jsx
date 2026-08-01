@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  TextInput, FlatList, ActivityIndicator, Alert, Modal, ScrollView, Animated, Platform
+  TextInput, FlatList, SectionList, ActivityIndicator, Alert, Modal, ScrollView, Animated, Platform, Image, TouchableWithoutFeedback
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, ChevronDown, DollarSign, FileText, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, X, Search } from 'lucide-react-native';
+import { User, ChevronDown, DollarSign, FileText, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, X, Search, Menu, Info, Banknote } from 'lucide-react-native';
 import Svg, { Path, Defs, LinearGradient, Stop, Rect, Circle } from 'react-native-svg';
 import { COLORS } from '../../constants/colors';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
-import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, DrawerActions, useRoute } from '@react-navigation/native';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
+import AddCustomerModal from '../../components/modals/AddCustomerModal';
 
 const PAYMENT_MODES = [
   { id: 'cash', label: 'Cash' },
@@ -22,9 +24,12 @@ const PAYMENT_MODES = [
 
 const PaymentsScreen = () => {
   const { t } = useTranslation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const route = useRoute();
+  const navigation = useNavigation();
   const { showAlert } = useAlert();
+
+  const vendorLogo = user?.logoUrl || user?.imageUrl;
 
   const [activeTab, setActiveTab] = useState('record'); // 'record' | 'statement'
 
@@ -35,6 +40,7 @@ const PaymentsScreen = () => {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
   const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [addCustomerVisible, setAddCustomerVisible] = useState(false);
 
   // Record Payment State
   const [amount, setAmount] = useState('');
@@ -70,26 +76,29 @@ const PaymentsScreen = () => {
   }, [loadingStatement, loadingCustomers]);
 
   const renderStatementSkeleton = () => (
-    <View style={{ flex: 1, padding: 16, gap: 16 }}>
+    <View style={{ flex: 1, padding: 16 }}>
       <Animated.View style={[styles.skeletonSummaryCard, { opacity: pulseAnim }]}>
-        <View style={[styles.skeletonBar, { width: 140, height: 16, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 16 }]} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
+          <View style={[styles.skeletonBar, { width: 120, height: 16, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+          <View style={[styles.skeletonBar, { width: 80, height: 16, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+        </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View style={[styles.skeletonBar, { width: 90, height: 28, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
-          <View style={[styles.skeletonBar, { width: 90, height: 28, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+          <View style={[styles.skeletonBar, { width: 100, height: 32, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+          <View style={[styles.skeletonBar, { width: 100, height: 32, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
         </View>
       </Animated.View>
 
-      <View style={{ gap: 12, marginTop: 8 }}>
+      <View style={{ marginTop: 24, gap: 16 }}>
+        <View style={[styles.skeletonBar, { width: 120, height: 20, marginBottom: 8 }]} />
         {[1, 2, 3, 4].map((key) => (
           <Animated.View key={key} style={[styles.skeletonTxItem, { opacity: pulseAnim }]}>
             <View style={{ flex: 1 }}>
-              <View style={[styles.skeletonBar, { width: 80, height: 12, marginBottom: 8 }]} />
-              <View style={[styles.skeletonBar, { width: '70%', height: 14, marginBottom: 6 }]} />
-              <View style={[styles.skeletonBar, { width: 50, height: 16, borderRadius: 6 }]} />
+              <View style={[styles.skeletonBar, { width: '80%', height: 16, marginBottom: 8 }]} />
+              <View style={[styles.skeletonBar, { width: '40%', height: 12 }]} />
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <View style={[styles.skeletonBar, { width: 70, height: 18, marginBottom: 6 }]} />
-              <View style={[styles.skeletonBar, { width: 80, height: 12 }]} />
+              <View style={[styles.skeletonBar, { width: 60, height: 18, marginBottom: 8 }]} />
+              <View style={[styles.skeletonBar, { width: 70, height: 12 }]} />
             </View>
           </Animated.View>
         ))}
@@ -129,6 +138,7 @@ const PaymentsScreen = () => {
   useEffect(() => {
     if (route.params?.preselectedCustomer) {
       selectCustomer(route.params.preselectedCustomer);
+      navigation.setParams({ preselectedCustomer: undefined });
     }
   }, [route.params?.preselectedCustomer]);
 
@@ -138,6 +148,7 @@ const PaymentsScreen = () => {
       const foundCustomer = customers.find(c => c.id === route.params.customerId || c.id === Number(route.params.customerId) || String(c.id) === String(route.params.customerId));
       if (foundCustomer && (!selectedCustomer || selectedCustomer.id !== foundCustomer.id)) {
         selectCustomer(foundCustomer);
+        navigation.setParams({ customerId: undefined });
       }
     }
   }, [route.params?.customerId, customers]);
@@ -253,8 +264,11 @@ const PaymentsScreen = () => {
 
   const renderCustomerModal = () => (
     <Modal visible={showCustomerModal} animationType="slide" transparent={true}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+        <TouchableWithoutFeedback onPress={() => setShowCustomerModal(false)}>
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+        </TouchableWithoutFeedback>
+        <View style={[styles.modalContent, { maxHeight: '80%' }]}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Select Customer</Text>
             <TouchableOpacity onPress={() => setShowCustomerModal(false)}>
@@ -274,24 +288,33 @@ const PaymentsScreen = () => {
           {loadingCustomers ? (
             renderCustomerSkeleton()
           ) : (
-            <FlatList
-              data={filteredCustomers}
-              keyExtractor={item => item.id || Math.random().toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.customerListItem}
-                  onPress={() => selectCustomer(item)}
-                >
-                  <View style={styles.customerListIcon}>
-                    <User size={20} color={COLORS.primary} />
-                  </View>
-                  <View style={styles.customerListInfo}>
-                    <Text style={styles.customerListName}>{item.name}</Text>
-                    <Text style={styles.customerListPhone}>{item.phone || 'No phone'}</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
+            <>
+              <TouchableOpacity 
+                style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
+                onPress={() => { setShowCustomerModal(false); setAddCustomerVisible(true); }}
+              >
+                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Customer</Text>
+              </TouchableOpacity>
+              <FlatList
+                data={filteredCustomers}
+                keyboardShouldPersistTaps="handled"
+                keyExtractor={item => item.id || Math.random().toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.customerListItem}
+                    onPress={() => selectCustomer(item)}
+                  >
+                    <View style={styles.customerListIcon}>
+                      <User size={20} color={COLORS.primary} />
+                    </View>
+                    <View style={styles.customerListInfo}>
+                      <Text style={styles.customerListName}>{item.name}</Text>
+                      <Text style={styles.customerListPhone}>{item.phone || 'No phone'}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            </>
           )}
         </View>
       </View>
@@ -299,7 +322,7 @@ const PaymentsScreen = () => {
   );
 
   const renderRecordPayment = () => (
-    <ScrollView contentContainerStyle={styles.tabContent}>
+    <ScrollView contentContainerStyle={styles.tabContent} keyboardShouldPersistTaps="handled">
       <View style={styles.card}>
         <Text style={styles.label}>Amount (₹)</Text>
         <TextInput
@@ -372,50 +395,53 @@ const PaymentsScreen = () => {
 
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.summaryCard, { paddingVertical: 12, paddingHorizontal: 16, marginBottom: 8 }]}>
-          <View style={StyleSheet.absoluteFill}>
-            <Svg height="100%" width="100%" viewBox="0 0 400 60" preserveAspectRatio="none">
-              <Defs>
-                <LinearGradient id="pieGrad1" x1="0" y1="0" x2="1" y2="1">
-                  <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.25" />
-                  <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.05" />
-                </LinearGradient>
-                <LinearGradient id="pieGrad2" x1="1" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.35" />
-                  <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.1" />
-                </LinearGradient>
-              </Defs>
-              <Circle cx="340" cy="30" r="40" fill="none" stroke="url(#pieGrad1)" strokeWidth="15" strokeDasharray="150 100" strokeDashoffset="40" />
-              <Circle cx="340" cy="30" r="40" fill="none" stroke="url(#pieGrad2)" strokeWidth="15" strokeDasharray="100 150" strokeDashoffset="-100" />
-              <Circle cx="340" cy="30" r="15" fill="url(#pieGrad1)" />
-              <Circle cx="20" cy="60" r="20" fill="url(#pieGrad2)" />
-            </Svg>
-          </View>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 1 }}>
-            <View style={{ flexDirection: 'row', gap: 16 }}>
-              <View>
-                <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>Total Charged</Text>
-                <Text style={{ fontSize: 13, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
-              </View>
-              <View>
-                <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>Total Paid</Text>
-                <Text style={{ fontSize: 13, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
-              </View>
-            </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>{owesMoney ? 'Amount Due' : 'Balance'}</Text>
-              <Text style={{ fontSize: 16, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.outstandingBalance)}</Text>
-            </View>
-          </View>
-        </View>
-
         <FlatList
           data={statement}
           keyExtractor={item => item.id || Math.random().toString()}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={<Text style={styles.statementListTitle}>Transactions</Text>}
+          ListHeaderComponent={
+            <View>
+              <View style={[styles.summaryCard, { paddingVertical: 12, paddingHorizontal: 16, marginBottom: 8 }]}>
+                <View style={StyleSheet.absoluteFill}>
+                  <Svg height="100%" width="100%" viewBox="0 0 400 60" preserveAspectRatio="none">
+                    <Defs>
+                      <LinearGradient id="pieGrad1" x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.25" />
+                        <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.05" />
+                      </LinearGradient>
+                      <LinearGradient id="pieGrad2" x1="1" y1="0" x2="0" y2="1">
+                        <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.35" />
+                        <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.1" />
+                      </LinearGradient>
+                    </Defs>
+                    <Circle cx="340" cy="30" r="40" fill="none" stroke="url(#pieGrad1)" strokeWidth="15" strokeDasharray="150 100" strokeDashoffset="40" />
+                    <Circle cx="340" cy="30" r="40" fill="none" stroke="url(#pieGrad2)" strokeWidth="15" strokeDasharray="100 150" strokeDashoffset="-100" />
+                    <Circle cx="340" cy="30" r="15" fill="url(#pieGrad1)" />
+                    <Circle cx="20" cy="60" r="20" fill="url(#pieGrad2)" />
+                  </Svg>
+                </View>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 1 }}>
+                  <View style={{ flexDirection: 'row', gap: 16 }}>
+                    <View>
+                      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>Total Charged</Text>
+                      <Text style={{ fontSize: 13, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
+                    </View>
+                    <View>
+                      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>Total Paid</Text>
+                      <Text style={{ fontSize: 13, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
+                    </View>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>{owesMoney ? 'Amount Due' : 'Balance'}</Text>
+                    <Text style={{ fontSize: 16, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.outstandingBalance)}</Text>
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.statementListTitle}>Transactions</Text>
+            </View>
+          }
           renderItem={({ item }) => {
             const isCredit = item.credit !== null;
             const amountStr = isCredit ? `+${formatCurrency(item.credit)}` : `-${formatCurrency(item.debit)}`;
@@ -452,57 +478,81 @@ const PaymentsScreen = () => {
   };
 
   return (
-    <SafeAreaView 
-      style={[styles.container, { paddingTop: Platform.OS === 'android' ? 15 : 0 }]} 
-      edges={Platform.OS === 'ios' ? ['top', 'left', 'right'] : ['left', 'right']}
-    >
+    <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Payments & Ledger</Text>
-      </View>
-
-      {/* Customer Selector */}
-      <TouchableOpacity
-        style={styles.customerSelector}
-        onPress={() => setShowCustomerModal(true)}
-      >
-        <View style={styles.customerSelectorLeft}>
-          <User size={20} color={selectedCustomer ? COLORS.primary : COLORS.textPlaceholder} style={{ marginRight: 10 }} />
+      <CurvedHeader
+        title={
           <View>
-            <Text style={styles.customerSelectorLabel}>Customer</Text>
-            <Text style={[styles.customerSelectorValue, !selectedCustomer && { color: COLORS.textPlaceholder }]}>
-              {selectedCustomer ? selectedCustomer.name : 'Select a customer'}
-            </Text>
+            <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Payments & Ledger</Text>
+            {/* <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, fontFamily: 'Geologica-Regular', marginTop: 2 }}>Every rupee, clearly accounted for.</Text> */}
           </View>
+        }
+        leftIcon={<Menu size={24} color="#FFF" />}
+        onLeftPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
+
+      <View style={styles.contentWrapper}>
+        {/* Customer Selector */}
+        <TouchableOpacity
+          style={styles.customerSelector}
+          onPress={() => setShowCustomerModal(true)}
+        >
+          <View style={styles.customerSelectorLeft}>
+            <User size={20} color={selectedCustomer ? COLORS.primary : COLORS.textPlaceholder} style={{ marginRight: 10 }} />
+            <View>
+              <Text style={styles.customerSelectorLabel}>Customer</Text>
+              <Text style={[styles.customerSelectorValue, !selectedCustomer && { color: COLORS.textPlaceholder }]}>
+                {selectedCustomer ? selectedCustomer.name : 'Select a customer'}
+              </Text>
+            </View>
+          </View>
+          <ChevronDown size={20} color={COLORS.textPlaceholder} />
+        </TouchableOpacity>
+
+        {/* Tabs */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'record' && styles.tabBtnActive]}
+            onPress={() => handleTabSwitch('record')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, activeTab === 'record' && styles.tabTextActive]}>
+              ₹  Record Payment
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'statement' && styles.tabBtnActive]}
+            onPress={() => handleTabSwitch('statement')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, activeTab === 'statement' && styles.tabTextActive]}>
+              ₹  Statement
+            </Text>
+          </TouchableOpacity>
         </View>
-        <ChevronDown size={20} color={COLORS.textPlaceholder} />
-      </TouchableOpacity>
 
-      {/* Tabs */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'record' && styles.tabBtnActive]}
-          onPress={() => handleTabSwitch('record')}
-        >
-          <DollarSign size={16} color={activeTab === 'record' ? COLORS.primary : COLORS.textSecondary} style={{ marginRight: 6 }} />
-          <Text style={[styles.tabText, activeTab === 'record' && styles.tabTextActive]}>Record Payment</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'statement' && styles.tabBtnActive]}
-          onPress={() => handleTabSwitch('statement')}
-        >
-          <FileText size={16} color={activeTab === 'statement' ? COLORS.primary : COLORS.textSecondary} style={{ marginRight: 6 }} />
-          <Text style={[styles.tabText, activeTab === 'statement' && styles.tabTextActive]}>Statement</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Main Content */}
+        <View style={styles.content}>
+          {activeTab === 'record' ? renderRecordPayment() : renderStatement()}
+        </View>
 
-      {/* Main Content */}
-      <View style={styles.content}>
-        {activeTab === 'record' ? renderRecordPayment() : renderStatement()}
       </View>
 
       {renderCustomerModal()}
-    </SafeAreaView>
+
+      <AddCustomerModal 
+        visible={addCustomerVisible}
+        onClose={() => setAddCustomerVisible(false)}
+        onSuccess={(newCustomer) => {
+          setAddCustomerVisible(false);
+          setCustomers(prev => [...prev, newCustomer]);
+          setFilteredCustomers(prev => [...prev, newCustomer]);
+          setSelectedCustomer(newCustomer);
+        }}
+      />
+    </View>
   );
 };
 
@@ -511,14 +561,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
+  contentWrapper: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    paddingTop: 8,
   },
   customerSelector: {
     flexDirection: 'row',
@@ -526,11 +572,29 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    padding: 16,
+    padding: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#F1F5F9',
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  customerAvatarPlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customerAvatarText: {
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: '#1D4ED8',
   },
   customerSelectorLeft: {
     flexDirection: 'row',
@@ -538,9 +602,9 @@ const styles = StyleSheet.create({
   },
   customerSelectorLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Geologica-Regular',
     color: COLORS.textSecondary,
-    marginBottom: 2,
+    marginTop: 2,
   },
   customerSelectorValue: {
     fontSize: 15,
@@ -550,41 +614,38 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     marginHorizontal: 16,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 4,
-    marginBottom: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   tabBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   tabBtnActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: '#0B409C',
   },
   tabText: {
     fontSize: 13,
     fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
+    color: '#64748B',
   },
   tabTextActive: {
     fontFamily: 'Geologica-Bold',
-    color: COLORS.primary,
+    color: '#FFFFFF',
   },
   content: {
     flex: 1,
   },
   tabContent: {
     padding: 16,
+    paddingBottom: 120,
   },
   emptyTabContent: {
     flex: 1,
@@ -746,11 +807,11 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   summaryCard: {
-    backgroundColor: '#D97706',
+    backgroundColor: '#1E3A8A', // Custom blue base
     marginHorizontal: 16,
     borderRadius: 8,
     padding: 20,
-    shadowColor: '#D97706',
+    shadowColor: '#1E3A8A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -846,19 +907,18 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   skeletonSummaryCard: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 8,
+    backgroundColor: '#1E3A8A', // Custom dark blue for skeleton to match summaryCard
+    borderRadius: 16,
     padding: 20,
-    height: 140,
+    height: 120,
+    justifyContent: 'center',
   },
   skeletonTxItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
   skeletonCustomerRow: {
     flexDirection: 'row',

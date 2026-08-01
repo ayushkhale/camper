@@ -10,13 +10,13 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Plus, Search, AlertCircle, RefreshCw, Package, MapPin, Calendar, Clock, ChevronLeft, ChevronRight, Repeat, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const SubscriptionListScreen = () => {
   const navigation = useNavigation();
@@ -136,14 +136,55 @@ const SubscriptionListScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('subscriptions.title', 'Subscriptions')}</Text>}
+        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 35 }}
+      />
+
       <View style={styles.contentWrapper}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <ChevronLeft size={28} color={COLORS.textPrimary} />
+
+        {/* Modern Tabs */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tabBtn, filterStatus === 'all' && styles.tabBtnActive]}
+            onPress={() => setFilterStatus('all')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, filterStatus === 'all' && styles.tabTextActive]}>
+              All
+            </Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t('subscriptions.title', 'Subscriptions')}</Text>
-          <View style={styles.headerRightSpacing} />
+          <TouchableOpacity
+            style={[styles.tabBtn, filterStatus === 'active' && styles.tabBtnActive]}
+            onPress={() => setFilterStatus('active')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, filterStatus === 'active' && styles.tabTextActive]}>
+              Active
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabBtn, filterStatus === 'paused' && styles.tabBtnActive]}
+            onPress={() => setFilterStatus('paused')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, filterStatus === 'paused' && styles.tabTextActive]}>
+              Paused
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabBtn, filterStatus === 'ended' && styles.tabBtnActive]}
+            onPress={() => setFilterStatus('ended')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, filterStatus === 'ended' && styles.tabTextActive]}>
+              Ended
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Search Box */}
@@ -158,22 +199,6 @@ const SubscriptionListScreen = () => {
               onChangeText={setSearchQuery}
             />
           </View>
-        </View>
-
-        {/* Status Filter Chips */}
-        <View style={styles.filterContainer}>
-          {['all', 'active', 'paused', 'ended'].map(status => (
-            <TouchableOpacity
-              key={status}
-              style={[styles.filterTab, filterStatus === status && styles.filterTabActive]}
-              onPress={() => setFilterStatus(status)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.filterTabText, filterStatus === status && styles.filterTabTextActive]}>
-                {status.toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
         </View>
 
         {loading ? (
@@ -240,7 +265,7 @@ const SubscriptionListScreen = () => {
           <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -253,30 +278,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: Platform.OS === 'ios' ? 24 : 16,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  backButton: {
-    padding: 4,
-    marginLeft: -4,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-    flex: 1,
-  },
-  headerRightSpacing: {
-    width: 32,
-  },
   searchContainer: {
     paddingHorizontal: 24,
+    paddingTop: 8,
     marginBottom: 12,
   },
   searchBar: {
@@ -299,38 +303,47 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingVertical: 0,
   },
-  filterContainer: {
+  tabContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 24,
-    marginBottom: 16,
-  },
-  filterTab: {
-    flex: 1,
-    paddingVertical: 8,
+    marginHorizontal: 16,
+    backgroundColor: '#F1F5F9',
     borderRadius: 12,
-    marginRight: 6,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    justifyContent: 'center',
+    padding: 4,
+    marginTop: -25, // Overlap the curved header
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  tabBtn: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
   },
-  filterTabActive: {
-    backgroundColor: COLORS.primaryLight,
-    borderColor: COLORS.border,
+  tabBtnActive: {
+    backgroundColor: '#FFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  filterTabText: {
-    fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+  tabText: {
+    fontSize: 14,
+    fontFamily: 'Geologica-Medium',
     color: '#64748B',
-    letterSpacing: 0.5,
   },
-  filterTabTextActive: {
+  tabTextActive: {
+    fontFamily: 'Geologica-SemiBold',
     color: COLORS.primary,
   },
   listContent: {
     paddingHorizontal: 24,
-    paddingBottom: 90,
+    paddingBottom: 120,
   },
   emptyListContent: {
     flexGrow: 1,
