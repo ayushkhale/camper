@@ -402,44 +402,58 @@ const PaymentsScreen = () => {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <View>
-              <View style={[styles.summaryCard, { paddingVertical: 12, paddingHorizontal: 16, marginBottom: 8 }]}>
-                <View style={StyleSheet.absoluteFill}>
-                  <Svg height="100%" width="100%" viewBox="0 0 400 60" preserveAspectRatio="none">
+              <View style={[styles.summaryCard, { marginHorizontal: 0, paddingVertical: 24, paddingHorizontal: 20, marginBottom: 16, borderRadius: 16 }]}>
+                <View style={[StyleSheet.absoluteFill, { overflow: 'hidden', borderRadius: 16 }]}>
+                  <Svg height="100%" width="100%" preserveAspectRatio="none">
                     <Defs>
-                      <LinearGradient id="pieGrad1" x1="0" y1="0" x2="1" y2="1">
-                        <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.25" />
-                        <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.05" />
+                      <LinearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0" stopColor="#1E3A8A" />
+                        <Stop offset="1" stopColor="#0F172A" />
                       </LinearGradient>
-                      <LinearGradient id="pieGrad2" x1="1" y1="0" x2="0" y2="1">
-                        <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.35" />
-                        <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.1" />
+                      <LinearGradient id="circleGrad" x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.15" />
+                        <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.0" />
                       </LinearGradient>
                     </Defs>
-                    <Circle cx="340" cy="30" r="40" fill="none" stroke="url(#pieGrad1)" strokeWidth="15" strokeDasharray="150 100" strokeDashoffset="40" />
-                    <Circle cx="340" cy="30" r="40" fill="none" stroke="url(#pieGrad2)" strokeWidth="15" strokeDasharray="100 150" strokeDashoffset="-100" />
-                    <Circle cx="340" cy="30" r="15" fill="url(#pieGrad1)" />
-                    <Circle cx="20" cy="60" r="20" fill="url(#pieGrad2)" />
+                    <Rect width="100%" height="100%" fill="url(#cardGrad)" />
+                    <Circle cx="85%" cy="-15%" r="120" fill="url(#circleGrad)" />
+                    <Circle cx="10%" cy="120%" r="80" fill="url(#circleGrad)" />
                   </Svg>
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 1 }}>
-                  <View style={{ flexDirection: 'row', gap: 16 }}>
-                    <View>
-                      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>Total Charged</Text>
-                      <Text style={{ fontSize: 13, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
-                    </View>
-                    <View>
-                      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>Total Paid</Text>
-                      <Text style={{ fontSize: 13, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
-                    </View>
+                <View style={{ zIndex: 1 }}>
+                  <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: 'Geologica-Medium', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                    {owesMoney ? 'Total Amount Due' : 'Available Balance'}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+                    <Text style={{ fontSize: 34, color: '#FFF', fontFamily: 'Geologica-Bold', includeFontPadding: false }}>
+                      {formatCurrency(Math.abs(summary.outstandingBalance))}
+                    </Text>
+                    {owesMoney ? (
+                      <View style={{ backgroundColor: 'rgba(239,68,68,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginLeft: 12 }}>
+                        <Text style={{ color: '#FCA5A5', fontSize: 11, fontFamily: 'Geologica-Bold' }}>To Collect</Text>
+                      </View>
+                    ) : (
+                       <View style={{ backgroundColor: 'rgba(16,185,129,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginLeft: 12 }}>
+                        <Text style={{ color: '#6EE7B7', fontSize: 11, fontFamily: 'Geologica-Bold' }}>Settled</Text>
+                      </View>
+                    )}
                   </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Geologica-Regular' }}>{owesMoney ? 'Amount Due' : 'Balance'}</Text>
-                    <Text style={{ fontSize: 16, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.outstandingBalance)}</Text>
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.08)', padding: 14, borderRadius: 12 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 4 }}>Total Billed</Text>
+                      <Text style={{ fontSize: 16, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
+                    </View>
+                    <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 16 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 4 }}>Total Received</Text>
+                      <Text style={{ fontSize: 16, color: '#4ADE80', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
+                    </View>
                   </View>
                 </View>
               </View>
-              <Text style={styles.statementListTitle}>Transactions</Text>
+              <Text style={[styles.statementListTitle, { marginTop: 4, marginBottom: 16 }]}>Recent Transactions</Text>
             </View>
           }
           renderItem={({ item }) => {
@@ -807,9 +821,8 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   summaryCard: {
-    backgroundColor: '#1E3A8A', // Custom blue base
-    marginHorizontal: 16,
-    borderRadius: 8,
+    backgroundColor: '#1E3A8A',
+    borderRadius: 16,
     padding: 20,
     shadowColor: '#1E3A8A',
     shadowOffset: { width: 0, height: 4 },

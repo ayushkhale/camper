@@ -317,19 +317,19 @@ const HomeScreen = () => {
   ];
 
   const totalDeliveries = Array.isArray(todaysDeliveries) ? todaysDeliveries.length : 0;
-  const completedDeliveries = Array.isArray(todaysDeliveries) 
-    ? todaysDeliveries.filter(d => (d.status || '').toUpperCase() === 'DELIVERED').length 
+  const completedDeliveries = Array.isArray(todaysDeliveries)
+    ? todaysDeliveries.filter(d => (d.status || '').toUpperCase() === 'DELIVERED').length
     : 0;
   const pendingDeliveries = totalDeliveries - completedDeliveries;
   const deliveryProgress = totalDeliveries === 0 ? 0 : completedDeliveries / totalDeliveries;
-  
+
   const radius = 34;
   const strokeWidth = 8;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (deliveryProgress * circumference);
 
-  const nextDelivery = Array.isArray(todaysDeliveries) 
-    ? todaysDeliveries.find(d => (d.status || '').toUpperCase() === 'PENDING') 
+  const nextDelivery = Array.isArray(todaysDeliveries)
+    ? todaysDeliveries.find(d => (d.status || '').toUpperCase() === 'PENDING')
     : null;
 
   return (
@@ -340,7 +340,7 @@ const HomeScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {(loadingStats || loadingDeliveries) ? (
-           renderWholeScreenSkeleton()
+          renderWholeScreenSkeleton()
         ) : (
           <>
             <View style={styles.sectionHeader}>
@@ -380,9 +380,9 @@ const HomeScreen = () => {
                     <Text style={styles.routeBadgeText}>Today's Deliveries</Text>
                   </View>
                 </View>
-                
+
                 {/* Fallback 3D illustration */}
-                <Image source={require('../../../assets/delivery_rickshaw.png')} style={styles.illustrationImage} />
+                <Image source={require('../../../assets/delivery_rickshaw.jpg')} style={styles.illustrationImage} />
               </View>
             </View>
 
@@ -439,15 +439,15 @@ const HomeScreen = () => {
                   <View style={styles.nextDeliveryInfo}>
                     <Text style={styles.nextDeliveryTitle}>Next delivery</Text>
                     <Text style={styles.nextDeliveryName} numberOfLines={1}>
-                      10:30 AM • {nextDelivery.Customer?.name || 'Customer'}
+                      {nextDelivery.Customer?.name || 'Customer'}
                     </Text>
-                    <Text style={styles.nextDeliveryAddress} numberOfLines={1}>
+                    {/* <Text style={styles.nextDeliveryAddress} numberOfLines={1}>
                       {nextDelivery.Customer?.address || 'View address'} • Stop 7 of {totalDeliveries}
-                    </Text>
+                    </Text> */}
                   </View>
                 </View>
                 <View style={styles.nextDeliveryCenter}>
-                  <Image source={require('../../../assets/branded_water_jar.png')} style={styles.jarImage} />
+                  <Image source={require('../../../assets/branded_water_jar.jpg')} style={styles.jarImage} />
                 </View>
                 <View style={styles.nextDeliveryRightCircle}>
                   <ChevronRight size={18} color="#3B82F6" />
@@ -527,7 +527,7 @@ const HomeScreen = () => {
                           </Text>
                         </View>
                       </View>
-                      
+
                       <View style={styles.orderRowRight}>
                         <Text style={styles.orderRowTime}>10:30 AM</Text>
                         <View style={[styles.orderRowBadge, { backgroundColor: bgHighlight }]}>
@@ -542,7 +542,7 @@ const HomeScreen = () => {
               )}
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 30, paddingVertical: 14, backgroundColor: '#EFF6FF', borderRadius: 12, alignItems: 'center' }}
               onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
             >
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Geologica-Bold',
     color: '#1E293B',
   },
-  
+
   // Progress Card Option A style
   progressCard: {
     backgroundColor: '#FFFFFF',

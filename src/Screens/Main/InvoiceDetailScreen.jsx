@@ -9,8 +9,12 @@ import {
   ActivityIndicator,
   Share,
   Linking,
+  Alert,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import RNPrint from 'react-native-print';
+import { generatePDF } from 'react-native-html-to-pdf';
+import RNShare from 'react-native-share';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import {
@@ -24,6 +28,13 @@ import {
   Printer,
   ChevronLeft,
 } from 'lucide-react-native';
+
+const WhatsAppIcon = ({ size = 20, color = "#FFF", style }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+    <Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+  </Svg>
+);
+
 import CurvedHeader from '../../components/CurvedHeader';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -38,6 +49,7 @@ const InvoiceDetailScreen = () => {
 
   const [invoiceData, setInvoiceData] = useState(initialInvoice || null);
   const [loading, setLoading] = useState(!initialInvoice?.Deliveries && !initialInvoice?.InvoiceLineItems);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchInvoiceDetail = async () => {
@@ -144,31 +156,7 @@ const InvoiceDetailScreen = () => {
 
   const handleWhatsAppShare = async () => {
     try {
-      const customerName = invoiceData?.Customer?.name || 'Customer';
-      let message = `*INVOICE ${invoiceNum}*\n`;
-      message += `Date: ${formatDate(invoiceData?.created_at)}\n`;
-      message += `Customer: ${customerName}\n\n`;
-      message += `*Items:*\n`;
-      
-      let allItems = deliveries.length > 0 ? deliveries : lineItems;
-      const openingBalanceItem = lineItems.find(item => item.description?.toLowerCase().includes('opening balance'));
-      if (deliveries.length > 0 && openingBalanceItem) {
-        allItems = [openingBalanceItem, ...deliveries];
-      }
-      
-      if (allItems.length > 0) {
-        allItems.forEach(item => {
-          const qty = item.fullUnitsDelivered || item.quantity || 1;
-          const rate = item.unitPriceCharged || item.unitPrice || item.amount || 0;
-          message += `- ${getProductName(item)} (x${qty}) = ${formatCurrency(rate * qty)}\n`;
-        });
-      } else {
-        message += `- Water Camper 20Ltr = ${formatCurrency(currentCharges)}\n`;
-      }
-      
-      message += `\n*Previous Balance:* ${formatCurrency(previousDues)}\n`;
-      message += `*Current Charges:* ${formatCurrency(currentCharges)}\n`;
-      message += `*Grand Total:* ${formatCurrency(grandTotal)}\n`;
+      const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
       message += `*Paid:* ${formatCurrency(amountPaid)}\n`;
       message += `*Balance Due: ${formatCurrency(balanceDue)}*\n\n`;
       message += `Thank you for your business!`;
@@ -187,9 +175,8 @@ const InvoiceDetailScreen = () => {
     }
   };
 
-  const handlePrint = async () => {
-    try {
-      const customerName = invoiceData?.Customer?.name || 'Customer';
+  const generateInvoiceHTML = () => {
+      const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
       let itemsHtml = '';
       
       let allItems = deliveries.length > 0 ? deliveries : lineItems;
@@ -465,10 +452,49 @@ const InvoiceDetailScreen = () => {
           </body>
         </html>
       `;
+      return htmlContent;
+  };
 
+  const handlePrint = async () => {
+    try {
+      const htmlContent = generateInvoiceHTML();
       await RNPrint.print({ html: htmlContent });
     } catch (error) {
       console.error('Error printing invoice:', error);
+    }
+  };
+
+  const handleSharePDFWhatsApp = async () => {
+    try {
+      setIsDownloading(true);
+      
+      const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
+      const dateStr = formatDate(invoiceData?.created_at);
+
+      // Download the PDF from backend API as base64
+      const targetId = invoiceId || initialInvoice?.id;
+      const filePath = await api.downloadInvoicePDF(userToken, targetId, customerName);
+      
+      console.log('PDF downloaded to:', filePath);
+
+      if (!filePath) {
+        throw new Error('Failed to retrieve file path from download');
+      }
+
+      const safeName = customerName.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_');
+
+      await RNShare.shareSingle({
+        title: `${customerName} Invoice`,
+        message: `Hello ${customerName},\n\nPlease find attached your invoice ${invoiceNum} dated ${dateStr}.\n\nThank you for your business!`,
+        url: `file://${filePath}`,
+        social: RNShare.Social.WHATSAPP,
+        filename: `${safeName}_Invoice`, 
+      });
+    } catch (error) {
+      console.error('Error sharing PDF to WhatsApp:', error);
+      Alert.alert('Download Failed', error.message || 'Failed to download invoice PDF');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -493,29 +519,9 @@ const InvoiceDetailScreen = () => {
           <Text style={styles.errorText}>Invoice not found.</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 4 }]} showsVerticalScrollIndicator={false}>
+        <>
+          <ScrollView contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 16, paddingBottom: 100 }]} showsVerticalScrollIndicator={false}>
           
-          {/* Action Buttons: WhatsApp & Print */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity 
-              style={[styles.actionBtn, { backgroundColor: '#Ecfdf5', borderColor: '#d1fae5' }]} 
-              activeOpacity={0.7}
-              onPress={handleWhatsAppShare}
-            >
-              <MessageCircle size={20} color="#059669" style={{ marginRight: 8 }} />
-              <Text style={[styles.actionBtnText, { color: '#059669' }]}>Share on WhatsApp</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.actionBtn, { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' }]} 
-              activeOpacity={0.7}
-              onPress={handlePrint}
-            >
-              <Printer size={20} color="#475569" style={{ marginRight: 8 }} />
-              <Text style={[styles.actionBtnText, { color: '#475569' }]}>Print Invoice</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* Tally Style Invoice View */}
           <View style={{ borderWidth: 1, borderColor: '#000', marginHorizontal: 0, marginTop: 4, marginBottom: 24, backgroundColor: '#FFF' }}>
             <Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 16, padding: 8, borderBottomWidth: 1, borderBottomColor: '#000', letterSpacing: 1, color: '#000' }}>TAX INVOICE</Text>
@@ -675,6 +681,45 @@ const InvoiceDetailScreen = () => {
           </View>
 
         </ScrollView>
+        
+        {/* Floating Action Bar */}
+        <View style={styles.floatingActionBar}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+            <TouchableOpacity 
+              style={[styles.actionBtn, { flex: 1, backgroundColor: '#25D366', shadowColor: '#25D366', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4, opacity: isDownloading ? 0.7 : 1 }]} 
+              onPress={handleSharePDFWhatsApp}
+              disabled={isDownloading}
+            >
+              {isDownloading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <WhatsAppIcon size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>Share PDF</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.actionBtn, { flex: 1, backgroundColor: '#128C7E', shadowColor: '#128C7E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4 }]} 
+              activeOpacity={0.7}
+              onPress={handleWhatsAppShare}
+            >
+              <WhatsAppIcon size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>Share Text</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity 
+            style={[styles.actionBtn, { width: '100%', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 }]} 
+            activeOpacity={0.7}
+            onPress={handlePrint}
+          >
+            <Printer size={20} color="#334155" style={{ marginRight: 8 }} />
+            <Text style={[styles.actionBtnText, { color: '#334155' }]}>Print Invoice</Text>
+          </TouchableOpacity>
+        </View>
+        </>
       )}
     </SafeAreaView>
   );
@@ -950,24 +995,28 @@ const styles = StyleSheet.create({
   },
 
   // WhatsApp & Print Actions
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-    marginBottom: 20,
-    gap: 12,
+  floatingActionBar: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 10,
   },
   actionBtn: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 14,
-    borderWidth: 1,
   },
   actionBtnText: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Geologica-Bold',
   },
 

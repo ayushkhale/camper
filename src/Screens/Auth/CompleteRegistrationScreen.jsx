@@ -35,11 +35,7 @@ const CompleteRegistrationScreen = () => {
   const [loading, setLoading] = useState(false);
   const { t, i18n } = useTranslation();
 
-  // Pincode Dropdown States
-  const [availableCities, setAvailableCities] = useState([]);
-  const [availableStates, setAvailableStates] = useState([]);
-  const [isCityModalVisible, setCityModalVisible] = useState(false);
-  const [isStateModalVisible, setStateModalVisible] = useState(false);
+  // We no longer need Modals for City and State, but we can track if we are fetching.
   const [fetchingPincode, setFetchingPincode] = useState(false);
 
   // Custom Toast state
@@ -83,7 +79,7 @@ const CompleteRegistrationScreen = () => {
 
   // Fetch pincode details
   useEffect(() => {
-    if (pincode.length === 6) {
+    if (pincode.length === 6 && pincode !== '000000') {
       setFetchingPincode(true);
       fetch(`https://api.postalpincode.in/pincode/${pincode}`)
         .then(res => res.json())
@@ -92,14 +88,12 @@ const CompleteRegistrationScreen = () => {
             const postOffices = data[0].PostOffice;
             const uniqueCities = [...new Set(postOffices.map(po => po.District))];
             const uniqueStates = [...new Set(postOffices.map(po => po.State))];
-            setAvailableCities(uniqueCities);
-            setAvailableStates(uniqueStates);
+            
+            // Auto-fill the first result, but user can still edit it manually
             if (uniqueCities.length > 0) setCity(uniqueCities[0]);
             if (uniqueStates.length > 0) setStateName(uniqueStates[0]);
           } else {
             triggerToast('Invalid Pincode', 'error');
-            setAvailableCities([]);
-            setAvailableStates([]);
           }
         })
         .catch(err => {
@@ -107,14 +101,15 @@ const CompleteRegistrationScreen = () => {
           triggerToast('Failed to fetch pincode details', 'error');
         })
         .finally(() => setFetchingPincode(false));
-    } else {
-      setAvailableCities([]);
-      setAvailableStates([]);
     }
   }, [pincode]);
 
   const handleSubmit = async () => {
-    if (!ownerName || !businessName || !address || !pincode || !city || !stateName || !country) {
+    await executeSubmit(address, pincode, city, stateName, country);
+  };
+
+  const executeSubmit = async (submitAddress, submitPincode, submitCity, submitState, submitCountry) => {
+    if (!ownerName || !businessName || !submitAddress || !submitPincode || !submitCity || !submitState || !submitCountry) {
       triggerToast('Please fill all required fields.', 'error');
       return;
     }
@@ -132,11 +127,11 @@ const CompleteRegistrationScreen = () => {
         businessName,
         selectedCategoryId,
         email || null,
-        address,
-        pincode,
-        city,
-        stateName,
-        country
+        submitAddress,
+        submitPincode,
+        submitCity,
+        submitState,
+        submitCountry
       );
 
       if (response.success) {
@@ -229,7 +224,7 @@ const CompleteRegistrationScreen = () => {
               />
             </View>
 
-            {/* Address Input */}
+            {/* Address Input Header */}
             <Text style={styles.inputLabel}>Address Line 1 *</Text>
             <View style={styles.inputContainer}>
               <TextInput
@@ -260,33 +255,33 @@ const CompleteRegistrationScreen = () => {
               )}
             </View>
 
-            {/* City Dropdown */}
+            {/* City Input */}
             <Text style={styles.inputLabel}>City *</Text>
-            <TouchableOpacity 
-              style={[styles.inputContainer, styles.dropdownContainer]} 
-              onPress={() => setCityModalVisible(true)}
-              disabled={loading || availableCities.length === 0}
-            >
-              <Text style={city ? styles.dropdownText : styles.dropdownPlaceholderText}>
-                {city || (availableCities.length === 0 ? "Enter valid pincode" : "Select City")}
-              </Text>
-              <ChevronDown size={20} color={COLORS.textPlaceholder} />
-            </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter city"
+                placeholderTextColor={COLORS.textPlaceholder}
+                value={city}
+                onChangeText={setCity}
+                editable={!loading}
+              />
+            </View>
 
-            {/* State Dropdown */}
+            {/* State Input */}
             <Text style={styles.inputLabel}>State *</Text>
-            <TouchableOpacity 
-              style={[styles.inputContainer, styles.dropdownContainer]} 
-              onPress={() => setStateModalVisible(true)}
-              disabled={loading || availableStates.length === 0}
-            >
-              <Text style={stateName ? styles.dropdownText : styles.dropdownPlaceholderText}>
-                {stateName || (availableStates.length === 0 ? "Enter valid pincode" : "Select State")}
-              </Text>
-              <ChevronDown size={20} color={COLORS.textPlaceholder} />
-            </TouchableOpacity>
-
-            {/* Submit Button */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter state"
+                placeholderTextColor={COLORS.textPlaceholder}
+                value={stateName}
+                onChangeText={setStateName}
+                editable={!loading}
+              />
+            </View>
+            
+            {/* Complete Registration Button */}
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleSubmit}
@@ -300,53 +295,7 @@ const CompleteRegistrationScreen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* City Modal */}
-      <Modal visible={isCityModalVisible} transparent={true} animationType="fade">
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setCityModalVisible(false)}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select City</Text>
-            <FlatList
-              data={availableCities}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setCity(item);
-                    setCityModalVisible(false);
-                  }}
-                >
-                  <Text style={[styles.modalItemText, city === item && styles.modalItemTextSelected]}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
-      {/* State Modal */}
-      <Modal visible={isStateModalVisible} transparent={true} animationType="fade">
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setStateModalVisible(false)}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select State</Text>
-            <FlatList
-              data={availableStates}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setStateName(item);
-                    setStateModalVisible(false);
-                  }}
-                >
-                  <Text style={[styles.modalItemText, stateName === item && styles.modalItemTextSelected]}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </SafeAreaView>
   );
 };

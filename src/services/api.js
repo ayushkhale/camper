@@ -1,6 +1,6 @@
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 const API_BASE_URL = 'http://192.168.1.5:3007';
-
 // const API_BASE_URL = 'https://api-camper.compunic.co.in';
 
 
@@ -459,6 +459,50 @@ export const api = {
 
   getInvoiceById: (token, id) =>
     getRequest(`/api/vendor/invoices/${id}`, token),
+
+  downloadInvoicePDF: async (token, invoiceId, customerName = 'Customer') => {
+    const url = `${API_BASE_URL}/api/vendor/invoices/${invoiceId}/download`;
+    console.log(`🚀 [API Request] GET ${url} for PDF download`);
+    
+    try {
+      // 1. Fetch using standard fetch (bypasses Android cleartext bug in blob-util fetch)
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to download invoice PDF: ${response.status}`);
+      }
+      
+      // 2. Read as blob and convert to base64
+      const blob = await response.blob();
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      
+      // reader.result is usually 'data:application/pdf;base64,JVBERi0xLj...'
+      const base64String = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+      
+      if (!base64String) {
+        throw new Error('Failed to parse base64 data from PDF');
+      }
+
+      // 3. Write securely to physical device storage
+      const dirs = ReactNativeBlobUtil.fs.dirs;
+      const safeName = customerName.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_'); // Keeps English and Hindi characters safe for filename
+      const path = `${dirs.CacheDir}/${safeName}_Invoice.pdf`;
+      
+      await ReactNativeBlobUtil.fs.writeFile(path, base64String, 'base64');
+      
+      return path;
+    } catch (error) {
+      throw new Error(`Error downloading PDF: ${error.message}`);
+    }
+  },
 
   // ── LEDGER ───────────────────────────────────────────────────
   recordPayment: (token, data) =>

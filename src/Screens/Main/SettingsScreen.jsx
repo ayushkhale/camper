@@ -12,7 +12,6 @@ import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
 import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink, Database } from 'lucide-react-native';
 import { seedDatabase } from '../../utils/seedDatabase';
-import CurvedHeader from '../../components/CurvedHeader';
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
@@ -77,6 +76,14 @@ const SettingsScreen = () => {
     }
   };
 
+  const handleSkipAddress = () => {
+    if (!isEditing) return;
+    setAddress('N/A');
+    setPincode('000000');
+    setCity('N/A');
+    setCountry('India');
+  };
+
   const changeLanguage = async (lng) => {
     i18n.changeLanguage(lng);
     await AsyncStorage.setItem('app_language', lng);
@@ -121,46 +128,29 @@ const SettingsScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <CurvedHeader
-        title={
-          <Text 
-            numberOfLines={1} 
-            adjustsFontSizeToFit 
-            style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
-          >
-            {t('drawer.settings', 'Settings')}
-          </Text>
-        }
-        leftIcon={<Menu size={28} color="#FFF" />}
-        onLeftPress={() => navigation.toggleDrawer()}
-        rightIcon={
-          <TouchableOpacity
-            onPress={() => isEditing ? setIsEditing(false) : setIsEditing(true)}
-            style={{
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: isEditing ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.2)',
-            }}
-          >
-            <Text style={{ color: '#FFF', fontFamily: 'Geologica-Medium', fontSize: 14 }}>
-              {isEditing ? 'Cancel' : 'Edit'}
-            </Text>
-          </TouchableOpacity>
-        }
-        height={140}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
-      />
-
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+
+          {/* Top Header Controls */}
+          <View style={styles.headerRow}>
+            <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuIconButton}>
+              <Menu size={28} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => isEditing ? setIsEditing(false) : setIsEditing(true)}
+              style={styles.editActionBtn}
+            >
+              <Text style={isEditing ? styles.cancelText : styles.editActionText}>
+                {isEditing ? 'Cancel' : 'Edit'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Profile Hero Section */}
           <View style={styles.profileHero}>
@@ -222,7 +212,14 @@ const SettingsScreen = () => {
               />
             </View>
 
-            <Text style={styles.inputLabel}>Address Line 1</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <Text style={[styles.inputLabel, { marginBottom: 0 }]}>Address Line 1</Text>
+              {isEditing && (
+                <TouchableOpacity onPress={handleSkipAddress}>
+                  <Text style={{ fontSize: 12, color: COLORS.primary, fontWeight: 'bold' }}>Skip for now</Text>
+                </TouchableOpacity>
+              )}
+            </View>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
               <TextInput
                 style={styles.input}
@@ -352,14 +349,14 @@ const SettingsScreen = () => {
 
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.background,
   },
   keyboardView: {
     flex: 1,
@@ -375,6 +372,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: Platform.OS === 'ios' ? 24 : 16,
     paddingBottom: 40,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  menuIconButton: {
+    padding: 4,
+    marginLeft: -4,
   },
   editActionBtn: {
     paddingVertical: 8,
@@ -392,8 +399,8 @@ const styles = StyleSheet.create({
   },
   profileHero: {
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 30,
+    marginBottom: 36,
+    marginTop: 10,
   },
   avatarContainer: {
     width: 84,
