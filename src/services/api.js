@@ -1,7 +1,7 @@
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
-const API_BASE_URL = 'http://192.168.1.5:3007';
-// const API_BASE_URL = 'https://api-camper.compunic.co.in';
+// const API_BASE_URL = 'http://192.168.1.5:3007';
+const API_BASE_URL = 'https://api-camper.compunic.co.in';
 
 
 const logRequest = (url, body) => {
@@ -463,18 +463,18 @@ export const api = {
   downloadInvoicePDF: async (token, invoiceId, customerName = 'Customer') => {
     const url = `${API_BASE_URL}/api/vendor/invoices/${invoiceId}/download`;
     console.log(`🚀 [API Request] GET ${url} for PDF download`);
-    
+
     try {
       // 1. Fetch using standard fetch (bypasses Android cleartext bug in blob-util fetch)
       const response = await fetch(url, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to download invoice PDF: ${response.status}`);
       }
-      
+
       // 2. Read as blob and convert to base64
       const blob = await response.blob();
       const base64Data = await new Promise((resolve, reject) => {
@@ -483,10 +483,10 @@ export const api = {
         reader.onerror = reject;
         reader.readAsDataURL(blob);
       });
-      
+
       // reader.result is usually 'data:application/pdf;base64,JVBERi0xLj...'
       const base64String = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-      
+
       if (!base64String) {
         throw new Error('Failed to parse base64 data from PDF');
       }
@@ -495,14 +495,43 @@ export const api = {
       const dirs = ReactNativeBlobUtil.fs.dirs;
       const safeName = customerName.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_'); // Keeps English and Hindi characters safe for filename
       const path = `${dirs.CacheDir}/${safeName}_Invoice.pdf`;
-      
+
       await ReactNativeBlobUtil.fs.writeFile(path, base64String, 'base64');
-      
+
       return path;
     } catch (error) {
       throw new Error(`Error downloading PDF: ${error.message}`);
     }
   },
+
+  // ── PRE-BILLING / UNINVOICED DELIVERIES ───────────────────────
+  getUninvoicedSummary: (token, customerId = null) => {
+    const params = customerId ? `?customerId=${encodeURIComponent(customerId)}` : '';
+    return getRequest(`/api/vendor/invoices/pre-summary${params}`, token);
+  },
+
+  getCustomerDeliveryHistory: (token, customerId, filters = {}) => {
+    let queryParams = [];
+    if (filters.invoiced) queryParams.push(`invoiced=${encodeURIComponent(filters.invoiced)}`);
+    if (filters.status) queryParams.push(`status=${encodeURIComponent(filters.status)}`);
+    if (filters.from) queryParams.push(`from=${encodeURIComponent(filters.from)}`);
+    if (filters.to) queryParams.push(`to=${encodeURIComponent(filters.to)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return getRequest(`/api/vendor/customers/${customerId}/deliveries${queryString}`, token);
+  },
+
+  getCustomerActivity: (token, customerId, params = {}) => {
+    let queryParams = [];
+    if (params.type && params.type !== 'all') queryParams.push(`type=${encodeURIComponent(params.type)}`);
+    if (params.invoiced) queryParams.push(`invoiced=${encodeURIComponent(params.invoiced)}`);
+    if (params.page) queryParams.push(`page=${encodeURIComponent(params.page)}`);
+    if (params.limit) queryParams.push(`limit=${encodeURIComponent(params.limit)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return getRequest(`/api/vendor/customers/${customerId}/activity${queryString}`, token);
+  },
+
+  generateInvoices: (token, payload) =>
+    postRequest('/api/vendor/invoices/generate', payload, token),
 
   // ── LEDGER ───────────────────────────────────────────────────
   recordPayment: (token, data) =>

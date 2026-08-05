@@ -44,6 +44,7 @@ const CustomDrawerContent = (props) => {
     { title: t('tabs.home'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Home' } },
     { title: t('deliveries.allRoutes'), type: 'navigate', screen: 'RouteList' },
     { title: t('tabs.customers'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Customers' } },
+    { title: 'Unbilled Deliveries', type: 'navigate', screen: 'UnbilledDeliveries' },
     { title: 'Customer Sequence', type: 'navigate', screen: 'RouteBuilder' },
     { title: t('subscriptions.title'), type: 'navigate', screen: 'SubscriptionList' },
     { title: t('oneTimeOrders.title'), type: 'navigate', screen: 'OneTimeOrderList' },

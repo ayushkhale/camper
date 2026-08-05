@@ -384,7 +384,7 @@ const InvoiceDetailScreen = () => {
                     </div>
                     <div style="text-align: right;">
                       <strong>Dated</strong>
-                      <div>${formatDate(invoiceData?.created_at)}</div>
+                      <div>${formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at)}</div>
                     </div>
                   </div>
                   
@@ -469,7 +469,7 @@ const InvoiceDetailScreen = () => {
       setIsDownloading(true);
       
       const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
-      const dateStr = formatDate(invoiceData?.created_at);
+      const dateStr = formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at);
 
       // Download the PDF from backend API as base64
       const targetId = invoiceId || initialInvoice?.id;
@@ -541,7 +541,7 @@ const InvoiceDetailScreen = () => {
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>Dated</Text>
-                    <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>{formatDate(invoiceData.created_at)}</Text>
+                    <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>{formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at)}</Text>
                   </View>
                 </View>
                 <View>

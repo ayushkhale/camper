@@ -18,6 +18,7 @@ import RouteBuilderScreen from '../Screens/Main/RouteBuilderScreen';
 import CustomerListScreen from '../Screens/Main/CustomerListScreen';
 import AddCustomerScreen from '../Screens/Main/AddCustomerScreen';
 import CustomerDetailScreen from '../Screens/Main/CustomerDetailScreen';
+import CustomerDeliveryHistoryScreen from '../Screens/Main/CustomerDeliveryHistoryScreen';
 import CustomerHistoryScreen from '../Screens/Main/CustomerHistoryScreen';
 import SubscriptionListScreen from '../Screens/Main/SubscriptionListScreen';
 import AddSubscriptionScreen from '../Screens/Main/AddSubscriptionScreen';
@@ -73,6 +74,7 @@ const RootNavigatorContent = () => {
           <Stack.Screen name="CustomerList" component={CustomerListScreen} />
           <Stack.Screen name="AddCustomer" component={AddCustomerScreen} />
           <Stack.Screen name="CustomerDetail" component={CustomerDetailScreen} />
+          <Stack.Screen name="CustomerDeliveryHistory" component={CustomerDeliveryHistoryScreen} />
           <Stack.Screen name="CustomerHistory" component={CustomerHistoryScreen} />
           <Stack.Screen name="SubscriptionList" component={SubscriptionListScreen} />
           <Stack.Screen name="AddSubscription" component={AddSubscriptionScreen} />

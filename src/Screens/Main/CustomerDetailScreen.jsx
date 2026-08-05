@@ -266,8 +266,8 @@ const CustomerDetailScreen = () => {
               {customerData.status.toUpperCase()}
             </Text>
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', backgroundColor: '#EFF6FF', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}
             onPress={() => navigation.navigate('CustomerHistory', { customerId: customerData.id })}
             activeOpacity={0.7}
@@ -409,6 +409,24 @@ const CustomerDetailScreen = () => {
             </View>
           </View>
         </View>
+
+        {/* Delivery History Row */}
+        {/* <TouchableOpacity
+          style={[styles.subscriptionToggle, { marginTop: 16 }]}
+          onPress={() => navigation.navigate('CustomerDeliveryHistory', { customerId: customerData.id, customerName: customerData.name })}
+          activeOpacity={0.7}
+        >
+          <View style={styles.subscriptionToggleLeft}>
+            <View style={[styles.subToggleIcon, { backgroundColor: '#F1F5F9' }]}>
+              <Clock size={18} color={COLORS.primary} />
+            </View>
+            <View>
+              <Text style={styles.subToggleTitle}>Activity Timeline</Text>
+              <Text style={styles.subToggleSubtitle}>View 360° customer activity and deliveries</Text>
+            </View>
+          </View>
+          <ChevronRight size={20} color={COLORS.textPlaceholder} />
+        </TouchableOpacity> */}
 
         {/* Security Deposit Section */}
         <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Security Deposit</Text>

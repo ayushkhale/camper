@@ -77,18 +77,26 @@ const PaymentsScreen = () => {
 
   const renderStatementSkeleton = () => (
     <View style={{ flex: 1, padding: 16 }}>
-      <Animated.View style={[styles.skeletonSummaryCard, { opacity: pulseAnim }]}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
-          <View style={[styles.skeletonBar, { width: 120, height: 16, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
-          <View style={[styles.skeletonBar, { width: 80, height: 16, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+      <Animated.View style={[styles.skeletonSummaryCard, { opacity: pulseAnim, padding: 16, borderRadius: 16, marginBottom: 16 }]}>
+        <View style={[styles.skeletonBar, { width: 100, height: 12, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 8 }]} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+          <View style={[styles.skeletonBar, { width: 140, height: 28, backgroundColor: 'rgba(255,255,255,0.4)' }]} />
+          <View style={[styles.skeletonBar, { width: 60, height: 20, backgroundColor: 'rgba(255,255,255,0.2)', marginLeft: 12, borderRadius: 6 }]} />
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View style={[styles.skeletonBar, { width: 100, height: 32, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
-          <View style={[styles.skeletonBar, { width: 100, height: 32, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.08)', padding: 12, borderRadius: 10 }}>
+          <View style={{ flex: 1 }}>
+            <View style={[styles.skeletonBar, { width: 70, height: 10, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 6 }]} />
+            <View style={[styles.skeletonBar, { width: 90, height: 16, backgroundColor: 'rgba(255,255,255,0.4)' }]} />
+          </View>
+          <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 12 }} />
+          <View style={{ flex: 1 }}>
+            <View style={[styles.skeletonBar, { width: 70, height: 10, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 6 }]} />
+            <View style={[styles.skeletonBar, { width: 90, height: 16, backgroundColor: 'rgba(255,255,255,0.4)' }]} />
+          </View>
         </View>
       </Animated.View>
 
-      <View style={{ marginTop: 24, gap: 16 }}>
+      <View style={{ marginTop: 8, gap: 16 }}>
         <View style={[styles.skeletonBar, { width: 120, height: 20, marginBottom: 8 }]} />
         {[1, 2, 3, 4].map((key) => (
           <Animated.View key={key} style={[styles.skeletonTxItem, { opacity: pulseAnim }]}>
@@ -402,7 +410,7 @@ const PaymentsScreen = () => {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <View>
-              <View style={[styles.summaryCard, { marginHorizontal: 0, paddingVertical: 24, paddingHorizontal: 20, marginBottom: 16, borderRadius: 16 }]}>
+              <View style={[styles.summaryCard, { marginHorizontal: 0, paddingVertical: 16, paddingHorizontal: 16, marginBottom: 16, borderRadius: 16 }]}>
                 <View style={[StyleSheet.absoluteFill, { overflow: 'hidden', borderRadius: 16 }]}>
                   <Svg height="100%" width="100%" preserveAspectRatio="none">
                     <Defs>
@@ -422,33 +430,33 @@ const PaymentsScreen = () => {
                 </View>
 
                 <View style={{ zIndex: 1 }}>
-                  <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: 'Geologica-Medium', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                  <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontFamily: 'Geologica-Medium', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
                     {owesMoney ? 'Total Amount Due' : 'Available Balance'}
                   </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-                    <Text style={{ fontSize: 34, color: '#FFF', fontFamily: 'Geologica-Bold', includeFontPadding: false }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                    <Text style={{ fontSize: 28, color: '#FFF', fontFamily: 'Geologica-Bold', includeFontPadding: false }}>
                       {formatCurrency(Math.abs(summary.outstandingBalance))}
                     </Text>
                     {owesMoney ? (
-                      <View style={{ backgroundColor: 'rgba(239,68,68,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginLeft: 12 }}>
-                        <Text style={{ color: '#FCA5A5', fontSize: 11, fontFamily: 'Geologica-Bold' }}>To Collect</Text>
+                      <View style={{ backgroundColor: 'rgba(239,68,68,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
+                        <Text style={{ color: '#FCA5A5', fontSize: 10, fontFamily: 'Geologica-Bold' }}>To Collect</Text>
                       </View>
                     ) : (
-                       <View style={{ backgroundColor: 'rgba(16,185,129,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginLeft: 12 }}>
-                        <Text style={{ color: '#6EE7B7', fontSize: 11, fontFamily: 'Geologica-Bold' }}>Settled</Text>
+                       <View style={{ backgroundColor: 'rgba(16,185,129,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
+                        <Text style={{ color: '#6EE7B7', fontSize: 10, fontFamily: 'Geologica-Bold' }}>Settled</Text>
                       </View>
                     )}
                   </View>
 
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.08)', padding: 14, borderRadius: 12 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.08)', padding: 12, borderRadius: 10 }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 4 }}>Total Billed</Text>
-                      <Text style={{ fontSize: 16, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 2 }}>Total Billed</Text>
+                      <Text style={{ fontSize: 15, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
                     </View>
-                    <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 16 }} />
+                    <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 12 }} />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 4 }}>Total Received</Text>
-                      <Text style={{ fontSize: 16, color: '#4ADE80', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 2 }}>Total Received</Text>
+                      <Text style={{ fontSize: 15, color: '#4ADE80', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
                     </View>
                   </View>
                 </View>
