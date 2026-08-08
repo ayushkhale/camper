@@ -107,7 +107,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
         </View>
 
         <View style={styles.headerActionsOptionC}>
-          {delivery.status === 'pending' && !isExpanded && (
+          {delivery.status === 'pending' && !isEditing && (
             <TouchableOpacity
               style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', marginRight: 6 }]}
               onPress={(e) => {
@@ -198,14 +198,23 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
                   />
                 </View>
               </View>
-              <TouchableOpacity
-                style={styles.inlineSaveBtnOptionC}
-                onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
-                activeOpacity={0.8}
-              >
-                <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
-                <Text style={styles.inlineSaveBtnTextOptionC}>Save Changes</Text>
-              </TouchableOpacity>
+              <View style={{flexDirection: 'row', gap: 10, marginTop: 8}}>
+                <TouchableOpacity
+                  style={[styles.inlineSaveBtnOptionC, {flex: 1, backgroundColor: '#F1F5F9', marginTop: 0}]}
+                  onPress={() => setIsEditing(false)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.inlineSaveBtnTextOptionC, {color: '#64748B'}]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.inlineSaveBtnOptionC, {flex: 1, marginTop: 0}]}
+                  onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
+                  activeOpacity={0.8}
+                >
+                  <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
+                  <Text style={styles.inlineSaveBtnTextOptionC}>Save Changes</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>
@@ -464,8 +473,8 @@ const OrdersScreen = () => {
                 <>
                   <FileText size={18} color="#0B409C" style={{ marginRight: 8 }} />
                   <Text style={styles.generateBtnTextOptionC}>
-                    {Array.isArray(allDeliveries) && allDeliveries.length === 0 
-                      ? 'Generate Delivery for Today' 
+                    {Array.isArray(allDeliveries) && allDeliveries.length === 0
+                      ? 'Generate Delivery for Today'
                       : 'Refresh Delivery'}
                   </Text>
                 </>

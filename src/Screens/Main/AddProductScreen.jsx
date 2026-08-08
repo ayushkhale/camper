@@ -33,7 +33,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { useAlert } from '../../context/AlertContext';
 import CurvedHeader from '../../components/CurvedHeader';
-
+import { api } from '../../services/api';
 const AddProductScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();

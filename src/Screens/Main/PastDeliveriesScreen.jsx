@@ -46,7 +46,7 @@ import { TextInput } from 'react-native';
 const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewOnly }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const expectedTotal = (delivery.expectedSubscriptionUnits || 0) + (delivery.expectedAddonUnits || 0);
 
   let defaultFull;
@@ -57,7 +57,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
   } else {
     defaultFull = (delivery.fullUnitsDelivered?.toString() || '0');
   }
-    
+
   let defaultEmpty;
   if (isViewOnly && delivery.status === 'pending') {
     defaultEmpty = '0';
@@ -70,7 +70,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
   const [fullUnits, setFullUnits] = useState(defaultFull);
   const [emptyUnits, setEmptyUnits] = useState(defaultEmpty);
   const [updating, setUpdating] = useState(false);
-  
+
   const handleUpdate = async (status, full, empty) => {
     setUpdating(true);
     await onUpdateStatus(delivery.id, {
@@ -96,9 +96,9 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
           <ActivityIndicator color={COLORS.primary} />
         </View>
       )}
-      
-      <TouchableOpacity 
-        style={styles.cardHeaderOptionC} 
+
+      <TouchableOpacity
+        style={styles.cardHeaderOptionC}
         onPress={() => setIsExpanded(!isExpanded)}
         activeOpacity={0.7}
       >
@@ -109,17 +109,17 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
           <Text style={styles.customerNameOptionC} numberOfLines={1}>
             {delivery.Customer?.name || 'Unknown Customer'}
           </Text>
-          <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 4}}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Package size={12} color="#64748B" style={{ marginRight: 4 }} />
             <Text style={styles.subTextOptionC} numberOfLines={1}>
               {delivery.Subscription?.Product?.name || 'Water Camper 20Ltr'} • Qty: {delivery.Subscription?.baseQuantity || 1}
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.headerActionsOptionC}>
-          {!isViewOnly && delivery.status === 'pending' && !isExpanded && (
-            <TouchableOpacity 
+          {!isViewOnly && delivery.status === 'pending' && !isEditing && (
+            <TouchableOpacity
               style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', marginRight: 6 }]}
               onPress={(e) => {
                 e.stopPropagation();
@@ -133,7 +133,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
           )}
 
           {!isViewOnly && delivery.status === 'pending' && !isExpanded && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.quickDeliverIconBtnOptionC}
               onPress={(e) => {
                 e.stopPropagation();
@@ -145,32 +145,32 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
             </TouchableOpacity>
           )}
           {!isViewOnly && delivery.status === 'delivered' && !isExpanded && (
-             <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#ECFDF5', borderColor: '#10B981' }]}>
-               <CheckSquare size={22} color="#10B981" />
-             </View>
+            <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#ECFDF5', borderColor: '#10B981' }]}>
+              <CheckSquare size={22} color="#10B981" />
+            </View>
           )}
           {!isViewOnly && delivery.status === 'skipped' && !isExpanded && (
-             <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }]}>
-               <XCircle size={22} color="#EF4444" />
-             </View>
+            <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }]}>
+              <XCircle size={22} color="#EF4444" />
+            </View>
           )}
 
           {isViewOnly && (
-             <View style={[styles.statusBadgePill, 
-                delivery.status === 'delivered' ? { backgroundColor: '#ECFDF5', borderColor: '#10B981' } :
-                (delivery.status === 'skipped' || delivery.status === 'pending') ? { backgroundColor: '#FEF2F2', borderColor: '#EF4444' } :
+            <View style={[styles.statusBadgePill,
+            delivery.status === 'delivered' ? { backgroundColor: '#ECFDF5', borderColor: '#10B981' } :
+              (delivery.status === 'skipped' || delivery.status === 'pending') ? { backgroundColor: '#FEF2F2', borderColor: '#EF4444' } :
                 { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }
-             ]}>
-               <Text style={[styles.statusBadgeText, 
-                  delivery.status === 'delivered' ? { color: '#10B981' } :
-                  (delivery.status === 'skipped' || delivery.status === 'pending') ? { color: '#EF4444' } :
+            ]}>
+              <Text style={[styles.statusBadgeText,
+              delivery.status === 'delivered' ? { color: '#10B981' } :
+                (delivery.status === 'skipped' || delivery.status === 'pending') ? { color: '#EF4444' } :
                   { color: '#B45309' }
-               ]}>
-                 {delivery.status === 'pending' ? 'UNDELIVERED' : delivery.status.toUpperCase()}
-               </Text>
-             </View>
+              ]}>
+                {delivery.status === 'pending' ? 'UNDELIVERED' : delivery.status.toUpperCase()}
+              </Text>
+            </View>
           )}
-          
+
           <View style={styles.expandIconContainerOptionC}>
             {isExpanded ? (
               <ChevronUp size={20} color="#334155" />
@@ -220,9 +220,9 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
                   <Text style={[styles.sliderUnitValueOptionC, { color: '#0B409C' }]}>{fullUnits}</Text>
                 </View>
               </View>
-              <DeliveryStatusSlider 
-                status={delivery.status} 
-                onStatusChange={handleStatusChange} 
+              <DeliveryStatusSlider
+                status={delivery.status}
+                onStatusChange={handleStatusChange}
               />
             </View>
           ) : (
@@ -249,14 +249,23 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
                   />
                 </View>
               </View>
-              <TouchableOpacity 
-                style={styles.inlineSaveBtnOptionC}
-                onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
-                activeOpacity={0.8}
-              >
-                <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
-                <Text style={styles.inlineSaveBtnTextOptionC}>Save Changes</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+                <TouchableOpacity
+                  style={[styles.inlineSaveBtnOptionC, { flex: 1, backgroundColor: '#F1F5F9', marginTop: 0 }]}
+                  onPress={() => setIsEditing(false)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.inlineSaveBtnTextOptionC, { color: '#64748B' }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.inlineSaveBtnOptionC, { flex: 1, marginTop: 0 }]}
+                  onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
+                  activeOpacity={0.8}
+                >
+                  <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
+                  <Text style={styles.inlineSaveBtnTextOptionC}>Save Changes</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>
@@ -418,9 +427,9 @@ const PastDeliveriesScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={
-          <Text 
-            numberOfLines={1} 
-            adjustsFontSizeToFit 
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
             style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
           >
             All Deliveries
@@ -433,7 +442,7 @@ const PastDeliveriesScreen = () => {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+
         {/* Date Selector Row */}
         <View style={styles.dateSelectorCard}>
           <TouchableOpacity style={styles.dateNavBtn} onPress={handlePrevDay} activeOpacity={0.7}>
@@ -445,11 +454,11 @@ const PastDeliveriesScreen = () => {
             <Text style={styles.dateDisplayText}>{formatDisplayDate(selectedDate)}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.dateNavBtn, !isPastDate && { opacity: 0.3 }]} 
+          <TouchableOpacity
+            style={[styles.dateNavBtn, !isPastDate && { opacity: 0.3 }]}
             onPress={() => {
               if (isPastDate) handleNextDay();
-            }} 
+            }}
             activeOpacity={isPastDate ? 0.7 : 1}
             disabled={!isPastDate}
           >
@@ -471,8 +480,8 @@ const PastDeliveriesScreen = () => {
         {!isPastDate && (
           <View style={styles.filtersHorizontalRow}>
             {/* Route Dropdown */}
-            <TouchableOpacity 
-              style={[styles.filterDropdown, { flex: 1 }]} 
+            <TouchableOpacity
+              style={[styles.filterDropdown, { flex: 1 }]}
               onPress={() => setActiveFilterModal('route')}
               activeOpacity={0.7}
             >
@@ -484,8 +493,8 @@ const PastDeliveriesScreen = () => {
             </TouchableOpacity>
 
             {/* Status Dropdown */}
-            <TouchableOpacity 
-              style={[styles.filterDropdown, { flex: 1 }]} 
+            <TouchableOpacity
+              style={[styles.filterDropdown, { flex: 1 }]}
               onPress={() => setActiveFilterModal('status')}
               activeOpacity={0.7}
             >
@@ -512,9 +521,9 @@ const PastDeliveriesScreen = () => {
                 <View style={[styles.linearProgressBarFill, { width: `${deliveryProgress}%` }]} />
               </View>
             </View>
-            
+
             <View style={styles.linearProgressDivider} />
-            
+
             <View style={styles.linearProgressPending}>
               <Text style={styles.linearProgressPendingNum}>{pendingDeliveries}</Text>
               <Text style={styles.linearProgressPendingText}>Pending</Text>
@@ -538,12 +547,12 @@ const PastDeliveriesScreen = () => {
           </View>
         ) : (
           deliveries.map((item, idx) => (
-            <DeliveryCard 
-              key={item.id || idx} 
-              delivery={item} 
+            <DeliveryCard
+              key={item.id || idx}
+              delivery={item}
               index={idx + 1}
               onUpdateStatus={async (id, data) => await handleUpdateStatus(id, data)}
-              getStatusColor={() => {}}
+              getStatusColor={() => { }}
               isViewOnly={isPastDate}
             />
           ))
@@ -563,8 +572,8 @@ const PastDeliveriesScreen = () => {
                 </TouchableOpacity>
               </View>
               <ScrollView showsVerticalScrollIndicator={false}>
-                <TouchableOpacity 
-                  style={styles.filterModalItem} 
+                <TouchableOpacity
+                  style={styles.filterModalItem}
                   onPress={() => { setSelectedRouteId(''); setActiveFilterModal(null); }}
                 >
                   <Text style={[styles.filterModalItemText, !selectedRouteId && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
@@ -572,9 +581,9 @@ const PastDeliveriesScreen = () => {
                   </Text>
                 </TouchableOpacity>
                 {routes.map((r) => (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     key={r.id}
-                    style={styles.filterModalItem} 
+                    style={styles.filterModalItem}
                     onPress={() => { setSelectedRouteId(r.id); setActiveFilterModal(null); }}
                   >
                     <Text style={[styles.filterModalItemText, selectedRouteId === r.id && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
@@ -600,9 +609,9 @@ const PastDeliveriesScreen = () => {
               </View>
               <ScrollView showsVerticalScrollIndicator={false}>
                 {['all', 'pending', 'delivered', 'skipped'].map((st) => (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     key={st}
-                    style={styles.filterModalItem} 
+                    style={styles.filterModalItem}
                     onPress={() => { setSelectedStatus(st); setActiveFilterModal(null); }}
                   >
                     <Text style={[styles.filterModalItemText, selectedStatus === st && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
