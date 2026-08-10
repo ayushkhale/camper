@@ -137,7 +137,7 @@ const AddCustomerModal = ({ visible, onClose, onSuccess }) => {
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Quick Add Customer</Text>
+              <Text style={styles.modalTitle}>{t('customers.addNew')}</Text>
               <TouchableOpacity style={styles.modalCloseBtn} onPress={onClose}>
                 <X size={18} color={COLORS.textSecondary} />
               </TouchableOpacity>
@@ -197,7 +197,7 @@ const AddCustomerModal = ({ visible, onClose, onSuccess }) => {
 
                 {/* Opening Balance */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Opening Balance</Text>
+                  <Text style={styles.label}>{t('customerDetail.openingBalance')}</Text>
                   <View style={styles.inputContainer}>
                     <IndianRupee size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                     <TextInput
@@ -241,9 +241,9 @@ const AddCustomerModal = ({ visible, onClose, onSuccess }) => {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.btnTextPrimary}>Create Customer</Text>
+                  <Text style={styles.btnTextPrimary}>{t('customers.addNew')}</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>

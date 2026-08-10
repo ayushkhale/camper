@@ -200,7 +200,7 @@ const CustomerDetailScreen = () => {
     return (
       <SafeAreaView style={styles.centerContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading customer details...</Text>
+        <Text style={styles.loadingText}>{t('customerDetail.loadingCustomerDetails')}</Text>
       </SafeAreaView>
     );
   }
@@ -208,9 +208,9 @@ const CustomerDetailScreen = () => {
   if (error || !customerData) {
     return (
       <SafeAreaView style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error || 'Customer not found'}</Text>
+        <Text style={styles.errorText}>{error || t('customers.noCustomersTitle')}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.retryText}>Go Back</Text>
+          <Text style={styles.retryText}>{t('common.goBack')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -225,7 +225,7 @@ const CustomerDetailScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Customer Detail</Text>}
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('customerDetail.customerDetail')}</Text>}
         leftIcon={<ArrowLeft size={24} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
@@ -410,26 +410,8 @@ const CustomerDetailScreen = () => {
           </View>
         </View>
 
-        {/* Delivery History Row */}
-        {/* <TouchableOpacity
-          style={[styles.subscriptionToggle, { marginTop: 16 }]}
-          onPress={() => navigation.navigate('CustomerDeliveryHistory', { customerId: customerData.id, customerName: customerData.name })}
-          activeOpacity={0.7}
-        >
-          <View style={styles.subscriptionToggleLeft}>
-            <View style={[styles.subToggleIcon, { backgroundColor: '#F1F5F9' }]}>
-              <Clock size={18} color={COLORS.primary} />
-            </View>
-            <View>
-              <Text style={styles.subToggleTitle}>Activity Timeline</Text>
-              <Text style={styles.subToggleSubtitle}>View 360° customer activity and deliveries</Text>
-            </View>
-          </View>
-          <ChevronRight size={20} color={COLORS.textPlaceholder} />
-        </TouchableOpacity> */}
-
         {/* Security Deposit Section */}
-        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Security Deposit</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>{t('customerDetail.securityDeposit')}</Text>
 
         {loadingDeposit ? (
           <View style={[styles.detailsCard, { padding: 20, alignItems: 'center' }]}>
@@ -446,8 +428,8 @@ const CustomerDetailScreen = () => {
                 <Plus size={18} color={COLORS.primary} />
               </View>
               <View>
-                <Text style={styles.subToggleTitle}>Add Security Deposit</Text>
-                <Text style={styles.subToggleSubtitle}>Collect container/jar deposit for this customer</Text>
+                <Text style={styles.subToggleTitle}>{t('customerDetail.addSecurityDeposit')}</Text>
+                <Text style={styles.subToggleSubtitle}>{t('customerDetail.collectDepositDesc')}</Text>
               </View>
             </View>
             <ChevronRight size={20} color={COLORS.textSecondary} />
@@ -459,7 +441,7 @@ const CustomerDetailScreen = () => {
                 <ShieldCheck size={18} color="#16A34A" />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Deposit Balance</Text>
+                <Text style={styles.detailLabel}>{t('customerDetail.depositBalance')}</Text>
                 <Text style={[styles.detailValue, { color: '#16A34A', fontFamily: 'Geologica-Bold' }]}>
                   ₹{depositData.depositBalance || 0}
                 </Text>
@@ -470,7 +452,7 @@ const CustomerDetailScreen = () => {
                 activeOpacity={0.7}
               >
                 <Plus size={14} color={COLORS.primary} style={{ marginRight: 4 }} />
-                <Text style={styles.addMoreDepositText}>Add More</Text>
+                <Text style={styles.addMoreDepositText}>{t('customerDetail.addMore')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -481,7 +463,7 @@ const CustomerDetailScreen = () => {
                 <Package size={18} color={COLORS.primary} />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Containers/Jars Held</Text>
+                <Text style={styles.detailLabel}>{t('customerDetail.containersHeld')}</Text>
                 <Text style={styles.detailValue}>{depositData.containersHeld || 0} Jar(s)</Text>
               </View>
             </View>
@@ -530,19 +512,19 @@ const CustomerDetailScreen = () => {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Collect Security Deposit</Text>
+              <Text style={styles.modalTitle}>{t('customerDetail.collectSecurityDeposit')}</Text>
               <TouchableOpacity onPress={() => setDepositModalVisible(false)}>
                 <X size={22} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalInputGroup}>
-              <Text style={styles.modalLabel}>Deposit Amount (₹) *</Text>
+              <Text style={styles.modalLabel}>{t('products.depositAmountLabel')} *</Text>
               <View style={styles.modalInputContainer}>
                 <IndianRupee size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
                 <TextInput
                   style={styles.modalInput}
-                  placeholder="e.g. 300"
+                  placeholder={t('products.depositPlaceholder')}
                   value={collectAmount}
                   onChangeText={(val) => setCollectAmount(val.replace(/[^0-9.]/g, ''))}
                   keyboardType="decimal-pad"
@@ -552,7 +534,7 @@ const CustomerDetailScreen = () => {
             </View>
 
             <View style={styles.modalInputGroup}>
-              <Text style={styles.modalLabel}>Containers/Jars Deposited</Text>
+              <Text style={styles.modalLabel}>{t('customerDetail.containersDeposited')}</Text>
               <View style={styles.modalInputContainer}>
                 <Package size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
                 <TextInput
@@ -567,12 +549,12 @@ const CustomerDetailScreen = () => {
             </View>
 
             <View style={styles.modalInputGroup}>
-              <Text style={styles.modalLabel}>Notes (Optional)</Text>
+              <Text style={styles.modalLabel}>{t('customerDetail.notesOptional')}</Text>
               <View style={styles.modalInputContainer}>
                 <FileText size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
                 <TextInput
                   style={styles.modalInput}
-                  placeholder="e.g. Deposit collected at customer detail"
+                  placeholder={t('common.notes')}
                   value={collectNotes}
                   onChangeText={setCollectNotes}
                   placeholderTextColor={COLORS.textPlaceholder}
@@ -617,7 +599,7 @@ const CustomerDetailScreen = () => {
               {submittingDeposit ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.modalSubmitBtnText}>Collect Deposit</Text>
+                <Text style={styles.modalSubmitBtnText}>{t('customerDetail.collectDeposit')}</Text>
               )}
             </TouchableOpacity>
           </View>

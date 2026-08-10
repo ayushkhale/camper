@@ -87,7 +87,7 @@ const UnbilledDeliveriesScreen = () => {
           <Text style={styles.customerPhone}>{item.customerPhone || 'No Phone'}</Text>
         </View>
         <View style={styles.amountContainer}>
-          <Text style={styles.amountLabel}>Est. Amount</Text>
+          <Text style={styles.amountLabel}>{t('invoices.estimatedTotal')}</Text>
           <Text style={styles.amountValue}>₹{Number(item.estimatedTotal).toFixed(2)}</Text>
         </View>
       </View>
@@ -95,17 +95,17 @@ const UnbilledDeliveriesScreen = () => {
       <View style={styles.cardStats}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{item.uninvoicedDeliveries}</Text>
-          <Text style={styles.statLabel}>Deliveries</Text>
+          <Text style={styles.statLabel}>{t('deliveries.title')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{item.earliestDeliveryDate}</Text>
-          <Text style={styles.statLabel}>From Date</Text>
+          <Text style={styles.statLabel}>{t('invoices.periodStartDate')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{item.latestDeliveryDate}</Text>
-          <Text style={styles.statLabel}>To Date</Text>
+          <Text style={styles.statLabel}>{t('invoices.periodEndDate')}</Text>
         </View>
       </View>
 
@@ -120,7 +120,7 @@ const UnbilledDeliveriesScreen = () => {
           ) : (
             <>
               <CheckCircle size={16} color="#FFF" style={{ marginRight: 6 }} />
-              <Text style={styles.generateButtonText}>Generate Invoice</Text>
+              <Text style={styles.generateButtonText}>{t('invoices.generateInvoices')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -131,7 +131,7 @@ const UnbilledDeliveriesScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title="Unbilled Deliveries"
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('invoices.pendingToInvoice')}</Text>}
         leftIcon={<Menu color="#FFF" size={24} />}
         onLeftPress={() => navigation.toggleDrawer()}
         height={130}
@@ -145,8 +145,8 @@ const UnbilledDeliveriesScreen = () => {
       ) : summaryData.length === 0 ? (
         <View style={styles.centerContainer}>
           <FileText size={60} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-          <Text style={styles.emptyTitle}>All Caught Up!</Text>
-          <Text style={styles.emptySubtitle}>There are no pending unbilled deliveries.</Text>
+          <Text style={styles.emptyTitle}>{t('invoices.noInvoicesFound')}</Text>
+          <Text style={styles.emptySubtitle}>{t('deliveries.noDeliveriesFound')}</Text>
         </View>
       ) : (
         <FlatList

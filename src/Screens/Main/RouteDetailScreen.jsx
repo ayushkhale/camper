@@ -32,8 +32,10 @@ import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
 import CurvedHeader from '../../components/CurvedHeader';
+import { useTranslation } from 'react-i18next';
 
 const RouteDetailScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const routeParams = useRoute();
   const { userToken } = useContext(AuthContext);
@@ -253,7 +255,7 @@ const RouteDetailScreen = () => {
     return (
       <SafeAreaView style={styles.centerContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading route details...</Text>
+        <Text style={styles.loadingText}>{t('routeDetail.loadingRouteDetails')}</Text>
       </SafeAreaView>
     );
   }
@@ -261,9 +263,9 @@ const RouteDetailScreen = () => {
   if (error || !routeData) {
     return (
       <SafeAreaView style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error || 'Route not found'}</Text>
+        <Text style={styles.errorText}>{error || t('routes.noRoutesFound')}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.retryText}>Go Back</Text>
+          <Text style={styles.retryText}>{t('common.goBack')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -276,7 +278,7 @@ const RouteDetailScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Route Details</Text>}
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('routes.routeDetails')}</Text>}
         leftIcon={<ArrowLeft size={24} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
@@ -307,7 +309,7 @@ const RouteDetailScreen = () => {
           <Text style={styles.routeNameText}>{routeData.name}</Text>
           {routeData.areaCode ? (
             <View style={styles.areaContainer}>
-              <Text style={styles.areaLabel}>Area Code:</Text>
+              <Text style={styles.areaLabel}>{t('routes.areaCode')}:</Text>
               <Text style={styles.areaValue}>{routeData.areaCode}</Text>
             </View>
           ) : null}
@@ -320,7 +322,7 @@ const RouteDetailScreen = () => {
           onPress={() => setAssignModalVisible(true)}
         >
           <UserPlus size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-          <Text style={styles.assignBtnText}>Assign Staff Member</Text>
+          <Text style={styles.assignBtnText}>{t('routes.assignStaff')}</Text>
         </TouchableOpacity>
 
         {/* Active Staff Assignments */}

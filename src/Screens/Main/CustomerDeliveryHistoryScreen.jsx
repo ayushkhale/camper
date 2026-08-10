@@ -16,8 +16,10 @@ import CurvedHeader from '../../components/CurvedHeader';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { COLORS } from '../../constants/colors';
+import { useTranslation } from 'react-i18next';
 
 const CustomerDeliveryHistoryScreen = () => {
+  const { t } = useTranslation();
   const route = useRoute();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
@@ -186,19 +188,19 @@ const CustomerDeliveryHistoryScreen = () => {
     return (
       <View style={styles.summaryContainer}>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Quick Summary</Text>
+          <Text style={styles.summaryTitle}>{t('customerDetail.quickSummary')}</Text>
           <View style={styles.summaryGrid}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{summaryData.totalDeliveries || 0}</Text>
-              <Text style={styles.summaryLabel}>Total Deliveries</Text>
+              <Text style={styles.summaryLabel}>{t('customerDetail.totalDeliveries')}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{summaryData.uninvoicedDeliveriesCount || 0}</Text>
-              <Text style={styles.summaryLabel}>Unbilled</Text>
+              <Text style={styles.summaryLabel}>{t('customerDetail.unbilled')}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>₹{Number(summaryData.estimatedUnbilledAmount || 0).toFixed(2)}</Text>
-              <Text style={styles.summaryLabel}>Unbilled Amt</Text>
+              <Text style={styles.summaryLabel}>{t('customerDetail.unbilledAmt')}</Text>
             </View>
           </View>
         </View>
@@ -271,7 +273,7 @@ const CustomerDeliveryHistoryScreen = () => {
             
             {item.amount !== null && !isNaN(Number(item.amount)) && (
               <View style={styles.amountRow}>
-                <Text style={styles.detailLabel}>Amount</Text>
+                <Text style={styles.detailLabel}>{t('invoices.amount')}</Text>
                 <Text style={styles.activityAmount}>₹{Number(item.amount).toFixed(2)}</Text>
               </View>
             )}
@@ -280,25 +282,25 @@ const CustomerDeliveryHistoryScreen = () => {
               <View style={styles.detailsGrid}>
                 {item.details.fullUnitsDelivered !== undefined && (
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Delivered</Text>
+                    <Text style={styles.detailLabel}>{t('deliveries.delivered')}</Text>
                     <Text style={styles.detailValue}>{item.details.fullUnitsDelivered}</Text>
                   </View>
                 )}
                 {item.details.emptyUnitsCollected !== undefined && (
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Collected</Text>
+                    <Text style={styles.detailLabel}>{t('deliveries.emptyRetrieved')}</Text>
                     <Text style={styles.detailValue}>{item.details.emptyUnitsCollected}</Text>
                   </View>
                 )}
                 {item.details.unitPriceCharged !== undefined && !isNaN(Number(item.details.unitPriceCharged)) && (
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Price</Text>
+                    <Text style={styles.detailLabel}>{t('invoices.rate')}</Text>
                     <Text style={styles.detailValue}>₹{Number(item.details.unitPriceCharged).toFixed(2)}</Text>
                   </View>
                 )}
                 {item.status && (
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Status</Text>
+                    <Text style={styles.detailLabel}>{t('common.status')}</Text>
                     <Text style={[styles.detailValue, { textTransform: 'capitalize', color: item.status === 'delivered' || item.status === 'collected' ? '#059669' : '#D97706' }]}>
                       {item.status}
                     </Text>
@@ -306,9 +308,9 @@ const CustomerDeliveryHistoryScreen = () => {
                 )}
                 {item.isInvoiced !== undefined && (
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Billing</Text>
+                    <Text style={styles.detailLabel}>{t('invoices.title')}</Text>
                     <Text style={[styles.detailValue, { color: item.isInvoiced ? '#059669' : '#D97706' }]}>
-                      {item.isInvoiced ? 'Invoiced' : 'Unbilled'}
+                      {item.isInvoiced ? 'Invoiced' : t('customerDetail.unbilled')}
                     </Text>
                   </View>
                 )}
@@ -341,8 +343,8 @@ const CustomerDeliveryHistoryScreen = () => {
       ) : activities.length === 0 ? (
         <View style={styles.centerContainer}>
           <Activity size={60} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-          <Text style={styles.emptyTitle}>No Activity Found</Text>
-          <Text style={styles.emptySubtitle}>There are no records matching this filter.</Text>
+          <Text style={styles.emptyTitle}>{t('customerDetail.noActivityFound')}</Text>
+          <Text style={styles.emptySubtitle}>{t('customerDetail.noActivityFilter')}</Text>
         </View>
       ) : (
         <FlatList

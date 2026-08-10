@@ -249,7 +249,7 @@ const AddProductScreen = () => {
         title={
           <View>
             <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>
-              {isEditing ? 'Edit Product' : 'Add Product'}
+              {isEditing ? t('products.editProduct') : t('products.addNew')}
             </Text>
           </View>
         }
@@ -294,19 +294,19 @@ const AddProductScreen = () => {
                   onPress={() => setPhotoModalVisible(true)}
                 >
                   <Camera size={26} color={COLORS.textPlaceholder} style={{ marginBottom: 8 }} />
-                  <Text style={styles.selectImageText}>Select product image</Text>
+                  <Text style={styles.selectImageText}>{t('products.selectProductImage')}</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             {/* Product Name */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Product name *</Text>
+              <Text style={styles.label}>{t('products.nameLabel')}</Text>
               <View style={styles.inputContainer}>
                 <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. 20L Water Jar"
+                  placeholder={t('products.namePlaceholder')}
                   placeholderTextColor={COLORS.textPlaceholder}
                   value={name}
                   onChangeText={setName}
@@ -318,12 +318,12 @@ const AddProductScreen = () => {
             <View style={styles.row}>
               <View style={[styles.col, { marginRight: 8 }]}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Price (₹) *</Text>
+                  <Text style={styles.label}>{t('products.priceLabel')}</Text>
                   <View style={styles.inputContainer}>
                     <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="e.g. 150"
+                      placeholder={t('products.pricePlaceholder')}
                       placeholderTextColor={COLORS.textPlaceholder}
                       keyboardType="numeric"
                       value={price}
@@ -335,12 +335,12 @@ const AddProductScreen = () => {
 
               <View style={[styles.col, { marginLeft: 8 }]}>
                 <View style={[styles.inputGroup, { zIndex: 10, position: 'relative' }]}>
-                  <Text style={styles.label}>Unit</Text>
+                  <Text style={styles.label}>{t('products.unit')}</Text>
                   {isCustomUnit ? (
                     <View style={styles.inputContainer}>
                       <TextInput
                         style={[styles.input, { flex: 1 }]}
-                        placeholder="Type custom unit"
+                        placeholder={t('common.customUnitPlaceholder')}
                         placeholderTextColor={COLORS.textPlaceholder}
                         value={unit}
                         onChangeText={setUnit}
@@ -358,7 +358,7 @@ const AddProductScreen = () => {
                         onPress={() => setShowUnitDropdown(true)}
                       >
                         <Text style={[styles.input, { flex: 1, color: unit ? '#000' : COLORS.textPlaceholder, paddingVertical: 12 }]}>
-                          {unit || 'Select Unit'}
+                          {unit || t('common.selectUnit')}
                         </Text>
                         <ChevronDown size={20} color={COLORS.textPlaceholder} />
                       </TouchableOpacity>
@@ -370,14 +370,14 @@ const AddProductScreen = () => {
 
             {/* Returnable Container Checkbox Row */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Returnable Container</Text>
+              <Text style={styles.label}>{t('products.returnable')}</Text>
               <View style={styles.checkboxRow}>
                 <TouchableOpacity
                   style={[styles.checkboxOption, isReturnableContainer && styles.checkboxOptionActive]}
                   activeOpacity={0.7}
                   onPress={() => setIsReturnableContainer(true)}
                 >
-                  <Text style={[styles.checkboxLabel, isReturnableContainer && styles.checkboxLabelActive]}>Yes</Text>
+                  <Text style={[styles.checkboxLabel, isReturnableContainer && styles.checkboxLabelActive]}>{t('common.yes')}</Text>
                   <View style={[styles.checkboxSquare, isReturnableContainer && styles.checkboxSquareChecked]}>
                     {isReturnableContainer && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                   </View>
@@ -388,7 +388,7 @@ const AddProductScreen = () => {
                   activeOpacity={0.7}
                   onPress={() => setIsReturnableContainer(false)}
                 >
-                  <Text style={[styles.checkboxLabel, !isReturnableContainer && styles.checkboxLabelActive]}>No</Text>
+                  <Text style={[styles.checkboxLabel, !isReturnableContainer && styles.checkboxLabelActive]}>{t('common.no')}</Text>
                   <View style={[styles.checkboxSquare, !isReturnableContainer && styles.checkboxSquareChecked]}>
                     {!isReturnableContainer && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                   </View>
@@ -399,12 +399,12 @@ const AddProductScreen = () => {
             {/* Deposit Amount Input (Conditional) */}
             {isReturnableContainer && (
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Deposit amount (₹)</Text>
+                <Text style={styles.label}>{t('products.depositAmountLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="e.g. 200"
+                    placeholder={t('products.depositPlaceholder')}
                     placeholderTextColor={COLORS.textPlaceholder}
                     keyboardType="numeric"
                     value={depositAmount}
@@ -428,7 +428,7 @@ const AddProductScreen = () => {
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.btnTextPrimary}>
-                {isEditing ? 'Save Changes' : 'Add Product'}
+                {isEditing ? t('common.saveChanges') : t('products.addNew')}
               </Text>
             )}
           </TouchableOpacity>
@@ -444,7 +444,7 @@ const AddProductScreen = () => {
         >
           <View style={{ backgroundColor: '#FFF', borderRadius: 12, width: '80%', maxHeight: '70%', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, elevation: 5, overflow: 'hidden' }}>
             <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F1F5F9', backgroundColor: '#F8FAFC' }}>
-              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#334155', textAlign: 'center' }}>Select Unit</Text>
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#334155', textAlign: 'center' }}>{t('common.selectUnit')}</Text>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
               {predefinedUnits.map((opt) => (
@@ -460,7 +460,7 @@ const AddProductScreen = () => {
                 style={{ padding: 16, backgroundColor: '#EFF6FF' }}
                 onPress={() => { setUnit(''); setIsCustomUnit(true); setShowUnitDropdown(false); }}
               >
-                <Text style={{ fontSize: 15, color: COLORS.primary, fontWeight: 'bold', textAlign: 'center' }}>+ Other (Type manually)</Text>
+                <Text style={{ fontSize: 15, color: COLORS.primary, fontWeight: 'bold', textAlign: 'center' }}>{t('common.customUnit')}</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -481,7 +481,7 @@ const AddProductScreen = () => {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select product photo</Text>
+              <Text style={styles.modalTitle}>{t('products.selectProductImage')}</Text>
               <TouchableOpacity onPress={() => setPhotoModalVisible(false)}>
                 <X size={20} color={COLORS.textPlaceholder} />
               </TouchableOpacity>
@@ -492,7 +492,7 @@ const AddProductScreen = () => {
               onPress={handleSelectFromGallery}
             >
               <ImageIcon size={20} color={COLORS.primary} style={{ marginRight: 12 }} />
-              <Text style={styles.modalOptionText}>Choose from Gallery</Text>
+              <Text style={styles.modalOptionText}>{t('products.selectImage')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -500,7 +500,7 @@ const AddProductScreen = () => {
               onPress={handleTakePhoto}
             >
               <Camera size={20} color={COLORS.primary} style={{ marginRight: 12 }} />
-              <Text style={styles.modalOptionText}>Take Photo with Camera</Text>
+              <Text style={styles.modalOptionText}>{t('products.samplePhoto')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

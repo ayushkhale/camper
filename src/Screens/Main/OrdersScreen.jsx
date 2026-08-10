@@ -161,11 +161,11 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
             <View style={styles.sliderSectionOptionC}>
               <View style={styles.sliderUnitsRowOptionC}>
                 <View style={styles.sliderUnitOptionC}>
-                  <Text style={styles.sliderUnitLabelOptionC}>Empty Jars</Text>
+                  <Text style={styles.sliderUnitLabelOptionC}>{t ? t('deliveries.emptyJars') : 'Empty Jars'}</Text>
                   <Text style={styles.sliderUnitValueOptionC}>{emptyUnits}</Text>
                 </View>
                 <View style={[styles.sliderUnitOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
-                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>Delivered</Text>
+                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>{t ? t('deliveries.delivered') : 'Delivered'}</Text>
                   <Text style={[styles.sliderUnitValueOptionC, { color: '#0B409C' }]}>{fullUnits}</Text>
                 </View>
               </View>
@@ -178,7 +178,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
             <View style={styles.inlineEditContainerOptionC}>
               <View style={styles.inlineInputWrapperOptionC}>
                 <View style={styles.inlineInputGroupOptionC}>
-                  <Text style={styles.inlineInputLabelOptionC}>Empty Jars</Text>
+                  <Text style={styles.inlineInputLabelOptionC}>{t ? t('deliveries.emptyJars') : 'Empty Jars'}</Text>
                   <TextInput
                     style={styles.inlineInputOptionC}
                     value={emptyUnits}
@@ -188,7 +188,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
                   />
                 </View>
                 <View style={styles.inlineInputGroupOptionC}>
-                  <Text style={styles.inlineInputLabelOptionC}>Delivered</Text>
+                  <Text style={styles.inlineInputLabelOptionC}>{t ? t('deliveries.delivered') : 'Delivered'}</Text>
                   <TextInput
                     style={[styles.inlineInputOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: '#0B409C' }]}
                     value={fullUnits}
@@ -204,7 +204,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
                   onPress={() => setIsEditing(false)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.inlineSaveBtnTextOptionC, {color: '#64748B'}]}>Cancel</Text>
+                  <Text style={[styles.inlineSaveBtnTextOptionC, {color: '#64748B'}]}>{t ? t('common.cancel') : 'Cancel'}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.inlineSaveBtnOptionC, {flex: 1, marginTop: 0}]}
@@ -212,7 +212,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
                   activeOpacity={0.8}
                 >
                   <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
-                  <Text style={styles.inlineSaveBtnTextOptionC}>Save Changes</Text>
+                  <Text style={styles.inlineSaveBtnTextOptionC}>{t ? t('common.saveChanges') : 'Save Changes'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -500,7 +500,7 @@ const OrdersScreen = () => {
 
               <View style={styles.linearProgressPending}>
                 <Text style={styles.linearProgressPendingNum}>{pendingDeliveries}</Text>
-                <Text style={styles.linearProgressPendingText}>Pending</Text>
+                <Text style={styles.linearProgressPendingText}>{t('deliveries.pending')}</Text>
               </View>
             </View>
           </View>
@@ -546,7 +546,7 @@ const OrdersScreen = () => {
           >
             <View style={styles.filterModalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Route</Text>
+                <Text style={styles.modalTitle}>{t('deliveries.selectRoute')}</Text>
                 <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
                   <X size={22} color={COLORS.textSecondary} />
                 </TouchableOpacity>
@@ -557,7 +557,7 @@ const OrdersScreen = () => {
                   onPress={() => { setSelectedRouteId(''); setActiveFilterModal(null); }}
                 >
                   <Text style={[styles.filterModalItemText, !selectedRouteId && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
-                    All Routes
+                    {t('deliveries.allRoutes')}
                   </Text>
                 </TouchableOpacity>
                 {routes.map((r) => (
@@ -592,7 +592,7 @@ const OrdersScreen = () => {
           >
             <View style={styles.filterModalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Status</Text>
+                <Text style={styles.modalTitle}>{t('deliveries.selectStatus')}</Text>
                 <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
                   <X size={22} color={COLORS.textSecondary} />
                 </TouchableOpacity>

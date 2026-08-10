@@ -505,8 +505,7 @@ const PaymentsScreen = () => {
       <CurvedHeader
         title={
           <View>
-            <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Payments & Ledger</Text>
-            {/* <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, fontFamily: 'Geologica-Regular', marginTop: 2 }}>Every rupee, clearly accounted for.</Text> */}
+            <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('payments.title')}</Text>
           </View>
         }
         leftIcon={<Menu size={24} color="#FFF" />}
@@ -524,9 +523,9 @@ const PaymentsScreen = () => {
           <View style={styles.customerSelectorLeft}>
             <User size={20} color={selectedCustomer ? COLORS.primary : COLORS.textPlaceholder} style={{ marginRight: 10 }} />
             <View>
-              <Text style={styles.customerSelectorLabel}>Customer</Text>
+              <Text style={styles.customerSelectorLabel}>{t('customers.title')}</Text>
               <Text style={[styles.customerSelectorValue, !selectedCustomer && { color: COLORS.textPlaceholder }]}>
-                {selectedCustomer ? selectedCustomer.name : 'Select a customer'}
+                {selectedCustomer ? selectedCustomer.name : t('common.selectCustomer')}
               </Text>
             </View>
           </View>

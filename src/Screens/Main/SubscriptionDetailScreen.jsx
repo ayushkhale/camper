@@ -370,14 +370,14 @@ const SubscriptionDetailScreen = () => {
         </View>
 
         {/* ── Subscription Details Card ── */}
-        <Text style={styles.sectionTitle}>Subscription Info</Text>
+        <Text style={styles.sectionTitle}>{t('subscriptions.edit')}</Text>
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
             <View style={styles.detailIconBox}>
               <User size={18} color={COLORS.textSecondary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Customer</Text>
+              <Text style={styles.detailLabel}>{t('customers.name')}</Text>
               <Text style={styles.detailValue}>{subscription.Customer?.name || '—'}</Text>
             </View>
           </View>
@@ -389,7 +389,7 @@ const SubscriptionDetailScreen = () => {
               <Phone size={18} color={COLORS.textSecondary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Phone Number</Text>
+              <Text style={styles.detailLabel}>{t('customers.phone_label')}</Text>
               <Text style={styles.detailValue}>{subscription.Customer?.phone || '—'}</Text>
             </View>
           </View>
@@ -401,7 +401,7 @@ const SubscriptionDetailScreen = () => {
               <Info size={18} color={COLORS.textSecondary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Quantity per Delivery</Text>
+              <Text style={styles.detailLabel}>{t('subscriptions.quantityPerDelivery')}</Text>
               <Text style={styles.detailValue}>
                 {subscription.baseQuantity} {subscription.baseQuantity === 1 ? 'unit' : 'units'}
               </Text>
@@ -415,7 +415,7 @@ const SubscriptionDetailScreen = () => {
               <Repeat size={18} color={COLORS.textSecondary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Frequency</Text>
+              <Text style={styles.detailLabel}>{t('subscriptions.frequency')}</Text>
               <Text style={styles.detailValue}>{getRecurrenceLabel(subscription.recurrencePattern)}</Text>
             </View>
           </View>
@@ -427,7 +427,7 @@ const SubscriptionDetailScreen = () => {
               <Calendar size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Start Date</Text>
+              <Text style={styles.detailLabel}>{t('subscriptions.startDate')}</Text>
               <Text style={styles.detailValue}>
                 {subscription.startDate ? formatDisplayDate(subscription.startDate.split('T')[0]) : '—'}
               </Text>
@@ -436,12 +436,12 @@ const SubscriptionDetailScreen = () => {
         </View>
 
         {/* ── Schedule Exceptions Log ── */}
-        <Text style={styles.sectionTitle}>Schedule Log</Text>
+        <Text style={styles.sectionTitle}>{t('subscriptions.scheduleLog')}</Text>
         <View style={styles.detailsCard}>
           {timeline.length === 0 ? (
             <View style={styles.emptyHistory}>
               <Clock size={20} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
-              <Text style={styles.emptyHistoryText}>No exceptions logged yet</Text>
+              <Text style={styles.emptyHistoryText}>{t('subscriptions.noExceptionsLogged')}</Text>
             </View>
           ) : (
             timeline.map((item, index) => {

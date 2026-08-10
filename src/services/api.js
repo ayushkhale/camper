@@ -240,7 +240,7 @@ export const api = {
     postRequest('/api/auth/complete-registration', { ownerName, businessName, businessCategoryId, email, address, pincode, city, state, country }, token),
 
   // Login Flow - Step 1: Request OTP
-  loginRequestOtp: (phone) =>
+  loginRequestOtp: (phone) => //
     postRequest('/api/auth/request-otp', { phone, type: 'user' }),
 
   // Login Flow - Step 2: Verify OTP

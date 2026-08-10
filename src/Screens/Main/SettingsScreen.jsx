@@ -147,7 +147,7 @@ const SettingsScreen = () => {
               style={styles.editActionBtn}
             >
               <Text style={isEditing ? styles.cancelText : styles.editActionText}>
-                {isEditing ? 'Cancel' : 'Edit'}
+                {isEditing ? t('common.cancel') : t('common.edit')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -163,33 +163,33 @@ const SettingsScreen = () => {
 
           {/* Form Fields */}
           <View style={styles.formContainer}>
-            <Text style={styles.sectionTitle}>Business Information</Text>
+            <Text style={styles.sectionTitle}>{t('settings.businessInfo')}</Text>
 
-            <Text style={styles.inputLabel}>Full Name</Text>
+            <Text style={styles.inputLabel}>{t('settings.fullName')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
               <TextInput
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
-                placeholder="Enter your name"
+                placeholder={t('completeReg.ownerPlaceholder')}
                 placeholderTextColor={COLORS.textPlaceholder}
                 editable={isEditing}
               />
             </View>
 
-            <Text style={styles.inputLabel}>Business Name</Text>
+            <Text style={styles.inputLabel}>{t('settings.businessName')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
               <TextInput
                 style={styles.input}
                 value={businessName}
                 onChangeText={setBusinessName}
-                placeholder="Enter business name"
+                placeholder={t('completeReg.businessPlaceholder')}
                 placeholderTextColor={COLORS.textPlaceholder}
                 editable={isEditing}
               />
             </View>
 
-            <Text style={styles.inputLabel}>Business Category</Text>
+            <Text style={styles.inputLabel}>{t('settings.businessCategory')}</Text>
             <View style={[styles.inputContainer, styles.inputDisabled]}>
               <TextInput
                 style={[styles.input, { color: COLORS.textPlaceholder }]}
@@ -198,13 +198,13 @@ const SettingsScreen = () => {
               />
             </View>
 
-            <Text style={styles.inputLabel}>Email Address</Text>
+            <Text style={styles.inputLabel}>{t('settings.emailAddress')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
               <TextInput
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="Enter email"
+                placeholder={t('staff.emailPlaceholder')}
                 placeholderTextColor={COLORS.textPlaceholder}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -213,10 +213,10 @@ const SettingsScreen = () => {
             </View>
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <Text style={[styles.inputLabel, { marginBottom: 0 }]}>Address Line 1</Text>
+              <Text style={[styles.inputLabel, { marginBottom: 0 }]}>{t('settings.addressLine1')}</Text>
               {isEditing && (
                 <TouchableOpacity onPress={handleSkipAddress}>
-                  <Text style={{ fontSize: 12, color: COLORS.primary, fontWeight: 'bold' }}>Skip for now</Text>
+                  <Text style={{ fontSize: 12, color: COLORS.primary, fontWeight: 'bold' }}>{t('settings.skipForNow')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -225,38 +225,38 @@ const SettingsScreen = () => {
                 style={styles.input}
                 value={address}
                 onChangeText={setAddress}
-                placeholder="Enter address"
+                placeholder={t('customers.addressPlaceholder')}
                 placeholderTextColor={COLORS.textPlaceholder}
                 editable={isEditing}
               />
             </View>
 
-            <Text style={styles.inputLabel}>City</Text>
+            <Text style={styles.inputLabel}>{t('settings.city')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
               <TextInput
                 style={styles.input}
                 value={city}
                 onChangeText={setCity}
-                placeholder="Enter city"
+                placeholder={t('settings.city')}
                 placeholderTextColor={COLORS.textPlaceholder}
                 editable={isEditing}
               />
             </View>
 
-            <Text style={styles.inputLabel}>Pincode</Text>
+            <Text style={styles.inputLabel}>{t('settings.pincode')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
               <TextInput
                 style={styles.input}
                 value={pincode}
                 onChangeText={setPincode}
-                placeholder="Enter pincode"
+                placeholder={t('settings.pincode')}
                 placeholderTextColor={COLORS.textPlaceholder}
                 keyboardType="numeric"
                 editable={isEditing}
               />
             </View>
 
-            <Text style={styles.inputLabel}>Country</Text>
+            <Text style={styles.inputLabel}>{t('settings.country')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
               <TextInput
                 style={styles.input}

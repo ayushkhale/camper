@@ -204,7 +204,7 @@ const SubscriptionListScreen = () => {
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading subscriptions...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : error ? (
           <View style={styles.centerContainer}>
@@ -212,7 +212,7 @@ const SubscriptionListScreen = () => {
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => fetchSubscriptions(true)}>
               <RefreshCw size={16} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.retryText}>Retry</Text>
+              <Text style={styles.retryText}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -235,11 +235,11 @@ const SubscriptionListScreen = () => {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Package size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>No Subscriptions Found</Text>
+                <Text style={styles.emptyTitle}>{t('customers.noActiveSubscriptions')}</Text>
                 <Text style={styles.emptySubtitle}>
                   {searchQuery || filterStatus !== 'all'
-                    ? 'No subscriptions match your current filter or search.'
-                    : 'Start by creating a recurring subscription.'}
+                    ? t('customers.noCustomersSearch')
+                    : t('customers.addSubDesc')}
                 </Text>
                 {!searchQuery && filterStatus === 'all' && (
                   <TouchableOpacity
@@ -247,7 +247,7 @@ const SubscriptionListScreen = () => {
                     onPress={() => navigation.navigate('AddSubscription')}
                   >
                     <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.emptyAddBtnText}>Add Subscription</Text>
+                    <Text style={styles.emptyAddBtnText}>{t('customers.addSubscription')}</Text>
                   </TouchableOpacity>
                 )}
               </View>

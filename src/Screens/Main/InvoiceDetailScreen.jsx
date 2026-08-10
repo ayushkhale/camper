@@ -39,8 +39,10 @@ import CurvedHeader from '../../components/CurvedHeader';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useTranslation } from 'react-i18next';
 
 const InvoiceDetailScreen = () => {
+  const { t } = useTranslation();
   const route = useRoute();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
@@ -511,12 +513,12 @@ const InvoiceDetailScreen = () => {
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading invoice...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       ) : !invoiceData ? (
         <View style={styles.centerContainer}>
           <AlertCircle size={48} color={COLORS.danger} style={{ marginBottom: 12 }} />
-          <Text style={styles.errorText}>Invoice not found.</Text>
+          <Text style={styles.errorText}>{t('invoices.noInvoicesFound')}</Text>
         </View>
       ) : (
         <>
@@ -524,11 +526,11 @@ const InvoiceDetailScreen = () => {
           
           {/* Tally Style Invoice View */}
           <View style={{ borderWidth: 1, borderColor: '#000', marginHorizontal: 0, marginTop: 4, marginBottom: 24, backgroundColor: '#FFF' }}>
-            <Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 16, padding: 8, borderBottomWidth: 1, borderBottomColor: '#000', letterSpacing: 1, color: '#000' }}>TAX INVOICE</Text>
+            <Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 16, padding: 8, borderBottomWidth: 1, borderBottomColor: '#000', letterSpacing: 1, color: '#000' }}>{t('invoices.taxInvoice')}</Text>
             
             <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000' }}>
               <View style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 8 }}>
-                <Text style={{ fontSize: 10, color: '#000', marginBottom: 2, fontWeight: 'bold' }}>Billed To:</Text>
+                <Text style={{ fontSize: 10, color: '#000', marginBottom: 2, fontWeight: 'bold' }}>{t('invoices.billedTo')}</Text>
                 <Text style={{ fontWeight: 'bold', fontSize: 13, color: '#000' }}>{invoiceData.Customer?.name || 'Customer'}</Text>
                 {!!invoiceData.Customer?.phone && <Text style={{ fontSize: 11, color: '#000', marginTop: 2 }}>Ph: {invoiceData.Customer.phone}</Text>}
                 {!!invoiceData.Customer?.address && <Text style={{ fontSize: 11, color: '#000', marginTop: 2 }}>{invoiceData.Customer.address}</Text>}
@@ -536,16 +538,16 @@ const InvoiceDetailScreen = () => {
               <View style={{ flex: 1, padding: 8 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
                   <View>
-                    <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>Invoice No.</Text>
+                    <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>{t('invoices.invoiceNo')}</Text>
                     <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>{invoiceNum}</Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>Dated</Text>
+                    <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>{t('invoices.dated')}</Text>
                     <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>{formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at)}</Text>
                   </View>
                 </View>
                 <View>
-                  <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>Billing Period</Text>
+                  <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>{t('invoices.billingPeriod')}</Text>
                   <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>
                     {invoiceData.periodStart && invoiceData.periodEnd
                       ? `${formatDate(invoiceData.periodStart)} to ${formatDate(invoiceData.periodEnd)}`
@@ -557,11 +559,11 @@ const InvoiceDetailScreen = () => {
 
             {/* Table Header */}
             <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000', backgroundColor: '#F9FAFB' }}>
-              <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'center', color: '#000' }}>Sl</Text>
-              <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, color: '#000' }}>Description of Goods</Text>
-              <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'center', color: '#000' }}>Qty</Text>
-              <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'right', color: '#000' }}>Rate</Text>
-              <Text style={{ width: 70, padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'right', color: '#000' }}>Amount</Text>
+              <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'center', color: '#000' }}>{t('invoices.sl')}</Text>
+              <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, color: '#000' }}>{t('invoices.descriptionOfGoods')}</Text>
+              <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'center', color: '#000' }}>{t('invoices.qty')}</Text>
+              <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'right', color: '#000' }}>{t('invoices.rate')}</Text>
+              <Text style={{ width: 70, padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'right', color: '#000' }}>{t('invoices.amount')}</Text>
             </View>
 
             {/* Table Body */}
@@ -630,23 +632,23 @@ const InvoiceDetailScreen = () => {
               </View>
               <View style={{ width: 180 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 6, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
-                  <Text style={{ fontSize: 11, color: '#000' }}>Sub Total</Text>
+                  <Text style={{ fontSize: 11, color: '#000' }}>{t('invoices.subTotal')}</Text>
                   <Text style={{ fontSize: 11, color: '#000' }}>{formatCurrency(currentCharges)}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 6, borderBottomWidth: 1, borderBottomColor: '#000' }}>
-                  <Text style={{ fontSize: 11, color: '#000' }}>Prev Balance</Text>
+                  <Text style={{ fontSize: 11, color: '#000' }}>{t('invoices.prevBalance')}</Text>
                   <Text style={{ fontSize: 11, color: '#000' }}>{formatCurrency(previousDues)}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 8, borderBottomWidth: 1, borderBottomColor: '#000' }}>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>Grand Total</Text>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{t('invoices.grandTotal')}</Text>
                   <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{formatCurrency(grandTotal)}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 6, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
-                  <Text style={{ fontSize: 11, color: '#000' }}>Amount Paid</Text>
+                  <Text style={{ fontSize: 11, color: '#000' }}>{t('invoices.amountPaid')}</Text>
                   <Text style={{ fontSize: 11, color: '#000' }}>{formatCurrency(amountPaid)}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 8 }}>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>Balance Due</Text>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{t('invoices.balanceDue')}</Text>
                   <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{formatCurrency(balanceDue)}</Text>
                 </View>
               </View>
@@ -669,15 +671,15 @@ const InvoiceDetailScreen = () => {
               }}
             >
               <CreditCard size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.payBtnText}>Record Payment ({formatCurrency(balanceDue)})</Text>
+              <Text style={styles.payBtnText}>{t('payments.recordPayment')} ({formatCurrency(balanceDue)})</Text>
             </TouchableOpacity>
           )}
 
 
           {/* Footer Note */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Thank you for your business!</Text>
-            <Text style={styles.footerSubtext}>Computer generated tax invoice. No signature required.</Text>
+            <Text style={styles.footerText}>{t('invoices.thankYou')}</Text>
+            <Text style={styles.footerSubtext}>{t('invoices.computerGenerated')}</Text>
           </View>
 
         </ScrollView>
@@ -695,7 +697,7 @@ const InvoiceDetailScreen = () => {
               ) : (
                 <>
                   <WhatsAppIcon size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                  <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>Share PDF</Text>
+                  <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>{t('invoices.sharePdf')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -706,7 +708,7 @@ const InvoiceDetailScreen = () => {
               onPress={handleWhatsAppShare}
             >
               <WhatsAppIcon size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>Share Text</Text>
+              <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>{t('invoices.shareText')}</Text>
             </TouchableOpacity>
           </View>
           
@@ -716,7 +718,7 @@ const InvoiceDetailScreen = () => {
             onPress={handlePrint}
           >
             <Printer size={20} color="#334155" style={{ marginRight: 8 }} />
-            <Text style={[styles.actionBtnText, { color: '#334155' }]}>Print Invoice</Text>
+            <Text style={[styles.actionBtnText, { color: '#334155' }]}>{t('invoices.printInvoice')}</Text>
           </TouchableOpacity>
         </View>
         </>

@@ -138,7 +138,7 @@ const ProductDetailScreen = () => {
     return (
       <SafeAreaView style={styles.centerContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading details...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </SafeAreaView>
     );
   }
@@ -148,7 +148,7 @@ const ProductDetailScreen = () => {
       <SafeAreaView style={styles.centerContainer}>
         <Text style={styles.errorText}>{error || 'Product not found'}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.retryText}>Go Back</Text>
+          <Text style={styles.retryText}>{t('common.goBack')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -157,7 +157,7 @@ const ProductDetailScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Product Details</Text>}
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('products.editProduct')}</Text>}
         leftIcon={<ChevronLeft size={28} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
@@ -187,7 +187,7 @@ const ProductDetailScreen = () => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* ── Profile Hero Section (Identical to Customer Detail Screen) ── */}
+        {/* ── Profile Hero Section ── */}
         <View style={styles.profileHero}>
           <View style={styles.avatarContainer}>
             {product.imageUrl ? (
@@ -202,13 +202,13 @@ const ProductDetailScreen = () => {
           <View style={styles.statusBadge}>
             <View style={[styles.statusDot, { backgroundColor: isActive ? '#16A34A' : '#94A3B8' }]} />
             <Text style={[styles.statusText, { color: isActive ? '#15803D' : '#64748B' }]}>
-              {isActive ? 'ACTIVE' : 'INACTIVE'}
+              {isActive ? t('products.active').toUpperCase() : t('products.inactive').toUpperCase()}
             </Text>
           </View>
         </View>
 
         {/* ── Product Info Card ── */}
-        <Text style={styles.sectionTitle}>Product Info</Text>
+        <Text style={styles.sectionTitle}>{t('products.image')}</Text>
         <View style={styles.detailsCard}>
           {/* Price */}
           <View style={styles.detailRow}>
@@ -216,7 +216,7 @@ const ProductDetailScreen = () => {
               <IndianRupee size={18} color={COLORS.textSecondary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Base Price</Text>
+              <Text style={styles.detailLabel}>{t('products.price')}</Text>
               <Text style={styles.detailValue}>
                 ₹ {parseFloat(product.price || 0).toLocaleString()}
               </Text>
@@ -231,7 +231,7 @@ const ProductDetailScreen = () => {
               <Info size={18} color={COLORS.textSecondary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Billing Unit</Text>
+              <Text style={styles.detailLabel}>{t('products.unit')}</Text>
               <Text style={styles.detailValue}>{product.unit || '—'}</Text>
             </View>
           </View>
@@ -244,8 +244,8 @@ const ProductDetailScreen = () => {
               <RefreshCcw size={18} color={COLORS.textSecondary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Returnable Container</Text>
-              <Text style={styles.detailValue}>{product.isReturnableContainer ? 'Yes' : 'No'}</Text>
+              <Text style={styles.detailLabel}>{t('products.returnable')}</Text>
+              <Text style={styles.detailValue}>{product.isReturnableContainer ? t('common.yes') : t('common.no')}</Text>
             </View>
           </View>
 
@@ -258,7 +258,7 @@ const ProductDetailScreen = () => {
                   <IndianRupee size={18} color={COLORS.primary} />
                 </View>
                 <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Deposit Amount</Text>
+                  <Text style={styles.detailLabel}>{t('products.depositAmount')}</Text>
                   <Text style={styles.detailValue}>
                     ₹ {parseFloat(product.depositAmount || 0).toLocaleString()}
                   </Text>
@@ -269,10 +269,10 @@ const ProductDetailScreen = () => {
         </View>
 
         {/* ── Status Controls Toggle Card ── */}
-        <Text style={styles.sectionTitle}>Status Management</Text>
+        <Text style={styles.sectionTitle}>{t('products.status')}</Text>
         <View style={styles.statusToggleCard}>
           <View style={styles.statusCardLeft}>
-            <Text style={styles.statusCardTitle}>Active Status</Text>
+            <Text style={styles.statusCardTitle}>{t('products.status')}</Text>
             <Text style={styles.statusCardSub}>
               {isActive
                 ? 'Product is visible and active for orders'

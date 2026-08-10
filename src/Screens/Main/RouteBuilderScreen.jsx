@@ -15,8 +15,10 @@ import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
 import CurvedHeader from '../../components/CurvedHeader';
+import { useTranslation } from 'react-i18next';
 
 const RouteBuilderScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
   const { showAlert } = useAlert();
@@ -149,7 +151,7 @@ const RouteBuilderScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Customer Sequence</Text>}
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('routes.customerSequence')}</Text>}
         leftIcon={<ChevronLeft size={28} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
@@ -178,12 +180,12 @@ const RouteBuilderScreen = () => {
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading customers...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       ) : customers.length === 0 ? (
         <View style={styles.centerContainer}>
           <User size={40} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-          <Text style={styles.emptyText}>No customers found on this route.</Text>
+          <Text style={styles.emptyText}>{t('routes.noCustomersOnRoute')}</Text>
         </View>
       ) : (
         <FlatList
@@ -209,7 +211,7 @@ const RouteBuilderScreen = () => {
             ) : (
               <>
                 <Save size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.saveBtnText}>Save Sequence</Text>
+                <Text style={styles.saveBtnText}>{t('routes.saveSequence')}</Text>
               </>
             )}
           </TouchableOpacity>

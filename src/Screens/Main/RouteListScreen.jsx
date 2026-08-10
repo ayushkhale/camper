@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { MapPin, Plus, Search, ChevronRight, AlertCircle, RefreshCw, ChevronLeft } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -18,6 +19,7 @@ import { api } from '../../services/api';
 import CurvedHeader from '../../components/CurvedHeader';
 
 const RouteListScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
 
@@ -31,15 +33,15 @@ const RouteListScreen = () => {
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      const res = await api.listRoutes(userToken);
-      if (res.success) {
-        setRoutes(res.data || []);
+      const res = await api.getRoutes(userToken);
+      if (res.success && res.data) {
+        setRoutes(res.data);
       } else {
-        throw new Error(res.message || 'Failed to fetch routes');
+        setRoutes([]);
       }
     } catch (err) {
-      console.error('Error fetching routes:', err);
-      setError(err.message || 'Something went wrong');
+      console.error('Fetch routes error:', err);
+      setError(err.message || 'Failed to load routes');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -48,8 +50,8 @@ const RouteListScreen = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchRoutes(true);
-    }, [])
+      fetchRoutes();
+    }, [userToken])
   );
 
   const onRefresh = () => {
@@ -57,45 +59,41 @@ const RouteListScreen = () => {
     fetchRoutes(false);
   };
 
-  const filteredRoutes = routes.filter((item) => {
-    const query = searchQuery.toLowerCase();
-    const nameMatch = item.name?.toLowerCase().includes(query);
-    const areaMatch = item.areaCode?.toLowerCase().includes(query);
-    return nameMatch || areaMatch;
+  const filteredRoutes = routes.filter((route) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    const nameMatch = route.name?.toLowerCase().includes(q);
+    const codeMatch = route.areaCode?.toLowerCase().includes(q);
+    return nameMatch || codeMatch;
   });
 
   const renderRouteCard = ({ item }) => {
-    // Active staff count where effectiveTo is null (currently assigned)
-    const activeStaffCount = (item.StaffRoutes || []).filter(
-      (sr) => sr.effectiveTo === null
-    ).length;
+    const customerCount = item.Customers?.length || item.customerCount || 0;
 
     return (
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.7}
-        onPress={() => navigation.navigate('RouteDetail', { routeId: item.id })}
+        onPress={() => navigation.navigate('RouteDetail', { route: item })}
       >
         <View style={styles.cardHeader}>
-          <View style={styles.iconBox}>
-            <MapPin size={20} color={COLORS.primary} />
+          <View style={styles.iconCircle}>
+            <MapPin size={22} color={COLORS.primary} />
           </View>
           <View style={styles.titleContainer}>
             <Text style={styles.routeName} numberOfLines={1}>
               {item.name}
             </Text>
             {item.areaCode ? (
-              <Text style={styles.areaCode}>{item.areaCode}</Text>
+              <Text style={styles.areaCode}>Code: {item.areaCode}</Text>
             ) : null}
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} />
+          <ChevronRight size={20} color={COLORS.textPlaceholder} />
         </View>
 
-        <View style={styles.divider} />
-
         <View style={styles.cardFooter}>
-          <Text style={styles.staffCountText}>
-            Active Staff: <Text style={styles.staffCountValue}>{activeStaffCount}</Text>
+          <Text style={styles.customerCountText}>
+            {customerCount} {customerCount === 1 ? 'Customer' : 'Customers'}
           </Text>
         </View>
       </TouchableOpacity>
@@ -105,7 +103,7 @@ const RouteListScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader 
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Delivery Routes</Text>}
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('home.routes')}</Text>}
         leftIcon={<ChevronLeft size={28} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
         height={120}
@@ -118,7 +116,7 @@ const RouteListScreen = () => {
           <Search size={18} color={COLORS.textSecondary} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search routes by name or area..."
+            placeholder={t('customers.searchPlaceholder')}
             placeholderTextColor={COLORS.textPlaceholder}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -130,7 +128,7 @@ const RouteListScreen = () => {
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading routes...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       ) : error ? (
         <View style={styles.centerContainer}>
@@ -138,7 +136,7 @@ const RouteListScreen = () => {
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => fetchRoutes(true)}>
             <RefreshCw size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.retryText}>Retry</Text>
+            <Text style={styles.retryText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -163,11 +161,11 @@ const RouteListScreen = () => {
               <View style={styles.emptyIconCircle}>
                 <MapPin size={28} color={COLORS.textPlaceholder} />
               </View>
-              <Text style={styles.emptyTitle}>No routes found</Text>
+              <Text style={styles.emptyTitle}>{t('customers.noRouteAssigned')}</Text>
               <Text style={styles.emptySubtitle}>
                 {searchQuery
-                  ? 'Try adjusting your search criteria'
-                  : 'Start by creating your first delivery route zone'}
+                  ? t('customers.noCustomersSearch')
+                  : t('customers.noCustomersSub')}
               </Text>
               {!searchQuery && (
                 <TouchableOpacity
@@ -175,7 +173,7 @@ const RouteListScreen = () => {
                   onPress={() => navigation.navigate('AddRoute')}
                 >
                   <Plus size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-                  <Text style={styles.emptyAddBtnText}>Add Route</Text>
+                  <Text style={styles.emptyAddBtnText}>{t('common.addNewRoute')}</Text>
                 </TouchableOpacity>
               )}
             </View>

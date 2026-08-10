@@ -35,6 +35,7 @@ import {
   ChevronUp,
   Save,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
@@ -44,6 +45,7 @@ import DeliveryStatusSlider from '../../components/DeliveryStatusSlider';
 import { TextInput } from 'react-native';
 
 const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewOnly }) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -199,11 +201,11 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
               )}
               <View style={[styles.sliderUnitsRowOptionC, { marginTop: 12, marginBottom: 0 }]}>
                 <View style={styles.sliderUnitOptionC}>
-                  <Text style={styles.sliderUnitLabelOptionC}>Empty Ret.</Text>
+                  <Text style={styles.sliderUnitLabelOptionC}>{t('deliveries.emptyRetrieved')}</Text>
                   <Text style={styles.sliderUnitValueOptionC}>{emptyUnits}</Text>
                 </View>
                 <View style={[styles.sliderUnitOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
-                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>Delivered</Text>
+                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>{t('deliveries.delivered')}</Text>
                   <Text style={[styles.sliderUnitValueOptionC, { color: '#0B409C' }]}>{fullUnits}</Text>
                 </View>
               </View>
@@ -212,11 +214,11 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
             <View style={styles.sliderSectionOptionC}>
               <View style={styles.sliderUnitsRowOptionC}>
                 <View style={styles.sliderUnitOptionC}>
-                  <Text style={styles.sliderUnitLabelOptionC}>Empty Jars</Text>
+                  <Text style={styles.sliderUnitLabelOptionC}>{t('deliveries.emptyJars')}</Text>
                   <Text style={styles.sliderUnitValueOptionC}>{emptyUnits}</Text>
                 </View>
                 <View style={[styles.sliderUnitOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
-                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>Delivered</Text>
+                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>{t('deliveries.delivered')}</Text>
                   <Text style={[styles.sliderUnitValueOptionC, { color: '#0B409C' }]}>{fullUnits}</Text>
                 </View>
               </View>
@@ -229,7 +231,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
             <View style={styles.inlineEditContainerOptionC}>
               <View style={styles.inlineInputWrapperOptionC}>
                 <View style={styles.inlineInputGroupOptionC}>
-                  <Text style={styles.inlineInputLabelOptionC}>Empty Jars</Text>
+                  <Text style={styles.inlineInputLabelOptionC}>{t('deliveries.emptyJars')}</Text>
                   <TextInput
                     style={styles.inlineInputOptionC}
                     value={emptyUnits}
@@ -239,7 +241,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
                   />
                 </View>
                 <View style={styles.inlineInputGroupOptionC}>
-                  <Text style={styles.inlineInputLabelOptionC}>Delivered</Text>
+                  <Text style={styles.inlineInputLabelOptionC}>{t('deliveries.delivered')}</Text>
                   <TextInput
                     style={[styles.inlineInputOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: '#0B409C' }]}
                     value={fullUnits}
@@ -255,7 +257,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
                   onPress={() => setIsEditing(false)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.inlineSaveBtnTextOptionC, { color: '#64748B' }]}>Cancel</Text>
+                  <Text style={[styles.inlineSaveBtnTextOptionC, { color: '#64748B' }]}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.inlineSaveBtnOptionC, { flex: 1, marginTop: 0 }]}
@@ -263,7 +265,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
                   activeOpacity={0.8}
                 >
                   <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
-                  <Text style={styles.inlineSaveBtnTextOptionC}>Save Changes</Text>
+                  <Text style={styles.inlineSaveBtnTextOptionC}>{t('common.saveChanges')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -526,24 +528,24 @@ const PastDeliveriesScreen = () => {
 
             <View style={styles.linearProgressPending}>
               <Text style={styles.linearProgressPendingNum}>{pendingDeliveries}</Text>
-              <Text style={styles.linearProgressPendingText}>Pending</Text>
+              <Text style={styles.linearProgressPendingText}>{t('deliveries.pending')}</Text>
             </View>
           </View>
         </View>
 
         {/* Deliveries Data Section */}
-        <Text style={styles.sectionTitle}>Delivery Records ({deliveries.length})</Text>
+        <Text style={styles.sectionTitle}>{t('deliveries.title')} ({deliveries.length})</Text>
 
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading delivery records...</Text>
+            <Text style={styles.loadingText}>{t('deliveries.loadingDeliveries')}</Text>
           </View>
         ) : deliveries.length === 0 ? (
           <View style={styles.emptyCard}>
             <Truck size={40} color={COLORS.textPlaceholder} style={{ marginBottom: 12 }} />
-            <Text style={styles.emptyTitle}>No deliveries found</Text>
-            <Text style={styles.emptySubtitle}>No records match the selected date and filters.</Text>
+            <Text style={styles.emptyTitle}>{t('deliveries.noDeliveriesFound')}</Text>
+            <Text style={styles.emptySubtitle}>{t('deliveries.noRecordsFilter')}</Text>
           </View>
         ) : (
           deliveries.map((item, idx) => (
@@ -566,7 +568,7 @@ const PastDeliveriesScreen = () => {
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setActiveFilterModal(null)}>
             <View style={styles.filterModalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Route</Text>
+                <Text style={styles.modalTitle}>{t('deliveries.selectRoute')}</Text>
                 <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
                   <X size={22} color={COLORS.textSecondary} />
                 </TouchableOpacity>
@@ -577,7 +579,7 @@ const PastDeliveriesScreen = () => {
                   onPress={() => { setSelectedRouteId(''); setActiveFilterModal(null); }}
                 >
                   <Text style={[styles.filterModalItemText, !selectedRouteId && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
-                    All Routes
+                    {t('deliveries.allRoutes')}
                   </Text>
                 </TouchableOpacity>
                 {routes.map((r) => (
@@ -602,7 +604,7 @@ const PastDeliveriesScreen = () => {
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setActiveFilterModal(null)}>
             <View style={styles.filterModalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Status</Text>
+                <Text style={styles.modalTitle}>{t('deliveries.selectStatus')}</Text>
                 <TouchableOpacity onPress={() => setActiveFilterModal(null)}>
                   <X size={22} color={COLORS.textSecondary} />
                 </TouchableOpacity>

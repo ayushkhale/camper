@@ -162,10 +162,10 @@ const InvoiceListScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <CurvedHeader
-        title={t('invoices.title', 'Invoices')}
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('invoices.title')}</Text>}
         leftIcon={<ChevronLeft size={28} color="#FFF" />}
-        onLeftPress={() => navigation.goBack()}
-        height={130}
+        onLeftPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
+        height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
       />
       <View style={styles.contentWrapper}>
@@ -176,7 +176,7 @@ const InvoiceListScreen = () => {
             <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by customer or ID..."
+              placeholder={t('customers.searchPlaceholder')}
               placeholderTextColor={COLORS.textPlaceholder}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -203,7 +203,7 @@ const InvoiceListScreen = () => {
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading invoices...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : error ? (
           <View style={styles.centerContainer}>
@@ -211,7 +211,7 @@ const InvoiceListScreen = () => {
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => fetchInvoices(true)}>
               <RefreshCw size={16} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.retryText}>Retry</Text>
+              <Text style={styles.retryText}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -234,11 +234,11 @@ const InvoiceListScreen = () => {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <FileText size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>No Invoices Found</Text>
+                <Text style={styles.emptyTitle}>{t('invoices.noInvoicesFound')}</Text>
                 <Text style={styles.emptySubtitle}>
                   {searchQuery || filterStatus !== 'all'
-                    ? 'No invoices match your current filter or search.'
-                    : 'You have no invoices yet.'}
+                    ? t('customers.noCustomersSearch')
+                    : t('invoices.noInvoicesFound')}
                 </Text>
                 {!searchQuery && filterStatus === 'all' && (
                   <TouchableOpacity
@@ -246,7 +246,7 @@ const InvoiceListScreen = () => {
                     onPress={() => navigation.navigate('GenerateInvoice')}
                   >
                     <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.emptyAddBtnText}>Generate Invoices</Text>
+                    <Text style={styles.emptyAddBtnText}>{t('invoices.generateInvoices')}</Text>
                   </TouchableOpacity>
                 )}
               </View>

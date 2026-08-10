@@ -14,8 +14,10 @@ import { api } from '../../services/api';
 import CurvedHeader from '../../components/CurvedHeader';
 import { ChevronLeft, Package, Clock, CheckCircle2, XCircle, FileText } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
+import { useTranslation } from 'react-i18next';
 
 const CustomerHistoryScreen = ({ route, navigation }) => {
+  const { t } = useTranslation();
   const { customerId } = route.params;
   const { userToken } = useContext(AuthContext);
   const { showAlert } = useAlert();
@@ -83,15 +85,15 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
       </View>
       <View style={styles.cardBody}>
         <View style={styles.row}>
-          <Text style={styles.label}>Product:</Text>
+          <Text style={styles.label}>{t('customers.product')}:</Text>
           <Text style={styles.value}>{item.product?.name || 'N/A'}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Delivered:</Text>
+          <Text style={styles.label}>{t('deliveries.delivered')}:</Text>
           <Text style={styles.value}>{item.fullUnitsDelivered || 0}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Empty Retrieved:</Text>
+          <Text style={styles.label}>{t('deliveries.emptyRetrieved')}:</Text>
           <Text style={styles.value}>{item.emptyUnitsCollected || 0}</Text>
         </View>
         {item.status === 'delivered' && (
@@ -99,12 +101,12 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
             {item.isInvoiced ? (
               <View style={styles.billedBadge}>
                 <CheckCircle2 size={12} color="#10B981" style={{marginRight: 4}} />
-                <Text style={styles.billedText}>Billed</Text>
+                <Text style={styles.billedText}>{t('customerDetail.unbilled')}</Text>
               </View>
             ) : (
               <View style={styles.unbilledBadge}>
                 <Clock size={12} color="#F59E0B" style={{marginRight: 4}} />
-                <Text style={styles.unbilledText}>Unbilled - ₹{item.estimatedAmount || 0}</Text>
+                <Text style={styles.unbilledText}>{t('customerDetail.unbilled')} - ₹{item.estimatedAmount || 0}</Text>
               </View>
             )}
           </View>
@@ -123,15 +125,15 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
       </View>
       <View style={styles.cardBody}>
         <View style={styles.row}>
-          <Text style={styles.label}>Product:</Text>
+          <Text style={styles.label}>{t('customers.product')}:</Text>
           <Text style={styles.value}>{item.product?.name || 'N/A'}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Delivered (Full):</Text>
+          <Text style={styles.label}>{t('deliveries.delivered')}:</Text>
           <Text style={styles.value}>{item.fullUnitsDelivered || 0}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Collected (Empty):</Text>
+          <Text style={styles.label}>{t('deliveries.emptyRetrieved')}:</Text>
           <Text style={styles.value}>{item.emptyUnitsCollected || 0}</Text>
         </View>
       </View>
@@ -143,7 +145,7 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
       <CurvedHeader
         title={
           <Text numberOfLines={1} adjustsFontSizeToFit style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>
-            Customer History
+            {t('customerDetail.viewHistory')}
           </Text>
         }
         leftIcon={<ChevronLeft size={28} color="#FFF" />}
@@ -160,7 +162,7 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
           activeOpacity={0.7}
         >
           <Text style={[styles.tabText, activeTab === 'deliveries' && styles.activeTabText]}>
-            Deliveries
+            {t('deliveries.title')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -169,7 +171,7 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
           activeOpacity={0.7}
         >
           <Text style={[styles.tabText, activeTab === 'jars' && styles.activeTabText]}>
-            Jar Collections
+            {t('deliveries.emptyJars')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -179,11 +181,11 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Total Delivered</Text>
+              <Text style={styles.summaryLabel}>{t('deliveries.delivered')}</Text>
               <Text style={styles.summaryValue}>{deliveriesSummary.totalUnitsDelivered || 0}</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Pending Bill</Text>
+              <Text style={styles.summaryLabel}>{t('customerDetail.unbilled')}</Text>
               <Text style={[styles.summaryValue, { color: '#F59E0B' }]}>₹{deliveriesSummary.estimatedUnbilledAmount || 0}</Text>
             </View>
           </View>
@@ -194,7 +196,7 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Currently With Customer</Text>
+              <Text style={styles.summaryLabel}>{t('customerDetail.currentlyWithCustomer')}</Text>
               <Text style={[styles.summaryValue, { color: COLORS.primary }]}>{jarsSummary.jarsCurrentlyOut || 0} Jars</Text>
             </View>
           </View>
@@ -214,7 +216,7 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No deliveries found in this period.</Text>
+            <Text style={styles.emptyText}>{t('deliveries.noDeliveriesFound')}</Text>
           }
         />
       ) : (
@@ -225,7 +227,7 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No jar collections found.</Text>
+            <Text style={styles.emptyText}>{t('deliveries.noDeliveriesFound')}</Text>
           }
         />
       )}

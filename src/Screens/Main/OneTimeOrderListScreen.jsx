@@ -41,6 +41,7 @@ import CurvedHeader from '../../components/CurvedHeader';
 
 
 const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, formatDisplayDate, onCancelOrder }) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -201,11 +202,11 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
             <View style={styles.sliderSection}>
               <View style={styles.sliderUnitsRow}>
                 <View style={[styles.sliderUnit, styles.sliderUnitEmpty]}>
-                  <Text style={[styles.sliderUnitLabel, { color: '#64748B' }]}>Empty Jars</Text>
+                  <Text style={[styles.sliderUnitLabel, { color: '#64748B' }]}>{t('deliveries.emptyJars')}</Text>
                   <Text style={[styles.sliderUnitValue, { color: '#0F172A' }]}>{emptyUnits}</Text>
                 </View>
                 <View style={[styles.sliderUnit, styles.sliderUnitDelivered]}>
-                  <Text style={[styles.sliderUnitLabel, { color: '#1D4ED8' }]}>Delivered</Text>
+                  <Text style={[styles.sliderUnitLabel, { color: '#1D4ED8' }]}>{t('deliveries.delivered')}</Text>
                   <Text style={[styles.sliderUnitValue, { color: '#1D4ED8' }]}>{fullUnits}</Text>
                 </View>
               </View>
@@ -218,7 +219,7 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
             <View style={styles.inlineEditContainer}>
               <View style={styles.inlineInputWrapper}>
                 <View style={styles.inlineInputGroup}>
-                  <Text style={styles.inlineInputLabel}>Full Units</Text>
+                  <Text style={styles.inlineInputLabel}>{t('deliveries.fullUnits')}</Text>
                   <TextInput
                     style={styles.inlineInput}
                     value={fullUnits}
@@ -228,7 +229,7 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
                   />
                 </View>
                 <View style={styles.inlineInputGroup}>
-                  <Text style={styles.inlineInputLabel}>Empty Units</Text>
+                  <Text style={styles.inlineInputLabel}>{t('deliveries.emptyUnits')}</Text>
                   <TextInput
                     style={styles.inlineInput}
                     value={emptyUnits}
@@ -244,7 +245,7 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
                 activeOpacity={0.8}
               >
                 <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
-                <Text style={styles.inlineSaveBtnText}>Save</Text>
+                <Text style={styles.inlineSaveBtnText}>{t('common.save')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -407,7 +408,7 @@ const OneTimeOrderListScreen = () => {
             <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by customer or product..."
+              placeholder={t('customers.searchPlaceholder')}
               placeholderTextColor={COLORS.textPlaceholder}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -418,14 +419,14 @@ const OneTimeOrderListScreen = () => {
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading one-time orders...</Text>
+            <Text style={styles.loadingText}>{t('oneTimeOrders.loadingOrders')}</Text>
           </View>
         ) : error ? (
           <View style={styles.centerContainer}>
             <AlertCircle size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => fetchOrders(true)}>
-              <Text style={styles.retryText}>Retry</Text>
+              <Text style={styles.retryText}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         ) : (

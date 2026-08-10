@@ -23,7 +23,7 @@ const OtpVerificationScreen = ({ route, navigation }) => {
   const [timer, setTimer] = useState(60);
   const [resendCount, setResendCount] = useState(0);
   const [activeContextId, setActiveContextId] = useState(contextId);
-  
+
   // Custom Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
@@ -131,9 +131,9 @@ const OtpVerificationScreen = ({ route, navigation }) => {
             </Text>
 
             {/* Premium Minimal OTP Grid */}
-            <TouchableOpacity 
-              activeOpacity={1} 
-              onPress={() => inputRef.current?.focus()} 
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => inputRef.current?.focus()}
               style={styles.inputWrapper}
             >
               <View style={styles.otpGrid} pointerEvents="none">

@@ -421,7 +421,7 @@ const AddCustomerScreen = () => {
             style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
             onPress={() => { setRouteModalVisible(false); setAddRouteVisible(true); }}
           >
-            <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Route</Text>
+            <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewRoute')}</Text>
           </TouchableOpacity>
 
           {loadingRoutes ? (
@@ -429,7 +429,7 @@ const AddCustomerScreen = () => {
               <ActivityIndicator size="small" color={COLORS.primary} />
             </View>
           ) : routes.length === 0 ? (
-            <Text style={styles.modalEmptyText}>No routes available.</Text>
+            <Text style={styles.modalEmptyText}>{t('customers.noRouteAssigned')}</Text>
           ) : (
             <FlatList
               data={routes}
@@ -647,7 +647,7 @@ const AddCustomerScreen = () => {
 
             {/* Opening Balance */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Opening Balance</Text>
+              <Text style={styles.label}>{t('customers.accountOverview')}</Text>
               <View style={[styles.inputContainer, isEditMode && { backgroundColor: '#F3F4F6' }]}>
                 <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
@@ -663,12 +663,10 @@ const AddCustomerScreen = () => {
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingHorizontal: 6, backgroundColor: '#FFFBEB', paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#FEF3C7' }}>
                 <AlertCircle size={14} color="#D97706" style={{ marginRight: 6 }} />
                 <Text style={{ fontSize: 11.5, fontFamily: 'Geologica-Medium', color: '#D97706' }}>
-                  Note: Opening balance once saved cannot be changed.
+                  {t('customers.phoneCantChange')}
                 </Text>
               </View>
             </View>
-
-
 
             {/* Route */}
             <View style={styles.inputGroup}>
@@ -701,8 +699,8 @@ const AddCustomerScreen = () => {
                     <IndianRupee size={18} color={COLORS.primary} />
                   </View>
                   <View style={{ flex: 1, paddingRight: 8 }}>
-                    <Text style={styles.subToggleTitle} numberOfLines={1}>Add Security Deposit</Text>
-                    <Text style={styles.subToggleSubtitle} numberOfLines={2}>Record container/jar deposit collected at onboarding</Text>
+                    <Text style={styles.subToggleTitle} numberOfLines={1}>{t('products.depositAmount')}</Text>
+                    <Text style={styles.subToggleSubtitle} numberOfLines={2}>{t('customers.addSubDesc')}</Text>
                   </View>
                 </View>
                 {addDeposit
@@ -714,7 +712,7 @@ const AddCustomerScreen = () => {
                 <View style={styles.subscriptionSection}>
                   {/* Deposit Amount */}
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Deposit Amount (₹) *</Text>
+                    <Text style={styles.label}>{t('products.depositAmountLabel')}</Text>
                     <View style={styles.inputContainer}>
                       <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                       <TextInput
@@ -730,7 +728,7 @@ const AddCustomerScreen = () => {
 
                   {/* Container Count */}
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Containers/Jars Deposited</Text>
+                    <Text style={styles.label}>{t('customers.quantity')}</Text>
                     <View style={styles.inputContainer}>
                       <Package size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                       <TextInput
@@ -746,12 +744,12 @@ const AddCustomerScreen = () => {
 
                   {/* Deposit Notes */}
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Deposit Notes (Optional)</Text>
+                    <Text style={styles.label}>{t('oneTimeOrders.driverNotes')}</Text>
                     <View style={styles.inputContainer}>
                       <FileText size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
-                        placeholder="e.g. 3 jar deposit collected at onboarding"
+                        placeholder={t('oneTimeOrders.notesPlaceholder')}
                         value={depositNotes}
                         onChangeText={setDepositNotes}
                         placeholderTextColor={COLORS.textPlaceholder}
@@ -879,13 +877,13 @@ const AddCustomerScreen = () => {
                   style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
                   onPress={() => { setProductModalVisible(false); setAddProductInlineVisible(true); }}
                 >
-                  <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Product</Text>
+                  <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
                 </TouchableOpacity>
 
                 {loadingProducts ? (
                   <ActivityIndicator size="small" color={COLORS.primary} style={{ padding: 20 }} />
                 ) : products.length === 0 ? (
-                  <Text style={{ textAlign: 'center', padding: 20, color: COLORS.textPlaceholder }}>No products available.</Text>
+                  <Text style={{ textAlign: 'center', padding: 20, color: COLORS.textPlaceholder }}>{t('products.noProductsTitle')}</Text>
                 ) : (
                   <FlatList
                     data={products}

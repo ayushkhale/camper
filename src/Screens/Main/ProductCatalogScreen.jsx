@@ -152,7 +152,7 @@ const ProductCatalogScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>Product Catalog</Text>}
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('products.title')}</Text>}
         leftIcon={<ChevronLeft size={28} color="#FFF" />}
         onLeftPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
         height={140}
@@ -166,7 +166,7 @@ const ProductCatalogScreen = () => {
             <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search products..."
+              placeholder={t('products.searchPlaceholder')}
               placeholderTextColor={COLORS.textPlaceholder}
               value={searchQuery}
               onChangeText={handleSearchChange}
@@ -177,7 +177,7 @@ const ProductCatalogScreen = () => {
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading products...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : error ? (
           <View style={styles.centerContainer}>
@@ -185,7 +185,7 @@ const ProductCatalogScreen = () => {
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => fetchProducts()}>
               <RefreshCw size={16} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.retryText}>Retry</Text>
+              <Text style={styles.retryText}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -208,11 +208,11 @@ const ProductCatalogScreen = () => {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Package size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>No Products Found</Text>
+                <Text style={styles.emptyTitle}>{t('products.noProductsTitle')}</Text>
                 <Text style={styles.emptySubtitle}>
                   {searchQuery
-                    ? 'No products match your current search.'
-                    : 'Start by adding a new product to your catalog.'}
+                    ? t('customers.noCustomersSearch')
+                    : t('products.noProductsSub')}
                 </Text>
                 {!searchQuery && (
                   <TouchableOpacity
@@ -220,7 +220,7 @@ const ProductCatalogScreen = () => {
                     onPress={() => navigation.navigate('AddProduct')}
                   >
                     <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.emptyAddBtnText}>Add Product</Text>
+                    <Text style={styles.emptyAddBtnText}>{t('products.addNew')}</Text>
                   </TouchableOpacity>
                 )}
               </View>

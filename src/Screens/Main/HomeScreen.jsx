@@ -308,12 +308,12 @@ const HomeScreen = () => {
   );
 
   const features = [
-    { title: t('customers.addNew', 'Add Customer'), icon: Plus, screen: 'AddCustomer', color: '#3B82F6', iconBg: '#EFF6FF' },
-    { title: 'Products', icon: Package, screen: 'ProductCatalog', color: '#10B981', iconBg: '#ECFDF5' },
+    { title: t('customers.addNew'), icon: Plus, screen: 'AddCustomer', color: '#3B82F6', iconBg: '#EFF6FF' },
+    { title: t('products.title'), icon: Package, screen: 'ProductCatalog', color: '#10B981', iconBg: '#ECFDF5' },
     { title: t('subscriptions.title'), icon: Repeat, screen: 'SubscriptionList', color: '#F59E0B', iconBg: '#FFFBEB' },
-    { title: t('deliveries.allRoutes'), icon: MapPin, screen: 'RouteList', color: '#8B5CF6', iconBg: '#F5F3FF' },
-    { title: t('invoices.title', 'Invoices'), icon: FileText, screen: 'InvoiceList', color: '#EF4444', iconBg: '#FEF2F2' },
-    { title: 'All Deliveries', icon: Calendar, screen: 'PastDeliveries', color: '#6366F1', iconBg: '#EEF2FF' },
+    { title: t('routes.title'), icon: MapPin, screen: 'RouteList', color: '#8B5CF6', iconBg: '#F5F3FF' },
+    { title: t('invoices.title'), icon: FileText, screen: 'InvoiceList', color: '#EF4444', iconBg: '#FEF2F2' },
+    { title: t('deliveries.title'), icon: Calendar, screen: 'PastDeliveries', color: '#6366F1', iconBg: '#EEF2FF' },
   ];
 
   const totalDeliveries = Array.isArray(todaysDeliveries) ? todaysDeliveries.length : 0;
@@ -344,12 +344,12 @@ const HomeScreen = () => {
         ) : (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Today's Overview</Text>
+              <Text style={styles.sectionTitle}>{t('home.overviewTitle')}</Text>
             </View>
 
             {/* Daily Delivery Progress Card */}
             <View style={styles.progressCard}>
-              <Text style={styles.progressCardTitle}>Daily Delivery Progress</Text>
+              <Text style={styles.progressCardTitle}>{t('home.dailyProgress')}</Text>
               <View style={styles.progressRow}>
                 <View style={styles.circleContainer}>
                   <Svg width={90} height={90} viewBox="0 0 90 90">
@@ -373,11 +373,11 @@ const HomeScreen = () => {
                 </View>
 
                 <View style={styles.progressInfo}>
-                  <Text style={styles.remainingText}>{pendingDeliveries} remaining</Text>
-                  <Text style={styles.encouragingText}>Stay on track, you've got this!</Text>
+                  <Text style={styles.remainingText}>{pendingDeliveries} {t('deliveries.pending')}</Text>
+                  <Text style={styles.encouragingText}>{t('home.stayOnTrack')}</Text>
                   <View style={styles.routeBadge}>
                     <MapPin size={12} color="#0B409C" style={{ marginRight: 4 }} />
-                    <Text style={styles.routeBadgeText}>Today's Deliveries</Text>
+                    <Text style={styles.routeBadgeText}>{t('home.todaysDeliveries')}</Text>
                   </View>
                 </View>
 
@@ -390,19 +390,19 @@ const HomeScreen = () => {
             <View style={styles.statsGrid}>
               <View style={styles.statsRow}>
                 <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Customers' } })}>
-                  <Text style={styles.statLabel}>Customers</Text>
+                  <Text style={styles.statLabel}>{t('home.customers')}</Text>
                   <Text style={styles.statValue}>{stats.customers}</Text>
                   <View style={styles.statFooterRow}>
-                    <Text style={styles.statSubText}>+ Total</Text>
+                    <Text style={styles.statSubText}>+ {t('home.total')}</Text>
                     <UserPlus size={18} color="#3B82F6" />
                   </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate('SubscriptionList')}>
-                  <Text style={styles.statLabel}>Active Subscriptions</Text>
+                  <Text style={styles.statLabel}>{t('home.subscriptions')}</Text>
                   <Text style={styles.statValue}>{stats.subscriptions}</Text>
                   <View style={styles.statFooterRow}>
-                    <Text style={styles.statSubText}>+ Active</Text>
+                    <Text style={styles.statSubText}>+ {t('home.active')}</Text>
                     <Repeat size={18} color="#10B981" />
                   </View>
                 </TouchableOpacity>
@@ -410,19 +410,19 @@ const HomeScreen = () => {
 
               <View style={styles.statsRow}>
                 <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate('RouteList')}>
-                  <Text style={styles.statLabel}>Routes</Text>
+                  <Text style={styles.statLabel}>{t('home.routes')}</Text>
                   <Text style={styles.statValue}>{stats.routes}</Text>
                   <View style={styles.statFooterRow}>
-                    <Text style={[styles.statSubText, { color: '#059669' }]}>+ Scheduled</Text>
+                    <Text style={[styles.statSubText, { color: '#059669' }]}>+ {t('home.scheduled')}</Text>
                     <MapPin size={18} color="#059669" />
                   </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate('OneTimeOrderList')}>
-                  <Text style={styles.statLabel}>One-Time Orders</Text>
+                  <Text style={styles.statLabel}>{t('oneTimeOrders.title')}</Text>
                   <Text style={styles.statValue}>{stats.oneTimeOrders}</Text>
                   <View style={styles.statFooterRow}>
-                    <Text style={styles.statSubText}>+ Pending</Text>
+                    <Text style={styles.statSubText}>+ {t('deliveries.pending')}</Text>
                     <Package size={18} color="#F59E0B" />
                   </View>
                 </TouchableOpacity>
@@ -437,9 +437,9 @@ const HomeScreen = () => {
                     <Clock size={18} color="#3B82F6" />
                   </View>
                   <View style={styles.nextDeliveryInfo}>
-                    <Text style={styles.nextDeliveryTitle}>Next delivery</Text>
+                    <Text style={styles.nextDeliveryTitle}>{t('deliveries.title')}</Text>
                     <Text style={styles.nextDeliveryName} numberOfLines={1}>
-                      {nextDelivery.Customer?.name || 'Customer'}
+                      {nextDelivery.Customer?.name || t('customers.title')}
                     </Text>
                     {/* <Text style={styles.nextDeliveryAddress} numberOfLines={1}>
                       {nextDelivery.Customer?.address || 'View address'} • Stop 7 of {totalDeliveries}
@@ -457,7 +457,7 @@ const HomeScreen = () => {
 
             {/* Quick Actions */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Quick Actions</Text>
+              <Text style={styles.sectionTitle}>{t('home.quickActionsTitle')}</Text>
             </View>
             <View style={styles.quickActionsGrid}>
               {features.map((feature, idx) => (
@@ -477,7 +477,7 @@ const HomeScreen = () => {
 
             {/* Today's Orders / Premium List */}
             <View style={[styles.sectionHeader, { marginTop: 10, marginBottom: 8 }]}>
-              <Text style={styles.sectionTitle}>Today's Orders</Text>
+              <Text style={styles.sectionTitle}>{t('home.todaysDeliveries')}</Text>
             </View>
 
             <View style={styles.ordersListContainerOptionA}>
@@ -486,23 +486,23 @@ const HomeScreen = () => {
                   <View style={styles.emptyIconBg}>
                     <Truck size={28} color="#3B82F6" strokeWidth={2} />
                   </View>
-                  <Text style={styles.emptyOrdersTitle}>You're all caught up!</Text>
-                  <Text style={styles.emptyOrdersText}>No orders scheduled for today.</Text>
+                  <Text style={styles.emptyOrdersTitle}>{t('deliveries.emptyDeliveries')}</Text>
+                  <Text style={styles.emptyOrdersText}>{t('deliveries.emptyDeliveriesSub')}</Text>
                 </View>
               ) : (
                 todaysDeliveries.slice(0, 5).map((item, idx) => {
                   let statusColor = '#F59E0B'; // warning (orange)
                   let bgHighlight = '#FFFBEB'; // warning bg
-                  let statusText = 'PENDING';
+                  let statusText = t('deliveries.pending').toUpperCase();
 
                   if (item.status === 'delivered') {
                     statusColor = '#10B981'; // success
                     bgHighlight = '#ECFDF5';
-                    statusText = 'DELIVERED';
+                    statusText = t('deliveries.delivered').toUpperCase();
                   } else if (item.status === 'skipped') {
                     statusColor = '#EF4444'; // danger
                     bgHighlight = '#FEF2F2';
-                    statusText = 'SKIPPED';
+                    statusText = t('deliveries.skipped').toUpperCase();
                   }
 
                   const qty = item.Subscription?.baseQuantity || 1;
@@ -520,7 +520,7 @@ const HomeScreen = () => {
                         </View>
                         <View style={styles.orderRowInfo}>
                           <Text style={styles.orderRowName} numberOfLines={1}>
-                            {item.Customer?.name || 'Customer'}
+                            {item.Customer?.name || t('customers.title')}
                           </Text>
                           <Text style={styles.orderRowProduct} numberOfLines={1}>
                             {qty} jar{qty > 1 ? 's' : ''} - 20L
@@ -546,7 +546,7 @@ const HomeScreen = () => {
               style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 30, paddingVertical: 14, backgroundColor: '#EFF6FF', borderRadius: 12, alignItems: 'center' }}
               onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
             >
-              <Text style={{ color: '#1D4ED8', fontFamily: 'Geologica-Bold', fontSize: 15 }}>View All Deliveries</Text>
+              <Text style={{ color: '#1D4ED8', fontFamily: 'Geologica-Bold', fontSize: 15 }}>{t('deliveries.title')}</Text>
             </TouchableOpacity>
 
             <View style={{ height: 10 }} />
