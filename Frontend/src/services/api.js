@@ -1,7 +1,7 @@
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
-// const API_BASE_URL = 'http://192.168.1.5:3007';
-const API_BASE_URL = 'https://api-camper.compunic.co.in';
+const API_BASE_URL = 'http://192.168.1.5:3007';
+// const API_BASE_URL = 'https://api-camper.compunic.co.in';
 
 
 const logRequest = (url, body) => {
