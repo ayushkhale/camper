@@ -33,8 +33,9 @@ const RouteListScreen = () => {
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      const res = await api.getRoutes(userToken);
-      if (res.success && res.data) {
+      const getFn = api.getRoutes || api.listRoutes;
+      const res = getFn ? await getFn(userToken) : { success: false };
+      if (res && res.success && Array.isArray(res.data)) {
         setRoutes(res.data);
       } else {
         setRoutes([]);

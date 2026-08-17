@@ -71,10 +71,10 @@ const SubscriptionListScreen = () => {
 
   const formatRecurrence = (pattern) => {
     switch (pattern) {
-      case 'daily': return 'Daily';
-      case 'alternate': case 'alternate_days': return 'Alternate Days';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
+      case 'daily': return t('subscriptions.daily');
+      case 'alternate': case 'alternate_days': return t('subscriptions.alternateDays');
+      case 'weekly': return t('subscriptions.weekly');
+      case 'monthly': return t('subscriptions.monthly');
       default: return pattern || '';
     }
   };
@@ -115,7 +115,10 @@ const SubscriptionListScreen = () => {
           <View style={styles.statusBadge}>
             <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
             <Text style={[styles.statusText, { color: statusColors.text }]}>
-              {(item.status || 'active').toUpperCase()}
+              {item.status === 'active' ? t('subscriptions.active').toUpperCase() 
+               : item.status === 'paused' ? t('subscriptions.paused').toUpperCase() 
+               : item.status === 'ended' ? t('subscriptions.ended').toUpperCase() 
+               : (item.status || 'active').toUpperCase()}
             </Text>
           </View>
         </View>
@@ -126,7 +129,7 @@ const SubscriptionListScreen = () => {
           <View style={styles.metaContainer}>
             <Repeat size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
             <Text style={styles.metaText} numberOfLines={1}>
-              Qty: {item.baseQuantity} • {formatRecurrence(item.recurrencePattern)}
+              {t('subscriptions.qty')}: {item.baseQuantity} • {formatRecurrence(item.recurrencePattern)}
             </Text>
           </View>
           <ChevronRight size={18} color={COLORS.textPlaceholder} />
@@ -155,7 +158,7 @@ const SubscriptionListScreen = () => {
             activeOpacity={0.7}
           >
             <Text style={[styles.tabText, filterStatus === 'all' && styles.tabTextActive]}>
-              All
+              {t('common.all')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -164,7 +167,7 @@ const SubscriptionListScreen = () => {
             activeOpacity={0.7}
           >
             <Text style={[styles.tabText, filterStatus === 'active' && styles.tabTextActive]}>
-              Active
+              {t('subscriptions.active')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -173,7 +176,7 @@ const SubscriptionListScreen = () => {
             activeOpacity={0.7}
           >
             <Text style={[styles.tabText, filterStatus === 'paused' && styles.tabTextActive]}>
-              Paused
+              {t('subscriptions.paused')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -182,7 +185,7 @@ const SubscriptionListScreen = () => {
             activeOpacity={0.7}
           >
             <Text style={[styles.tabText, filterStatus === 'ended' && styles.tabTextActive]}>
-              Ended
+              {t('subscriptions.ended')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -193,7 +196,7 @@ const SubscriptionListScreen = () => {
             <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by customer or product..."
+              placeholder={t('subscriptions.searchPlaceholder')}
               placeholderTextColor={COLORS.textPlaceholder}
               value={searchQuery}
               onChangeText={setSearchQuery}

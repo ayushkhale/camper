@@ -46,6 +46,11 @@ const getNext7Days = () => {
 const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedEditStatus, setSelectedEditStatus] = useState(delivery.status || 'pending');
+
+  useEffect(() => {
+    setSelectedEditStatus(delivery.status || 'pending');
+  }, [delivery.status]);
 
   const expectedTotal = (delivery.expectedSubscriptionUnits || 0) + (delivery.expectedAddonUnits || 0);
   const defaultFull = (delivery.status === 'pending' && (!delivery.fullUnitsDelivered || delivery.fullUnitsDelivered === 0))
@@ -75,6 +80,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
   };
 
   const handleStatusChange = (newStatus) => {
+    setSelectedEditStatus(newStatus);
     handleUpdate(newStatus, fullUnits, emptyUnits);
   };
 
@@ -101,13 +107,13 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Package size={12} color="#64748B" style={{ marginRight: 4 }} />
             <Text style={styles.subTextOptionC} numberOfLines={1}>
-              {delivery.Subscription?.Product?.name || 'Water Camper 20Ltr'} • Qty: {delivery.Subscription?.baseQuantity || 1}
+              {delivery.Subscription?.Product?.name || (delivery.oneTimeOrderId ? 'One-Time Order' : 'Water Camper 20Ltr')} • Qty: {delivery.Subscription?.baseQuantity || delivery.expectedAddonUnits || delivery.fullUnitsDelivered || 1}
             </Text>
           </View>
         </View>
 
         <View style={styles.headerActionsOptionC}>
-          {delivery.status === 'pending' && !isEditing && (
+          {!isEditing && (
             <TouchableOpacity
               style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', marginRight: 6 }]}
               onPress={(e) => {
@@ -117,7 +123,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
               }}
               activeOpacity={0.7}
             >
-              <Edit2 size={20} color="#EA580C" />
+              <Edit2 size={18} color="#EA580C" />
             </TouchableOpacity>
           )}
 
@@ -134,14 +140,28 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
             </TouchableOpacity>
           )}
           {delivery.status === 'delivered' && !isExpanded && (
-            <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#ECFDF5', borderColor: '#10B981' }]}>
+            <TouchableOpacity
+              style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#ECFDF5', borderColor: '#10B981' }]}
+              onPress={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+              }}
+              activeOpacity={0.7}
+            >
               <CheckSquare size={22} color="#10B981" />
-            </View>
+            </TouchableOpacity>
           )}
           {delivery.status === 'skipped' && !isExpanded && (
-            <View style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }]}>
+            <TouchableOpacity
+              style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }]}
+              onPress={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+              }}
+              activeOpacity={0.7}
+            >
               <XCircle size={22} color="#EF4444" />
-            </View>
+            </TouchableOpacity>
           )}
 
           <View style={styles.expandIconContainerOptionC}>
@@ -198,17 +218,60 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
                   />
                 </View>
               </View>
-              <View style={{flexDirection: 'row', gap: 10, marginTop: 8}}>
+
+              {/* Status Pills Selector */}
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#475569', marginTop: 10, marginBottom: 6 }}>
+                Change Delivery Status:
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                 <TouchableOpacity
-                  style={[styles.inlineSaveBtnOptionC, {flex: 1, backgroundColor: '#F1F5F9', marginTop: 0}]}
+                  style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
+                    selectedEditStatus === 'delivered' && { backgroundColor: '#ECFDF5', borderColor: '#10B981' }
+                  ]}
+                  onPress={() => setSelectedEditStatus('delivered')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'delivered' && { color: '#15803D' }]}>
+                    DELIVERED
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
+                    selectedEditStatus === 'skipped' && { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }
+                  ]}
+                  onPress={() => setSelectedEditStatus('skipped')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'skipped' && { color: '#B91C1C' }]}>
+                    SKIPPED
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
+                    selectedEditStatus === 'pending' && { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }
+                  ]}
+                  onPress={() => setSelectedEditStatus('pending')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'pending' && { color: '#B45309' }]}>
+                    PENDING
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                <TouchableOpacity
+                  style={[styles.inlineSaveBtnOptionC, { flex: 1, backgroundColor: '#F1F5F9', marginTop: 0 }]}
                   onPress={() => setIsEditing(false)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.inlineSaveBtnTextOptionC, {color: '#64748B'}]}>{t ? t('common.cancel') : 'Cancel'}</Text>
+                  <Text style={[styles.inlineSaveBtnTextOptionC, { color: '#64748B' }]}>{t ? t('common.cancel') : 'Cancel'}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.inlineSaveBtnOptionC, {flex: 1, marginTop: 0}]}
-                  onPress={() => handleUpdate(delivery.status, fullUnits, emptyUnits)}
+                  style={[styles.inlineSaveBtnOptionC, { flex: 1, marginTop: 0 }]}
+                  onPress={() => handleUpdate(selectedEditStatus, fullUnits, emptyUnits)}
                   activeOpacity={0.8}
                 >
                   <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
@@ -331,8 +394,8 @@ const OrdersScreen = () => {
       if (res && res.success) {
         let rawList = Array.isArray(res.data) ? res.data : (res.data?.deliveries || []);
 
-        // Filter out one-time orders from this daily view screen
-        rawList = rawList.filter(item => !item.oneTimeOrderId);
+        // Exclude one-time order deliveries from Today's & All Deliveries view
+        rawList = rawList.filter(item => !item.oneTimeOrderId && !item.one_time_order_item_id);
 
         setAllDeliveries(rawList);
       }
@@ -379,10 +442,22 @@ const OrdersScreen = () => {
         setAllDeliveries(prev => prev.map(d => d.id === deliveryId ? { ...d, status: data.status } : d));
         fetchDeliveries(selectedDate, selectedRouteId);
       } else {
-        showAlert('Error', res.message || 'Failed to update delivery', 'error');
+        const msg = res?.message || 'Failed to update delivery';
+        const isLocked = msg.toLowerCase().includes('locked') || msg.toLowerCase().includes('invoice has already been generated');
+        if (isLocked) {
+          showAlert('Locked Delivery', 'This order is locked because an invoice has already been generated for it.', 'info');
+        } else {
+          showAlert('Error', msg, 'error');
+        }
       }
     } catch (err) {
-      showAlert('Error', err.message, 'error');
+      const msg = err?.message || '';
+      const isLocked = msg.toLowerCase().includes('locked') || msg.toLowerCase().includes('invoice has already been generated');
+      if (isLocked) {
+        showAlert('Locked Delivery', 'This order is locked because an invoice has already been generated for it.', 'info');
+      } else {
+        showAlert('Error', msg || 'Failed to update delivery', 'error');
+      }
     }
   };
 
@@ -411,17 +486,25 @@ const OrdersScreen = () => {
   };
 
   const filteredDeliveries = allDeliveries.filter(item => {
-    if (selectedStatus === 'pending') return item.status === 'pending';
-    if (selectedStatus === 'completed') return item.status === 'delivered' || item.status === 'completed';
+    const st = (item.status || '').toLowerCase();
+    if (selectedStatus === 'pending') return st === 'pending';
+    if (selectedStatus === 'completed') return st === 'delivered' || st === 'completed';
+    if (selectedStatus === 'skipped') return st === 'skipped' || st === 'skip';
     return true;
   });
 
   const totalDeliveries = Array.isArray(allDeliveries) ? allDeliveries.length : 0;
   const completedDeliveries = Array.isArray(allDeliveries)
-    ? allDeliveries.filter(d => (d.status || '').toUpperCase() === 'DELIVERED' || (d.status || '').toUpperCase() === 'COMPLETED').length
+    ? allDeliveries.filter(d => (d.status || '').toLowerCase() === 'delivered' || (d.status || '').toLowerCase() === 'completed').length
     : 0;
-  const pendingDeliveries = totalDeliveries - completedDeliveries;
-  const deliveryProgress = totalDeliveries === 0 ? 0 : Math.round((completedDeliveries / totalDeliveries) * 100);
+  const skippedDeliveries = Array.isArray(allDeliveries)
+    ? allDeliveries.filter(d => (d.status || '').toLowerCase() === 'skipped' || (d.status || '').toLowerCase() === 'skip').length
+    : 0;
+  const pendingDeliveries = Array.isArray(allDeliveries)
+    ? allDeliveries.filter(d => (d.status || '').toLowerCase() === 'pending').length
+    : 0;
+  const rawProgress = totalDeliveries > 0 ? Math.round((completedDeliveries / totalDeliveries) * 100) : 0;
+  const deliveryProgress = Math.min(100, Math.max(0, isNaN(rawProgress) ? 0 : rawProgress));
 
   return (
     <View style={styles.container}>
@@ -456,7 +539,7 @@ const OrdersScreen = () => {
               >
                 <Truck size={16} color="#334155" style={{ marginRight: 8 }} />
                 <Text style={styles.filterBtnTextOptionC} numberOfLines={1}>
-                  {selectedStatus === 'pending' ? 'Pending' : selectedStatus === 'completed' ? 'Completed' : 'All'}
+                  {selectedStatus === 'pending' ? t('deliveries.pending') : selectedStatus === 'completed' ? t('deliveries.completed') : selectedStatus === 'skipped' ? t('deliveries.skipped') : t('common.all')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -474,8 +557,8 @@ const OrdersScreen = () => {
                   <FileText size={18} color="#0B409C" style={{ marginRight: 8 }} />
                   <Text style={styles.generateBtnTextOptionC}>
                     {Array.isArray(allDeliveries) && allDeliveries.length === 0
-                      ? 'Generate Delivery for Today'
-                      : 'Refresh Delivery'}
+                      ? t('deliveries.generateForToday')
+                      : t('deliveries.refresh')}
                   </Text>
                 </>
               )}
@@ -487,9 +570,8 @@ const OrdersScreen = () => {
               <View style={styles.linearProgressMain}>
                 <View style={styles.linearProgressHeader}>
                   <Text style={styles.linearProgressStats}>
-                    <Text style={styles.linearProgressStatsBig}>{completedDeliveries}</Text> <Text style={styles.linearProgressStatsSmall}>/ {totalDeliveries} Completed</Text>
+                    <Text style={styles.linearProgressStatsBig}>{completedDeliveries}</Text> <Text style={styles.linearProgressStatsSmall}>/ {totalDeliveries} Delivered</Text>
                   </Text>
-                  <Text style={styles.linearProgressPercent}>{deliveryProgress}%</Text>
                 </View>
                 <View style={styles.linearProgressBarBg}>
                   <View style={[styles.linearProgressBarFill, { width: `${deliveryProgress}%` }]} />
@@ -502,6 +584,16 @@ const OrdersScreen = () => {
                 <Text style={styles.linearProgressPendingNum}>{pendingDeliveries}</Text>
                 <Text style={styles.linearProgressPendingText}>{t('deliveries.pending')}</Text>
               </View>
+
+              {skippedDeliveries > 0 && (
+                <>
+                  <View style={styles.linearProgressDivider} />
+                  <View style={styles.linearProgressPending}>
+                    <Text style={[styles.linearProgressPendingNum, { color: '#EF4444' }]}>{skippedDeliveries}</Text>
+                    <Text style={[styles.linearProgressPendingText, { color: '#EF4444' }]}>{t('deliveries.skipped') || 'Skipped'}</Text>
+                  </View>
+                </>
+              )}
             </View>
           </View>
 
@@ -604,7 +696,7 @@ const OrdersScreen = () => {
                   onPress={() => { setSelectedStatus('pending'); setActiveFilterModal(null); }}
                 >
                   <Text style={[styles.filterModalItemText, selectedStatus === 'pending' && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
-                    Pending
+                    {t('deliveries.pending')}
                   </Text>
                 </TouchableOpacity>
 
@@ -614,17 +706,27 @@ const OrdersScreen = () => {
                   onPress={() => { setSelectedStatus('completed'); setActiveFilterModal(null); }}
                 >
                   <Text style={[styles.filterModalItemText, selectedStatus === 'completed' && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
-                    Completed
+                    {t('deliveries.completed')}
                   </Text>
                 </TouchableOpacity>
 
-                {/* 3. All (In Last) */}
+                {/* 3. Skipped */}
+                <TouchableOpacity
+                  style={styles.filterModalItem}
+                  onPress={() => { setSelectedStatus('skipped'); setActiveFilterModal(null); }}
+                >
+                  <Text style={[styles.filterModalItemText, selectedStatus === 'skipped' && { color: COLORS.danger || '#EF4444', fontFamily: 'Geologica-Bold' }]}>
+                    {t('deliveries.skipped')}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* 4. All (In Last) */}
                 <TouchableOpacity
                   style={styles.filterModalItem}
                   onPress={() => { setSelectedStatus('all'); setActiveFilterModal(null); }}
                 >
                   <Text style={[styles.filterModalItemText, selectedStatus === 'all' && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
-                    All
+                    {t('common.all')}
                   </Text>
                 </TouchableOpacity>
               </ScrollView>

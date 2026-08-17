@@ -51,26 +51,43 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
     ? formatDisplayDate(item.orderFrom) 
     : `${formatDisplayDate(item.orderFrom)} → ${formatDisplayDate(item.orderTo)}`;
   
-  const expectedQty = (item.OneTimeOrderItems || []).reduce((acc, current) => {
+  const orderedQty = (item.OneTimeOrderItems || []).reduce((acc, current) => {
     return acc + (parseInt(current.quantity) || 0);
   }, 0);
 
-  const defaultFull = (item.status === 'pending' && !item.fullUnitsDelivered)
-    ? (expectedQty > 0 ? String(expectedQty) : '0')
-    : String(item.fullUnitsDelivered || 0);
+  const totalDeliveredUnits = (item.Deliveries || []).reduce((acc, d) => {
+    return acc + (parseInt(d.fullUnitsDelivered) || 0);
+  }, 0);
+
+  const totalEmptyUnits = (item.Deliveries || []).reduce((acc, d) => {
+    return acc + (parseInt(d.emptyUnitsCollected) || 0);
+  }, 0);
+
+  const additionalJars = Math.max(0, totalDeliveredUnits - orderedQty);
+  const remainingJars = Math.max(0, orderedQty - totalDeliveredUnits);
+
+  const defaultFull = (item.status === 'pending')
+    ? (remainingJars > 0 ? String(remainingJars) : String(orderedQty || 1))
+    : String(totalDeliveredUnits || 0);
     
-  const defaultEmpty = (item.status === 'pending' && !item.emptyUnitsCollected)
+  const defaultEmpty = (item.status === 'pending')
     ? '0'
-    : String(item.emptyUnitsCollected || 0);
+    : String(totalEmptyUnits || 0);
 
   const [fullUnits, setFullUnits] = useState(defaultFull);
   const [emptyUnits, setEmptyUnits] = useState(defaultEmpty);
 
   const totalOrderPrice = (item.OneTimeOrderItems || []).reduce((acc, current) => {
-    const price = parseFloat(current.unitPrice) || 0;
-    const qty = parseInt(current.quantity) || 0;
-    return acc + (price * qty);
+    const productPrice = parseFloat(current.unitPrice) || 0;
+    const qty = totalDeliveredUnits > 0 ? totalDeliveredUnits : (parseInt(current.quantity) || 0);
+    return acc + (productPrice * qty);
   }, 0);
+
+  const displayUnitPrice = parseFloat(item.OneTimeOrderItems?.[0]?.unitPrice) || 0;
+  const activeQty = totalDeliveredUnits > 0 ? totalDeliveredUnits : orderedQty;
+  const priceDisplayString = displayUnitPrice > 0 
+    ? `₹${displayUnitPrice.toFixed(2)} × ${activeQty} = ₹${totalOrderPrice.toFixed(2)}`
+    : `₹${totalOrderPrice.toFixed(2)}`;
 
   const itemsCount = (item.OneTimeOrderItems || []).length;
   const itemsSummary = (item.OneTimeOrderItems || [])
@@ -114,13 +131,23 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
         </View>
         <View style={styles.titleContainer}>
           <Text style={styles.customerName} numberOfLines={1}>
-            {item.Customer?.name || 'Unknown Customer'}
+            {item.Customer?.name || t('common.unknownCustomer')}
           </Text>
           <View style={styles.row}>
             <Text style={styles.subText} numberOfLines={1}>
-              {itemsCount === 1 ? itemsSummary : `${itemsCount} Products: ${itemsSummary}`}
+              {itemsCount === 1 ? itemsSummary : `${itemsCount} ${t('common.products')}: ${itemsSummary}`}
             </Text>
           </View>
+          {additionalJars > 0 && (
+            <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#16A34A', marginTop: 2 }}>
+              + {additionalJars} {t('deliveries.additionalJars')}
+            </Text>
+          )}
+          {remainingJars > 0 && item.status === 'pending' && (
+            <Text style={{ fontSize: 11, fontFamily: 'Geologica-Medium', color: '#D97706', marginTop: 2 }}>
+              {remainingJars} {t('deliveries.remainingJars')}
+            </Text>
+          )}
         </View>
 
         <View style={styles.headerActions}>
@@ -181,7 +208,7 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
         </View>
 
         <View style={styles.footerRight}>
-          <Text style={styles.totalPrice}>₹{totalOrderPrice.toFixed(2)}</Text>
+          <Text style={styles.totalPrice}>{priceDisplayString}</Text>
           
           {item.status === 'pending' && onCancelOrder && (
             <TouchableOpacity
@@ -195,59 +222,111 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
         </View>
       </View>
 
-      {isExpanded && item.status === 'pending' && (
+      {isExpanded && (
         <View style={styles.expandedContent}>
 
-          {!isEditing ? (
-            <View style={styles.sliderSection}>
-              <View style={styles.sliderUnitsRow}>
-                <View style={[styles.sliderUnit, styles.sliderUnitEmpty]}>
-                  <Text style={[styles.sliderUnitLabel, { color: '#64748B' }]}>{t('deliveries.emptyJars')}</Text>
-                  <Text style={[styles.sliderUnitValue, { color: '#0F172A' }]}>{emptyUnits}</Text>
-                </View>
-                <View style={[styles.sliderUnit, styles.sliderUnitDelivered]}>
-                  <Text style={[styles.sliderUnitLabel, { color: '#1D4ED8' }]}>{t('deliveries.delivered')}</Text>
-                  <Text style={[styles.sliderUnitValue, { color: '#1D4ED8' }]}>{fullUnits}</Text>
-                </View>
+          {Array.isArray(item.Deliveries) && item.Deliveries.length > 0 ? (
+            <View style={styles.deliveryLogsSection}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <Text style={styles.deliveryLogsTitle}>{t('deliveries.deliveryLogs')} ({item.Deliveries.length})</Text>
+                {additionalJars > 0 && (
+                  <View style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                    <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#15803D' }}>
+                      +{additionalJars} {t('deliveries.additionalJars')}
+                    </Text>
+                  </View>
+                )}
               </View>
-              <DeliveryStatusSlider 
-                status={item.status} 
-                onStatusChange={handleStatusChange} 
-              />
+              {item.Deliveries.map((delivery, dIdx) => {
+                const dStatus = (delivery.status || 'pending').toLowerCase();
+                const badgeBg = dStatus === 'delivered' ? '#ECFDF5' : dStatus === 'skipped' ? '#FEF2F2' : '#FFFBEB';
+                const badgeColor = dStatus === 'delivered' ? '#15803D' : dStatus === 'skipped' ? '#B91C1C' : '#B45309';
+
+                return (
+                  <View key={delivery.id || dIdx} style={styles.deliveryLogRow}>
+                    <View style={styles.deliveryLogHeader}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Truck size={14} color="#64748B" style={{ marginRight: 6 }} />
+                        <Text style={styles.deliveryLogDate}>{delivery.deliveryDate || 'N/A'}</Text>
+                      </View>
+                      <View style={[styles.deliveryLogBadge, { backgroundColor: badgeBg }]}>
+                        <Text style={[styles.deliveryLogBadgeText, { color: badgeColor }]}>
+                          {dStatus.toUpperCase()}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.deliveryLogUnitsRow}>
+                      <Text style={styles.deliveryLogUnitText}>
+                        {t('deliveries.delivered')}: <Text style={{ fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{delivery.fullUnitsDelivered ?? 0}</Text>
+                      </Text>
+                      <Text style={styles.deliveryLogUnitText}>
+                        {t('deliveries.emptyCollected')}: <Text style={{ fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{delivery.emptyUnitsCollected ?? 0}</Text>
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
             </View>
-          ) : (
-            <View style={styles.inlineEditContainer}>
-              <View style={styles.inlineInputWrapper}>
-                <View style={styles.inlineInputGroup}>
-                  <Text style={styles.inlineInputLabel}>{t('deliveries.fullUnits')}</Text>
-                  <TextInput
-                    style={styles.inlineInput}
-                    value={fullUnits}
-                    onChangeText={setFullUnits}
-                    keyboardType="numeric"
-                    placeholder="0"
+          ) : item.status !== 'pending' ? (
+            <View style={styles.noDeliveriesInfo}>
+              <Text style={styles.noDeliveriesText}>{t('deliveries.awaitingLogs')}</Text>
+            </View>
+          ) : null}
+
+          {item.status === 'pending' && (
+            <>
+              {!isEditing ? (
+                <View style={styles.sliderSection}>
+                  <View style={styles.sliderUnitsRow}>
+                    <View style={[styles.sliderUnit, styles.sliderUnitEmpty]}>
+                      <Text style={[styles.sliderUnitLabel, { color: '#64748B' }]}>{t('deliveries.emptyJars')}</Text>
+                      <Text style={[styles.sliderUnitValue, { color: '#0F172A' }]}>{emptyUnits}</Text>
+                    </View>
+                    <View style={[styles.sliderUnit, styles.sliderUnitDelivered]}>
+                      <Text style={[styles.sliderUnitLabel, { color: '#1D4ED8' }]}>{t('deliveries.delivered')}</Text>
+                      <Text style={[styles.sliderUnitValue, { color: '#1D4ED8' }]}>{fullUnits}</Text>
+                    </View>
+                  </View>
+                  <DeliveryStatusSlider 
+                    status={item.status} 
+                    onStatusChange={handleStatusChange} 
                   />
                 </View>
-                <View style={styles.inlineInputGroup}>
-                  <Text style={styles.inlineInputLabel}>{t('deliveries.emptyUnits')}</Text>
-                  <TextInput
-                    style={styles.inlineInput}
-                    value={emptyUnits}
-                    onChangeText={setEmptyUnits}
-                    keyboardType="numeric"
-                    placeholder="0"
-                  />
+              ) : (
+                <View style={styles.inlineEditContainer}>
+                  <View style={styles.inlineInputWrapper}>
+                    <View style={styles.inlineInputGroup}>
+                      <Text style={styles.inlineInputLabel}>{t('deliveries.fullUnits')}</Text>
+                      <TextInput
+                        style={styles.inlineInput}
+                        value={fullUnits}
+                        onChangeText={setFullUnits}
+                        keyboardType="numeric"
+                        placeholder="0"
+                      />
+                    </View>
+                    <View style={styles.inlineInputGroup}>
+                      <Text style={styles.inlineInputLabel}>{t('deliveries.emptyUnits')}</Text>
+                      <TextInput
+                        style={styles.inlineInput}
+                        value={emptyUnits}
+                        onChangeText={setEmptyUnits}
+                        keyboardType="numeric"
+                        placeholder="0"
+                      />
+                    </View>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.inlineSaveBtn}
+                    onPress={() => handleUpdate('delivered', fullUnits, emptyUnits)}
+                    activeOpacity={0.8}
+                  >
+                    <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
+                    <Text style={styles.inlineSaveBtnText}>{t('common.save')}</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-              <TouchableOpacity 
-                style={styles.inlineSaveBtn}
-                onPress={() => handleUpdate('delivered', fullUnits, emptyUnits)}
-                activeOpacity={0.8}
-              >
-                <Save size={16} color="#FFF" style={{ marginRight: 4 }} />
-                <Text style={styles.inlineSaveBtnText}>{t('common.save')}</Text>
-              </TouchableOpacity>
-            </View>
+              )}
+            </>
           )}
         </View>
       )}
@@ -452,7 +531,7 @@ const OneTimeOrderListScreen = () => {
                 <Text style={styles.emptyTitle}>{t('oneTimeOrders.noOrders')}</Text>
                 <Text style={styles.emptySubtitle}>
                   {searchQuery 
-                    ? 'No orders match your search query.' 
+                    ? t('oneTimeOrders.noOrdersSearch') 
                     : t('oneTimeOrders.noOrdersSub')}
                 </Text>
               </View>
@@ -834,6 +913,72 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 6,
+  },
+  deliveryLogsSection: {
+    marginBottom: 12,
+    padding: 10,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  deliveryLogsTitle: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
+    color: '#475569',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  deliveryLogRow: {
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  deliveryLogHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  deliveryLogDate: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: '#334155',
+  },
+  deliveryLogBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  deliveryLogBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Geologica-Bold',
+  },
+  deliveryLogUnitsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  deliveryLogUnitText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Regular',
+    color: '#64748B',
+  },
+  noDeliveriesInfo: {
+    padding: 10,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  noDeliveriesText: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: '#64748B',
   },
 });
 

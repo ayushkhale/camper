@@ -19,8 +19,10 @@ import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
 import CurvedHeader from '../../components/CurvedHeader';
+import { useTranslation } from 'react-i18next';
 
 const AddRouteScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
@@ -79,7 +81,7 @@ const AddRouteScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{isEditing ? 'Edit Route' : 'Create Route'}</Text>}
+        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{isEditing ? t('routes.editRoute') : t('routes.createRoute')}</Text>}
         leftIcon={<ChevronLeft size={28} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
         height={120}
@@ -99,12 +101,12 @@ const AddRouteScreen = () => {
           <View style={styles.form}>
             {/* Route Name Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Route Name *</Text>
+              <Text style={styles.label}>{t('routes.routeName')}</Text>
               <View style={styles.inputContainer}>
                 <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Satellite Area Route"
+                  placeholder={t('routes.namePlaceholder')}
                   placeholderTextColor={COLORS.textPlaceholder}
                   value={name}
                   onChangeText={setName}
@@ -114,12 +116,12 @@ const AddRouteScreen = () => {
 
             {/* Area Code Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Area Code (Optional)</Text>
+              <Text style={styles.label}>{t('routes.areaCode')}</Text>
               <View style={styles.inputContainer}>
                 <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. SAT-01"
+                  placeholder={t('routes.areaCodePlaceholder')}
                   placeholderTextColor={COLORS.textPlaceholder}
                   value={areaCode}
                   onChangeText={setAreaCode}
@@ -142,7 +144,7 @@ const AddRouteScreen = () => {
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.btnTextPrimary}>
-                {isEditing ? 'Save Changes' : 'Create Route'}
+                {isEditing ? t('common.saveChanges') : t('routes.createRoute')}
               </Text>
             )}
           </TouchableOpacity>

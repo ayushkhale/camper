@@ -15,6 +15,7 @@ import Svg, { Path } from 'react-native-svg';
 import RNPrint from 'react-native-print';
 import { generatePDF } from 'react-native-html-to-pdf';
 import RNShare from 'react-native-share';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import {
@@ -26,6 +27,7 @@ import {
   CreditCard,
   MessageCircle,
   Printer,
+  Download,
   ChevronLeft,
 } from 'lucide-react-native';
 
@@ -42,7 +44,7 @@ import { api } from '../../services/api';
 import { useTranslation } from 'react-i18next';
 
 const InvoiceDetailScreen = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const route = useRoute();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
@@ -51,7 +53,9 @@ const InvoiceDetailScreen = () => {
 
   const [invoiceData, setInvoiceData] = useState(initialInvoice || null);
   const [loading, setLoading] = useState(!initialInvoice?.Deliveries && !initialInvoice?.InvoiceLineItems);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isSharingPdf, setIsSharingPdf] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isPrintingPdf, setIsPrintingPdf] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchInvoiceDetail = async () => {
@@ -146,11 +150,11 @@ const InvoiceDetailScreen = () => {
   const statusInfo = getStatusBadge(invoiceData?.status);
   const deliveries = invoiceData?.Deliveries || invoiceData?.deliveries || [];
   const lineItems = invoiceData?.InvoiceLineItems || invoiceData?.lineItems || [];
-  
+
   const previousDues = parseFloat(invoiceData?.previousDues || 0);
   const currentCharges = parseFloat(invoiceData?.totalAmount || 0);
   const amountPaid = parseFloat(invoiceData?.amountPaid || 0);
-  
+
   const grandTotal = currentCharges + previousDues;
   const balanceDue = Math.max(0, grandTotal - amountPaid);
 
@@ -159,13 +163,27 @@ const InvoiceDetailScreen = () => {
   const handleWhatsAppShare = async () => {
     try {
       const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
+      const bName = invoiceData?.businessName || invoiceData?.VendorProfile?.businessName || 'Patidar Water Plant';
+      const rawPhone = invoiceData?.customerPhone || invoiceData?.Customer?.phone;
+      let cleanPhone = rawPhone ? String(rawPhone).replace(/[^0-9]/g, '') : '';
+      if (cleanPhone.length === 10) {
+        cleanPhone = `91${cleanPhone}`;
+      }
+
+      let message = `*INVOICE: ${invoiceNum}*\n`;
+      message += `*Business:* ${bName}\n`;
+      message += `*Customer:* ${customerName}\n`;
+      message += `*Grand Total:* ${formatCurrency(grandTotal)}\n`;
       message += `*Paid:* ${formatCurrency(amountPaid)}\n`;
-      message += `*Balance Due: ${formatCurrency(balanceDue)}*\n\n`;
-      message += `Thank you for your business!`;
+      message += `*Balance Due:* ${formatCurrency(balanceDue)}\n\n`;
+      message += `Thank you for choosing ${bName}!`;
 
       const encodedMessage = encodeURIComponent(message);
-      const whatsappUrl = `whatsapp://send?text=${encodedMessage}`;
-      
+      let whatsappUrl = `whatsapp://send?text=${encodedMessage}`;
+      if (cleanPhone && cleanPhone.length >= 10) {
+        whatsappUrl = `whatsapp://send?phone=${cleanPhone}&text=${encodedMessage}`;
+      }
+
       const canOpen = await Linking.canOpenURL(whatsappUrl);
       if (canOpen) {
         await Linking.openURL(whatsappUrl);
@@ -177,64 +195,157 @@ const InvoiceDetailScreen = () => {
     }
   };
 
-  const generateInvoiceHTML = () => {
-      const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
-      let itemsHtml = '';
-      
-      let allItems = deliveries.length > 0 ? deliveries : lineItems;
-      const openingBalanceItem = lineItems.find(item => item.description?.toLowerCase().includes('opening balance'));
-      if (deliveries.length > 0 && openingBalanceItem) {
-        allItems = [openingBalanceItem, ...deliveries];
+  const getItemQuantity = (item) => {
+    if (item.quantity !== undefined && item.quantity !== null) {
+      return parseInt(item.quantity) || 0;
+    }
+    if (item.fullUnitsDelivered !== undefined && item.fullUnitsDelivered !== null) {
+      return parseInt(item.fullUnitsDelivered) || 0;
+    }
+    if (item.description) {
+      const match = item.description.match(/(\d+)\s*(?:can\(s\)|unit\(s\)|cans|units|jars|jar|pcs|pieces)/i);
+      if (match && match[1]) {
+        return parseInt(match[1]);
       }
-      
-      let renderedRows = 0;
-      if (allItems.length > 0) {
-        allItems.forEach((item, index) => {
-          renderedRows++;
-          const qty = item.fullUnitsDelivered || item.quantity || 1;
-          const rate = item.unitPriceCharged || item.unitPrice || item.amount || 0;
-          itemsHtml += `
+      const leadingMatch = item.description.match(/\]\s*(\d+)/i);
+      if (leadingMatch && leadingMatch[1]) {
+        return parseInt(leadingMatch[1]);
+      }
+    }
+    const status = (item.status || '').toLowerCase();
+    if (status === 'skipped' || status === 'pending') {
+      return 0;
+    }
+    return 1;
+  };
+
+  const getItemDetails = (item) => {
+    let productName = item.productName || item.Product?.name || item.Subscription?.Product?.name;
+    let rawDescription = item.description || '';
+    let status = (item.status || '').toLowerCase();
+
+    if (rawDescription) {
+      const lowerDesc = rawDescription.toLowerCase();
+      if (lowerDesc.includes('skipped') || lowerDesc.includes('not delivered (skipped)')) {
+        status = 'skipped';
+      } else if (lowerDesc.includes('pending') || lowerDesc.includes('not delivered (pending)')) {
+        status = 'pending';
+      } else if (lowerDesc.includes('delivered')) {
+        status = 'delivered';
+      }
+    }
+
+    if (!productName && rawDescription) {
+      if (rawDescription.toLowerCase().includes('opening balance')) {
+        productName = 'Opening Balance';
+      } else if (rawDescription.includes(' of ') && rawDescription.includes(' on ')) {
+        const match = rawDescription.match(/of (.+) on/i);
+        if (match && match[1]) {
+          productName = match[1].trim();
+        }
+      } else if (rawDescription.includes('Jar 30 rs')) {
+        productName = 'Jar 30 rs';
+      } else if (rawDescription.includes('Jar 25rs')) {
+        productName = 'Jar 25rs';
+      }
+    }
+
+    if (!productName) {
+      productName = 'Jar 30 rs';
+    }
+
+    const dateStr = item.dateFormatted || (item.deliveryDate ? formatDate(item.deliveryDate) : '');
+    const qty = getItemQuantity(item);
+
+    // Clean up hardcoded manual bracket tags like [ONE-TIME ORDER DELIVERED] or [DELIVERED]
+    let description = rawDescription.replace(/\[ONE-TIME ORDER DELIVERED\]|\[DELIVERED\]|\[NOT DELIVERED \(SKIPPED\)\]|\[NOT DELIVERED \(PENDING\)\]|\[DELIVERY\]/gi, '').trim();
+
+    if (!description) {
+      if (status === 'skipped') {
+        description = `Skipped delivery${dateStr ? ` on ${dateStr}` : ''}`;
+      } else if (status === 'pending') {
+        description = `Pending delivery${dateStr ? ` on ${dateStr}` : ''}`;
+      } else {
+        description = `${qty} unit(s) delivered${dateStr ? ` on ${dateStr}` : ''}`;
+      }
+    }
+
+    return { productName, description, status: status || 'delivered', qty };
+  };
+
+  const generateInvoiceHTML = () => {
+    const bName = invoiceData?.businessName || invoiceData?.VendorProfile?.businessName || 'Patidar Water Plant';
+    const bAddress = invoiceData?.businessAddress || invoiceData?.VendorProfile?.address || 'Indraprastha tower, Indore, Madhya Pradesh';
+    const cName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
+
+    const rawCPhone = invoiceData?.customerPhone || invoiceData?.Customer?.phone;
+    const rawCAddress = invoiceData?.customerAddress || invoiceData?.Customer?.address;
+    const cPhone = rawCPhone && String(rawCPhone).trim() !== '' ? String(rawCPhone).trim() : 'N/A';
+    const cAddress = rawCAddress && String(rawCAddress).trim() !== '' ? String(rawCAddress).trim() : 'N/A (Not Provided)';
+
+    const dateFormatted = invoiceData?.generatedAtFormatted || formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at);
+    const periodStart = invoiceData?.periodStartFormatted || formatDate(invoiceData?.periodStart);
+    const periodEnd = invoiceData?.periodEndFormatted || formatDate(invoiceData?.periodEnd);
+
+    let itemsHtml = '';
+    
+    // Top Row: Opening Balance / Previous Dues if present
+    if (previousDues > 0) {
+      itemsHtml += `
+        <tr style="background-color: #fffbeb;">
+          <td style="padding: 8px 10px;">
+            <div style="font-weight: bold; font-size: 11px; color: #0f172a;">Opening Balance / Previous Dues</div>
+            <div style="font-size: 10px; margin-top: 3px; line-height: 1.4; color: #b45309; font-weight: bold;">[PREVIOUS DUES] Carried forward from previous billing period</div>
+          </td>
+          <td style="text-align: center; padding: 8px; color: #334155;">1</td>
+          <td style="text-align: right; padding: 8px; color: #334155;">${formatCurrency(previousDues)}</td>
+          <td style="text-align: right; padding: 8px; font-weight: bold; color: #0f172a;">${formatCurrency(previousDues)}</td>
+        </tr>
+      `;
+    }
+
+    let allItems = lineItems.length > 0 ? lineItems : deliveries;
+    if (deliveries.length > 0 && lineItems.length === 0) {
+      allItems = deliveries;
+    }
+
+    if (allItems.length > 0) {
+      allItems.forEach((item, index) => {
+        const { productName, description, status, qty } = getItemDetails(item);
+        const rate = parseFloat(item.unitPrice || item.unitPriceCharged || (qty > 0 ? (item.amount / qty) : item.amount) || 0);
+        const amount = parseFloat(item.amount !== undefined ? item.amount : (rate * qty));
+
+        let statusBadgeClass = 'badge-delivered';
+        if (status === 'skipped') statusBadgeClass = 'badge-skipped';
+        else if (status === 'pending') statusBadgeClass = 'badge-pending';
+
+        itemsHtml += `
             <tr>
-              <td style="border-right: 1px solid #000; padding: 4px; text-align: center;">${index + 1}</td>
-              <td style="border-right: 1px solid #000; padding: 4px;">${getProductName(item)}</td>
-              <td style="border-right: 1px solid #000; padding: 4px; text-align: center;">${qty}</td>
-              <td style="border-right: 1px solid #000; padding: 4px; text-align: right;">${formatCurrency(rate)}</td>
-              <td style="padding: 4px; text-align: right;">${formatCurrency(rate * qty)}</td>
+              <td style="padding: 8px 10px;">
+                <div style="font-weight: bold; font-size: 11px; color: #0f172a;">${productName}</div>
+                <div style="font-size: 10px; margin-top: 3px; line-height: 1.4;" class="${statusBadgeClass}">${description}</div>
+              </td>
+              <td style="text-align: center; padding: 8px; color: #334155;">${qty}</td>
+              <td style="text-align: right; padding: 8px; color: #334155;">${formatCurrency(rate)}</td>
+              <td style="text-align: right; padding: 8px; font-weight: bold; color: #0f172a;">${formatCurrency(amount)}</td>
             </tr>
           `;
-        });
-      } else {
-        renderedRows = 1;
-        itemsHtml += `
+      });
+    } else if (previousDues === 0) {
+      itemsHtml += `
           <tr>
-            <td style="border-right: 1px solid #000; padding: 4px; text-align: center;">1</td>
-            <td style="border-right: 1px solid #000; padding: 4px;">Water Camper 20Ltr</td>
-            <td style="border-right: 1px solid #000; padding: 4px; text-align: center;">1</td>
-            <td style="border-right: 1px solid #000; padding: 4px; text-align: right;">${formatCurrency(currentCharges)}</td>
-            <td style="padding: 4px; text-align: right;">${formatCurrency(currentCharges)}</td>
+            <td style="padding: 8px 10px;">
+              <div style="font-weight: bold; font-size: 11px; color: #0f172a;">Jar 30 rs</div>
+              <div style="font-size: 10px; color: #15803d; margin-top: 3px;" class="badge-delivered">Water Delivery</div>
+            </td>
+            <td style="text-align: center; padding: 8px;">1</td>
+            <td style="text-align: right; padding: 8px;">${formatCurrency(currentCharges)}</td>
+            <td style="text-align: right; padding: 8px; font-weight: bold;">${formatCurrency(currentCharges)}</td>
           </tr>
         `;
-      }
-      
-      const minRows = 15;
-      const totalPages = Math.ceil(renderedRows / 25) || 1;
-      
-      if (renderedRows < minRows) {
-        const rowsToAdd = minRows - renderedRows;
-        for(let i = 0; i < rowsToAdd; i++) {
-          itemsHtml += `
-            <tr>
-              <td style="border-right: 1px solid #000; padding: 4px; color: transparent;">-</td>
-              <td style="border-right: 1px solid #000; padding: 4px; color: transparent;">-</td>
-              <td style="border-right: 1px solid #000; padding: 4px; color: transparent;">-</td>
-              <td style="border-right: 1px solid #000; padding: 4px; color: transparent;">-</td>
-              <td style="padding: 4px; color: transparent;">-</td>
-            </tr>
-          `;
-        }
-      }
+    }
 
-      const htmlContent = `
+    const htmlContent = `
         <!DOCTYPE html>
         <html>
           <head>
@@ -243,262 +354,387 @@ const InvoiceDetailScreen = () => {
               body { 
                 font-family: Arial, Helvetica, sans-serif; 
                 margin: 0; 
-                padding: 0;
-                color: #000; 
+                padding: 16px;
+                color: #1e293b; 
                 font-size: 11px;
                 background-color: #fff;
-                counter-reset: page;
               }
               @page {
                 size: A4;
-                margin: 10mm;
+                margin: 8mm;
               }
-              .invoice-box {
-                width: 100%;
-                border: 1px solid #000;
-                box-sizing: border-box;
-              }
-              tr { page-break-inside: avoid; }
-              thead { display: table-header-group; }
-              tfoot { display: table-footer-group; }
-              .tax-title {
-                text-align: center;
-                font-weight: bold;
-                font-size: 16px;
-                padding: 5px;
-                border-bottom: 1px solid #000;
-                letter-spacing: 1px;
-              }
-              .info-grid {
-                display: flex;
-                border-bottom: 1px solid #000;
-              }
-              .info-left, .info-right {
-                flex: 1;
-                padding: 8px;
-              }
-              .info-left {
-                border-right: 1px solid #000;
-              }
-              .info-block {
-                margin-bottom: 10px;
-              }
-              .info-block strong {
-                display: block;
-                margin-bottom: 2px;
-                font-size: 10px;
-              }
-              .customer-name {
-                font-weight: bold;
-                font-size: 13px;
-              }
-              table { 
-                width: 100%; 
-                border-collapse: collapse; 
-              }
-              th { 
-                border-bottom: 1px solid #000;
-                border-right: 1px solid #000;
-                padding: 6px 4px; 
-                text-align: left; 
-                font-weight: bold;
-              }
-              th:last-child {
-                border-right: none;
-              }
-              th:nth-child(1) { text-align: center; width: 40px; }
-              th:nth-child(3) { text-align: center; width: 60px; }
-              th:nth-child(4) { text-align: right; width: 80px; }
-              th:nth-child(5) { text-align: right; width: 100px; }
-              
-              .items-row {
-                min-height: 200px; /* Force minimum height for tally look */
-                vertical-align: top;
-              }
-              .items-row td {
-                padding-bottom: 10px; /* Space out items */
-              }
-              
-              .totals-section {
-                border-top: 1px solid #000;
-                display: flex;
-              }
-              .totals-left {
-                flex: 1;
-                border-right: 1px solid #000;
-                padding: 8px;
-              }
-              .totals-right {
-                width: 250px;
-              }
-              .total-row {
+              .header-container {
                 display: flex;
                 justify-content: space-between;
-                padding: 4px 8px;
-                border-bottom: 1px solid #ccc;
+                align-items: flex-start;
+                margin-bottom: 16px;
               }
-              .total-row:last-child {
+              .logo-block {
+                padding: 0;
+                margin: 0;
+              }
+              .vendor-details {
+                text-align: right;
+                font-size: 11px;
+                color: #334155;
+                line-height: 1.4;
+              }
+              .vendor-details .v-title {
+                font-size: 15px;
+                font-weight: bold;
+                color: #1e3a8a;
+                margin-bottom: 2px;
+              }
+              .header-divider {
+                height: 1px;
+                background-color: #cbd5e1;
+                margin: 16px 0;
+              }
+              .meta-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 20px;
+              }
+              .billed-to {
+                flex: 1;
+              }
+              .billed-to .section-label {
+                font-size: 11px;
+                font-weight: bold;
+                color: #1e3a8a;
+                margin-bottom: 4px;
+                text-transform: uppercase;
+              }
+              .billed-to .c-name {
+                font-size: 14px;
+                font-weight: bold;
+                color: #0f172a;
+                margin-bottom: 2px;
+              }
+              .meta-right {
+                text-align: right;
+                font-size: 11px;
+                line-height: 1.6;
+              }
+              .meta-right .m-label {
+                font-weight: bold;
+                color: #1e3a8a;
+              }
+              table.invoice-table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin-bottom: 0;
+              }
+              table.invoice-table th { 
+                background-color: #1e3a8a;
+                color: #ffffff;
+                padding: 10px 10px; 
+                font-weight: bold;
+                font-size: 11px;
+                border: none;
+              }
+              table.invoice-table td { 
+                padding: 8px 10px; 
+                border-bottom: 1px solid #e2e8f0;
+                border-top: none;
+                border-left: none;
+                border-right: none;
+                font-size: 11px;
+              }
+              .badge-delivered { color: #15803d; font-weight: bold; }
+              .badge-skipped { color: #b91c1c; font-weight: bold; }
+              .badge-pending { color: #b45309; font-weight: bold; }
+              
+              .summary-container {
+                display: flex;
+                border: 1px solid #cbd5e1;
+                border-top: 1.5px solid #cbd5e1;
+                margin-top: 0;
+                margin-bottom: 24px;
+                box-sizing: border-box;
+              }
+              .notes-box {
+                flex: 1;
+                border-right: 1px solid #cbd5e1;
+                padding: 10px 12px;
+                background-color: #f8fafc;
+                box-sizing: border-box;
+              }
+              .notes-box .n-label {
+                font-size: 11px;
+                font-weight: bold;
+                color: #1e3a8a;
+                margin-bottom: 4px;
+              }
+              .totals-box {
+                width: 200px;
+                border-collapse: collapse;
+                background-color: #ffffff;
+              }
+              .totals-box td {
+                padding: 6px 10px;
+                border-bottom: 1px solid #e2e8f0;
+                font-size: 10.5px;
+                color: #64748b;
+              }
+              .totals-box tr.grand-row td {
+                background-color: #1e3a8a;
+                color: #ffffff;
+                font-weight: bold;
+                font-size: 11px;
                 border-bottom: none;
               }
-              .total-row.bold {
-                font-weight: bold;
-                border-top: 1px solid #000;
-                border-bottom: 1px solid #000;
-                font-size: 12px;
-                padding: 6px 8px;
-              }
-              .footer {
+              .footer-tag {
                 text-align: center;
-                font-size: 10px;
-                border-top: 1px solid #000;
-                padding: 8px 0;
-                position: fixed;
-                bottom: 5px;
-                left: 10px;
-                right: 10px;
-                background-color: white;
-              }
-              .page-number::before {
-                counter-increment: page;
-                content: counter(page) "/${totalPages}";
+                margin-top: 24px;
+                font-size: 11.5px;
+                font-weight: bold;
+                color: #1e3a8a;
               }
             </style>
           </head>
           <body>
-            <div class="invoice-box">
-              <div class="tax-title">TAX INVOICE</div>
-              
-              <div class="info-grid">
-                <div class="info-left">
-                  <div class="info-block">
-                    <strong>Billed To:</strong>
-                    <div class="customer-name">${customerName}</div>
-                    ${invoiceData?.Customer?.phone ? `<div>Ph: ${invoiceData.Customer.phone}</div>` : ''}
-                    ${invoiceData?.Customer?.address ? `<div>${invoiceData.Customer.address}</div>` : ''}
-                  </div>
+            <div class="header-container">
+              <div class="logo-block" style="background-color: #1e3a8a; color: #ffffff; padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: bold; letter-spacing: 1.5px; text-align: center;">
+                INVOICE
+              </div>
+              <div class="vendor-details">
+                <div class="v-title">${bName}</div>
+                <div>${bAddress}</div>
+              </div>
+            </div>
+
+            <div class="header-divider"></div>
+
+            <div class="meta-container">
+              <div class="billed-to" style="flex: 1.1; padding-right: 12px;">
+                <div class="section-label">BILLED TO:</div>
+                <div class="c-name">${cName}</div>
+                <div style="margin-top: 3px; color: #334155;">
+                  <span style="font-weight: bold; color: #1e3a8a; display: inline-block; width: 62px;">Phone:</span>
+                  <span>${cPhone}</span>
                 </div>
-                
-                <div class="info-right">
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <div>
-                      <strong>Invoice No.</strong>
-                      <div>${invoiceNum}</div>
-                    </div>
-                    <div style="text-align: right;">
-                      <strong>Dated</strong>
-                      <div>${formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at)}</div>
-                    </div>
-                  </div>
-                  
-                  <div style="margin-top: 15px;">
-                    <strong>Billing Period</strong>
-                    <div>
-                      ${invoiceData?.periodStart && invoiceData?.periodEnd 
-                        ? `${formatDate(invoiceData.periodStart)} to ${formatDate(invoiceData.periodEnd)}` 
-                        : 'Monthly'}
-                    </div>
-                  </div>
+                <div style="margin-top: 3px; color: #334155;">
+                  <span style="font-weight: bold; color: #1e3a8a; display: inline-block; width: 62px;">Address:</span>
+                  <span>${cAddress}</span>
                 </div>
               </div>
-              
-              <table>
-                <thead>
-                  <tr>
-                    <th>Sl No.</th>
-                    <th>Description of Goods</th>
-                    <th>Qty</th>
-                    <th>Rate</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody class="items-row">
-                  ${itemsHtml}
-                </tbody>
+
+              <div class="meta-right" style="flex: 1; text-align: left; padding-left: 12px;">
+                <div class="section-label" style="font-size: 11px; font-weight: bold; color: #1e3a8a; margin-bottom: 4px; text-transform: uppercase;">INVOICE DETAILS:</div>
+                <div style="margin-top: 3px; color: #334155;">
+                  <span style="font-weight: bold; color: #1e3a8a; display: inline-block; width: 72px;">Invoice #:</span>
+                  <span style="font-weight: bold; color: #0f172a;">${invoiceNum}</span>
+                </div>
+                <div style="margin-top: 3px; color: #334155;">
+                  <span style="font-weight: bold; color: #1e3a8a; display: inline-block; width: 72px;">Date:</span>
+                  <span>${dateFormatted}</span>
+                </div>
+                <div style="margin-top: 3px; color: #334155;">
+                  <span style="font-weight: bold; color: #1e3a8a; display: inline-block; width: 72px;">Period:</span>
+                  <span>${periodStart} to ${periodEnd}</span>
+                </div>
+              </div>
+            </div>
+
+            <table class="invoice-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 45%;">Description</th>
+                  <th style="text-align: center; width: 15%;">Quantity</th>
+                  <th style="text-align: right; width: 20%;">Unit Price</th>
+                  <th style="text-align: right; width: 20%;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+            </table>
+
+            <div class="summary-container">
+              <div class="notes-box">
+                <div class="n-label">Notes</div>
+                <div style="color: #475569; font-size: 9.5px; line-height: 1.4;">
+                  Thank you for choosing ${bName}! Clean & Pure Water Delivery. All particulars are true and correct.
+                </div>
+              </div>
+
+              <table class="totals-box">
+                <tr>
+                  <td>Current Charges</td>
+                  <td style="text-align: right; font-weight: bold; color: #334155;">${formatCurrency(currentCharges)}</td>
+                </tr>
+                ${previousDues !== 0 ? `
+                <tr>
+                  <td style="color: ${previousDues > 0 ? '#64748b' : '#059669'};">${previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}</td>
+                  <td style="text-align: right; font-weight: bold; color: ${previousDues > 0 ? '#334155' : '#059669'};">${formatCurrency(previousDues)}</td>
+                </tr>
+                ` : ''}
+                ${amountPaid > 0 ? `
+                <tr>
+                  <td>Amount Paid</td>
+                  <td style="text-align: right; font-weight: bold; color: #059669;">${formatCurrency(amountPaid)}</td>
+                </tr>
+                ` : ''}
+                <tr class="grand-row">
+                  <td style="font-weight: bold; color: #ffffff;">Total Amount</td>
+                  <td style="text-align: right; font-weight: bold; color: #ffffff; font-size: 12px;">${formatCurrency(balanceDue > 0 ? balanceDue : grandTotal)}</td>
+                </tr>
               </table>
-              
-              <div class="totals-section">
-                <div class="totals-left">
-                  <strong>Declaration</strong><br>
-                  We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
-                </div>
-                <div class="totals-right">
-                  <div class="total-row">
-                    <span>Sub Total</span>
-                    <span>${formatCurrency(currentCharges)}</span>
-                  </div>
-                  <div class="total-row">
-                    <span>Prev Balance</span>
-                    <span>${formatCurrency(previousDues)}</span>
-                  </div>
-                  <div class="total-row bold">
-                    <span>Grand Total</span>
-                    <span>${formatCurrency(grandTotal)}</span>
-                  </div>
-                  <div class="total-row">
-                    <span>Amount Paid</span>
-                    <span>${formatCurrency(amountPaid)}</span>
-                  </div>
-                  <div class="total-row bold" style="border-top: none;">
-                    <span>Balance Due</span>
-                    <span>${formatCurrency(balanceDue)}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="footer">
-                <span style="float: left;">Computer Generated Invoice</span>
-                <span class="page-number" style="float: right;"></span>
-                <div style="clear: both;"></div>
-              </div>
+            </div>
+
+            <div class="footer-tag">
+              Thank you! We appreciate your business.
             </div>
           </body>
         </html>
       `;
-      return htmlContent;
+    return htmlContent;
   };
 
   const handlePrint = async () => {
     try {
-      const htmlContent = generateInvoiceHTML();
-      await RNPrint.print({ html: htmlContent });
+      setIsPrintingPdf(true);
+      const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
+      const targetId = invoiceId || initialInvoice?.id;
+
+      let pdfFilePath = null;
+      if (targetId && userToken) {
+        try {
+          pdfFilePath = await api.downloadInvoicePDF(userToken, targetId, customerName);
+        } catch (apiErr) {
+          console.warn('Backend PDF download for print failed, using local HTML fallback:', apiErr.message);
+        }
+      }
+
+      if (pdfFilePath) {
+        console.log('Printing downloaded backend PDF file from:', pdfFilePath);
+        await RNPrint.print({ filePath: pdfFilePath });
+      } else {
+        const htmlContent = generateInvoiceHTML();
+        await RNPrint.print({ html: htmlContent });
+      }
     } catch (error) {
       console.error('Error printing invoice:', error);
+      Alert.alert('Print Error', error.message || 'Could not print invoice');
+    } finally {
+      setIsPrintingPdf(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setIsDownloadingPdf(true);
+      const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
+      const targetId = invoiceId || initialInvoice?.id;
+
+      let filePath = null;
+      if (targetId && userToken) {
+        filePath = await api.downloadInvoicePDF(userToken, targetId, customerName);
+        if (filePath) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+
+      if (filePath) {
+        Alert.alert(
+          'Invoice Downloaded',
+          `PDF saved successfully!\n\nFile location:\n${filePath}`,
+          [
+            {
+              text: 'Open / Share',
+              onPress: () => {
+                const fileUrl = filePath.startsWith('file://') ? filePath : `file://${filePath}`;
+                RNShare.open({
+                  url: fileUrl,
+                  type: 'application/pdf',
+                  title: 'Open Invoice PDF',
+                }).catch(() => {});
+              }
+            },
+            { text: 'OK' }
+          ]
+        );
+      } else {
+        await handlePrint();
+      }
+    } catch (error) {
+      console.log('Download notice:', error.message);
+      await handlePrint();
+    } finally {
+      setIsDownloadingPdf(false);
     }
   };
 
   const handleSharePDFWhatsApp = async () => {
     try {
-      setIsDownloading(true);
-      
+      setIsSharingPdf(true);
+
       const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
       const dateStr = formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at);
-
-      // Download the PDF from backend API as base64
       const targetId = invoiceId || initialInvoice?.id;
-      const filePath = await api.downloadInvoicePDF(userToken, targetId, customerName);
-      
-      console.log('PDF downloaded to:', filePath);
+      let filePath = null;
 
-      if (!filePath) {
-        throw new Error('Failed to retrieve file path from download');
+      try {
+        filePath = await api.downloadInvoicePDF(userToken, targetId, customerName);
+        console.log('PDF downloaded to:', filePath);
+      } catch (dlErr) {
+        console.warn('PDF download failed, falling back to text share:', dlErr.message);
       }
 
-      const safeName = customerName.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_');
+      // Check if file exists and has content BEFORE opening share sheet
+      let isValidFile = false;
+      if (filePath) {
+        try {
+          const fileExists = await ReactNativeBlobUtil.fs.exists(filePath);
+          if (fileExists) {
+            const fileStat = await ReactNativeBlobUtil.fs.stat(filePath);
+            if (fileStat && parseInt(fileStat.size) > 0) {
+              isValidFile = true;
+            }
+          }
+        } catch (checkErr) {
+          console.warn('File existence check failed:', checkErr.message);
+        }
+      }
 
-      await RNShare.shareSingle({
-        title: `${customerName} Invoice`,
-        message: `Hello ${customerName},\n\nPlease find attached your invoice ${invoiceNum} dated ${dateStr}.\n\nThank you for your business!`,
-        url: `file://${filePath}`,
-        social: RNShare.Social.WHATSAPP,
-        filename: `${safeName}_Invoice`, 
-      });
+      if (isValidFile && filePath) {
+        // Short delay to ensure OS file lock is completely released
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const fileUrl = filePath.startsWith('file://') ? filePath : `file://${filePath}`;
+        const safeName = customerName.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_');
+
+        const shareOptions = {
+          title: `Share Invoice ${invoiceNum}`,
+          message: `Hello ${customerName},\n\nPlease find attached your invoice ${invoiceNum} dated ${dateStr}.\n\nThank you for your business!`,
+          url: fileUrl,
+          type: 'application/pdf',
+          filename: `${safeName}_Invoice`,
+        };
+
+        // Open native share chooser dialog directly so user selects WhatsApp or any preferred app
+        await RNShare.open(shareOptions);
+      } else {
+        // Fallback to text share if PDF is not ready
+        console.log('PDF file not valid or missing, falling back to text share');
+        await handleWhatsAppShare();
+      }
     } catch (error) {
-      console.error('Error sharing PDF to WhatsApp:', error);
-      Alert.alert('Download Failed', error.message || 'Failed to download invoice PDF');
+      if (error && error.message !== 'User did not share') {
+        console.error('Error in handleSharePDFWhatsApp, falling back to text share:', error);
+        await handleWhatsAppShare();
+      }
     } finally {
-      setIsDownloading(false);
+      setIsSharingPdf(false);
     }
   };
+
+  const rawCPhone = invoiceData?.customerPhone || invoiceData?.Customer?.phone;
+  const rawCAddress = invoiceData?.customerAddress || invoiceData?.Customer?.address;
+  const cPhoneText = rawCPhone && String(rawCPhone).trim() !== '' ? String(rawCPhone).trim() : 'N/A';
+  const cAddressText = rawCAddress && String(rawCAddress).trim() !== '' ? String(rawCAddress).trim() : 'N/A (Not Provided)';
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -523,204 +759,327 @@ const InvoiceDetailScreen = () => {
       ) : (
         <>
           <ScrollView contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 16, paddingBottom: 100 }]} showsVerticalScrollIndicator={false}>
-          
-          {/* Tally Style Invoice View */}
-          <View style={{ borderWidth: 1, borderColor: '#000', marginHorizontal: 0, marginTop: 4, marginBottom: 24, backgroundColor: '#FFF' }}>
-            <Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 16, padding: 8, borderBottomWidth: 1, borderBottomColor: '#000', letterSpacing: 1, color: '#000' }}>{t('invoices.taxInvoice')}</Text>
-            
-            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000' }}>
-              <View style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 8 }}>
-                <Text style={{ fontSize: 10, color: '#000', marginBottom: 2, fontWeight: 'bold' }}>{t('invoices.billedTo')}</Text>
-                <Text style={{ fontWeight: 'bold', fontSize: 13, color: '#000' }}>{invoiceData.Customer?.name || 'Customer'}</Text>
-                {!!invoiceData.Customer?.phone && <Text style={{ fontSize: 11, color: '#000', marginTop: 2 }}>Ph: {invoiceData.Customer.phone}</Text>}
-                {!!invoiceData.Customer?.address && <Text style={{ fontSize: 11, color: '#000', marginTop: 2 }}>{invoiceData.Customer.address}</Text>}
-              </View>
-              <View style={{ flex: 1, padding: 8 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <View>
-                    <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>{t('invoices.invoiceNo')}</Text>
-                    <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>{invoiceNum}</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>{t('invoices.dated')}</Text>
-                    <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>{formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at)}</Text>
-                  </View>
+
+            <View style={{
+              borderWidth: 1,
+              borderColor: '#CBD5E1',
+              borderRadius: 12,
+              marginTop: 4,
+              marginBottom: 24,
+              backgroundColor: '#FFFFFF',
+              overflow: 'hidden',
+              elevation: 4,
+              shadowColor: '#1E3A8A',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 10,
+            }}>
+              <View style={{ height: 5, backgroundColor: '#1E3A8A' }} />
+
+              <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Left Navy Box: TAX INVOICE Badge */}
+                <View style={{ backgroundColor: '#1E3A8A', borderRadius: 6, paddingHorizontal: 14, paddingVertical: 9 }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontFamily: 'Geologica-Bold', letterSpacing: 1.5 }}>
+                    INVOICE
+                  </Text>
                 </View>
-                <View>
-                  <Text style={{ fontSize: 10, color: '#000', fontWeight: 'bold' }}>{t('invoices.billingPeriod')}</Text>
-                  <Text style={{ fontSize: 12, color: '#000', marginTop: 2 }}>
-                    {invoiceData.periodStart && invoiceData.periodEnd
-                      ? `${formatDate(invoiceData.periodStart)} to ${formatDate(invoiceData.periodEnd)}`
-                      : 'Monthly'}
+
+                {/* Right Vendor Details */}
+                <View style={{ flex: 1, alignItems: 'flex-end', paddingLeft: 12 }}>
+                  <Text style={{ color: '#1E3A8A', fontSize: 14, fontFamily: 'Geologica-Bold', textAlign: 'right' }}>
+                    {invoiceData?.businessName || invoiceData?.VendorProfile?.businessName || 'Patidar Water Plant'}
+                  </Text>
+                  <Text style={{ color: '#475569', fontSize: 10.5, fontFamily: 'Geologica-Medium', textAlign: 'right', marginTop: 2, lineHeight: 14 }}>
+                    {invoiceData?.businessAddress || invoiceData?.VendorProfile?.address || 'Indraprastha tower, Indore, Madhya Pradesh'}
                   </Text>
                 </View>
               </View>
-            </View>
 
-            {/* Table Header */}
-            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000', backgroundColor: '#F9FAFB' }}>
-              <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'center', color: '#000' }}>{t('invoices.sl')}</Text>
-              <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, color: '#000' }}>{t('invoices.descriptionOfGoods')}</Text>
-              <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'center', color: '#000' }}>{t('invoices.qty')}</Text>
-              <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'right', color: '#000' }}>{t('invoices.rate')}</Text>
-              <Text style={{ width: 70, padding: 6, fontWeight: 'bold', fontSize: 10, textAlign: 'right', color: '#000' }}>{t('invoices.amount')}</Text>
-            </View>
+              <View style={{ height: 1, backgroundColor: '#E2E8F0', marginHorizontal: 16, marginBottom: 14 }} />
 
-            {/* Table Body */}
-            {(() => {
-              const elements = [];
-              let allItems = deliveries.length > 0 ? deliveries : lineItems;
-              const openingBalanceItem = lineItems.find(item => item.description?.toLowerCase().includes('opening balance'));
-              if (deliveries.length > 0 && openingBalanceItem) {
-                allItems = [openingBalanceItem, ...deliveries];
-              }
-              let renderedRows = 0;
-              
-              if (allItems.length > 0) {
-                allItems.forEach((item, idx) => {
-                  renderedRows++;
-                  const qty = item.fullUnitsDelivered || item.quantity || 1;
-                  const rate = parseFloat(item.unitPriceCharged || item.unitPrice || item.amount || 0);
-                  const rowTotal = qty * rate;
-                  elements.push(
-                    <View key={item.id || idx} style={{ flexDirection: 'row', minHeight: 28 }}>
-                      <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: '#000' }}>{idx + 1}</Text>
-                      <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, color: '#000' }}>{getProductName(item)}</Text>
-                      <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: '#000' }}>{qty}</Text>
-                      <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'right', color: '#000' }}>{formatCurrency(rate)}</Text>
-                      <Text style={{ width: 70, padding: 6, fontSize: 11, textAlign: 'right', color: '#000' }}>{formatCurrency(rowTotal)}</Text>
-                    </View>
-                  );
-                });
-              } else {
-                renderedRows = 1;
-                elements.push(
-                  <View key="empty-fallback" style={{ flexDirection: 'row', minHeight: 28 }}>
-                    <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: '#000' }}>1</Text>
-                    <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, color: '#000' }}>Water Camper 20Ltr</Text>
-                    <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: '#000' }}>1</Text>
-                    <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'right', color: '#000' }}>{formatCurrency(currentCharges)}</Text>
-                    <Text style={{ width: 70, padding: 6, fontSize: 11, textAlign: 'right', color: '#000' }}>{formatCurrency(currentCharges)}</Text>
+              <View style={{ paddingHorizontal: 16, marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
+                {/* Left Column: Billed To */}
+                <View style={{ flex: 1.1, paddingRight: 6 }}>
+                  <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+                    BILLED TO:
+                  </Text>
+                  <Text style={{ fontSize: 13.5, color: '#0F172A', fontFamily: 'Geologica-Bold', marginBottom: 3 }}>
+                    {invoiceData.customerName || invoiceData.Customer?.name || 'Customer'}
+                  </Text>
+                  <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'flex-start' }}>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 56 }}>Phone:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Medium', flex: 1 }}>{cPhoneText}</Text>
                   </View>
-                );
-              }
-              
-              const minRows = 15;
-              if (renderedRows < minRows) {
-                const rowsToAdd = minRows - renderedRows;
-                for(let i = 0; i < rowsToAdd; i++) {
-                  elements.push(
-                    <View key={`empty-${i}`} style={{ flexDirection: 'row', minHeight: 28 }}>
-                      <Text style={{ width: 35, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: 'transparent' }}>-</Text>
-                      <Text style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, color: 'transparent' }}>-</Text>
-                      <Text style={{ width: 40, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'center', color: 'transparent' }}>-</Text>
-                      <Text style={{ width: 60, borderRightWidth: 1, borderRightColor: '#000', padding: 6, fontSize: 11, textAlign: 'right', color: 'transparent' }}>-</Text>
-                      <Text style={{ width: 70, padding: 6, fontSize: 11, textAlign: 'right', color: 'transparent' }}>-</Text>
-                    </View>
-                  );
-                }
-              }
-              
-              return elements;
-            })()}
+                  <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'flex-start' }}>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 56 }}>Address:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Medium', flex: 1, lineHeight: 14 }}>{cAddressText}</Text>
+                  </View>
+                </View>
 
-            {/* Totals Section */}
-            <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#000' }}>
-              <View style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#000', padding: 8 }}>
-                <Text style={{ fontWeight: 'bold', fontSize: 10, color: '#000', marginBottom: 2 }}>Declaration</Text>
-                <Text style={{ fontSize: 9, color: '#000', lineHeight: 12 }}>We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</Text>
+                {/* Right Column: Invoice Details (Aligned from starting point) */}
+                <View style={{ flex: 1, paddingLeft: 6 }}>
+                  <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+                    INVOICE DETAILS:
+                  </Text>
+                  <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 68 }}>Invoice #:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#0F172A', fontFamily: 'Geologica-Bold', flex: 1 }}>{invoiceNum}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 68 }}>Date:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Medium', flex: 1 }}>
+                      {invoiceData?.generatedAtFormatted || formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at)}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'flex-start' }}>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 68 }}>Period:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Medium', flex: 1, lineHeight: 14 }}>
+                      {invoiceData.periodStart && invoiceData.periodEnd
+                        ? `${invoiceData.periodStartFormatted || formatDate(invoiceData.periodStart)} to ${invoiceData.periodEndFormatted || formatDate(invoiceData.periodEnd)}`
+                        : 'Monthly'}
+                    </Text>
+                  </View>
+                </View>
               </View>
-              <View style={{ width: 180 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 6, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
-                  <Text style={{ fontSize: 11, color: '#000' }}>{t('invoices.subTotal')}</Text>
-                  <Text style={{ fontSize: 11, color: '#000' }}>{formatCurrency(currentCharges)}</Text>
+
+              <View style={{ flexDirection: 'row', backgroundColor: '#1E3A8A', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#1E3A8A' }}>
+                <Text style={{ flex: 1, paddingVertical: 8, paddingHorizontal: 10, fontWeight: 'bold', fontSize: 10.5, color: '#FFFFFF' }}>Description</Text>
+                <Text style={{ width: 55, paddingVertical: 8, paddingHorizontal: 4, fontWeight: 'bold', fontSize: 10.5, textAlign: 'center', color: '#FFFFFF' }}>Quantity</Text>
+                <Text style={{ width: 65, paddingVertical: 8, paddingHorizontal: 4, fontWeight: 'bold', fontSize: 10.5, textAlign: 'right', color: '#FFFFFF' }}>Unit Price</Text>
+                <Text style={{ width: 75, paddingVertical: 8, paddingHorizontal: 8, fontWeight: 'bold', fontSize: 10.5, textAlign: 'right', color: '#FFFFFF' }}>Total</Text>
+              </View>
+
+              {(() => {
+                let allItems = lineItems.length > 0 ? lineItems : deliveries;
+                if (deliveries.length > 0 && lineItems.length === 0) {
+                  allItems = deliveries;
+                }
+
+                return (
+                  <>
+                    {/* Top Row: Opening Balance / Previous Dues or Advance Credit */}
+                    {previousDues !== 0 && (
+                      <View style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', backgroundColor: previousDues > 0 ? '#FFFBEB' : '#ECFDF5', alignItems: 'center' }}>
+                        <View style={{ flex: 1, paddingRight: 6 }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>
+                            {previousDues > 0 ? 'Opening Balance / Previous Dues' : 'Opening Balance / Advance Credit'}
+                          </Text>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 3 }}>
+                            <View style={{ backgroundColor: previousDues > 0 ? '#FEF3C7' : '#D1FAE5', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, marginRight: 4, marginBottom: 2 }}>
+                              <Text style={{ fontSize: 8.5, fontFamily: 'Geologica-Bold', color: previousDues > 0 ? '#B45309' : '#047857', textTransform: 'uppercase' }}>
+                                {previousDues > 0 ? 'PREVIOUS DUES' : 'ADVANCE CREDIT'}
+                              </Text>
+                            </View>
+                            <Text style={{ fontSize: 10, color: previousDues > 0 ? '#92400E' : '#065F46', fontFamily: 'Geologica-Medium', lineHeight: 14, flex: 1 }}>
+                              {previousDues > 0 ? 'Carried forward from previous billing period' : 'Prepaid balance / advance deposit'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>1</Text>
+                        <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#334155' }}>{formatCurrency(previousDues)}</Text>
+                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Geologica-Bold', color: previousDues > 0 ? '#0F172A' : '#047857' }}>{formatCurrency(previousDues)}</Text>
+                      </View>
+                    )}
+
+                    {allItems.length === 0 && previousDues === 0 ? (
+                      <View style={{ flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', alignItems: 'center' }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>Jar 30 rs</Text>
+                          <Text style={{ fontSize: 10, color: '#15803D', fontFamily: 'Geologica-Medium', marginTop: 2 }}>[DELIVERED] Water Delivery</Text>
+                        </View>
+                        <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>1</Text>
+                        <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#334155' }}>{formatCurrency(currentCharges)}</Text>
+                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{formatCurrency(currentCharges)}</Text>
+                      </View>
+                    ) : (
+                      allItems.map((item, idx) => {
+                        const { productName, description, status, qty } = getItemDetails(item);
+                        const rate = parseFloat(item.unitPrice || item.unitPriceCharged || (qty > 0 ? (item.amount / qty) : item.amount) || 0);
+                        const amount = parseFloat(item.amount !== undefined ? item.amount : (rate * qty));
+
+                        let statusColor = '#64748B';
+                        let statusBg = '#F8FAFC';
+                        if (status === 'delivered') {
+                          statusColor = '#15803D';
+                          statusBg = '#ECFDF5';
+                        } else if (status === 'skipped') {
+                          statusColor = '#B91C1C';
+                          statusBg = '#FEF2F2';
+                        } else if (status === 'pending') {
+                          statusColor = '#B45309';
+                          statusBg = '#FFFBEB';
+                        }
+
+                        return (
+                          <View key={item.id || idx} style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC', alignItems: 'center' }}>
+                            <View style={{ flex: 1, paddingRight: 6 }}>
+                              <Text style={{ fontSize: 11.5, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{productName}</Text>
+                              <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 3 }}>
+                                <View style={{ backgroundColor: statusBg, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, marginRight: 4, marginBottom: 2 }}>
+                                  <Text style={{ fontSize: 8.5, fontFamily: 'Geologica-Bold', color: statusColor, textTransform: 'uppercase' }}>
+                                    {status || 'DELIVERY'}
+                                  </Text>
+                                </View>
+                                <Text style={{ fontSize: 10, color: '#475569', fontFamily: 'Geologica-Medium', lineHeight: 14, flex: 1 }}>
+                                  {description}
+                                </Text>
+                              </View>
+                            </View>
+
+                            <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>{qty}</Text>
+                            <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#334155' }}>{formatCurrency(rate)}</Text>
+                            <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{formatCurrency(amount)}</Text>
+                          </View>
+                        );
+                      })
+                    )}
+                  </>
+                );
+              })()}
+
+              <View style={{ flexDirection: 'row', borderTopWidth: 1.5, borderColor: '#CBD5E1' }}>
+                <View style={{ flex: 1, borderRightWidth: 1, borderColor: '#CBD5E1', padding: 10, backgroundColor: '#F8FAFC' }}>
+                  <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#1E3A8A', marginBottom: 3 }}>Notes</Text>
+                  <Text style={{ fontSize: 9.5, color: '#475569', lineHeight: 13 }}>
+                    Thank you for choosing {invoiceData?.businessName || invoiceData?.VendorProfile?.businessName || 'Patidar Water Plant'}! Clean & Pure Water Delivery. All particulars are true and correct.
+                  </Text>
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 6, borderBottomWidth: 1, borderBottomColor: '#000' }}>
-                  <Text style={{ fontSize: 11, color: '#000' }}>{t('invoices.prevBalance')}</Text>
-                  <Text style={{ fontSize: 11, color: '#000' }}>{formatCurrency(previousDues)}</Text>
+
+                {/* Totals Table Box */}
+                <View style={{ width: 175, backgroundColor: '#FFFFFF' }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                    <Text style={{ fontSize: 10.5, color: '#64748B' }}>Current Charges</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Bold' }}>{formatCurrency(currentCharges)}</Text>
+                  </View>
+
+                  {previousDues !== 0 && (
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                      <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#64748B' : '#059669' }}>
+                        {previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}
+                      </Text>
+                      <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#334155' : '#059669', fontFamily: 'Geologica-Bold' }}>
+                        {formatCurrency(previousDues)}
+                      </Text>
+                    </View>
+                  )}
+
+                  {amountPaid > 0 && (
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                      <Text style={{ fontSize: 10.5, color: '#64748B' }}>Amount Paid</Text>
+                      <Text style={{ fontSize: 10.5, color: '#059669', fontFamily: 'Geologica-Bold' }}>{formatCurrency(amountPaid)}</Text>
+                    </View>
+                  )}
+
+                  {/* Solid Navy Total Row */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, paddingHorizontal: 8, backgroundColor: '#1E3A8A' }}>
+                    <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#FFFFFF' }}>Total Amount</Text>
+                    <Text style={{ fontSize: 12, fontFamily: 'Geologica-Bold', color: '#FFFFFF' }}>
+                      {formatCurrency(balanceDue > 0 ? balanceDue : grandTotal)}
+                    </Text>
+                  </View>
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 8, borderBottomWidth: 1, borderBottomColor: '#000' }}>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{t('invoices.grandTotal')}</Text>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{formatCurrency(grandTotal)}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 6, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
-                  <Text style={{ fontSize: 11, color: '#000' }}>{t('invoices.amountPaid')}</Text>
-                  <Text style={{ fontSize: 11, color: '#000' }}>{formatCurrency(amountPaid)}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 8 }}>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{t('invoices.balanceDue')}</Text>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#000' }}>{formatCurrency(balanceDue)}</Text>
-                </View>
+              </View>
+
+              {/* Footer Tag */}
+              <View style={{ backgroundColor: '#F8FAFC', paddingVertical: 10, borderTopWidth: 1, borderColor: '#E2E8F0', alignItems: 'center' }}>
+                <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#1E3A8A' }}>
+                  Thank you! We appreciate your business.
+                </Text>
               </View>
             </View>
+
+            {/* Record Payment Action Button */}
+            {invoiceData.status !== 'paid' && balanceDue > 0 && (
+              <TouchableOpacity
+                style={styles.payBtn}
+                activeOpacity={0.85}
+                onPress={() => {
+                  navigation.navigate('MainDrawer', {
+                    screen: 'MainTabs',
+                    params: {
+                      screen: 'Payments',
+                      params: { customerId: invoiceData.CustomerId || invoiceData.Customer?.id, prefillAmount: balanceDue }
+                    }
+                  });
+                }}
+              >
+                <CreditCard size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.payBtnText}>{t('payments.recordPayment')} ({formatCurrency(balanceDue)})</Text>
+              </TouchableOpacity>
+            )}
+
+
+            {/* Footer Note */}
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>{t('invoices.thankYou')}</Text>
+              <Text style={styles.footerSubtext}>{t('invoices.computerGenerated')}</Text>
+            </View>
+
+          </ScrollView>
+
+          {/* Floating Action Bar */}
+          <View style={styles.floatingActionBar}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { flex: 1, backgroundColor: '#25D366', shadowColor: '#25D366', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4, opacity: isSharingPdf ? 0.7 : 1 }]}
+                onPress={handleSharePDFWhatsApp}
+                disabled={isSharingPdf}
+              >
+                {isSharingPdf ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <WhatsAppIcon size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                    <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>{t('invoices.sharePdf')}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionBtn, { flex: 1, backgroundColor: '#128C7E', shadowColor: '#128C7E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4 }]}
+                activeOpacity={0.7}
+                onPress={handleWhatsAppShare}
+              >
+                <WhatsAppIcon size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>{t('invoices.shareText')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { flex: 1, backgroundColor: '#1E3A8A', shadowColor: '#1E3A8A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2, opacity: isPrintingPdf ? 0.7 : 1 }]}
+                activeOpacity={0.7}
+                onPress={handlePrint}
+                disabled={isPrintingPdf}
+              >
+                {isPrintingPdf ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Printer size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Text style={[styles.actionBtnText, { color: '#FFFFFF', fontSize: 13 }]} numberOfLines={1}>{t('invoices.printInvoice') || 'Print Invoice'}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionBtn, { flex: 1, backgroundColor: '#0F172A', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2, opacity: isDownloadingPdf ? 0.7 : 1 }]}
+                activeOpacity={0.7}
+                onPress={handleDownloadPDF}
+                disabled={isDownloadingPdf}
+              >
+                {isDownloadingPdf ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Download size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Text style={[styles.actionBtnText, { color: '#FFFFFF', fontSize: 13 }]} numberOfLines={1}>Download PDF</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-
-          {/* Record Payment Action Button */}
-          {invoiceData.status !== 'paid' && balanceDue > 0 && (
-            <TouchableOpacity
-              style={styles.payBtn}
-              activeOpacity={0.85}
-              onPress={() => {
-                navigation.navigate('MainDrawer', {
-                  screen: 'MainTabs',
-                  params: {
-                    screen: 'Payments',
-                    params: { customerId: invoiceData.CustomerId || invoiceData.Customer?.id, prefillAmount: balanceDue }
-                  }
-                });
-              }}
-            >
-              <CreditCard size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.payBtnText}>{t('payments.recordPayment')} ({formatCurrency(balanceDue)})</Text>
-            </TouchableOpacity>
-          )}
-
-
-          {/* Footer Note */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>{t('invoices.thankYou')}</Text>
-            <Text style={styles.footerSubtext}>{t('invoices.computerGenerated')}</Text>
-          </View>
-
-        </ScrollView>
-        
-        {/* Floating Action Bar */}
-        <View style={styles.floatingActionBar}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-            <TouchableOpacity 
-              style={[styles.actionBtn, { flex: 1, backgroundColor: '#25D366', shadowColor: '#25D366', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4, opacity: isDownloading ? 0.7 : 1 }]} 
-              onPress={handleSharePDFWhatsApp}
-              disabled={isDownloading}
-            >
-              {isDownloading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <>
-                  <WhatsAppIcon size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                  <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>{t('invoices.sharePdf')}</Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.actionBtn, { flex: 1, backgroundColor: '#128C7E', shadowColor: '#128C7E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4 }]} 
-              activeOpacity={0.7}
-              onPress={handleWhatsAppShare}
-            >
-              <WhatsAppIcon size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]} numberOfLines={1}>{t('invoices.shareText')}</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.actionBtn, { width: '100%', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 }]} 
-            activeOpacity={0.7}
-            onPress={handlePrint}
-          >
-            <Printer size={20} color="#334155" style={{ marginRight: 8 }} />
-            <Text style={[styles.actionBtnText, { color: '#334155' }]}>{t('invoices.printInvoice')}</Text>
-          </TouchableOpacity>
-        </View>
         </>
       )}
     </SafeAreaView>

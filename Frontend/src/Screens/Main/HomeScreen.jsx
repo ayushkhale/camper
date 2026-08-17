@@ -173,9 +173,12 @@ const HomeScreen = () => {
           const todayStr = new Date().toISOString().split('T')[0];
           const res = await api.listDeliveries(userToken, todayStr);
           if (isActive && res && res.success) {
-            const list = Array.isArray(res.data)
+            let list = Array.isArray(res.data)
               ? res.data
               : (Array.isArray(res.data?.deliveries) ? res.data.deliveries : []);
+
+            // Exclude one-time order deliveries from today's deliveries dashboard section
+            list = list.filter(item => !item.oneTimeOrderId && !item.one_time_order_item_id);
 
             const sortedList = [...list].sort((a, b) => {
               const statusA = (a.status || '').toUpperCase();
@@ -318,15 +321,26 @@ const HomeScreen = () => {
 
   const totalDeliveries = Array.isArray(todaysDeliveries) ? todaysDeliveries.length : 0;
   const completedDeliveries = Array.isArray(todaysDeliveries)
-    ? todaysDeliveries.filter(d => (d.status || '').toUpperCase() === 'DELIVERED').length
+    ? todaysDeliveries.filter(d => (d.status || '').toLowerCase() === 'delivered' || (d.status || '').toLowerCase() === 'completed').length
     : 0;
-  const pendingDeliveries = totalDeliveries - completedDeliveries;
-  const deliveryProgress = totalDeliveries === 0 ? 0 : completedDeliveries / totalDeliveries;
+  const skippedDeliveries = Array.isArray(todaysDeliveries)
+    ? todaysDeliveries.filter(d => (d.status || '').toLowerCase() === 'skipped' || (d.status || '').toLowerCase() === 'skip').length
+    : 0;
+  const pendingDeliveries = Array.isArray(todaysDeliveries)
+    ? todaysDeliveries.filter(d => (d.status || '').toLowerCase() === 'pending').length
+    : 0;
+  const activeDeliveries = Math.max(0, totalDeliveries - skippedDeliveries);
+  const deliveryProgress = activeDeliveries === 0 ? (totalDeliveries > 0 && completedDeliveries === 0 ? 0 : 1) : completedDeliveries / activeDeliveries;
 
   const radius = 34;
-  const strokeWidth = 8;
+  const strokeWidth = 10;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (deliveryProgress * circumference);
+
+  const completedRatio = totalDeliveries > 0 ? completedDeliveries / totalDeliveries : 0;
+  const skippedRatio = totalDeliveries > 0 ? skippedDeliveries / totalDeliveries : 0;
+
+  const completedDash = completedRatio * circumference;
+  const skippedDash = skippedRatio * circumference;
 
   const nextDelivery = Array.isArray(todaysDeliveries)
     ? todaysDeliveries.find(d => (d.status || '').toUpperCase() === 'PENDING')
@@ -353,28 +367,63 @@ const HomeScreen = () => {
               <View style={styles.progressRow}>
                 <View style={styles.circleContainer}>
                   <Svg width={90} height={90} viewBox="0 0 90 90">
+                    {/* Background Ring */}
                     <Circle
                       cx="45" cy="45" r={radius}
                       stroke="#EFF6FF" strokeWidth={strokeWidth} fill="none"
                     />
-                    <Circle
-                      cx="45" cy="45" r={radius}
-                      stroke="#0B409C" strokeWidth={strokeWidth} fill="none"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={strokeDashoffset}
-                      strokeLinecap="round"
-                      transform="rotate(-90 45 45)"
-                    />
+                    {/* Completed Arc (Blue) */}
+                    {completedDeliveries > 0 && (
+                      <Circle
+                        cx="45" cy="45" r={radius}
+                        stroke="#0B409C" strokeWidth={strokeWidth} fill="none"
+                        strokeDasharray={`${completedDash} ${circumference - completedDash}`}
+                        strokeDashoffset={0}
+                        strokeLinecap="round"
+                        transform="rotate(-90 45 45)"
+                      />
+                    )}
+                    {/* Skipped Arc (Red) */}
+                    {skippedDeliveries > 0 && (
+                      <Circle
+                        cx="45" cy="45" r={radius}
+                        stroke="#EF4444" strokeWidth={strokeWidth} fill="none"
+                        strokeDasharray={`${skippedDash} ${circumference - skippedDash}`}
+                        strokeDashoffset={-completedDash}
+                        strokeLinecap="round"
+                        transform="rotate(-90 45 45)"
+                      />
+                    )}
                   </Svg>
-                  <View style={styles.circleTextContainer}>
-                    <Text style={styles.circleTextBig}>{completedDeliveries}</Text>
-                    <Text style={styles.circleTextSmall}>/{totalDeliveries}</Text>
+                  <View style={[styles.circleTextContainer, { flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                      <Text style={styles.circleTextBig}>{completedDeliveries}</Text>
+                      <Text style={styles.circleTextSmall}>/{totalDeliveries}</Text>
+                    </View>
+                    {skippedDeliveries > 0 && (
+                      <View style={{ backgroundColor: '#EF4444', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 6, marginTop: 1 }}>
+                        <Text style={{ fontSize: 7.5, fontFamily: 'Geologica-Bold', color: '#FFFFFF', textAlign: 'center' }}>
+                          {skippedDeliveries} skipped
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </View>
 
                 <View style={styles.progressInfo}>
-                  <Text style={styles.remainingText}>{pendingDeliveries} {t('deliveries.pending')}</Text>
+                  <Text style={{ marginBottom: 4 }}>
+                    <Text style={{ color: '#D97706', fontFamily: 'Geologica-Medium', fontSize: 13 }}>
+                      {pendingDeliveries} {t('deliveries.pending')}
+                    </Text>
+                    {skippedDeliveries > 0 && (
+                      <Text style={{ color: '#EF4444', fontFamily: 'Geologica-Medium', fontSize: 13 }}>
+                        {' • '}{skippedDeliveries} {t('deliveries.skipped') || 'Skipped'}
+                      </Text>
+                    )}
+                  </Text>
+
                   <Text style={styles.encouragingText}>{t('home.stayOnTrack')}</Text>
+
                   <View style={styles.routeBadge}>
                     <MapPin size={12} color="#0B409C" style={{ marginRight: 4 }} />
                     <Text style={styles.routeBadgeText}>{t('home.todaysDeliveries')}</Text>
@@ -476,8 +525,18 @@ const HomeScreen = () => {
             </View>
 
             {/* Today's Orders / Premium List */}
-            <View style={[styles.sectionHeader, { marginTop: 10, marginBottom: 8 }]}>
+            <View style={[styles.sectionHeader, { marginTop: 10, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
               <Text style={styles.sectionTitle}>{t('home.todaysDeliveries')}</Text>
+              {/* <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
+                style={{ flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 13, fontFamily: 'Geologica-Bold', color: '#1D4ED8', marginRight: 2 }}>
+                  {t('home.viewMore')}
+                </Text>
+                <ChevronRight size={15} color="#1D4ED8" strokeWidth={2.5} />
+              </TouchableOpacity> */}
             </View>
 
             <View style={styles.ordersListContainerOptionA}>
@@ -543,10 +602,14 @@ const HomeScreen = () => {
             </View>
 
             <TouchableOpacity
-              style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 30, paddingVertical: 14, backgroundColor: '#EFF6FF', borderRadius: 12, alignItems: 'center' }}
+              style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 30, paddingVertical: 14, backgroundColor: '#EFF6FF', borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }}
+              activeOpacity={0.7}
               onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
             >
-              <Text style={{ color: '#1D4ED8', fontFamily: 'Geologica-Bold', fontSize: 15 }}>{t('deliveries.title')}</Text>
+              <Text style={{ color: '#1D4ED8', fontFamily: 'Geologica-Bold', fontSize: 15, marginRight: 4 }}>
+                {t('home.viewMore')}
+              </Text>
+              <ChevronRight size={18} color="#1D4ED8" strokeWidth={2.5} />
             </TouchableOpacity>
 
             <View style={{ height: 10 }} />

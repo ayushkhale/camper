@@ -252,7 +252,7 @@ const AddOneTimeOrderScreen = () => {
     let currentVal = null;
 
     if (activeModal === 'customer') {
-      title = 'Select Customer';
+      title = t('common.selectCustomer');
       data = customers;
       currentVal = customerId;
       renderItemText = (item) => `${item.name} ${item.phone ? `(${item.phone})` : ''}`;
@@ -261,7 +261,7 @@ const AddOneTimeOrderScreen = () => {
         setActiveModal(null);
       };
     } else if (activeModal === 'product') {
-      title = 'Select Product';
+      title = t('customers.selectProduct');
       data = products;
       renderItemText = (item) => `${item.name} (₹${item.price || '0'})`;
       onSelect = (item) => {
@@ -293,7 +293,7 @@ const AddOneTimeOrderScreen = () => {
                 style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
                 onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
               >
-                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Customer</Text>
+                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
               </TouchableOpacity>
             )}
 
@@ -302,7 +302,7 @@ const AddOneTimeOrderScreen = () => {
                 style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
                 onPress={() => { setActiveModal(null); setAddProductVisible(true); }}
               >
-                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Product</Text>
+                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
               </TouchableOpacity>
             )}
 
@@ -343,7 +343,7 @@ const AddOneTimeOrderScreen = () => {
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={{ marginTop: 10, color: COLORS.textPlaceholder, fontFamily: 'Geologica-Medium' }}>
-          Loading form data...
+          {t('common.loading')}
         </Text>
       </SafeAreaView>
     );
@@ -386,7 +386,7 @@ const AddOneTimeOrderScreen = () => {
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Customer *</Text>
+              <Text style={styles.label}>{t('common.selectCustomer')} *</Text>
               <TouchableOpacity
                 style={styles.inputContainer}
                 onPress={() => setActiveModal('customer')}
@@ -394,14 +394,14 @@ const AddOneTimeOrderScreen = () => {
               >
                 <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <Text style={[styles.inputText, !customerId && { color: COLORS.textPlaceholder }]}>
-                  {getCustomerName(customerId)}
+                  {customerId ? getCustomerName(customerId) : t('common.selectCustomer')}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.dateRow}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.label}>Start Date *</Text>
+                <Text style={styles.label}>{t('oneTimeOrders.orderFrom')} *</Text>
                 <TouchableOpacity
                   style={styles.inputContainer}
                   onPress={() => setActiveDatePicker('orderFrom')}
@@ -413,7 +413,7 @@ const AddOneTimeOrderScreen = () => {
               </View>
 
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.label}>End Date *</Text>
+                <Text style={styles.label}>{t('oneTimeOrders.orderTo')} *</Text>
                 <TouchableOpacity
                   style={styles.inputContainer}
                   onPress={() => setActiveDatePicker('orderTo')}
@@ -478,7 +478,7 @@ const AddOneTimeOrderScreen = () => {
 
                         {/* Price field */}
                         <View style={[styles.itemInputCol, { marginLeft: 12 }]}>
-                          <Text style={styles.itemInputLabel}>Price Override</Text>
+                          <Text style={styles.itemInputLabel}>{t('oneTimeOrders.priceOverride')}</Text>
                           <View style={styles.itemInputWrap}>
                             <Text style={styles.currencySymbol}>₹</Text>
                             <TextInput
@@ -499,7 +499,7 @@ const AddOneTimeOrderScreen = () => {
 
             {/* Notes Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Notes</Text>
+              <Text style={styles.label}>{t('common.notes')}</Text>
               <View style={[styles.inputContainer, styles.textAreaContainer]}>
                 <TextInput
                   style={[styles.input, styles.textArea]}

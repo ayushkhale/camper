@@ -15,11 +15,11 @@ import { useAlert } from '../../context/AlertContext';
 import CurvedHeader from '../../components/CurvedHeader';
 import AddCustomerModal from '../../components/modals/AddCustomerModal';
 
-const PAYMENT_MODES = [
-  { id: 'cash', label: 'Cash' },
-  { id: 'upi', label: 'UPI' },
-  { id: 'bank_transfer', label: 'Bank Transfer' },
-  { id: 'cheque', label: 'Cheque' }
+const getPaymentModes = (t) => [
+  { id: 'cash', label: t('payments.cash') },
+  { id: 'upi', label: t('payments.upi') },
+  { id: 'bank_transfer', label: t('payments.bankTransfer') },
+  { id: 'cheque', label: t('payments.cheque') }
 ];
 
 const PaymentsScreen = () => {
@@ -278,7 +278,7 @@ const PaymentsScreen = () => {
         </TouchableWithoutFeedback>
         <View style={[styles.modalContent, { maxHeight: '80%' }]}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Customer</Text>
+            <Text style={styles.modalTitle}>{t('payments.selectCustomerTitle')}</Text>
             <TouchableOpacity onPress={() => setShowCustomerModal(false)}>
               <X size={24} color={COLORS.textPrimary} />
             </TouchableOpacity>
@@ -287,7 +287,7 @@ const PaymentsScreen = () => {
             <Search size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search customer by name or phone"
+              placeholder={t('payments.searchCustomer')}
               value={customerSearch}
               onChangeText={handleCustomerSearch}
               placeholderTextColor={COLORS.textPlaceholder}
@@ -301,7 +301,7 @@ const PaymentsScreen = () => {
                 style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
                 onPress={() => { setShowCustomerModal(false); setAddCustomerVisible(true); }}
               >
-                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Customer</Text>
+                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
               </TouchableOpacity>
               <FlatList
                 data={filteredCustomers}
@@ -332,7 +332,7 @@ const PaymentsScreen = () => {
   const renderRecordPayment = () => (
     <ScrollView contentContainerStyle={styles.tabContent} keyboardShouldPersistTaps="handled">
       <View style={styles.card}>
-        <Text style={styles.label}>Amount (₹)</Text>
+        <Text style={styles.label}>{t('payments.amount')}</Text>
         <TextInput
           style={styles.input}
           placeholder="0.00"
@@ -342,9 +342,9 @@ const PaymentsScreen = () => {
           placeholderTextColor={COLORS.textPlaceholder}
         />
 
-        <Text style={styles.label}>Payment Mode</Text>
+        <Text style={styles.label}>{t('payments.paymentMode')}</Text>
         <View style={styles.chipsContainer}>
-          {PAYMENT_MODES.map(mode => (
+          {getPaymentModes(t).map(mode => (
             <TouchableOpacity
               key={mode.id}
               style={[styles.chip, paymentMode === mode.id && styles.chipActive]}
@@ -357,7 +357,7 @@ const PaymentsScreen = () => {
           ))}
         </View>
 
-        <Text style={styles.label}>Reference Note (Optional)</Text>
+        <Text style={styles.label}>{t('payments.referenceNote')}</Text>
         <TextInput
           style={styles.input}
           placeholder="e.g. July bill payment via GPay"
@@ -374,7 +374,7 @@ const PaymentsScreen = () => {
           {submittingPayment ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.primaryBtnText}>Record Payment</Text>
+            <Text style={styles.primaryBtnText}>{t('payments.recordPayment')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -386,8 +386,8 @@ const PaymentsScreen = () => {
       return (
         <View style={styles.emptyTabContent}>
           <User size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-          <Text style={styles.emptyTitle}>Select a Customer</Text>
-          <Text style={styles.emptySubtitle}>Please select a customer to view their statement.</Text>
+          <Text style={styles.emptyTitle}>{t('payments.selectCustomerTitle')}</Text>
+          <Text style={styles.emptySubtitle}>{t('payments.selectCustomerSubtitle')}</Text>
         </View>
       );
     }
@@ -431,7 +431,7 @@ const PaymentsScreen = () => {
 
                 <View style={{ zIndex: 1 }}>
                   <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontFamily: 'Geologica-Medium', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                    {owesMoney ? 'Total Amount Due' : 'Available Balance'}
+                    {owesMoney ? t('payments.totalAmountDue') : t('payments.availableBalance')}
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                     <Text style={{ fontSize: 28, color: '#FFF', fontFamily: 'Geologica-Bold', includeFontPadding: false }}>
@@ -439,29 +439,29 @@ const PaymentsScreen = () => {
                     </Text>
                     {owesMoney ? (
                       <View style={{ backgroundColor: 'rgba(239,68,68,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
-                        <Text style={{ color: '#FCA5A5', fontSize: 10, fontFamily: 'Geologica-Bold' }}>To Collect</Text>
+                        <Text style={{ color: '#FCA5A5', fontSize: 10, fontFamily: 'Geologica-Bold' }}>{t('payments.toCollect')}</Text>
                       </View>
                     ) : (
                        <View style={{ backgroundColor: 'rgba(16,185,129,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
-                        <Text style={{ color: '#6EE7B7', fontSize: 10, fontFamily: 'Geologica-Bold' }}>Settled</Text>
+                        <Text style={{ color: '#6EE7B7', fontSize: 10, fontFamily: 'Geologica-Bold' }}>{t('payments.settled')}</Text>
                       </View>
                     )}
                   </View>
 
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.08)', padding: 12, borderRadius: 10 }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 2 }}>Total Billed</Text>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 2 }}>{t('payments.totalBilled')}</Text>
                       <Text style={{ fontSize: 15, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
                     </View>
                     <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 12 }} />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 2 }}>Total Received</Text>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 2 }}>{t('payments.totalReceived')}</Text>
                       <Text style={{ fontSize: 15, color: '#4ADE80', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
                     </View>
                   </View>
                 </View>
               </View>
-              <Text style={[styles.statementListTitle, { marginTop: 4, marginBottom: 16 }]}>Recent Transactions</Text>
+              <Text style={[styles.statementListTitle, { marginTop: 4, marginBottom: 16 }]}>{t('payments.recentTransactions')}</Text>
             </View>
           }
           renderItem={({ item }) => {
@@ -491,7 +491,7 @@ const PaymentsScreen = () => {
           }}
           ListEmptyComponent={
             <View style={{ alignItems: 'center', padding: 30 }}>
-              <Text style={{ color: COLORS.textPlaceholder }}>No transactions found.</Text>
+              <Text style={{ color: COLORS.textPlaceholder }}>{t('payments.noTransactions')}</Text>
             </View>
           }
         />
@@ -540,7 +540,7 @@ const PaymentsScreen = () => {
             activeOpacity={0.7}
           >
             <Text style={[styles.tabText, activeTab === 'record' && styles.tabTextActive]}>
-              ₹  Record Payment
+              ₹  {t('payments.recordPayment')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -549,7 +549,7 @@ const PaymentsScreen = () => {
             activeOpacity={0.7}
           >
             <Text style={[styles.tabText, activeTab === 'statement' && styles.tabTextActive]}>
-              ₹  Statement
+              ₹  {t('payments.statement')}
             </Text>
           </TouchableOpacity>
         </View>

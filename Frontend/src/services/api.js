@@ -297,6 +297,9 @@ export const api = {
   listRoutes: (token) =>
     getRequest('/api/vendor/routes', token),
 
+  getRoutes: (token) =>
+    getRequest('/api/vendor/routes', token),
+
   getRoute: (token, id) =>
     getRequest(`/api/vendor/routes/${id}`, token),
 

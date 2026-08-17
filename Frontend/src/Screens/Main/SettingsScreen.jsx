@@ -157,8 +157,8 @@ const SettingsScreen = () => {
             <View style={styles.avatarContainer}>
               <Image source={require('../../../assets/fallbackimage.png')} style={styles.avatarImage} />
             </View>
-            <Text style={styles.profileName}>{name || 'Your Profile'}</Text>
-            <Text style={styles.profileBusiness}>{businessName || 'Vendor Account'}</Text>
+            <Text style={styles.profileName}>{name || t('settings.yourProfile')}</Text>
+            <Text style={styles.profileBusiness}>{businessName || t('settings.vendorAccount')}</Text>
           </View>
 
           {/* Form Fields */}
@@ -193,7 +193,7 @@ const SettingsScreen = () => {
             <View style={[styles.inputContainer, styles.inputDisabled]}>
               <TextInput
                 style={[styles.input, { color: COLORS.textPlaceholder }]}
-                value={categoryName || 'Not Set'}
+                value={categoryName || t('settings.notSet')}
                 editable={false}
               />
             </View>
@@ -275,7 +275,7 @@ const SettingsScreen = () => {
                 ) : (
                   <>
                     <Check size={18} color="#FFF" style={{ marginRight: 8 }} />
-                    <Text style={styles.buttonText}>Save Changes</Text>
+                    <Text style={styles.buttonText}>{t('common.saveChanges')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -283,7 +283,7 @@ const SettingsScreen = () => {
           </View>
 
           {/* Preferences Section */}
-          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>App Settings</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>{t('settings.appSettings')}</Text>
 
           <View style={styles.preferencesContainer}>
             <View style={styles.prefRow}>
@@ -313,7 +313,7 @@ const SettingsScreen = () => {
             >
               <View style={styles.prefLeft}>
                 <Shield size={20} color={COLORS.textSecondary} style={{ marginRight: 10 }} />
-                <Text style={styles.prefLabel}>Privacy Policy</Text>
+                <Text style={styles.prefLabel}>{t('settings.privacyPolicy')}</Text>
               </View>
               <ExternalLink size={16} color={COLORS.textPlaceholder} />
             </TouchableOpacity>
@@ -334,7 +334,7 @@ const SettingsScreen = () => {
             >
               <View style={styles.prefLeft}>
                 <Trash2 size={20} color={COLORS.danger} style={{ marginRight: 10 }} />
-                <Text style={[styles.prefLabel, { color: COLORS.danger }]}>Delete Account</Text>
+                <Text style={[styles.prefLabel, { color: COLORS.danger }]}>{t('settings.deleteAccount')}</Text>
               </View>
               <ExternalLink size={16} color={COLORS.danger} />
             </TouchableOpacity>
