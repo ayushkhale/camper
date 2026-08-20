@@ -20,7 +20,7 @@ import { COLORS } from '../../constants/colors';
 const UnbilledDeliveriesScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -110,20 +110,22 @@ const UnbilledDeliveriesScreen = () => {
       </View>
 
       <View style={styles.cardActions}>
-        <TouchableOpacity 
-          style={styles.generateButton}
-          onPress={() => handleGenerateInvoice(item.customerId, item.earliestDeliveryDate, item.latestDeliveryDate)}
-          disabled={generatingForId === item.customerId}
-        >
-          {generatingForId === item.customerId ? (
-            <ActivityIndicator size="small" color="#FFF" />
-          ) : (
-            <>
-              <CheckCircle size={16} color="#FFF" style={{ marginRight: 6 }} />
-              <Text style={styles.generateButtonText}>{t('invoices.generateInvoices')}</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {user?.role !== 'staff' && (
+          <TouchableOpacity 
+            style={styles.generateButton}
+            onPress={() => handleGenerateInvoice(item.customerId, item.earliestDeliveryDate, item.latestDeliveryDate)}
+            disabled={generatingForId === item.customerId}
+          >
+            {generatingForId === item.customerId ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <>
+                <CheckCircle size={16} color="#FFF" style={{ marginRight: 6 }} />
+                <Text style={styles.generateButtonText}>{t('invoices.generateInvoices')}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

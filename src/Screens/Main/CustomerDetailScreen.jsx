@@ -45,7 +45,7 @@ import CurvedHeader from '../../components/CurvedHeader';
 const CustomerDetailScreen = () => {
   const navigation = useNavigation();
   const routeParams = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const customerId = routeParams.params?.customerId;
   const { t } = useTranslation();
   const { showAlert } = useAlert();
@@ -229,20 +229,22 @@ const CustomerDetailScreen = () => {
         leftIcon={<ArrowLeft size={24} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <TouchableOpacity
-              style={styles.headerActionBtnDark}
-              onPress={() => navigation.navigate('AddCustomer', { customer: customerData })}
-            >
-              <Edit size={18} color="#FFF" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(239,68,68,0.2)' }]}
-              onPress={handleDeleteCustomer}
-            >
-              <Trash2 size={18} color="#FECACA" />
-            </TouchableOpacity>
-          </View>
+          user?.role !== 'staff' ? (
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                style={styles.headerActionBtnDark}
+                onPress={() => navigation.navigate('AddCustomer', { customer: customerData })}
+              >
+                <Edit size={18} color="#FFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(239,68,68,0.2)' }]}
+                onPress={handleDeleteCustomer}
+              >
+                <Trash2 size={18} color="#FECACA" />
+              </TouchableOpacity>
+            </View>
+          ) : null
         }
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -471,6 +473,22 @@ const CustomerDetailScreen = () => {
         )}
 
 
+
+            {/* Metadata Section */}
+            <View style={styles.metadataSection}>
+              <Text style={styles.metadataLabel}>Last Modified By</Text>
+              <View style={styles.metadataUserRow}>
+                <User size={14} color="#64748B" />
+                <Text style={styles.metadataValue}>
+                  {customerData.updatedBy?.name || 'System'} ({customerData.updatedBy?.role || 'admin'})
+                </Text>
+              </View>
+              {customerData.updatedAt && (
+                <Text style={styles.metadataTime}>
+                  {new Date(customerData.updatedAt).toLocaleString()}
+                </Text>
+              )}
+            </View>
 
       </ScrollView>
 
@@ -792,6 +810,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Geologica-Medium',
     color: COLORS.textSecondary,
+  },
+  metadataSection: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  metadataLabel: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  metadataUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  metadataValue: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#334155',
+    marginLeft: 6,
+  },
+  metadataTime: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Regular',
+    color: '#94A3B8',
   },
   dot: {
     width: 4,

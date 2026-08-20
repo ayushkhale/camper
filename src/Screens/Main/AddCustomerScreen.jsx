@@ -33,7 +33,7 @@ import AddProductModal from '../../components/modals/AddProductModal';
 const AddCustomerScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { t } = useTranslation();
   const { showAlert } = useAlert();
 
@@ -175,7 +175,7 @@ const AddCustomerScreen = () => {
       setNameError('');
     }
 
-    if (!isEditMode && phone.trim()) {
+    if (phone.trim()) {
       const cleanPhone = phone.replace(/[^0-9]/g, '');
       if (cleanPhone.length !== 10) {
         setPhoneError('Enter a valid 10-digit number');
@@ -205,11 +205,14 @@ const AddCustomerScreen = () => {
     const customerData = {
       name: name.trim(),
       address: address.trim() || undefined,
-      openingBalance: openingBalance ? parseFloat(openingBalance) : 0,
       routeId: routeId || undefined,
     };
 
-    if (!isEditMode && formattedPhone) {
+    if (!isEditMode) {
+      customerData.openingBalance = openingBalance ? parseFloat(openingBalance) : 0;
+    }
+
+    if (formattedPhone) {
       customerData.phone = formattedPhone;
     }
 
@@ -417,12 +420,14 @@ const AddCustomerScreen = () => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity 
-            style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
-            onPress={() => { setRouteModalVisible(false); setAddRouteVisible(true); }}
-          >
-            <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewRoute')}</Text>
-          </TouchableOpacity>
+          {user?.role !== 'staff' && (
+            <TouchableOpacity 
+              style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
+              onPress={() => { setRouteModalVisible(false); setAddRouteVisible(true); }}
+            >
+              <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewRoute')}</Text>
+            </TouchableOpacity>
+          )}
 
           {loadingRoutes ? (
             <View style={{ padding: 30, alignItems: 'center' }}>
@@ -619,14 +624,9 @@ const AddCustomerScreen = () => {
                   keyboardType="number-pad"
                   maxLength={10}
                   placeholderTextColor={COLORS.textPlaceholder}
-                  disabled={isEditMode && !!editCustomer?.phone}
-                  editable={!(isEditMode && !!editCustomer?.phone)}
                 />
               </View>
               {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
-              {isEditMode && editCustomer?.phone && (
-                <Text style={styles.helperText}>{t('customers.phoneCantChange')}</Text>
-              )}
             </View>
 
             {/* Address */}
@@ -663,7 +663,7 @@ const AddCustomerScreen = () => {
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingHorizontal: 6, backgroundColor: '#FFFBEB', paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#FEF3C7' }}>
                 <AlertCircle size={14} color="#D97706" style={{ marginRight: 6 }} />
                 <Text style={{ fontSize: 11.5, fontFamily: 'Geologica-Medium', color: '#D97706' }}>
-                  {t('customers.phoneCantChange')}
+                  {t('customers.openingBalanceCantChange')}
                 </Text>
               </View>
             </View>
@@ -873,12 +873,14 @@ const AddCustomerScreen = () => {
                   </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity 
-                  style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
-                  onPress={() => { setProductModalVisible(false); setAddProductInlineVisible(true); }}
-                >
-                  <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
-                </TouchableOpacity>
+                {user?.role !== 'staff' && (
+                  <TouchableOpacity 
+                    style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
+                    onPress={() => { setProductModalVisible(false); setAddProductInlineVisible(true); }}
+                  >
+                    <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
+                  </TouchableOpacity>
+                )}
 
                 {loadingProducts ? (
                   <ActivityIndicator size="small" color={COLORS.primary} style={{ padding: 20 }} />

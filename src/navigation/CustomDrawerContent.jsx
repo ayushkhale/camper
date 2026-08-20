@@ -40,19 +40,22 @@ const CustomDrawerContent = (props) => {
   }, [userToken]);
 
   // Only list screens that actually exist and are registered in navigation
-  const menuItems = [
+  const allMenuItems = [
     { title: t('tabs.home'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Home' } },
     { title: t('deliveries.allRoutes'), type: 'navigate', screen: 'RouteList' },
     { title: t('tabs.customers'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Customers' } },
-    { title: t('deliveries.unbilledDeliveries'), type: 'navigate', screen: 'UnbilledDeliveries' },
-    { title: t('routes.customerSequence'), type: 'navigate', screen: 'RouteBuilder' },
+    { title: t('deliveries.unbilledDeliveries'), type: 'navigate', screen: 'UnbilledDeliveries', ownerOnly: true },
+    { title: t('routes.customerSequence'), type: 'navigate', screen: 'RouteBuilder', ownerOnly: true },
     { title: t('subscriptions.title'), type: 'navigate', screen: 'SubscriptionList' },
     { title: t('oneTimeOrders.title'), type: 'navigate', screen: 'OneTimeOrderList' },
     { title: t('products.title'), type: 'navigate', screen: 'ProductCatalog' },
-    { title: t('staff.title'), type: 'navigate', screen: 'StaffManagement' },
-    { title: t('settings.title'), type: 'navigate', screen: 'Settings' },
+    { title: t('staff.title'), type: 'navigate', screen: 'StaffManagement', ownerOnly: true },
+    { title: 'Reports & Analytics', type: 'navigate', screen: 'Reports', ownerOnly: true },
+    { title: t('settings.title'), type: 'navigate', screen: 'Settings', ownerOnly: true },
     { title: t('settings.logout'), type: 'logout' },
   ];
+
+  const menuItems = allMenuItems.filter(item => !(user?.role === 'staff' && item.ownerOnly));
 
   const handlePress = (item) => {
     navigation.closeDrawer();

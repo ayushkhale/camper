@@ -40,13 +40,12 @@ import CurvedHeader from '../../components/CurvedHeader';
 const AddOneTimeOrderScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
 
   const [customerId, setCustomerId] = useState('');
   const [items, setItems] = useState([]); // Array of: { productId, quantity, unitPrice, Product }
   const [orderFrom, setOrderFrom] = useState(new Date().toISOString().split('T')[0]);
-  const [orderTo, setOrderTo] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
 
   const [customers, setCustomers] = useState([]);
@@ -110,16 +109,6 @@ const AddOneTimeOrderScreen = () => {
       const formatted = formatDateString(selectedDate);
       if (pickerType === 'orderFrom') {
         setOrderFrom(formatted);
-        if (orderTo < formatted) {
-          setOrderTo(formatted);
-        }
-      }
-      if (pickerType === 'orderTo') {
-        if (formatted < orderFrom) {
-          showAlert('Validation Error', 'End Date cannot be before Start Date', 'warning');
-        } else {
-          setOrderTo(formatted);
-        }
       }
     }
   };
@@ -144,7 +133,6 @@ const AddOneTimeOrderScreen = () => {
       }
     }
     if (!orderFrom || !/^\d{4}-\d{2}-\d{2}$/.test(orderFrom)) return 'Start Date must be in YYYY-MM-DD format';
-    if (orderTo && !/^\d{4}-\d{2}-\d{2}$/.test(orderTo)) return 'End Date must be in YYYY-MM-DD format';
     return null;
   };
 
@@ -168,7 +156,6 @@ const AddOneTimeOrderScreen = () => {
     const orderData = {
       customerId,
       orderFrom,
-      orderTo,
       notes: notes.trim() || undefined,
       items: formattedItems,
     };
@@ -297,7 +284,7 @@ const AddOneTimeOrderScreen = () => {
               </TouchableOpacity>
             )}
 
-            {activeModal === 'product' && (
+            {activeModal === 'product' && user?.role !== 'staff' && (
               <TouchableOpacity
                 style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
                 onPress={() => { setActiveModal(null); setAddProductVisible(true); }}
@@ -399,30 +386,16 @@ const AddOneTimeOrderScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.dateRow}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.label}>{t('oneTimeOrders.orderFrom')} *</Text>
-                <TouchableOpacity
-                  style={styles.inputContainer}
-                  onPress={() => setActiveDatePicker('orderFrom')}
-                  activeOpacity={0.7}
-                >
-                  <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                  <Text style={styles.inputText}>{formatDisplayDate(orderFrom)}</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.label}>{t('oneTimeOrders.orderTo')} *</Text>
-                <TouchableOpacity
-                  style={styles.inputContainer}
-                  onPress={() => setActiveDatePicker('orderTo')}
-                  activeOpacity={0.7}
-                >
-                  <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                  <Text style={styles.inputText}>{formatDisplayDate(orderTo)}</Text>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('oneTimeOrders.orderDate') || 'Order Date'} *</Text>
+              <TouchableOpacity
+                style={styles.inputContainer}
+                onPress={() => setActiveDatePicker('orderFrom')}
+                activeOpacity={0.7}
+              >
+                <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <Text style={styles.inputText}>{formatDisplayDate(orderFrom)}</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Products Selector */}
@@ -536,12 +509,11 @@ const AddOneTimeOrderScreen = () => {
 
       {activeDatePicker && (
         <DateTimePicker
-          value={
-            activeDatePicker === 'orderFrom' ? parseDateString(orderFrom) : parseDateString(orderTo)
-          }
+          value={parseDateString(orderFrom)}
           mode="date"
           display="default"
           onChange={onDatePickerChange}
+          minimumDate={user?.role === 'staff' ? new Date() : undefined}
         />
       )}
 

@@ -31,7 +31,7 @@ const PaymentsScreen = () => {
 
   const vendorLogo = user?.logoUrl || user?.imageUrl;
 
-  const [activeTab, setActiveTab] = useState('record'); // 'record' | 'statement'
+  const [activeTab, setActiveTab] = useState(user?.role === 'staff' ? 'statement' : 'record'); // 'record' | 'statement'
 
   // Customer Selection State
   const [customers, setCustomers] = useState([]);
@@ -534,15 +534,17 @@ const PaymentsScreen = () => {
 
         {/* Tabs */}
         <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tabBtn, activeTab === 'record' && styles.tabBtnActive]}
-            onPress={() => handleTabSwitch('record')}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.tabText, activeTab === 'record' && styles.tabTextActive]}>
-              ₹  {t('payments.recordPayment')}
-            </Text>
-          </TouchableOpacity>
+          {user?.role !== 'staff' && (
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'record' && styles.tabBtnActive]}
+              onPress={() => handleTabSwitch('record')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tabText, activeTab === 'record' && styles.tabTextActive]}>
+                ₹  {t('payments.recordPayment')}
+              </Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[styles.tabBtn, activeTab === 'statement' && styles.tabBtnActive]}
             onPress={() => handleTabSwitch('statement')}

@@ -21,7 +21,7 @@ import { api } from '../../services/api';
 
 const InvoiceListScreen = () => {
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { t } = useTranslation();
 
   const [invoices, setInvoices] = useState([]);
@@ -240,7 +240,7 @@ const InvoiceListScreen = () => {
                     ? t('customers.noCustomersSearch')
                     : t('invoices.noInvoicesFound')}
                 </Text>
-                {!searchQuery && filterStatus === 'all' && (
+                {!searchQuery && filterStatus === 'all' && user?.role !== 'staff' && (
                   <TouchableOpacity
                     style={styles.emptyAddBtn}
                     onPress={() => navigation.navigate('GenerateInvoice')}
@@ -255,7 +255,7 @@ const InvoiceListScreen = () => {
         )}
       </View>
 
-      {!loading && !error && (
+      {!loading && !error && user?.role !== 'staff' && (
         <TouchableOpacity
           style={styles.fab}
           activeOpacity={0.85}

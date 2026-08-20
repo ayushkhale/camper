@@ -7,15 +7,17 @@ import {
   ScrollView,
   Animated,
   Dimensions,
-  Image
+  Image,
+  Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  Package, MapPin, Repeat, ShoppingBag, FileText, Calendar, Truck, CheckCircle2, XCircle, AlertCircle, UserPlus, Plus, Clock
+  Package, MapPin, Repeat, ShoppingBag, FileText, Calendar, Truck, CheckCircle2, XCircle, AlertCircle, UserPlus, Plus, Clock, Globe
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -134,7 +136,7 @@ const AnimatedLucideIcon = ({ Icon, color, delay = 0, size = 45 }) => {
 };
 
 const HomeScreen = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
 
@@ -142,11 +144,32 @@ const HomeScreen = () => {
   const [loadingStats, setLoadingStats] = useState(true);
   const [todaysDeliveries, setTodaysDeliveries] = useState([]);
   const [loadingDeliveries, setLoadingDeliveries] = useState(true);
+  const [noAssignedRoutes, setNoAssignedRoutes] = useState(false);
+
+  const toggleLanguage = async () => {
+    const newLang = i18n.language === 'en' ? 'hi' : 'en';
+    i18n.changeLanguage(newLang);
+    await AsyncStorage.setItem('app_language', newLang);
+  };
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
       const fetchStats = async () => {
+        if (user?.role === 'staff') {
+          setStats({ customers: 0, subscriptions: 0, routes: 0, oneTimeOrders: 0 });
+          if (isActive) setLoadingStats(false);
+          try {
+            const profileRes = await api.getVendorProfile(userToken);
+            if (isActive && profileRes.success) {
+              const assignedRoutes = profileRes.data?.assignedRoutes || [];
+              setNoAssignedRoutes(assignedRoutes.length === 0);
+            }
+          } catch (e) {
+            console.error('Error fetching staff profile on home:', e);
+          }
+          return;
+        }
         setLoadingStats(true);
         try {
           const res = await api.getDashboardStats(userToken);
@@ -310,6 +333,41 @@ const HomeScreen = () => {
     </View>
   );
 
+  const renderNoRoutesModal = () => {
+    return (
+      <Modal
+        visible={noAssignedRoutes}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIconContainer}>
+              <MapPin size={40} color="#EF4444" strokeWidth={1.5} />
+            </View>
+            <Text style={styles.modalTitle}>
+              {i18n.language === 'hi' ? 'कोई रूट नहीं मिला' : 'No Route Assigned'}
+            </Text>
+            <Text style={styles.modalText}>
+              {i18n.language === 'hi'
+                ? 'माफ़ करें! आपको डिलीवरी के लिए अभी तक कोई रूट नहीं दिया गया है। कृपया अपने मालिक/व्यवस्थापक से संपर्क करें ताकि वे आपको रूट असाइन कर सकें।'
+                : "Oops! It looks like you haven't been assigned to any route for delivery yet. Please contact your owner/admin to get a route assigned to you."}
+            </Text>
+            <TouchableOpacity
+              style={styles.modalBtn}
+              activeOpacity={0.8}
+              onPress={() => setNoAssignedRoutes(false)}
+            >
+              <Text style={styles.modalBtnText}>
+                {i18n.language === 'hi' ? 'ठीक है, समझ गया' : 'Okay, I understand'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   const features = [
     { title: t('customers.addNew'), icon: Plus, screen: 'AddCustomer', color: '#3B82F6', iconBg: '#EFF6FF' },
     { title: t('products.title'), icon: Package, screen: 'ProductCatalog', color: '#10B981', iconBg: '#ECFDF5' },
@@ -357,8 +415,27 @@ const HomeScreen = () => {
           renderWholeScreenSkeleton()
         ) : (
           <>
-            <View style={styles.sectionHeader}>
+            <View style={[styles.sectionHeader, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
               <Text style={styles.sectionTitle}>{t('home.overviewTitle')}</Text>
+              {user?.role === 'staff' && (
+                <TouchableOpacity
+                  onPress={toggleLanguage}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#EFF6FF',
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 20,
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Globe size={16} color="#3B82F6" style={{ marginRight: 6 }} />
+                  <Text style={{ fontFamily: 'Geologica-Medium', color: '#3B82F6', fontSize: 13 }}>
+                    {i18n.language === 'hi' ? 'English' : 'हिंदी'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Daily Delivery Progress Card */}
@@ -435,7 +512,8 @@ const HomeScreen = () => {
               </View>
             </View>
 
-            {/* 2x2 Stats Grid */}
+            {/* 2x2 Stats Grid (Hidden for Staff) */}
+            {user?.role !== 'staff' && (
             <View style={styles.statsGrid}>
               <View style={styles.statsRow}>
                 <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Customers' } })}>
@@ -477,6 +555,7 @@ const HomeScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
+            )}
 
             {/* Next Delivery Card */}
             {nextDelivery && (
@@ -618,6 +697,7 @@ const HomeScreen = () => {
         )}
 
       </ScrollView>
+      {renderNoRoutesModal()}
     </SafeAreaView>
   );
 };
@@ -977,6 +1057,64 @@ const styles = StyleSheet.create({
   skeletonCircle: {
     backgroundColor: '#F1F5F9',
     borderRadius: 20,
+  },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FEF2F2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontFamily: 'Geologica-Bold',
+    color: '#1E293B',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 15,
+    fontFamily: 'Geologica-Medium',
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 30,
+  },
+  modalBtn: {
+    backgroundColor: '#3B82F6',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalBtnText: {
+    fontSize: 16,
+    fontFamily: 'Geologica-Bold',
+    color: '#FFFFFF',
   }
 });
 

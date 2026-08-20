@@ -43,7 +43,7 @@ const getNext7Days = () => {
   return days;
 };
 
-const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) => {
+const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t, isLocked }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedEditStatus, setSelectedEditStatus] = useState(delivery.status || 'pending');
@@ -86,7 +86,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
 
   return (
     <View style={[styles.deliveryCardWrapperOptionC, isExpanded && styles.deliveryCardExpandedOptionC]}>
-      {updating && (
+      {updating && isExpanded && (
         <View style={styles.cardUpdatingOverlay}>
           <ActivityIndicator color={COLORS.primary} />
         </View>
@@ -113,7 +113,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
         </View>
 
         <View style={styles.headerActionsOptionC}>
-          {!isEditing && (
+          {!isEditing && !isLocked && (
             <TouchableOpacity
               style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', marginRight: 6 }]}
               onPress={(e) => {
@@ -127,7 +127,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
             </TouchableOpacity>
           )}
 
-          {delivery.status === 'pending' && !isExpanded && (
+          {delivery.status === 'pending' && !isExpanded && !isLocked && (
             <TouchableOpacity
               style={styles.quickDeliverIconBtnOptionC}
               onPress={(e) => {
@@ -135,11 +135,12 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
                 handleStatusChange('delivered');
               }}
               activeOpacity={0.7}
+              disabled={updating}
             >
-              <CheckSquare size={22} color="#10B981" />
+              {updating ? <ActivityIndicator size="small" color="#10B981" /> : <CheckSquare size={22} color="#10B981" />}
             </TouchableOpacity>
           )}
-          {delivery.status === 'delivered' && !isExpanded && (
+          {delivery.status === 'delivered' && !isExpanded && !isLocked && (
             <TouchableOpacity
               style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#ECFDF5', borderColor: '#10B981' }]}
               onPress={(e) => {
@@ -147,11 +148,12 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
                 setIsExpanded(true);
               }}
               activeOpacity={0.7}
+              disabled={updating}
             >
-              <CheckSquare size={22} color="#10B981" />
+              {updating ? <ActivityIndicator size="small" color="#10B981" /> : <CheckSquare size={22} color="#10B981" />}
             </TouchableOpacity>
           )}
-          {delivery.status === 'skipped' && !isExpanded && (
+          {delivery.status === 'skipped' && !isExpanded && !isLocked && (
             <TouchableOpacity
               style={[styles.quickDeliverIconBtnOptionC, { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }]}
               onPress={(e) => {
@@ -159,8 +161,9 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
                 setIsExpanded(true);
               }}
               activeOpacity={0.7}
+              disabled={updating}
             >
-              <XCircle size={22} color="#EF4444" />
+              {updating ? <ActivityIndicator size="small" color="#EF4444" /> : <XCircle size={22} color="#EF4444" />}
             </TouchableOpacity>
           )}
 
@@ -226,25 +229,13 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                 <TouchableOpacity
                   style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
-                    selectedEditStatus === 'delivered' && { backgroundColor: '#ECFDF5', borderColor: '#10B981' }
-                  ]}
-                  onPress={() => setSelectedEditStatus('delivered')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'delivered' && { color: '#15803D' }]}>
-                    DELIVERED
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
                     selectedEditStatus === 'skipped' && { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }
                   ]}
                   onPress={() => setSelectedEditStatus('skipped')}
                   activeOpacity={0.7}
                 >
                   <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'skipped' && { color: '#B91C1C' }]}>
-                    SKIPPED
+                    {t('deliveries.skipped').toUpperCase()}
                   </Text>
                 </TouchableOpacity>
 
@@ -256,7 +247,19 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t }) =>
                   activeOpacity={0.7}
                 >
                   <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'pending' && { color: '#B45309' }]}>
-                    PENDING
+                    {t('deliveries.pending').toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
+                    selectedEditStatus === 'delivered' && { backgroundColor: '#ECFDF5', borderColor: '#10B981' }
+                  ]}
+                  onPress={() => setSelectedEditStatus('delivered')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'delivered' && { color: '#15803D' }]}>
+                    {t('deliveries.delivered').toUpperCase()}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -607,7 +610,12 @@ const OrdersScreen = () => {
                 <Text style={styles.emptySubtitle}>{t('deliveries.emptyDeliveriesSub')}</Text>
               </View>
             ) : (
-              filteredDeliveries.map((delivery, idx) => (
+              filteredDeliveries.map((delivery, idx) => {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const isPastDate = selectedDate < todayStr;
+                const isLocked = user?.role === 'staff' && (delivery.status !== 'pending' || !!delivery.invoiceId || isPastDate);
+
+                return (
                 <DeliveryCard
                   key={delivery.id}
                   delivery={delivery}
@@ -615,8 +623,9 @@ const OrdersScreen = () => {
                   onUpdateStatus={handleDeliveryUpdate}
                   getStatusColor={getStatusColor}
                   t={t}
+                  isLocked={isLocked}
                 />
-              ))
+              )})
             )}
           </View>
 
@@ -743,6 +752,7 @@ const OrdersScreen = () => {
           mode="date"
           display="default"
           onChange={onDateChange}
+          minimumDate={user?.role === 'staff' ? new Date() : undefined}
         />
       )}
 

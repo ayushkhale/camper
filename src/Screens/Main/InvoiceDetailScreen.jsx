@@ -29,6 +29,7 @@ import {
   Printer,
   Download,
   ChevronLeft,
+  User,
 } from 'lucide-react-native';
 
 const WhatsAppIcon = ({ size = 20, color = "#FFF", style }) => (
@@ -47,7 +48,7 @@ const InvoiceDetailScreen = () => {
   const { t, i18n } = useTranslation();
   const route = useRoute();
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
 
   const { invoiceId, invoice: initialInvoice } = route.params || {};
 
@@ -990,7 +991,7 @@ const InvoiceDetailScreen = () => {
             </View>
 
             {/* Record Payment Action Button */}
-            {invoiceData.status !== 'paid' && balanceDue > 0 && (
+            {invoiceData.status !== 'paid' && balanceDue > 0 && user?.role !== 'staff' && (
               <TouchableOpacity
                 style={styles.payBtn}
                 activeOpacity={0.85}
@@ -1014,6 +1015,22 @@ const InvoiceDetailScreen = () => {
             <View style={styles.footer}>
               <Text style={styles.footerText}>{t('invoices.thankYou')}</Text>
               <Text style={styles.footerSubtext}>{t('invoices.computerGenerated')}</Text>
+            </View>
+
+            {/* Metadata Section */}
+            <View style={styles.metadataSection}>
+              <Text style={styles.metadataLabel}>Last Modified By</Text>
+              <View style={styles.metadataUserRow}>
+                <User size={14} color="#64748B" />
+                <Text style={styles.metadataValue}>
+                  {invoiceData.updatedBy?.name || 'System'} ({invoiceData.updatedBy?.role || 'admin'})
+                </Text>
+              </View>
+              {invoiceData.updatedAt && (
+                <Text style={styles.metadataTime}>
+                  {new Date(invoiceData.updatedAt).toLocaleString()}
+                </Text>
+              )}
             </View>
 
           </ScrollView>
@@ -1396,9 +1413,40 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   footerSubtext: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  metadataSection: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  metadataLabel: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  metadataUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  metadataValue: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#334155',
+    marginLeft: 6,
+  },
+  metadataTime: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Regular',
+    color: '#94A3B8',
   },
 });
 

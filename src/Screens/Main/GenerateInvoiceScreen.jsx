@@ -327,14 +327,6 @@ const GenerateInvoiceScreen = () => {
           showsVerticalScrollIndicator={false}
         >
 
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>
-              Generate Invoices
-            </Text>
-            <Text style={styles.pageSubtitle}>
-              Create bills for a specific period
-            </Text>
-          </View>
 
           {apiError ? (
             <View style={styles.errorBanner}>
@@ -346,8 +338,8 @@ const GenerateInvoiceScreen = () => {
           {preSummary ? (
             <View style={styles.preSummaryCard}>
               <View style={styles.preSummaryHeader}>
-                <FileText size={18} color="#0EA5E9" style={{marginRight: 6}} />
-                <Text style={styles.preSummaryTitle}>Pending to be Invoiced</Text>
+                <FileText size={16} color="rgba(255,255,255,0.8)" style={{marginRight: 6}} />
+                <Text style={styles.preSummaryTitle}>{t('deliveries.pendingToInvoice') || 'Pending to be Invoiced'}</Text>
               </View>
               <View style={styles.preSummaryRow}>
                 <View style={styles.preSummaryStat}>
@@ -356,7 +348,7 @@ const GenerateInvoiceScreen = () => {
                 </View>
                 <View style={styles.preSummaryStat}>
                   <Text style={styles.preSummaryLabel}>Estimated Total</Text>
-                  <Text style={[styles.preSummaryValue, { color: '#16A34A' }]}>₹{preSummary.total}</Text>
+                  <Text style={[styles.preSummaryValue, { color: '#4ADE80' }]}>₹{preSummary.total}</Text>
                 </View>
               </View>
             </View>
@@ -367,13 +359,22 @@ const GenerateInvoiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('tabs.customers')} *</Text>
               <TouchableOpacity 
-                style={styles.inputContainer}
+                style={styles.customerSelector}
                 onPress={() => setActiveModal('customer')}
+                activeOpacity={0.7}
               >
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                <Text style={[styles.dropdownText, !customerId && { color: COLORS.textPlaceholder }]}>
-                  {getCustomerName(customerId)}
-                </Text>
+                <View style={styles.customerSelectorAvatar}>
+                  <User size={22} color={COLORS.primary} />
+                </View>
+                <View style={styles.customerSelectorInfo}>
+                  <Text style={[styles.customerSelectorText, !customerId && { color: COLORS.textPlaceholder }]}>
+                    {getCustomerName(customerId)}
+                  </Text>
+                  <Text style={styles.customerSelectorSubtext}>
+                    {customerId ? 'Tap to change customer' : 'Tap to select customer'}
+                  </Text>
+                </View>
+                <ChevronDown size={20} color={COLORS.textPlaceholder} />
               </TouchableOpacity>
             </View>
 
@@ -481,21 +482,7 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
-  titleContainer: {
-    marginBottom: 32,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 6,
-  },
-  pageSubtitle: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
-  },
+
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -516,22 +503,28 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
   },
   preSummaryCard: {
-    backgroundColor: '#F0F9FF',
+    backgroundColor: '#1E3A8A',
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
+    shadowColor: '#1E3A8A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
     marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
+    overflow: 'hidden',
   },
   preSummaryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   preSummaryTitle: {
-    fontSize: 14,
-    fontFamily: 'Geologica-Bold',
-    color: '#0369A1',
+    fontSize: 12,
+    fontFamily: 'Geologica-Medium',
+    color: 'rgba(255,255,255,0.7)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   preSummaryRow: {
     flexDirection: 'row',
@@ -541,18 +534,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   preSummaryLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Geologica-Medium',
-    color: '#0284C7',
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 4,
   },
   preSummaryValue: {
-    fontSize: 20,
+    fontSize: 24,
     fontFamily: 'Geologica-Bold',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   form: {
-    marginBottom: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    paddingTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    marginBottom: 20,
   },
   inputGroup: {
     marginBottom: 20,
@@ -566,12 +570,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#F1F5F9',
     borderRadius: 16,
-    paddingHorizontal: 12,
-    height: 52,
+    paddingHorizontal: 16,
+    height: 56,
   },
   inputIcon: {
     marginRight: 8,
@@ -581,6 +585,38 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: COLORS.textPrimary,
+  },
+  customerSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    borderRadius: 16,
+    padding: 12,
+  },
+  customerSelectorAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  customerSelectorInfo: {
+    flex: 1,
+  },
+  customerSelectorText: {
+    fontSize: 15,
+    fontFamily: 'Geologica-SemiBold',
+    color: COLORS.textPrimary,
+    marginBottom: 2,
+  },
+  customerSelectorSubtext: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Regular',
+    color: COLORS.textPlaceholder,
   },
   bottomBar: {
     backgroundColor: '#FFFFFF',

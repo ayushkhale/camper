@@ -30,7 +30,7 @@ const AddSubscriptionScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
 
   const editSub = route.params?.subscription || null;
@@ -291,7 +291,7 @@ const AddSubscriptionScreen = () => {
               </TouchableOpacity>
             )}
 
-            {activeModal === 'product' && (
+            {activeModal === 'product' && user?.role !== 'staff' && (
               <TouchableOpacity
                 style={styles.addInlineBtn}
                 onPress={() => { setActiveModal(null); setAddProductVisible(true); }}
@@ -454,6 +454,7 @@ const AddSubscriptionScreen = () => {
                   mode="date"
                   display="default"
                   onChange={onDateChange}
+                  minimumDate={user?.role === 'staff' ? new Date() : undefined}
                 />
               )}
             </View>

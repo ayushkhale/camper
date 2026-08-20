@@ -21,7 +21,7 @@ import CurvedHeader from '../../components/CurvedHeader';
 const RouteListScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
 
   const [routes, setRoutes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,7 +69,7 @@ const RouteListScreen = () => {
   });
 
   const renderRouteCard = ({ item }) => {
-    const customerCount = item.Customers?.length || item.customerCount || 0;
+    const staffCount = item.StaffRoutes?.length || 0;
 
     return (
       <TouchableOpacity
@@ -93,9 +93,11 @@ const RouteListScreen = () => {
         </View>
 
         <View style={styles.cardFooter}>
-          <Text style={styles.customerCountText}>
-            {customerCount} {customerCount === 1 ? 'Customer' : 'Customers'}
-          </Text>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
+              {staffCount} {staffCount === 1 ? 'Staff Member' : 'Staff Members'}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -168,7 +170,7 @@ const RouteListScreen = () => {
                   ? t('customers.noCustomersSearch')
                   : t('customers.noCustomersSub')}
               </Text>
-              {!searchQuery && (
+              {!searchQuery && user?.role !== 'staff' && (
                 <TouchableOpacity
                   style={styles.emptyAddBtn}
                   onPress={() => navigation.navigate('AddRoute')}
@@ -183,7 +185,7 @@ const RouteListScreen = () => {
       )}
 
       {/* Floating Action Button */}
-      {!loading && !error && (
+      {!loading && !error && user?.role !== 'staff' && (
         <TouchableOpacity
           style={styles.fab}
           activeOpacity={0.85}
@@ -241,14 +243,19 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    marginBottom: 16,
+    padding: 16,
+    // Add subtle drop shadow
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
   },
   iconBox: {
     width: 42,
@@ -271,31 +278,26 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   areaCode: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginTop: 2,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 12,
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#94A3B8',
+    marginTop: 4,
   },
   cardFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  staffCountText: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
+  badge: {
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
-  staffCountValue: {
+  badgeText: {
+    fontSize: 12,
     fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.primary,
+    color: '#0284C7',
   },
   centerContainer: {
     flex: 1,
@@ -375,9 +377,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    width: 60,
-    height: 60,
-    borderRadius: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',

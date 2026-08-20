@@ -32,7 +32,7 @@ import CurvedHeader from '../../components/CurvedHeader';
 const ProductCatalogScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
 
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -214,7 +214,7 @@ const ProductCatalogScreen = () => {
                     ? t('customers.noCustomersSearch')
                     : t('products.noProductsSub')}
                 </Text>
-                {!searchQuery && (
+                {!searchQuery && user?.role !== 'staff' && (
                   <TouchableOpacity
                     style={styles.emptyAddBtn}
                     onPress={() => navigation.navigate('AddProduct')}
@@ -229,7 +229,7 @@ const ProductCatalogScreen = () => {
         )}
       </View>
 
-      {!loading && !error && (
+      {!loading && !error && user?.role !== 'staff' && (
         <TouchableOpacity
           style={styles.fab}
           activeOpacity={0.85}

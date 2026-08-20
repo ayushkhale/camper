@@ -337,7 +337,7 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
 const OneTimeOrderListScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
 
   const [orders, setOrders] = useState([]);
@@ -458,7 +458,7 @@ const OneTimeOrderListScreen = () => {
       onUpdateStatus={handleUpdateStatus} 
       getStatusColors={getStatusColors} 
       formatDisplayDate={formatDisplayDate} 
-      onCancelOrder={handleCancelOrder}
+      onCancelOrder={user?.role !== 'staff' ? handleCancelOrder : undefined}
     />
   );
 

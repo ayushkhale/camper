@@ -43,7 +43,7 @@ const SubscriptionDetailScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
 
   const subscriptionId = route.params?.subscriptionId;
@@ -331,7 +331,7 @@ const SubscriptionDetailScreen = () => {
         }
         leftIcon={<ChevronLeft size={28} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
-        rightIcon={
+        rightIcon={user?.role !== 'staff' ? (
           <View style={{ flexDirection: 'row', gap: 12, marginRight: 16 }}>
             <TouchableOpacity
               style={styles.headerActionBtnDark}
@@ -346,7 +346,7 @@ const SubscriptionDetailScreen = () => {
               <Trash2 size={18} color="#FFD1D1" />
             </TouchableOpacity>
           </View>
-        }
+        ) : null}
         height={130}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
       />
@@ -464,7 +464,7 @@ const SubscriptionDetailScreen = () => {
                       <Text style={[styles.logBadgeText, { color: badgeText }]}>{label}</Text>
                     </View>
                     <Text style={styles.logDates}>{dateRange}</Text>
-                    {isFuture && (
+                    {isFuture && user?.role !== 'staff' && (
                       <TouchableOpacity
                         onPress={() => handleDeleteException(item)}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -477,6 +477,22 @@ const SubscriptionDetailScreen = () => {
                 </View>
               );
             })
+          )}
+        </View>
+
+        {/* Metadata Section */}
+        <View style={styles.metadataSection}>
+          <Text style={styles.metadataLabel}>Last Modified By</Text>
+          <View style={styles.metadataUserRow}>
+            <User size={14} color="#64748B" />
+            <Text style={styles.metadataValue}>
+              {subscription.updatedBy?.name || 'System'} ({subscription.updatedBy?.role || 'admin'})
+            </Text>
+          </View>
+          {subscription.updatedAt && (
+            <Text style={styles.metadataTime}>
+              {new Date(subscription.updatedAt).toLocaleString()}
+            </Text>
           )}
         </View>
       </ScrollView>
@@ -630,6 +646,7 @@ const SubscriptionDetailScreen = () => {
           mode="date"
           display="default"
           onChange={onDatePickerChange}
+          minimumDate={user?.role === 'staff' ? new Date() : undefined}
         />
       )}
     </View>
@@ -985,8 +1002,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Geologica-Bold',
     color: COLORS.background,
   },
-
-  typeSelectorRow: {
+  typeSelectorRow: {
     flexDirection: 'row',
     gap: 10,
     marginBottom: 16,
@@ -1012,6 +1028,36 @@ const styles = StyleSheet.create({
   typeOptionTextActive: {
     color: COLORS.primary,
     fontFamily: 'Geologica-Bold',
+  },
+  metadataSection: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  metadataLabel: {
+    fontSize: 12,
+    fontFamily: 'Geologica-Bold',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  metadataUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  metadataValue: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#334155',
+    marginLeft: 6,
+  },
+  metadataTime: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Regular',
+    color: '#94A3B8',
   },
 });
 

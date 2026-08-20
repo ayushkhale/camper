@@ -4,6 +4,12 @@ const API_BASE_URL = 'http://192.168.1.5:3007';
 // const API_BASE_URL = 'https://api-camper.compunic.co.in';
 
 
+let apiPrefix = '/api/vendor';
+export const setApiRole = (role) => {
+  apiPrefix = role === 'staff' ? '/api/staff' : '/api/vendor';
+};
+
+
 const logRequest = (url, body) => {
   console.log(`🚀 [API Request] POST ${url}`);
   if (body) {
@@ -253,10 +259,10 @@ export const api = {
 
   // Vendor Profile APIs
   getVendorProfile: (token) =>
-    getRequest('/api/vendor/profile', token),
+    getRequest(`${apiPrefix}/profile`, token),
 
   updateVendorProfile: (token, updatedData) =>
-    patchRequest('/api/vendor/profile', updatedData, token),
+    patchRequest(`${apiPrefix}/profile`, updatedData, token),
 
   // Fetch Categories
   getCategories: () =>
@@ -264,59 +270,59 @@ export const api = {
 
   // Staff APIs
   listStaff: (token) =>
-    getRequest('/api/vendor/staff', token),
+    getRequest(`${apiPrefix}/staff`, token),
 
   addStaff: (token, staffData) =>
-    postRequest('/api/vendor/staff', staffData, token),
+    postRequest(`${apiPrefix}/staff`, staffData, token),
 
   updateStaff: (token, id, staffData) =>
-    patchRequest(`/api/vendor/staff/${id}`, staffData, token),
+    patchRequest(`${apiPrefix}/staff/${id}`, staffData, token),
 
   deleteStaff: (token, id) =>
-    deleteRequest(`/api/vendor/staff/${id}`, token),
+    deleteRequest(`${apiPrefix}/staff/${id}`, token),
 
   // Product / SKU Catalog APIs
   listProducts: (token) =>
-    getRequest('/api/vendor/products', token),
+    getRequest(`${apiPrefix}/products`, token),
 
   getProduct: (token, id) =>
-    getRequest(`/api/vendor/products/${id}`, token),
+    getRequest(`${apiPrefix}/products/${id}`, token),
 
   createProduct: (token, formData) =>
-    postMultipartRequest('/api/vendor/products', formData, token),
+    postMultipartRequest(`${apiPrefix}/products`, formData, token),
 
   updateProduct: (token, id, data, isMultipart = false) =>
     isMultipart
-      ? patchMultipartRequest(`/api/vendor/products/${id}`, data, token)
-      : patchRequest(`/api/vendor/products/${id}`, data, token),
+      ? patchMultipartRequest(`${apiPrefix}/products/${id}`, data, token)
+      : patchRequest(`${apiPrefix}/products/${id}`, data, token),
 
   deleteProduct: (token, id) =>
-    deleteRequest(`/api/vendor/products/${id}`, token),
+    deleteRequest(`${apiPrefix}/products/${id}`, token),
 
   // Delivery Routes APIs
   listRoutes: (token) =>
-    getRequest('/api/vendor/routes', token),
+    getRequest(`${apiPrefix}/routes`, token),
 
   getRoutes: (token) =>
-    getRequest('/api/vendor/routes', token),
+    getRequest(`${apiPrefix}/routes`, token),
 
   getRoute: (token, id) =>
-    getRequest(`/api/vendor/routes/${id}`, token),
+    getRequest(`${apiPrefix}/routes/${id}`, token),
 
   createRoute: (token, routeData) =>
-    postRequest('/api/vendor/routes', routeData, token),
+    postRequest(`${apiPrefix}/routes`, routeData, token),
 
   updateRoute: (token, id, routeData) =>
-    patchRequest(`/api/vendor/routes/${id}`, routeData, token),
+    patchRequest(`${apiPrefix}/routes/${id}`, routeData, token),
 
   deleteRoute: (token, id) =>
-    deleteRequest(`/api/vendor/routes/${id}`, token),
+    deleteRequest(`${apiPrefix}/routes/${id}`, token),
 
   assignStaff: (token, id, assignmentData) =>
-    postRequest(`/api/vendor/routes/${id}/assign-staff`, assignmentData, token),
+    postRequest(`${apiPrefix}/routes/${id}/assign-staff`, assignmentData, token),
 
   endStaffAssignment: (token, routeId, staffRouteId) =>
-    deleteRequest(`/api/vendor/routes/${routeId}/assign-staff/${staffRouteId}`, token),
+    deleteRequest(`${apiPrefix}/routes/${routeId}/assign-staff/${staffRouteId}`, token),
 
   // Customer APIs
   listCustomers: (token, search = '', routeId = '') => {
@@ -324,23 +330,23 @@ export const api = {
     if (search) queryParams.push(`search=${encodeURIComponent(search)}`);
     if (routeId) queryParams.push(`routeId=${encodeURIComponent(routeId)}`);
     const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-    return getRequest(`/api/vendor/customers${queryString}`, token);
+    return getRequest(`${apiPrefix}/customers${queryString}`, token);
   },
 
   getCustomer: (token, id) =>
-    getRequest(`/api/vendor/customers/${id}`, token),
+    getRequest(`${apiPrefix}/customers/${id}`, token),
 
   createCustomer: (token, customerData) =>
-    postRequest('/api/vendor/customers', customerData, token),
+    postRequest(`${apiPrefix}/customers`, customerData, token),
 
   updateCustomer: (token, id, customerData) =>
-    patchRequest(`/api/vendor/customers/${id}`, customerData, token),
+    patchRequest(`${apiPrefix}/customers/${id}`, customerData, token),
 
   deleteCustomer: (token, id) =>
-    deleteRequest(`/api/vendor/customers/${id}`, token),
+    deleteRequest(`${apiPrefix}/customers/${id}`, token),
 
   updateCustomerSequence: (token, sequences) =>
-    patchRequest('/api/vendor/customers/sequence', { sequences }, token),
+    patchRequest(`${apiPrefix}/customers/sequence`, { sequences }, token),
 
   getCustomerDeliveries: (token, customerId, { from, to, status, invoiced } = {}) => {
     let queryParams = [];
@@ -349,7 +355,7 @@ export const api = {
     if (status) queryParams.push(`status=${encodeURIComponent(status)}`);
     if (invoiced) queryParams.push(`invoiced=${encodeURIComponent(invoiced)}`);
     const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-    return getRequest(`/api/vendor/customers/${customerId}/deliveries${queryString}`, token);
+    return getRequest(`${apiPrefix}/customers/${customerId}/deliveries${queryString}`, token);
   },
 
   getCustomerJarCollections: (token, customerId, { from, to } = {}) => {
@@ -357,7 +363,7 @@ export const api = {
     if (from) queryParams.push(`from=${encodeURIComponent(from)}`);
     if (to) queryParams.push(`to=${encodeURIComponent(to)}`);
     const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-    return getRequest(`/api/vendor/customers/${customerId}/jar-collections${queryString}`, token);
+    return getRequest(`${apiPrefix}/customers/${customerId}/jar-collections${queryString}`, token);
   },
 
   // Subscriptions APIs
@@ -366,31 +372,31 @@ export const api = {
     if (customerId) queryParams.push(`customerId=${encodeURIComponent(customerId)}`);
     if (status) queryParams.push(`status=${encodeURIComponent(status)}`);
     const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-    return getRequest(`/api/vendor/subscriptions${queryString}`, token);
+    return getRequest(`${apiPrefix}/subscriptions${queryString}`, token);
   },
 
   getSubscription: (token, id) =>
-    getRequest(`/api/vendor/subscriptions/${id}`, token),
+    getRequest(`${apiPrefix}/subscriptions/${id}`, token),
 
   createSubscription: (token, subscriptionData) =>
-    postRequest('/api/vendor/subscriptions', subscriptionData, token),
+    postRequest(`${apiPrefix}/subscriptions`, subscriptionData, token),
 
   updateSubscription: (token, id, subscriptionData) =>
-    patchRequest(`/api/vendor/subscriptions/${id}`, subscriptionData, token),
+    patchRequest(`${apiPrefix}/subscriptions/${id}`, subscriptionData, token),
 
   deleteSubscription: (token, id) =>
-    deleteRequest(`/api/vendor/subscriptions/${id}`, token),
+    deleteRequest(`${apiPrefix}/subscriptions/${id}`, token),
 
   // Deliveries APIs
   generateDeliveries: (token, targetDate) =>
-    postRequest('/api/vendor/deliveries/generate', { targetDate }, token),
+    postRequest(`${apiPrefix}/deliveries/generate`, { targetDate }, token),
 
   listDeliveries: (token, date, routeId = '', status = '') => {
     let queryParams = [`date=${encodeURIComponent(date)}`];
     if (routeId) queryParams.push(`routeId=${encodeURIComponent(routeId)}`);
     if (status) queryParams.push(`status=${encodeURIComponent(status)}`);
     const queryString = `?${queryParams.join('&')}`;
-    return getRequest(`/api/vendor/deliveries${queryString}`, token);
+    return getRequest(`${apiPrefix}/deliveries${queryString}`, token);
   },
 
   trackDeliveries: (token, { date, routeId = '', status = '' } = {}) => {
@@ -398,57 +404,57 @@ export const api = {
     if (routeId) queryParams.push(`routeId=${encodeURIComponent(routeId)}`);
     if (status) queryParams.push(`status=${encodeURIComponent(status)}`);
     const queryString = `?${queryParams.join('&')}`;
-    return getRequest(`/api/vendor/deliveries/track${queryString}`, token);
+    return getRequest(`${apiPrefix}/deliveries/track${queryString}`, token);
   },
 
   updateDeliveryStatus: (token, id, statusData) =>
-    patchRequest(`/api/vendor/deliveries/${id}/status`, statusData, token),
+    patchRequest(`${apiPrefix}/deliveries/${id}/status`, statusData, token),
 
   // Pauses APIs
   listPauses: (token, subscriptionId) =>
-    getRequest(`/api/vendor/subscriptions/${subscriptionId}/pauses`, token),
+    getRequest(`${apiPrefix}/subscriptions/${subscriptionId}/pauses`, token),
 
   addPause: (token, subscriptionId, pauseData) =>
-    postRequest(`/api/vendor/subscriptions/${subscriptionId}/pauses`, pauseData, token),
+    postRequest(`${apiPrefix}/subscriptions/${subscriptionId}/pauses`, pauseData, token),
 
   deletePause: (token, subscriptionId, pauseId) =>
-    deleteRequest(`/api/vendor/subscriptions/${subscriptionId}/pauses/${pauseId}`, token),
+    deleteRequest(`${apiPrefix}/subscriptions/${subscriptionId}/pauses/${pauseId}`, token),
 
   // Overrides APIs
   listOverrides: (token, subscriptionId) =>
-    getRequest(`/api/vendor/subscriptions/${subscriptionId}/overrides`, token),
+    getRequest(`${apiPrefix}/subscriptions/${subscriptionId}/overrides`, token),
 
   addOverride: (token, subscriptionId, overrideData) =>
-    postRequest(`/api/vendor/subscriptions/${subscriptionId}/overrides`, overrideData, token),
+    postRequest(`${apiPrefix}/subscriptions/${subscriptionId}/overrides`, overrideData, token),
 
   deleteOverride: (token, subscriptionId, overrideId) =>
-    deleteRequest(`/api/vendor/subscriptions/${subscriptionId}/overrides/${overrideId}`, token),
+    deleteRequest(`${apiPrefix}/subscriptions/${subscriptionId}/overrides/${overrideId}`, token),
 
   // One-Time Orders APIs
   listOneTimeOrders: (token) =>
-    getRequest('/api/vendor/one-time-orders', token),
+    getRequest(`${apiPrefix}/one-time-orders`, token),
 
   createOneTimeOrder: (token, orderData) =>
-    postRequest('/api/vendor/one-time-orders', orderData, token),
+    postRequest(`${apiPrefix}/one-time-orders`, orderData, token),
 
   updateOneTimeOrderStatus: (token, id, status) =>
-    patchRequest(`/api/vendor/one-time-orders/${id}/status`, { status }, token),
+    patchRequest(`${apiPrefix}/one-time-orders/${id}/status`, { status }, token),
 
   fulfillOneTimeOrder: (token, id, data) =>
-    postRequest(`/api/vendor/one-time-orders/${id}/fulfill`, data, token),
+    postRequest(`${apiPrefix}/one-time-orders/${id}/fulfill`, data, token),
 
   // Dashboard APIs
   getDashboardStats: (token) =>
-    getRequest('/api/vendor/dashboard', token),
+    getRequest(`${apiPrefix}/dashboard`, token),
 
   // ── INVOICES ─────────────────────────────────────────────────
   getUninvoicedPreSummary: (token, customerId = '') => {
     const queryString = customerId ? `?customerId=${encodeURIComponent(customerId)}` : '';
-    return getRequest(`/api/vendor/invoices/pre-summary${queryString}`, token);
+    return getRequest(`${apiPrefix}/invoices/pre-summary${queryString}`, token);
   },
 
   generateInvoices: (token, data) =>
-    postRequest('/api/vendor/invoices/generate', data, token),
+    postRequest(`${apiPrefix}/invoices/generate`, data, token),
 
   listInvoices: (token, { customerId, status, from, to } = {}) => {
     let queryParams = [];
@@ -457,11 +463,11 @@ export const api = {
     if (from) queryParams.push(`from=${encodeURIComponent(from)}`);
     if (to) queryParams.push(`to=${encodeURIComponent(to)}`);
     const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-    return getRequest(`/api/vendor/invoices${queryString}`, token);
+    return getRequest(`${apiPrefix}/invoices${queryString}`, token);
   },
 
   getInvoiceById: (token, id) =>
-    getRequest(`/api/vendor/invoices/${id}`, token),
+    getRequest(`${apiPrefix}/invoices/${id}`, token),
 
   downloadInvoicePDF: async (token, invoiceId, customerName = 'Customer') => {
     const url = `${API_BASE_URL}/api/vendor/invoices/${invoiceId}/download`;
@@ -510,7 +516,7 @@ export const api = {
   // ── PRE-BILLING / UNINVOICED DELIVERIES ───────────────────────
   getUninvoicedSummary: (token, customerId = null) => {
     const params = customerId ? `?customerId=${encodeURIComponent(customerId)}` : '';
-    return getRequest(`/api/vendor/invoices/pre-summary${params}`, token);
+    return getRequest(`${apiPrefix}/invoices/pre-summary${params}`, token);
   },
 
   getCustomerDeliveryHistory: (token, customerId, filters = {}) => {
@@ -520,7 +526,7 @@ export const api = {
     if (filters.from) queryParams.push(`from=${encodeURIComponent(filters.from)}`);
     if (filters.to) queryParams.push(`to=${encodeURIComponent(filters.to)}`);
     const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-    return getRequest(`/api/vendor/customers/${customerId}/deliveries${queryString}`, token);
+    return getRequest(`${apiPrefix}/customers/${customerId}/deliveries${queryString}`, token);
   },
 
   getCustomerActivity: (token, customerId, params = {}) => {
@@ -530,29 +536,71 @@ export const api = {
     if (params.page) queryParams.push(`page=${encodeURIComponent(params.page)}`);
     if (params.limit) queryParams.push(`limit=${encodeURIComponent(params.limit)}`);
     const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-    return getRequest(`/api/vendor/customers/${customerId}/activity${queryString}`, token);
+    return getRequest(`${apiPrefix}/customers/${customerId}/activity${queryString}`, token);
   },
 
   generateInvoices: (token, payload) =>
-    postRequest('/api/vendor/invoices/generate', payload, token),
+    postRequest(`${apiPrefix}/invoices/generate`, payload, token),
 
   // ── LEDGER ───────────────────────────────────────────────────
   recordPayment: (token, data) =>
-    postRequest('/api/vendor/ledgers/payment', data, token),
+    postRequest(`${apiPrefix}/ledgers/payment`, data, token),
 
   getAccountStatement: (token, customerId) =>
-    getRequest(`/api/vendor/ledgers/account/${customerId}`, token),
+    getRequest(`${apiPrefix}/ledgers/account/${customerId}`, token),
 
   // ── DEPOSITS ─────────────────────────────────────────────────
   collectDeposit: (token, data) =>
-    postRequest('/api/vendor/deposits/collect', data, token),
+    postRequest(`${apiPrefix}/deposits/collect`, data, token),
 
   settleDepositToBill: (token, data) =>
-    postRequest('/api/vendor/deposits/settle-to-bill', data, token),
+    postRequest(`${apiPrefix}/deposits/settle-to-bill`, data, token),
 
   refundDeposit: (token, data) =>
-    postRequest('/api/vendor/deposits/refund', data, token),
+    postRequest(`${apiPrefix}/deposits/refund`, data, token),
 
   getDepositLedger: (token, customerId) =>
-    getRequest(`/api/vendor/deposits/${customerId}`, token),
+    getRequest(`${apiPrefix}/deposits/${customerId}`, token),
+
+  // ── REPORTS ──────────────────────────────────────────────────
+  getFinancialReports: (token, params = {}) => {
+    let queryParams = [];
+    if (params.rangePreset) queryParams.push(`rangePreset=${encodeURIComponent(params.rangePreset)}`);
+    if (params.from) queryParams.push(`from=${encodeURIComponent(params.from)}`);
+    if (params.to) queryParams.push(`to=${encodeURIComponent(params.to)}`);
+    if (params.routeId) queryParams.push(`routeId=${encodeURIComponent(params.routeId)}`);
+    if (params.staffId) queryParams.push(`staffId=${encodeURIComponent(params.staffId)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return getRequest(`${apiPrefix}/reports/financials${queryString}`, token);
+  },
+
+  getOutstandingReports: (token, params = {}) => {
+    let queryParams = [];
+    if (params.routeId) queryParams.push(`routeId=${encodeURIComponent(params.routeId)}`);
+    if (params.staffId) queryParams.push(`staffId=${encodeURIComponent(params.staffId)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return getRequest(`${apiPrefix}/reports/outstanding${queryString}`, token);
+  },
+
+  getOperationsReports: (token, params = {}) => {
+    let queryParams = [];
+    if (params.rangePreset) queryParams.push(`rangePreset=${encodeURIComponent(params.rangePreset)}`);
+    if (params.from) queryParams.push(`from=${encodeURIComponent(params.from)}`);
+    if (params.to) queryParams.push(`to=${encodeURIComponent(params.to)}`);
+    if (params.routeId) queryParams.push(`routeId=${encodeURIComponent(params.routeId)}`);
+    if (params.staffId) queryParams.push(`staffId=${encodeURIComponent(params.staffId)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return getRequest(`${apiPrefix}/reports/operations${queryString}`, token);
+  },
+
+  getInventoryReports: (token, params = {}) => {
+    let queryParams = [];
+    if (params.rangePreset) queryParams.push(`rangePreset=${encodeURIComponent(params.rangePreset)}`);
+    if (params.from) queryParams.push(`from=${encodeURIComponent(params.from)}`);
+    if (params.to) queryParams.push(`to=${encodeURIComponent(params.to)}`);
+    if (params.routeId) queryParams.push(`routeId=${encodeURIComponent(params.routeId)}`);
+    if (params.staffId) queryParams.push(`staffId=${encodeURIComponent(params.staffId)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return getRequest(`${apiPrefix}/reports/inventory${queryString}`, token);
+  },
 };

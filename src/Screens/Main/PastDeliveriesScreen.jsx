@@ -99,7 +99,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
 
   return (
     <View style={[styles.deliveryCardWrapperOptionC, isExpanded && styles.deliveryCardExpandedOptionC]}>
-      {updating && (
+      {updating && isExpanded && (
         <View style={styles.cardUpdatingOverlay}>
           <ActivityIndicator color={COLORS.primary} />
         </View>
@@ -148,8 +148,9 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
                 handleStatusChange('delivered');
               }}
               activeOpacity={0.7}
+              disabled={updating}
             >
-              <CheckSquare size={22} color="#10B981" />
+              {updating ? <ActivityIndicator size="small" color="#10B981" /> : <CheckSquare size={22} color="#10B981" />}
             </TouchableOpacity>
           )}
           {!isViewOnly && delivery.status === 'delivered' && !isExpanded && (
@@ -160,8 +161,9 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
                 setIsExpanded(true);
               }}
               activeOpacity={0.7}
+              disabled={updating}
             >
-              <CheckSquare size={22} color="#10B981" />
+              {updating ? <ActivityIndicator size="small" color="#10B981" /> : <CheckSquare size={22} color="#10B981" />}
             </TouchableOpacity>
           )}
           {!isViewOnly && delivery.status === 'skipped' && !isExpanded && (
@@ -172,8 +174,9 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
                 setIsExpanded(true);
               }}
               activeOpacity={0.7}
+              disabled={updating}
             >
-              <XCircle size={22} color="#EF4444" />
+              {updating ? <ActivityIndicator size="small" color="#EF4444" /> : <XCircle size={22} color="#EF4444" />}
             </TouchableOpacity>
           )}
 
@@ -279,25 +282,13 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                 <TouchableOpacity
                   style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
-                    selectedEditStatus === 'delivered' && { backgroundColor: '#ECFDF5', borderColor: '#10B981' }
-                  ]}
-                  onPress={() => setSelectedEditStatus('delivered')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'delivered' && { color: '#15803D' }]}>
-                    DELIVERED
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
                     selectedEditStatus === 'skipped' && { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }
                   ]}
                   onPress={() => setSelectedEditStatus('skipped')}
                   activeOpacity={0.7}
                 >
                   <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'skipped' && { color: '#B91C1C' }]}>
-                    SKIPPED
+                    {t('deliveries.skipped').toUpperCase()}
                   </Text>
                 </TouchableOpacity>
 
@@ -309,7 +300,19 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
                   activeOpacity={0.7}
                 >
                   <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'pending' && { color: '#B45309' }]}>
-                    PENDING
+                    {t('deliveries.pending').toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
+                    selectedEditStatus === 'delivered' && { backgroundColor: '#ECFDF5', borderColor: '#10B981' }
+                  ]}
+                  onPress={() => setSelectedEditStatus('delivered')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[{ fontSize: 11, fontWeight: '700', color: '#64748B' }, selectedEditStatus === 'delivered' && { color: '#15803D' }]}>
+                    {t('deliveries.delivered').toUpperCase()}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -342,7 +345,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
 
 const PastDeliveriesScreen = () => {
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
   const { t } = useTranslation();
 
@@ -632,16 +635,20 @@ const PastDeliveriesScreen = () => {
             <Text style={styles.emptySubtitle}>{t('deliveries.noRecordsFilter')}</Text>
           </View>
         ) : (
-          deliveries.map((item, idx) => (
+          deliveries.map((item, idx) => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isPast = selectedDate < todayStr;
+            const isLocked = user?.role === 'staff' && (item.status !== 'pending' || !!item.invoiceId || isPast);
+            return (
             <DeliveryCard
               key={item.id || idx}
               delivery={item}
               index={idx + 1}
               onUpdateStatus={async (id, data) => await handleUpdateStatus(id, data)}
               getStatusColor={() => { }}
-              isViewOnly={String(item.id || '').startsWith('preview-')}
+              isViewOnly={String(item.id || '').startsWith('preview-') || isLocked}
             />
-          ))
+          )})
         )}
 
       </ScrollView>

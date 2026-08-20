@@ -212,12 +212,18 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    paddingHorizontal: 14,
-    height: 52,
+    paddingHorizontal: 16,
+    height: 56,
+    // Add subtle shadow for depth
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   inputIcon: {
     marginRight: 8,
@@ -239,13 +245,18 @@ const styles = StyleSheet.create({
     borderTopColor: '#F1F5F9',
   },
   btn: {
-    height: 52,
+    height: 56,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   btnPrimary: {
     backgroundColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
   },
   btnDisabled: {
     opacity: 0.7,

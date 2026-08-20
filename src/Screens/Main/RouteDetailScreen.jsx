@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   Trash2,
   Edit,
+  User,
   UserPlus,
   Calendar,
   X,
@@ -38,7 +39,7 @@ const RouteDetailScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const routeParams = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const routeId = routeParams?.params?.routeId || routeParams?.params?.route?.id || routeParams?.params?.id;
   const { showAlert } = useAlert();
 
@@ -140,9 +141,11 @@ const RouteDetailScreen = () => {
     React.useCallback(() => {
       if (routeId) {
         fetchRouteDetail();
-        fetchAllStaff();
+        if (user?.role !== 'staff') {
+          fetchAllStaff();
+        }
       }
-    }, [routeId])
+    }, [routeId, user])
   );
 
   const handleDeleteRoute = () => {
@@ -282,22 +285,24 @@ const RouteDetailScreen = () => {
         leftIcon={<ArrowLeft size={24} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity
-              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
-              onPress={() => navigation.navigate('AddRoute', { route: routeData })}
-              activeOpacity={0.7}
-            >
-              <Edit size={18} color="#FFF" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(239,68,68,0.2)' }]}
-              onPress={handleDeleteRoute}
-              activeOpacity={0.7}
-            >
-              <Trash2 size={18} color="#FECACA" />
-            </TouchableOpacity>
-          </View>
+          user?.role !== 'staff' ? (
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TouchableOpacity
+                style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
+                onPress={() => navigation.navigate('AddRoute', { route: routeData })}
+                activeOpacity={0.7}
+              >
+                <Edit size={18} color="#FFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(239,68,68,0.2)' }]}
+                onPress={handleDeleteRoute}
+                activeOpacity={0.7}
+              >
+                <Trash2 size={18} color="#FECACA" />
+              </TouchableOpacity>
+            </View>
+          ) : null
         }
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -316,74 +321,96 @@ const RouteDetailScreen = () => {
         </View>
 
         {/* Action Button: Assign Staff */}
-        <TouchableOpacity
-          style={styles.assignBtn}
-          activeOpacity={0.8}
-          onPress={() => setAssignModalVisible(true)}
-        >
-          <UserPlus size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-          <Text style={styles.assignBtnText}>{t('routes.assignStaff')}</Text>
-        </TouchableOpacity>
-
-        {/* Active Staff Assignments */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Currently Active Staff ({activeAssignments.length})</Text>
-        </View>
-
-        {activeAssignments.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyCardText}>No active staff assigned to this route.</Text>
-          </View>
-        ) : (
-          activeAssignments.map((assignment) => (
-            <View key={assignment.id} style={styles.staffCard}>
-              <View style={styles.staffInfo}>
-                <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
-                <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
-                <View style={styles.dateRow}>
-                  <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                  <Text style={styles.dateText}>From: {assignment.effectiveFrom}</Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.endAssignBtn}
-                onPress={() => handleEndAssignment(assignment.id, assignment.staffUser?.name)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.endAssignText}>End</Text>
-              </TouchableOpacity>
-            </View>
-          ))
+        {user?.role !== 'staff' && (
+          <TouchableOpacity
+            style={styles.assignBtn}
+            activeOpacity={0.8}
+            onPress={() => setAssignModalVisible(true)}
+          >
+            <UserPlus size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={styles.assignBtnText}>{t('routes.assignStaff')}</Text>
+          </TouchableOpacity>
         )}
 
-        {/* Past Assignments History */}
-        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-          <Text style={styles.sectionTitle}>Assignment History ({pastAssignments.length})</Text>
-        </View>
-
-        {pastAssignments.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyCardText}>No past history logs.</Text>
-          </View>
-        ) : (
-          pastAssignments.map((assignment) => (
-            <View key={assignment.id} style={[styles.staffCard, styles.historyCard]}>
-              <View style={styles.staffInfo}>
-                <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
-                <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
-                <View style={styles.dateRow}>
-                  <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                  <Text style={styles.dateText}>
-                    {assignment.effectiveFrom} to {assignment.effectiveTo}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.historyBadge}>
-                <Text style={styles.historyBadgeText}>Ended</Text>
-              </View>
+        {user?.role !== 'staff' && (
+          <>
+            {/* Active Staff Assignments */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Currently Active Staff ({activeAssignments.length})</Text>
             </View>
-          ))
+
+            {activeAssignments.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyCardText}>No active staff assigned to this route.</Text>
+              </View>
+            ) : (
+              activeAssignments.map((assignment) => (
+                <View key={assignment.id} style={styles.staffCard}>
+                  <View style={styles.staffInfo}>
+                    <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
+                    <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
+                    <View style={styles.dateRow}>
+                      <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+                      <Text style={styles.dateText}>From: {assignment.effectiveFrom}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.endAssignBtn}
+                    onPress={() => handleEndAssignment(assignment.id, assignment.staffUser?.name)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.endAssignText}>End</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+
+            {/* Past Assignments History */}
+            <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+              <Text style={styles.sectionTitle}>Assignment History ({pastAssignments.length})</Text>
+            </View>
+
+            {pastAssignments.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyCardText}>No past history logs.</Text>
+              </View>
+            ) : (
+              pastAssignments.map((assignment) => (
+                <View key={assignment.id} style={[styles.staffCard, styles.historyCard]}>
+                  <View style={styles.staffInfo}>
+                    <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
+                    <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
+                    <View style={styles.dateRow}>
+                      <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+                      <Text style={styles.dateText}>
+                        {assignment.effectiveFrom} to {assignment.effectiveTo}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.historyBadge}>
+                    <Text style={styles.historyBadgeText}>Ended</Text>
+                  </View>
+                </View>
+              ))
+            )}
+          </>
         )}
+        
+        {/* Metadata Section */}
+        <View style={styles.metadataSection}>
+          <Text style={styles.metadataLabel}>Last Modified By</Text>
+          <View style={styles.metadataUserRow}>
+            <User size={14} color="#64748B" />
+            <Text style={styles.metadataValue}>
+              {routeData.updatedBy?.name || 'System'} ({routeData.updatedBy?.role || 'admin'})
+            </Text>
+          </View>
+          {routeData.updatedAt && (
+            <Text style={styles.metadataTime}>
+              {new Date(routeData.updatedAt).toLocaleString()}
+            </Text>
+          )}
+        </View>
       </ScrollView>
 
       {/* Assign Staff Modal Dialog */}
@@ -925,8 +952,38 @@ const styles = StyleSheet.create({
   modalSaveText: {
     color: '#FFFFFF',
     fontSize: 15,
+    fontFamily: 'Geologica-SemiBold',
+    fontWeight: '600',
+  },
+  metadataSection: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  metadataLabel: {
+    fontSize: 12,
     fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  metadataUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  metadataValue: {
+    fontSize: 13,
+    fontFamily: 'Geologica-Medium',
+    color: '#334155',
+    marginLeft: 6,
+  },
+  metadataTime: {
+    fontSize: 11,
+    fontFamily: 'Geologica-Regular',
+    color: '#94A3B8',
   },
   // Toast
   toast: {

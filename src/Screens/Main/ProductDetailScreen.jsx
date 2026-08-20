@@ -36,7 +36,7 @@ const ProductDetailScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
 
   const productId = route.params?.productId;
@@ -161,25 +161,27 @@ const ProductDetailScreen = () => {
         leftIcon={<ChevronLeft size={28} color="#FFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
-          <View style={{ flexDirection: 'row', gap: 12, marginRight: 16 }}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('EditProduct', { product })}
-              style={styles.headerActionBtnDark}
-            >
-              <Edit size={18} color="#FFF" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleDeleteConfirm}
-              disabled={deleting}
-              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(229, 62, 62, 0.2)' }]}
-            >
-              {deleting ? (
-                <ActivityIndicator size="small" color="#FFD1D1" />
-              ) : (
-                <Trash2 size={18} color="#FFD1D1" />
-              )}
-            </TouchableOpacity>
-          </View>
+          user?.role !== 'staff' ? (
+            <View style={{ flexDirection: 'row', gap: 12, marginRight: 16 }}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('EditProduct', { product })}
+                style={styles.headerActionBtnDark}
+              >
+                <Edit size={18} color="#FFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleDeleteConfirm}
+                disabled={deleting}
+                style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(229, 62, 62, 0.2)' }]}
+              >
+                {deleting ? (
+                  <ActivityIndicator size="small" color="#FFD1D1" />
+                ) : (
+                  <Trash2 size={18} color="#FFD1D1" />
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : null
         }
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
@@ -285,6 +287,7 @@ const ProductDetailScreen = () => {
             <Switch
               value={isActive}
               onValueChange={handleToggleStatus}
+              disabled={user?.role === 'staff'}
               trackColor={{ false: COLORS.border, true: COLORS.success }}
               thumbColor={COLORS.background}
               ios_backgroundColor={COLORS.border}

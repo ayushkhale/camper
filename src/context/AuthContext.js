@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setApiRole } from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -14,8 +15,10 @@ export const AuthProvider = ({ children }) => {
         const token = await AsyncStorage.getItem('jwt_token');
         const userData = await AsyncStorage.getItem('user_data');
         if (token && userData) {
+          const parsedUser = JSON.parse(userData);
+          setApiRole(parsedUser.role);
           setUserToken(token);
-          setUser(JSON.parse(userData));
+          setUser(parsedUser);
         }
       } catch (e) {
         console.error('Failed to load auth data', e);
@@ -30,6 +33,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await AsyncStorage.setItem('jwt_token', token);
       await AsyncStorage.setItem('user_data', JSON.stringify(userData));
+      setApiRole(userData?.role || 'owner');
       setUserToken(token);
       setUser(userData);
     } catch (e) {
