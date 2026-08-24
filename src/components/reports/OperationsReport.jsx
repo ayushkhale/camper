@@ -5,8 +5,10 @@ import { PieChart } from 'react-native-gifted-charts';
 import { api } from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
+import { useTranslation } from 'react-i18next';
 
 const OperationsReport = ({ filters }) => {
+  const { t } = useTranslation();
   const { userToken } = useContext(AuthContext);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,8 +59,8 @@ const OperationsReport = ({ filters }) => {
 
   // Chart data for success rate
   const gaugeData = [
-    { value: successRate, color: successRate >= 85 ? '#10B981' : successRate >= 60 ? '#F59E0B' : '#EF4444' },
-    { value: 100 - successRate, color: '#E2E8F0' }
+    { value: successRate, color: successRate >= 85 ? '#059669' : successRate >= 60 ? '#D97706' : '#E11D48' },
+    { value: Math.max(0, 100 - successRate), color: '#FFF1F2' }
   ];
 
   const renderLeaderboardItem = (item, type, index) => {
@@ -78,7 +80,7 @@ const OperationsReport = ({ filters }) => {
             ) : (
               <User size={16} color={COLORS.textSecondary} style={{marginRight: 6}} />
             )}
-            <Text style={styles.leaderboardName}>{item.routeName || item.staffName}</Text>
+            <Text style={styles.leaderboardName}>{item.routeName || item.staffName || t('reports.unassigned')}</Text>
           </View>
           <View style={[styles.successBadge, { backgroundColor: isGood ? '#D1FAE5' : isBad ? '#FEE2E2' : '#FEF3C7' }]}>
             <Text style={[styles.successBadgeText, { color: isGood ? '#065F46' : isBad ? '#991B1B' : '#92400E' }]}>
@@ -89,21 +91,46 @@ const OperationsReport = ({ filters }) => {
 
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
-            <Text style={styles.statBoxLabel}>Scheduled</Text>
+            <Text style={styles.statBoxLabel}>{t('reports.scheduled') || 'Scheduled'}</Text>
             <Text style={styles.statBoxValue}>{item.total}</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statBoxLabel}>Skipped</Text>
+            <Text style={styles.statBoxLabel}>{t('reports.skipped') || 'Skipped'}</Text>
             <Text style={[styles.statBoxValue, item.skipped > 0 && { color: '#EF4444' }]}>{item.skipped}</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statBoxLabel}>Delivered</Text>
+            <Text style={styles.statBoxLabel}>{t('reports.delivered') || 'Delivered'}</Text>
             <Text style={styles.statBoxValue}>{item.delivered}</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statBoxLabel}>Returned</Text>
+            <Text style={styles.statBoxLabel}>{t('reports.returned') || 'Returned'}</Text>
             <Text style={styles.statBoxValue}>{item.returned}</Text>
           </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderHorizontalBar = (item, type) => {
+    const total = item.total || 0;
+    const completed = item.completed || 0;
+    const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const label = type === 'route' ? (item.routeName || t('reports.unassigned')) : (item.staffName || t('reports.unassigned'));
+    
+    let color = '#E11D48'; // Rose
+    let bgColor = '#FFF1F2';
+    if (rate >= 85) { color = '#059669'; bgColor = '#ECFDF5'; }
+    else if (rate >= 60) { color = '#D97706'; bgColor = '#FFFBEB'; }
+
+    // Use a composite key in case there are multiple 'Unassigned'
+    const uniqueKey = `${type}-${label}-${item.routeId || item.staffId || Math.random()}`;
+
+    return (
+      <View key={uniqueKey} style={styles.customBarContainer}>
+        <View style={[styles.customBarFill, { width: `${rate}%`, backgroundColor: bgColor, borderRightColor: color }]} />
+        <View style={styles.customBarContent}>
+          <Text style={styles.customBarLabel} numberOfLines={1}>{label}</Text>
+          <Text style={[styles.customBarValue, { color }]}>{rate}%</Text>
         </View>
       </View>
     );
@@ -114,7 +141,7 @@ const OperationsReport = ({ filters }) => {
       
       {/* Gauge Chart (Success Rate) */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Success Rate</Text>
+        <Text style={styles.cardTitle}>{t('reports.successRate') || 'Success Rate'}</Text>
         <View style={styles.gaugeContainer}>
           <PieChart
             data={gaugeData}
@@ -132,7 +159,7 @@ const OperationsReport = ({ filters }) => {
           />
         </View>
         <Text style={styles.gaugeHelper}>
-          {successRate >= 85 ? 'Excellent operations performance.' : successRate >= 60 ? 'Acceptable, but has room for improvement.' : 'Warning: High failure/skip rate.'}
+          {successRate >= 85 ? t('reports.excellentOperations') : successRate >= 60 ? t('reports.acceptableOperations') : t('reports.warningOperations')}
         </Text>
       </View>
 
@@ -141,46 +168,50 @@ const OperationsReport = ({ filters }) => {
         <View style={[styles.gridItem, { backgroundColor: '#F8FAFC' }]}>
           <Truck size={24} color="#64748B" />
           <Text style={styles.gridValue}>{totalScheduled}</Text>
-          <Text style={styles.gridLabel}>Total Scheduled</Text>
+          <Text style={styles.gridLabel}>{t('reports.totalScheduled') || 'Total Scheduled'}</Text>
         </View>
         
         <View style={[styles.gridItem, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0', borderWidth: 1 }]}>
           <CheckCircle size={24} color="#10B981" />
           <Text style={[styles.gridValue, { color: '#047857' }]}>{totalCompleted}</Text>
-          <Text style={[styles.gridLabel, { color: '#065F46' }]}>Completed</Text>
+          <Text style={[styles.gridLabel, { color: '#065F46' }]}>{t('reports.completed') || 'Completed'}</Text>
         </View>
 
         <View style={[styles.gridItem, { backgroundColor: '#FEF2F2', borderColor: '#FECACA', borderWidth: 1 }]}>
           <XCircle size={24} color="#EF4444" />
           <Text style={[styles.gridValue, { color: '#B91C1C' }]}>{totalSkipped}</Text>
-          <Text style={[styles.gridLabel, { color: '#991B1B' }]}>Skipped</Text>
+          <Text style={[styles.gridLabel, { color: '#991B1B' }]}>{t('reports.skipped') || 'Skipped'}</Text>
         </View>
 
         <View style={[styles.gridItem, { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE', borderWidth: 1 }]}>
-          <PackageCheck size={24} color="#6366F1" />
-          <Text style={[styles.gridValue, { color: '#4338CA' }]}>{totalDeliveredJars}</Text>
-          <Text style={[styles.gridLabel, { color: '#3730A3' }]}>Jars Delivered</Text>
+          <PackageCheck size={24} color="#0B409C" />
+          <Text style={[styles.gridValue, { color: '#1E3A8A' }]}>{totalDeliveredJars}</Text>
+          <Text style={[styles.gridLabel, { color: '#0B409C' }]}>{t('reports.jarsDelivered') || 'Jars Delivered'}</Text>
         </View>
 
         <View style={[styles.gridItem, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A', borderWidth: 1 }]}>
           <PackageX size={24} color="#D97706" />
           <Text style={[styles.gridValue, { color: '#B45309' }]}>{totalReturnedJars}</Text>
-          <Text style={[styles.gridLabel, { color: '#92400E' }]}>Jars Returned</Text>
+          <Text style={[styles.gridLabel, { color: '#92400E' }]}>{t('reports.jarsReturned') || 'Jars Returned'}</Text>
         </View>
       </View>
 
       {/* Leaderboards */}
       {byRoute && byRoute.length > 0 && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Route Performance</Text>
-          {byRoute.map((item, index) => renderLeaderboardItem(item, 'route', index))}
+          <Text style={styles.cardTitle}>{t('reports.routePerformance') || 'Route Performance (Success %)'}</Text>
+          <View style={{ marginTop: 4 }}>
+            {byRoute.map((item) => renderHorizontalBar(item, 'route'))}
+          </View>
         </View>
       )}
 
       {byStaff && byStaff.length > 0 && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Staff Performance</Text>
-          {byStaff.map((item, index) => renderLeaderboardItem(item, 'staff', index))}
+          <Text style={styles.cardTitle}>{t('reports.staffPerformance') || 'Staff Performance (Success %)'}</Text>
+          <View style={{ marginTop: 4 }}>
+            {byStaff.map((item) => renderHorizontalBar(item, 'staff'))}
+          </View>
         </View>
       )}
 
@@ -200,7 +231,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorText: {
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#EF4444',
     textAlign: 'center',
   },
@@ -223,7 +254,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 20,
   },
@@ -234,7 +265,7 @@ const styles = StyleSheet.create({
   gaugeHelper: {
     textAlign: 'center',
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginTop: 8,
   },
@@ -259,67 +290,50 @@ const styles = StyleSheet.create({
   },
   gridValue: {
     fontSize: 24,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginTop: 8,
     marginBottom: 2,
   },
   gridLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
-  leaderboardItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    paddingVertical: 16,
-  },
-  leaderboardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  leaderboardNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  leaderboardName: {
-    fontSize: 15,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.textPrimary,
-  },
-  successBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  successBadgeText: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Bold',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  customBarContainer: {
+    height: 44,
     backgroundColor: '#F8FAFC',
     borderRadius: 8,
-    padding: 12,
+    marginBottom: 10,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  statBox: {
-    alignItems: 'center',
+  customBarFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    borderRightWidth: 3,
   },
-  statBoxLabel: {
-    fontSize: 10,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
-    textTransform: 'uppercase',
-    marginBottom: 4,
+  customBarContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    zIndex: 1,
   },
-  statBoxValue: {
+  customBarLabel: {
+    fontFamily: 'Rubik-SemiBold',
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
+    color: '#1E293B',
+    flex: 1,
+    marginRight: 10,
+  },
+  customBarValue: {
+    fontFamily: 'Rubik-Bold',
+    fontSize: 14,
   }
 });
 

@@ -27,6 +27,7 @@ import {
   IndianRupee,
   Info,
   ChevronDown,
+  ArrowLeft,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -246,17 +247,11 @@ const AddProductScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={
-          <View>
-            <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>
-              {isEditing ? t('products.editProduct') : t('products.addNew')}
-            </Text>
-          </View>
-        }
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={isEditing ? t('products.editProduct') : t('products.addNew')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
-        height={140}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        height={110}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 
       <KeyboardAvoidingView
@@ -303,7 +298,9 @@ const AddProductScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('products.nameLabel')}</Text>
               <View style={styles.inputContainer}>
-                <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#EEF2FF' }]}>
+                  <Package size={18} color="#4F46E5" />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t('products.namePlaceholder')}
@@ -320,7 +317,9 @@ const AddProductScreen = () => {
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('products.priceLabel')}</Text>
                   <View style={styles.inputContainer}>
-                    <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                    <View style={[styles.iconBox, { backgroundColor: '#FEF2F2' }]}>
+                      <IndianRupee size={16} color="#DC2626" />
+                    </View>
                     <TextInput
                       style={styles.input}
                       placeholder={t('products.pricePlaceholder')}
@@ -401,7 +400,9 @@ const AddProductScreen = () => {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{t('products.depositAmountLabel')}</Text>
                 <View style={styles.inputContainer}>
-                  <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                  <View style={[styles.iconBox, { backgroundColor: '#FEF2F2' }]}>
+                    <IndianRupee size={16} color="#DC2626" />
+                  </View>
                   <TextInput
                     style={styles.input}
                     placeholder={t('products.depositPlaceholder')}
@@ -587,8 +588,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 52,
   },
-  inputIcon: {
-    marginRight: 8,
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   input: {
     flex: 1,

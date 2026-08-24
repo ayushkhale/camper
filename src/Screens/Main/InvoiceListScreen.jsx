@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
-import { Plus, Search, FileText, ChevronRight, AlertCircle, RefreshCw, Calendar, DollarSign, ChevronLeft } from 'lucide-react-native';
+import { Plus, Search, FileText, ChevronRight, AlertCircle, RefreshCw, Calendar, DollarSign, ChevronLeft, ArrowLeft, IndianRupee } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import CurvedHeader from '../../components/CurvedHeader';
 import { COLORS } from '../../constants/colors';
@@ -71,10 +72,10 @@ const InvoiceListScreen = () => {
 
   const getStatusColors = (status) => {
     switch (status) {
-      case 'paid': return { dot: '#16A34A', text: '#15803D' };
-      case 'partially_paid': return { dot: '#3B82F6', text: '#1D4ED8' }; // Blue
-      case 'pending': return { dot: '#D97706', text: '#B45309' }; // Orange
-      default: return { dot: '#94A3B8', text: '#64748B' };
+      case 'paid': return { dot: '#16A34A', text: '#15803D', grad: ['#FFFFFF', '#F0FDF4'], border: '#DCFCE7' };
+      case 'partially_paid': return { dot: '#3B82F6', text: '#1D4ED8', grad: ['#FFFFFF', '#EFF6FF'], border: '#DBEAFE' }; // Blue
+      case 'pending': return { dot: '#D97706', text: '#B45309', grad: ['#FFFFFF', '#FFFBEB'], border: '#FEF3C7' }; // Orange
+      default: return { dot: '#94A3B8', text: '#64748B', grad: ['#FFFFFF', '#F8FAFC'], border: '#F1F5F9' };
     }
   };
 
@@ -96,65 +97,77 @@ const InvoiceListScreen = () => {
 
     return (
       <TouchableOpacity
-        style={styles.card}
-        activeOpacity={0.7}
+        activeOpacity={0.8}
         onPress={() => navigation.navigate('InvoiceDetail', { invoiceId: item.id, invoice: item })}
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.iconBox}>
-            <FileText size={22} color={COLORS.primary} />
-          </View>
-          <View style={styles.titleContainer}>
-            <Text style={styles.customerName} numberOfLines={1}>
-              {item.Customer?.name || 'Unknown Customer'}
-            </Text>
-            <Text style={styles.subText} numberOfLines={1}>
-              {item.periodStart} to {item.periodEnd}
-            </Text>
-          </View>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
-            <Text style={[styles.statusText, { color: statusColors.text, textAlign: 'right', fontSize: 9, lineHeight: 11 }]}>
-              {item.status === 'partially_paid' ? 'PARTIALLY\nPAID' : (item.status || 'pending').replace('_', ' ').toUpperCase()}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.cardFooter}>
-          <View style={styles.metaContainer}>
-            <Calendar size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-            <Text style={styles.metaText} numberOfLines={1}>
-              {dateFormatted}
-            </Text>
-          </View>
-          <View style={styles.amountContainer}>
-            {parseFloat(item.previousDues || 0) > 0 ? (
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={[styles.paidSubText, { color: '#64748B', marginBottom: 2 }]}>
-                  Prev. Due: ₹{parseFloat(item.previousDues).toFixed(2)}
-                </Text>
-                <Text style={[styles.paidSubText, { color: '#64748B', marginBottom: 4 }]}>
-                  Current: ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
-                </Text>
-                <Text style={[styles.amountText, { color: COLORS.primary }]}>
-                  Total: ₹{(parseFloat(item.previousDues || 0) + parseFloat(item.totalAmount || 0)).toFixed(2)}
-                </Text>
-              </View>
-            ) : (
-              <Text style={styles.amountText}>
-                ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
+        <LinearGradient
+          colors={statusColors.grad}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 1}}
+          style={[styles.card, { borderColor: statusColors.border }]}
+        >
+          <View style={styles.cardHeader}>
+            <View style={styles.iconBox}>
+              <FileText size={22} color={COLORS.primary} />
+            </View>
+            <View style={styles.titleContainer}>
+              <Text style={styles.customerName} numberOfLines={1}>
+                {item.Customer?.name || 'Unknown Customer'}
               </Text>
-            )}
-            {item.status !== 'paid' && parseFloat(item.amountPaid || 0) > 0 && (
-              <Text style={[styles.paidSubText, { marginTop: 4 }]}>
-                Paid: ₹{parseFloat(item.amountPaid).toFixed(2)}
+              <Text style={styles.subText} numberOfLines={1}>
+                {item.periodStart} to {item.periodEnd}
               </Text>
-            )}
+            </View>
+            <View style={styles.statusBadge}>
+              <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
+              <Text style={[styles.statusText, { color: statusColors.text, textAlign: 'right', fontSize: 9, lineHeight: 11 }]}>
+                {item.status === 'partially_paid' ? 'PARTIALLY\nPAID' : (item.status || 'pending').replace('_', ' ').toUpperCase()}
+              </Text>
+            </View>
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} style={{ marginLeft: 8 }} />
-        </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.cardFooter}>
+            <View style={styles.metaContainer}>
+              <Calendar size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
+              <Text style={styles.metaText} numberOfLines={1}>
+                {dateFormatted}
+              </Text>
+            </View>
+            <View style={styles.amountContainer}>
+              {parseFloat(item.previousDues || 0) > 0 ? (
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={[styles.paidSubText, { color: '#64748B', marginBottom: 2 }]}>
+                    Prev. Due: ₹{parseFloat(item.previousDues).toFixed(2)}
+                  </Text>
+                  <Text style={[styles.paidSubText, { color: '#64748B', marginBottom: 4 }]}>
+                    Current: ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
+                  </Text>
+                  <View style={styles.totalRow}>
+                    <IndianRupee size={14} color={COLORS.primary} style={{ marginTop: 1 }} />
+                    <Text style={[styles.amountText, { color: COLORS.primary }]}>
+                      {(parseFloat(item.previousDues || 0) + parseFloat(item.totalAmount || 0)).toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.totalRow}>
+                  <IndianRupee size={15} color={COLORS.textPrimary} style={{ marginTop: 1 }} />
+                  <Text style={styles.amountText}>
+                    {parseFloat(item.totalAmount || 0).toFixed(2)}
+                  </Text>
+                </View>
+              )}
+              {item.status !== 'paid' && parseFloat(item.amountPaid || 0) > 0 && (
+                <Text style={[styles.paidSubText, { marginTop: 4 }]}>
+                  Paid: ₹{parseFloat(item.amountPaid).toFixed(2)}
+                </Text>
+              )}
+            </View>
+            <ChevronRight size={18} color={COLORS.textPlaceholder} style={{ marginLeft: 8 }} />
+          </View>
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
@@ -162,8 +175,8 @@ const InvoiceListScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('invoices.title')}</Text>}
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={t('invoices.title')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
@@ -291,7 +304,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     flex: 1,
@@ -319,7 +332,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontSize: 15,
     paddingVertical: 0,
   },
@@ -345,7 +358,7 @@ const styles = StyleSheet.create({
   },
   filterTabText: {
     fontSize: 10,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#64748B',
     letterSpacing: 0.5,
   },
@@ -363,13 +376,16 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
-    backgroundColor: COLORS.surface,
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     paddingHorizontal: 14,
     paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -391,14 +407,14 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
   subText: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: 'bold',
     marginTop: 4,
   },
@@ -420,7 +436,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     flexShrink: 1,
   },
@@ -428,14 +444,18 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   amountText: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontSize: 16,
+    fontFamily: 'Rubik-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   paidSubText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   statusBadge: {
@@ -450,7 +470,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
@@ -463,12 +483,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -483,7 +503,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 15,
   },
   emptyContainer: {
@@ -492,7 +512,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
@@ -502,7 +522,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 24,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   emptyAddBtn: {
     flexDirection: 'row',
@@ -514,7 +534,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 15,
   },
   fab: {
@@ -536,3 +556,4 @@ const styles = StyleSheet.create({
 });
 
 export default InvoiceListScreen;
+

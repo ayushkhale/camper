@@ -58,18 +58,39 @@
 	<false/>
 	<key>UIAppFonts</key>
 	<array>
+		<string>BricolageGrotesque-Bold.ttf</string>
+		<string>BricolageGrotesque-Medium.ttf</string>
+		<string>BricolageGrotesque-Regular.ttf</string>
+		<string>BricolageGrotesque-SemiBold.ttf</string>
+		<string>Fredoka-Bold.ttf</string>
+		<string>Fredoka-Medium.ttf</string>
+		<string>Fredoka-Regular.ttf</string>
+		<string>Fredoka-SemiBold.ttf</string>
+		<string>Geologica-Bold.ttf</string>
+		<string>Geologica-Medium.ttf</string>
+		<string>Geologica-Regular.ttf</string>
+		<string>Geologica-SemiBold.ttf</string>
+		<string>Inter-Bold.ttf</string>
+		<string>Inter-Medium.ttf</string>
+		<string>Inter-Regular.ttf</string>
+		<string>Inter-SemiBold.ttf</string>
 		<string>Poppins-Bold.ttf</string>
 		<string>Poppins-Medium.ttf</string>
 		<string>Poppins-Regular.ttf</string>
 		<string>Poppins-SemiBold.ttf</string>
-		<string>BricolageGrotesque-Regular.ttf</string>
-		<string>BricolageGrotesque-SemiBold.ttf</string>
-		<string>BricolageGrotesque-Medium.ttf</string>
-		<string>BricolageGrotesque-Bold.ttf</string>
-		<string>Inter-Medium.ttf</string>
-		<string>Inter-Bold.ttf</string>
-		<string>Inter-Regular.ttf</string>
-		<string>Inter-SemiBold.ttf</string>
+		<string>Rubik-Bold.ttf</string>
+		<string>Rubik-Medium.ttf</string>
+		<string>Rubik-Regular.ttf</string>
+		<string>Rubik-SemiBold.ttf</string>
+		<string>SUSE-Black.ttf</string>
+		<string>SUSE-Bold.ttf</string>
+		<string>SUSE-ExtraBold.ttf</string>
+		<string>SUSE-ExtraLight.ttf</string>
+		<string>SUSE-Light.ttf</string>
+		<string>SUSE-Medium.ttf</string>
+		<string>SUSE-Regular.ttf</string>
+		<string>SUSE-SemiBold.ttf</string>
+		<string>SUSE-Thin.ttf</string>
 	</array>
 </dict>
 </plist>

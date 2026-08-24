@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+﻿import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,12 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'react-native-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Plus, Search, ChevronRight, AlertCircle, RefreshCw, ChevronLeft } from 'lucide-react-native';
+import { MapPin, Plus, Search, ChevronRight, AlertCircle, RefreshCw, ChevronLeft , ArrowLeft} from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -73,32 +76,54 @@ const RouteListScreen = () => {
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { borderLeftWidth: 4, borderLeftColor: '#D97706' }]}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('RouteDetail', { route: item })}
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.iconCircle}>
-            <MapPin size={22} color={COLORS.primary} />
+        <LinearGradient
+          colors={['#FFFFFF', '#F8FAFC']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardInner}
+        >
+          {/* Decorative Background Circles (Route Theme) */}
+          <View style={StyleSheet.absoluteFillObject}>
+            <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+              {/* Big backdrop circles */}
+              <Circle cx="-5%" cy="-20%" r="45" fill="#FEF3C7" opacity="0.8" />
+              <Circle cx="105%" cy="120%" r="55" fill="#FDE68A" opacity="0.6" />
+              
+              {/* Route Nodes & Path */}
+              {/* Fake dashed path connecting the nodes */}
+              <Circle cx="75%" cy="25%" r="6" fill="#F59E0B" opacity="0.4" />
+              <Circle cx="90%" cy="50%" r="8" fill="#F59E0B" opacity="0.3" />
+              <Circle cx="70%" cy="80%" r="5" fill="#F59E0B" opacity="0.4" />
+            </Svg>
           </View>
-          <View style={styles.titleContainer}>
-            <Text style={styles.routeName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            {item.areaCode ? (
-              <Text style={styles.areaCode}>Code: {item.areaCode}</Text>
-            ) : null}
-          </View>
-          <ChevronRight size={20} color={COLORS.textPlaceholder} />
-        </View>
 
-        <View style={styles.cardFooter}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>
-              {staffCount} {staffCount === 1 ? 'Staff Member' : 'Staff Members'}
-            </Text>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconBox, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+              <MapPin size={22} color="#D97706" />
+            </View>
+            <View style={styles.titleContainer}>
+              <Text style={styles.routeName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              {item.areaCode ? (
+                <Text style={styles.areaCode}>Code: {item.areaCode}</Text>
+              ) : null}
+            </View>
+            <ChevronRight size={20} color={COLORS.textPlaceholder} />
           </View>
-        </View>
+
+          <View style={styles.cardFooter}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {staffCount} {staffCount === 1 ? 'Staff Member' : 'Staff Members'}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
@@ -106,8 +131,8 @@ const RouteListScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader 
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('home.routes')}</Text>}
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={t('home.routes')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -226,7 +251,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     paddingVertical: 0,
   },
   listContent: {
@@ -241,45 +266,48 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
+    marginBottom: 12,
+    borderRadius: 14,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginBottom: 16,
-    padding: 16,
-    // Add subtle drop shadow
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  cardInner: {
+    padding: 12,
+    position: 'relative',
+    overflow: 'hidden',
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
+    zIndex: 1,
   },
   iconBox: {
-    width: 42,
-    height: 42,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 21,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    marginRight: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   titleContainer: {
     flex: 1,
   },
   routeName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
   areaCode: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#94A3B8',
     marginTop: 4,
   },
@@ -287,6 +315,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    zIndex: 1,
   },
   badge: {
     backgroundColor: '#E0F2FE',
@@ -296,7 +325,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#0284C7',
   },
   centerContainer: {
@@ -308,12 +337,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -328,7 +357,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   emptyContainer: {
@@ -348,14 +377,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
@@ -370,7 +399,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14.5,
   },
   fab: {
@@ -392,3 +421,4 @@ const styles = StyleSheet.create({
 });
 
 export default RouteListScreen;
+

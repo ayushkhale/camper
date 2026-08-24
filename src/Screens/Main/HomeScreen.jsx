@@ -8,7 +8,8 @@ import {
   Animated,
   Dimensions,
   Image,
-  Modal
+  Modal,
+  ImageBackground
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -16,7 +17,7 @@ import {
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -146,6 +147,8 @@ const HomeScreen = () => {
   const [loadingDeliveries, setLoadingDeliveries] = useState(true);
   const [noAssignedRoutes, setNoAssignedRoutes] = useState(false);
 
+  const quickActionsScrollX = React.useRef(new Animated.Value(0)).current;
+
   const toggleLanguage = async () => {
     const newLang = i18n.language === 'en' ? 'hi' : 'en';
     i18n.changeLanguage(newLang);
@@ -228,6 +231,7 @@ const HomeScreen = () => {
     }, [userToken])
   );
 
+  const scrollViewRef = React.useRef(null);
   const pulseAnim = React.useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
@@ -409,7 +413,7 @@ const HomeScreen = () => {
       style={styles.container}
       edges={['left', 'right']}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {(loadingStats || loadingDeliveries) ? (
           renderWholeScreenSkeleton()
@@ -431,7 +435,7 @@ const HomeScreen = () => {
                   activeOpacity={0.7}
                 >
                   <Globe size={16} color="#3B82F6" style={{ marginRight: 6 }} />
-                  <Text style={{ fontFamily: 'Geologica-Medium', color: '#3B82F6', fontSize: 13 }}>
+                  <Text style={{ fontFamily: 'Rubik-Regular', color: '#3B82F6', fontSize: 13 }}>
                     {i18n.language === 'hi' ? 'English' : 'हिंदी'}
                   </Text>
                 </TouchableOpacity>
@@ -439,168 +443,218 @@ const HomeScreen = () => {
             </View>
 
             {/* Daily Delivery Progress Card */}
-            <View style={styles.progressCard}>
-              <Text style={styles.progressCardTitle}>{t('home.dailyProgress')}</Text>
-              <View style={styles.progressRow}>
-                <View style={styles.circleContainer}>
-                  <Svg width={90} height={90} viewBox="0 0 90 90">
-                    {/* Background Ring */}
-                    <Circle
-                      cx="45" cy="45" r={radius}
-                      stroke="#EFF6FF" strokeWidth={strokeWidth} fill="none"
-                    />
-                    {/* Completed Arc (Blue) */}
-                    {completedDeliveries > 0 && (
-                      <Circle
-                        cx="45" cy="45" r={radius}
-                        stroke="#0B409C" strokeWidth={strokeWidth} fill="none"
-                        strokeDasharray={`${completedDash} ${circumference - completedDash}`}
-                        strokeDashoffset={0}
-                        strokeLinecap="round"
-                        transform="rotate(-90 45 45)"
-                      />
-                    )}
-                    {/* Skipped Arc (Red) */}
-                    {skippedDeliveries > 0 && (
-                      <Circle
-                        cx="45" cy="45" r={radius}
-                        stroke="#EF4444" strokeWidth={strokeWidth} fill="none"
-                        strokeDasharray={`${skippedDash} ${circumference - skippedDash}`}
-                        strokeDashoffset={-completedDash}
-                        strokeLinecap="round"
-                        transform="rotate(-90 45 45)"
-                      />
-                    )}
-                  </Svg>
-                  <View style={[styles.circleTextContainer, { flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                      <Text style={styles.circleTextBig}>{completedDeliveries}</Text>
-                      <Text style={styles.circleTextSmall}>/{totalDeliveries}</Text>
+            <TouchableOpacity 
+              style={[styles.progressCard, { overflow: 'hidden', padding: 0, backgroundColor: '#FFFFFF' }]}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
+            >
+
+              <View style={{ padding: 16 }}>
+                {/* Header: Daily Delivery Progress */}
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={{ fontSize: 14, fontFamily: 'Rubik-Medium', color: '#3B82F6' }}>
+                    {t('home.dailyProgress') || 'Daily Delivery Progress'}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {/* Circle Indicator (Left) */}
+                  <View style={{ width: 80, height: 80, justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
+                    <Svg width={80} height={80} viewBox="0 0 96 96">
+                      {/* Background Ring */}
+                      <Circle cx="48" cy="48" r={40} stroke="#E2E8F0" strokeWidth={10} fill="none" />
+                      {/* Skipped Arc (Red) */}
+                      {skippedDeliveries > 0 && (
+                        <Circle cx="48" cy="48" r={40} stroke="#EF4444" strokeWidth={10} fill="none" strokeDasharray={`${skippedDash * (40 / 34)} ${(2 * Math.PI * 40) - (skippedDash * (40 / 34))}`} strokeDashoffset={-(completedDash * (40 / 34))} strokeLinecap="round" transform="rotate(-90 48 48)" />
+                      )}
+                      {/* Completed Arc (Blue) */}
+                      {completedDeliveries > 0 && (
+                        <Circle cx="48" cy="48" r={40} stroke="#1D4ED8" strokeWidth={10} fill="none" strokeDasharray={`${completedDash * (40 / 34)} ${(2 * Math.PI * 40) - (completedDash * (40 / 34))}`} strokeDashoffset={0} strokeLinecap="round" transform="rotate(-90 48 48)" />
+                      )}
+                    </Svg>
+                    <View style={{ position: 'absolute', justifyContent: 'center', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                        <Text style={{ fontSize: 20, fontFamily: 'Rubik-Medium', color: '#0F172A' }}>{completedDeliveries}</Text>
+                        <Text style={{ fontSize: 12, fontFamily: 'Rubik-Medium', color: '#64748B' }}>/{totalDeliveries}</Text>
+                      </View>
                     </View>
-                    {skippedDeliveries > 0 && (
-                      <View style={{ backgroundColor: '#EF4444', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 6, marginTop: 1 }}>
-                        <Text style={{ fontSize: 7.5, fontFamily: 'Geologica-Bold', color: '#FFFFFF', textAlign: 'center' }}>
-                          {skippedDeliveries} skipped
-                        </Text>
+                    {/* Skipped Badge / Pill */}
+                    {skippedDeliveries > 0 ? (
+                      <View style={{ position: 'absolute', bottom: -6, backgroundColor: '#EF4444', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 9, fontFamily: 'Rubik-Medium' }}>{skippedDeliveries} {t('deliveries.skipped')}</Text>
+                      </View>
+                    ) : (
+                      <View style={{ position: 'absolute', bottom: -6, backgroundColor: '#1D4ED8', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 9, fontFamily: 'Rubik-Medium' }}>{Math.round(completedRatio * 100)}%</Text>
                       </View>
                     )}
                   </View>
-                </View>
 
-                <View style={styles.progressInfo}>
-                  <Text style={{ marginBottom: 4 }}>
-                    <Text style={{ color: '#D97706', fontFamily: 'Geologica-Medium', fontSize: 13 }}>
-                      {pendingDeliveries} {t('deliveries.pending')}
+                  {/* Info Section (Center) */}
+                  <View style={{ flex: 1, zIndex: 1, justifyContent: 'center' }}>
+                    {/* Legend */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 12, fontFamily: 'Rubik-Medium', color: '#F59E0B' }}>{pendingDeliveries} {t('deliveries.pending')}</Text>
+                      <Text style={{ fontSize: 12, fontFamily: 'Rubik-Medium', color: '#EF4444', marginHorizontal: 4 }}>•</Text>
+                      <Text style={{ fontSize: 12, fontFamily: 'Rubik-Medium', color: '#EF4444' }}>{skippedDeliveries} {t('deliveries.skipped')}</Text>
+                    </View>
+
+                    <Text style={{ fontSize: 9, fontFamily: 'Rubik-Regular', color: '#64748B', marginBottom: 12 }}>
+                      {t('home.stayOnTrack')}
                     </Text>
-                    {skippedDeliveries > 0 && (
-                      <Text style={{ color: '#EF4444', fontFamily: 'Geologica-Medium', fontSize: 13 }}>
-                        {' • '}{skippedDeliveries} {t('deliveries.skipped') || 'Skipped'}
-                      </Text>
-                    )}
-                  </Text>
 
-                  <Text style={styles.encouragingText}>{t('home.stayOnTrack')}</Text>
-
-                  <View style={styles.routeBadge}>
-                    <MapPin size={12} color="#0B409C" style={{ marginRight: 4 }} />
-                    <Text style={styles.routeBadgeText}>{t('home.todaysDeliveries')}</Text>
+                    {/* Button */}
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
+                      style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', backgroundColor: '#EFF6FF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 }}
+                    >
+                      <MapPin size={10} color="#1D4ED8" style={{ marginRight: 4 }} />
+                      <Text style={{ color: '#1D4ED8', fontSize: 10, fontFamily: 'Rubik-Medium', marginRight: 2 }}>{t('home.todaysDeliveries') || "Today's Deliveries"}</Text>
+                    </TouchableOpacity>
                   </View>
-                </View>
 
-                {/* Fallback 3D illustration */}
-                <Image source={require('../../../assets/delivery_rickshaw.jpg')} style={styles.illustrationImage} />
+                  {/* Rickshaw Image (Right) */}
+                  <Image
+                    source={require('../../../assets/delivery_rickshaw.jpg')}
+                    style={{ width: 85, height: 85, marginLeft: 4 }}
+                    resizeMode="contain"
+                  />
+                </View>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* 2x2 Stats Grid (Hidden for Staff) */}
             {user?.role !== 'staff' && (
-            <View style={styles.statsGrid}>
-              <View style={styles.statsRow}>
-                <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Customers' } })}>
-                  <Text style={styles.statLabel}>{t('home.customers')}</Text>
-                  <Text style={styles.statValue}>{stats.customers}</Text>
-                  <View style={styles.statFooterRow}>
-                    <Text style={styles.statSubText}>+ {t('home.total')}</Text>
-                    <UserPlus size={18} color="#3B82F6" />
-                  </View>
-                </TouchableOpacity>
+              <View style={styles.statsGrid}>
+                <View style={styles.statsRow}>
+                  {/* Customers */}
+                  <TouchableOpacity
+                    style={[styles.statCard, { borderBottomColor: '#1866E4' }]}
+                    activeOpacity={0.7}
+                    onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Customers' } })}
+                  >
+                    <View style={{ position: 'absolute', bottom: -24, right: -24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#1866E4', opacity: 0.08 }} />
+                    <View style={{ position: 'absolute', bottom: 8, right: 8 }}>
+                      <ChevronRight size={16} color="#1866E4" />
+                    </View>
+                    <View style={[styles.statIconWrapper, { backgroundColor: '#1866E4' }]}>
+                      <UserPlus size={20} color="#FFF" />
+                    </View>
+                    <View style={styles.statTitleWrapper}>
+                      <Text style={styles.statValue}>{stats.customers}</Text>
+                      <Text style={styles.statLabel} numberOfLines={1}>{t('home.customers')}</Text>
+                    </View>
+                  </TouchableOpacity>
 
-                <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate('SubscriptionList')}>
-                  <Text style={styles.statLabel}>{t('home.subscriptions')}</Text>
-                  <Text style={styles.statValue}>{stats.subscriptions}</Text>
-                  <View style={styles.statFooterRow}>
-                    <Text style={styles.statSubText}>+ {t('home.active')}</Text>
-                    <Repeat size={18} color="#10B981" />
-                  </View>
-                </TouchableOpacity>
+                  {/* Subscriptions */}
+                  <TouchableOpacity
+                    style={[styles.statCard, { borderBottomColor: '#059669' }]}
+                    activeOpacity={0.7}
+                    onPress={() => navigation.navigate('SubscriptionList')}
+                  >
+                    <View style={{ position: 'absolute', bottom: -24, right: -24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#059669', opacity: 0.08 }} />
+                    <View style={{ position: 'absolute', bottom: 8, right: 8 }}>
+                      <ChevronRight size={16} color="#059669" />
+                    </View>
+                    <View style={[styles.statIconWrapper, { backgroundColor: '#059669' }]}>
+                      <Repeat size={20} color="#FFF" />
+                    </View>
+                    <View style={styles.statTitleWrapper}>
+                      <Text style={styles.statValue}>{stats.subscriptions}</Text>
+                      <Text style={styles.statLabel} numberOfLines={1}>{t('home.subscriptions') || 'Active Subs'}</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.statsRow}>
+                  {/* Routes */}
+                  <TouchableOpacity
+                    style={[styles.statCard, { borderBottomColor: '#6366F1' }]}
+                    activeOpacity={0.7}
+                    onPress={() => navigation.navigate('RouteList')}
+                  >
+                    <View style={{ position: 'absolute', bottom: -24, right: -24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#6366F1', opacity: 0.08 }} />
+                    <View style={{ position: 'absolute', bottom: 8, right: 8 }}>
+                      <ChevronRight size={16} color="#6366F1" />
+                    </View>
+                    <View style={[styles.statIconWrapper, { backgroundColor: '#6366F1' }]}>
+                      <MapPin size={20} color="#FFF" />
+                    </View>
+                    <View style={styles.statTitleWrapper}>
+                      <Text style={styles.statValue}>{stats.routes}</Text>
+                      <Text style={styles.statLabel} numberOfLines={1}>{t('home.routes') || 'Routes'}</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* One Time Orders */}
+                  <TouchableOpacity
+                    style={[styles.statCard, { borderBottomColor: '#F59E0B' }]}
+                    activeOpacity={0.7}
+                    onPress={() => navigation.navigate('OneTimeOrderList')}
+                  >
+                    <View style={{ position: 'absolute', bottom: -24, right: -24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#F59E0B', opacity: 0.08 }} />
+                    <View style={{ position: 'absolute', bottom: 8, right: 8 }}>
+                      <ChevronRight size={16} color="#F59E0B" />
+                    </View>
+                    <View style={[styles.statIconWrapper, { backgroundColor: '#F59E0B' }]}>
+                      <Package size={20} color="#FFF" />
+                    </View>
+                    <View style={styles.statTitleWrapper}>
+                      <Text style={styles.statValue}>{stats.oneTimeOrders}</Text>
+                      <Text style={styles.statLabel} numberOfLines={1}>{t('oneTimeOrders.title') || 'Orders'}</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
               </View>
-
-              <View style={styles.statsRow}>
-                <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate('RouteList')}>
-                  <Text style={styles.statLabel}>{t('home.routes')}</Text>
-                  <Text style={styles.statValue}>{stats.routes}</Text>
-                  <View style={styles.statFooterRow}>
-                    <Text style={[styles.statSubText, { color: '#059669' }]}>+ {t('home.scheduled')}</Text>
-                    <MapPin size={18} color="#059669" />
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate('OneTimeOrderList')}>
-                  <Text style={styles.statLabel}>{t('oneTimeOrders.title')}</Text>
-                  <Text style={styles.statValue}>{stats.oneTimeOrders}</Text>
-                  <View style={styles.statFooterRow}>
-                    <Text style={styles.statSubText}>+ {t('deliveries.pending')}</Text>
-                    <Package size={18} color="#F59E0B" />
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
             )}
 
-            {/* Next Delivery Card */}
-            {nextDelivery && (
-              <TouchableOpacity style={styles.nextDeliveryCardOptionA} activeOpacity={0.8} onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}>
-                <View style={styles.nextDeliveryLeft}>
-                  <View style={styles.clockIconOutline}>
-                    <Clock size={18} color="#3B82F6" />
-                  </View>
-                  <View style={styles.nextDeliveryInfo}>
-                    <Text style={styles.nextDeliveryTitle}>{t('deliveries.title')}</Text>
-                    <Text style={styles.nextDeliveryName} numberOfLines={1}>
-                      {nextDelivery.Customer?.name || t('customers.title')}
-                    </Text>
-                    {/* <Text style={styles.nextDeliveryAddress} numberOfLines={1}>
-                      {nextDelivery.Customer?.address || 'View address'} • Stop 7 of {totalDeliveries}
-                    </Text> */}
-                  </View>
-                </View>
-                <View style={styles.nextDeliveryCenter}>
-                  <Image source={require('../../../assets/branded_water_jar.jpg')} style={styles.jarImage} />
-                </View>
-                <View style={styles.nextDeliveryRightCircle}>
-                  <ChevronRight size={18} color="#3B82F6" />
-                </View>
-              </TouchableOpacity>
-            )}
-
-            {/* Quick Actions */}
+            {/* Quick Actions Scrollable List */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t('home.quickActionsTitle')}</Text>
             </View>
-            <View style={styles.quickActionsGrid}>
+            <ScrollView
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 8 }}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { x: quickActionsScrollX } } }],
+                { useNativeDriver: false }
+              )}
+              scrollEventThrottle={16}
+            >
               {features.map((feature, idx) => (
                 <TouchableOpacity
                   key={idx}
-                  style={styles.quickActionItem}
+                  style={{ width: 90, marginRight: 12, alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#F1F5F9', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02 }}
                   activeOpacity={0.65}
                   onPress={() => navigation.navigate(feature.screen)}
                 >
-                  <View style={styles.quickActionCircle}>
-                    <feature.icon size={22} color={feature.color} strokeWidth={2.5} />
+                  <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: feature.iconBg || '#F8FAFC', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                    <feature.icon size={18} color={feature.color} strokeWidth={2} />
                   </View>
-                  <Text style={styles.quickActionText}>{feature.title}</Text>
+                  <Text style={{ fontSize: 9.5, fontFamily: 'Rubik-Medium', color: '#334155', textAlign: 'center', paddingHorizontal: 4 }} numberOfLines={1}>
+                    {feature.title}
+                  </Text>
                 </TouchableOpacity>
               ))}
+            </ScrollView>
+
+            {/* Custom Scroll Indicator */}
+            <View style={{ width: 40, height: 4, backgroundColor: '#E2E8F0', borderRadius: 2, alignSelf: 'center', marginTop: 4, marginBottom: 12, overflow: 'hidden' }}>
+              <Animated.View style={{
+                width: 20,
+                height: 4,
+                backgroundColor: '#3B82F6',
+                borderRadius: 2,
+                transform: [{
+                  translateX: quickActionsScrollX.interpolate({
+                    inputRange: [0, 300],
+                    outputRange: [0, 20],
+                    extrapolate: 'clamp'
+                  })
+                }]
+              }} />
             </View>
 
             {/* Today's Orders / Premium List */}
@@ -611,7 +665,7 @@ const HomeScreen = () => {
                 onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
                 style={{ flexDirection: 'row', alignItems: 'center' }}
               >
-                <Text style={{ fontSize: 13, fontFamily: 'Geologica-Bold', color: '#1D4ED8', marginRight: 2 }}>
+                <Text style={{ fontSize: 13, fontFamily: 'Rubik-Medium', color: '#1D4ED8', marginRight: 2 }}>
                   {t('home.viewMore')}
                 </Text>
                 <ChevronRight size={15} color="#1D4ED8" strokeWidth={2.5} />
@@ -648,21 +702,27 @@ const HomeScreen = () => {
                   return (
                     <TouchableOpacity
                       key={item.id || idx}
-                      style={styles.orderRowOptionA}
+                      style={[styles.orderRowOptionA, { borderLeftWidth: 3, borderLeftColor: statusColor }]}
                       activeOpacity={0.7}
                       onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
                     >
                       <View style={styles.orderRowLeft}>
                         <View style={styles.customerAvatarPlaceholder}>
-                          <UserPlus size={16} color="#64748B" />
+                          <UserPlus size={18} color="#64748B" />
                         </View>
                         <View style={styles.orderRowInfo}>
                           <Text style={styles.orderRowName} numberOfLines={1}>
-                            {item.Customer?.name || t('customers.title')}
+                            {item.Customer?.name || 'User1'}
                           </Text>
                           <Text style={styles.orderRowProduct} numberOfLines={1}>
-                            {qty} jar{qty > 1 ? 's' : ''} - 20L
+                            {qty} jar{qty > 1 ? 's' : ''} - 20L <Text style={{ color: '#E2E8F0', paddingHorizontal: 2 }}>|</Text> Route 1
                           </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MapPin size={10} color="#94A3B8" style={{ marginRight: 4 }} />
+                            <Text style={{ fontSize: 11, fontFamily: 'Rubik-Medium', color: '#64748B' }} numberOfLines={1}>
+                              {item.Customer?.address || 'Vijay Nagar, Indore'}
+                            </Text>
+                          </View>
                         </View>
                       </View>
 
@@ -685,7 +745,7 @@ const HomeScreen = () => {
               activeOpacity={0.7}
               onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
             >
-              <Text style={{ color: '#1D4ED8', fontFamily: 'Geologica-Bold', fontSize: 15, marginRight: 4 }}>
+              <Text style={{ color: '#1D4ED8', fontFamily: 'Rubik-Medium', fontSize: 15, marginRight: 4 }}>
                 {t('home.viewMore')}
               </Text>
               <ChevronRight size={18} color="#1D4ED8" strokeWidth={2.5} />
@@ -708,6 +768,12 @@ const ChevronRight = ({ size, color }) => (
   </Svg>
 );
 
+const ChevronLeft = ({ size, color }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M15 18l-6-6 6-6" />
+  </Svg>
+);
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -725,9 +791,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontFamily: 'Geologica-Bold',
-    color: '#1E293B',
+    fontSize: 18,
+    fontFamily: 'Rubik-Medium',
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
 
   // Progress Card Option A style
@@ -746,7 +813,7 @@ const styles = StyleSheet.create({
   },
   progressCardTitle: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Medium',
     color: '#3B82F6',
     marginBottom: 12,
   },
@@ -768,12 +835,12 @@ const styles = StyleSheet.create({
   },
   circleTextBig: {
     fontSize: 22,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Medium',
     color: '#0F172A',
   },
   circleTextSmall: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-Regular',
     color: '#64748B',
   },
   progressInfo: {
@@ -782,13 +849,13 @@ const styles = StyleSheet.create({
   },
   remainingText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Medium',
     color: '#0F172A',
     marginBottom: 2,
   },
   encouragingText: {
     fontSize: 10,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-Regular',
     color: '#64748B',
     marginBottom: 8,
   },
@@ -803,7 +870,7 @@ const styles = StyleSheet.create({
   },
   routeBadgeText: {
     fontSize: 9,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Medium',
     color: '#0B409C',
   },
   illustrationImage: {
@@ -820,43 +887,57 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   statCard: {
     width: '48%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1,
     borderColor: '#F1F5F9',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Medium',
-    color: '#475569',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 24,
-    fontFamily: 'Geologica-Bold',
-    color: '#0F172A',
-    marginBottom: 8,
-  },
-  statFooterRow: {
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+    borderBottomWidth: 3,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 'auto',
+    overflow: 'hidden',
   },
-  statSubText: {
-    fontSize: 10,
-    fontFamily: 'Geologica-Medium',
-    color: '#10B981',
+  statIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  statTitleWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  statLabel: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Regular',
+    color: '#64748B',
+  },
+  statValue: {
+    fontSize: 22,
+    fontFamily: 'Rubik-Medium',
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  statChevronWrapper: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Next Delivery Card (Option A style)
@@ -891,20 +972,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   nextDeliveryTitle: {
-    fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontSize: 16,
+    fontFamily: 'Rubik-Medium',
     color: '#3B82F6',
     marginBottom: 6,
+    letterSpacing: -0.2,
   },
   nextDeliveryName: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Medium',
     color: '#334155',
     marginBottom: 4,
   },
   nextDeliveryAddress: {
     fontSize: 10,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-Regular',
     color: '#64748B',
   },
   nextDeliveryCenter: {
@@ -964,37 +1046,35 @@ const styles = StyleSheet.create({
     borderColor: '#F1F5F9',
   },
   quickActionText: {
-    fontSize: 10,
-    fontFamily: 'Geologica-Bold',
-    color: '#475569',
+    fontSize: 11,
+    fontFamily: 'Rubik-Medium',
+    color: '#334155',
     textAlign: 'center',
   },
 
   // Premium Orders List (Option A layout)
   viewAllTopText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Medium',
     color: '#3B82F6',
   },
   ordersListContainerOptionA: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.02,
-    shadowRadius: 3,
-    elevation: 1,
+    paddingTop: 4,
   },
   orderRowOptionA: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    marginBottom: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+    overflow: 'hidden',
   },
   orderRowLeft: {
     flexDirection: 'row',
@@ -1002,47 +1082,47 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   customerAvatarPlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   orderRowInfo: {
     flex: 1,
   },
   orderRowName: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Bold',
-    color: '#1E293B',
-    marginBottom: 2,
+    fontSize: 14,
+    fontFamily: 'Rubik-Medium',
+    color: '#0F172A',
+    marginBottom: 4,
   },
   orderRowProduct: {
-    fontSize: 10,
-    fontFamily: 'Geologica-Medium',
-    color: '#64748B',
-  },
-  orderRowRight: {
-    alignItems: 'flex-end',
-  },
-  orderRowTime: {
-    fontSize: 10,
-    fontFamily: 'Geologica-Medium',
+    fontSize: 11,
+    fontFamily: 'Rubik-Regular',
     color: '#64748B',
     marginBottom: 4,
   },
+  orderRowRight: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  orderRowTime: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Medium',
+    color: '#64748B',
+    marginBottom: 8,
+  },
   orderRowBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   orderRowBadgeText: {
     fontSize: 9,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Medium',
   },
 
   // Skeleton
@@ -1090,14 +1170,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 22,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Medium',
     color: '#1E293B',
     marginBottom: 12,
     textAlign: 'center',
   },
   modalText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-Regular',
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 24,
@@ -1113,7 +1193,7 @@ const styles = StyleSheet.create({
   },
   modalBtnText: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Medium',
     color: '#FFFFFF',
   }
 });

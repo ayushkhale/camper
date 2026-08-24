@@ -4,7 +4,7 @@ import {
   TextInput, FlatList, SectionList, ActivityIndicator, Alert, Modal, ScrollView, Animated, Platform, Image, TouchableWithoutFeedback
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, ChevronDown, DollarSign, FileText, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, X, Search, Menu, Info, Banknote } from 'lucide-react-native';
+import { User, ChevronDown, DollarSign, FileText, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, X, Search, Menu, Info, Banknote, Smartphone, Landmark } from 'lucide-react-native';
 import Svg, { Path, Defs, LinearGradient, Stop, Rect, Circle } from 'react-native-svg';
 import { COLORS } from '../../constants/colors';
 import { useTranslation } from 'react-i18next';
@@ -16,10 +16,10 @@ import CurvedHeader from '../../components/CurvedHeader';
 import AddCustomerModal from '../../components/modals/AddCustomerModal';
 
 const getPaymentModes = (t) => [
-  { id: 'cash', label: t('payments.cash') },
-  { id: 'upi', label: t('payments.upi') },
-  { id: 'bank_transfer', label: t('payments.bankTransfer') },
-  { id: 'cheque', label: t('payments.cheque') }
+  { id: 'upi', label: t('payments.upi'), Icon: Smartphone },
+  { id: 'cash', label: t('payments.cash'), Icon: Banknote },
+  { id: 'bank_transfer', label: 'Bank\nTransfer', Icon: Landmark },
+  { id: 'cheque', label: t('payments.cheque'), Icon: FileText }
 ];
 
 const PaymentsScreen = () => {
@@ -301,7 +301,7 @@ const PaymentsScreen = () => {
                 style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
                 onPress={() => { setShowCustomerModal(false); setAddCustomerVisible(true); }}
               >
-                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
+                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
               </TouchableOpacity>
               <FlatList
                 data={filteredCustomers}
@@ -350,7 +350,8 @@ const PaymentsScreen = () => {
               style={[styles.chip, paymentMode === mode.id && styles.chipActive]}
               onPress={() => setPaymentMode(mode.id)}
             >
-              <Text style={[styles.chipText, paymentMode === mode.id && styles.chipTextActive]}>
+              <mode.Icon size={16} color={paymentMode === mode.id ? COLORS.primary : COLORS.textSecondary} style={{ marginBottom: 4 }} />
+              <Text style={[styles.chipText, paymentMode === mode.id && styles.chipTextActive]} textAlign="center">
                 {mode.label}
               </Text>
             </TouchableOpacity>
@@ -430,33 +431,33 @@ const PaymentsScreen = () => {
                 </View>
 
                 <View style={{ zIndex: 1 }}>
-                  <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontFamily: 'Geologica-Medium', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                  <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontFamily: 'Rubik-SemiBold', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
                     {owesMoney ? t('payments.totalAmountDue') : t('payments.availableBalance')}
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                    <Text style={{ fontSize: 28, color: '#FFF', fontFamily: 'Geologica-Bold', includeFontPadding: false }}>
+                    <Text style={{ fontSize: 28, color: '#FFF', fontFamily: 'Rubik-Bold', includeFontPadding: false }}>
                       {formatCurrency(Math.abs(summary.outstandingBalance))}
                     </Text>
                     {owesMoney ? (
                       <View style={{ backgroundColor: 'rgba(239,68,68,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
-                        <Text style={{ color: '#FCA5A5', fontSize: 10, fontFamily: 'Geologica-Bold' }}>{t('payments.toCollect')}</Text>
+                        <Text style={{ color: '#FCA5A5', fontSize: 10, fontFamily: 'Rubik-Bold' }}>{t('payments.toCollect')}</Text>
                       </View>
                     ) : (
                        <View style={{ backgroundColor: 'rgba(16,185,129,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
-                        <Text style={{ color: '#6EE7B7', fontSize: 10, fontFamily: 'Geologica-Bold' }}>{t('payments.settled')}</Text>
+                        <Text style={{ color: '#6EE7B7', fontSize: 10, fontFamily: 'Rubik-Bold' }}>{t('payments.settled')}</Text>
                       </View>
                     )}
                   </View>
 
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.08)', padding: 12, borderRadius: 10 }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 2 }}>{t('payments.totalBilled')}</Text>
-                      <Text style={{ fontSize: 15, color: '#FFF', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Rubik-Medium', marginBottom: 2 }}>{t('payments.totalBilled')}</Text>
+                      <Text style={{ fontSize: 15, color: '#FFF', fontFamily: 'Rubik-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
                     </View>
                     <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 12 }} />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Geologica-Regular', marginBottom: 2 }}>{t('payments.totalReceived')}</Text>
-                      <Text style={{ fontSize: 15, color: '#4ADE80', fontFamily: 'Geologica-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Rubik-Medium', marginBottom: 2 }}>{t('payments.totalReceived')}</Text>
+                      <Text style={{ fontSize: 15, color: '#4ADE80', fontFamily: 'Rubik-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
                     </View>
                   </View>
                 </View>
@@ -468,9 +469,19 @@ const PaymentsScreen = () => {
             const isCredit = item.credit !== null;
             const amountStr = isCredit ? `+${formatCurrency(item.credit)}` : `-${formatCurrency(item.debit)}`;
             const amountColor = isCredit ? COLORS.success : COLORS.danger;
+            
+            // Icon Selection
+            const isInvoice = item.entryType === 'delivery_charge' || item.description?.toLowerCase().includes('invoice');
+            const IconComponent = isInvoice ? FileText : Banknote;
+            const iconColor = isInvoice ? '#0B409C' : '#10B981'; // Blue for invoice, Green for payment
+            const iconBg = isInvoice ? '#E0E7FF' : '#D1FAE5'; // Light background for circle
+            const borderColor = isInvoice ? '#0B409C' : '#10B981';
 
             return (
-              <View style={styles.statementItem}>
+              <View style={[styles.statementItem, { borderLeftColor: borderColor }]}>
+                <View style={[styles.statementIconCircle, { backgroundColor: iconBg }]}>
+                  <IconComponent size={20} color={iconColor} />
+                </View>
                 <View style={styles.statementLeft}>
                   <Text style={styles.statementDate}>
                     {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -505,10 +516,10 @@ const PaymentsScreen = () => {
       <CurvedHeader
         title={
           <View>
-            <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('payments.title')}</Text>
+            <Text style={{ color: '#0B409C', fontSize: 20, fontFamily: 'Rubik-Bold' }}>{t('payments.title')}</Text>
           </View>
         }
-        leftIcon={<Menu size={24} color="#FFF" />}
+        leftIcon={<Menu size={24} color="#0B409C" />}
         onLeftPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -521,7 +532,9 @@ const PaymentsScreen = () => {
           onPress={() => setShowCustomerModal(true)}
         >
           <View style={styles.customerSelectorLeft}>
-            <User size={20} color={selectedCustomer ? COLORS.primary : COLORS.textPlaceholder} style={{ marginRight: 10 }} />
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+              <User size={22} color={COLORS.primary} fill={COLORS.primary} />
+            </View>
             <View>
               <Text style={styles.customerSelectorLabel}>{t('customers.title')}</Text>
               <Text style={[styles.customerSelectorValue, !selectedCustomer && { color: COLORS.textPlaceholder }]}>
@@ -616,7 +629,7 @@ const styles = StyleSheet.create({
   },
   customerAvatarText: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#1D4ED8',
   },
   customerSelectorLeft: {
@@ -625,13 +638,13 @@ const styles = StyleSheet.create({
   },
   customerSelectorLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
     marginTop: 2,
   },
   customerSelectorValue: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   tabContainer: {
@@ -656,11 +669,11 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#64748B',
   },
   tabTextActive: {
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#FFFFFF',
   },
   content: {
@@ -678,13 +691,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
@@ -697,7 +710,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 8,
   },
@@ -709,35 +722,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 50,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     marginBottom: 20,
   },
   chipsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginBottom: 20,
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    flex: 1,
+    paddingHorizontal: 4,
+    paddingVertical: 12,
+    borderRadius: 14,
     backgroundColor: '#F1F5F9',
     borderWidth: 1,
     borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipActive: {
     backgroundColor: COLORS.primaryLight,
     borderColor: COLORS.primary,
   },
   chipText: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontSize: 11,
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
+    textAlign: 'center',
   },
   chipTextActive: {
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   primaryBtn: {
@@ -759,7 +776,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     color: '#FFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -781,7 +798,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   searchInputWrapper: {
@@ -796,7 +813,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   customerListItem: {
@@ -820,13 +837,13 @@ const styles = StyleSheet.create({
   },
   customerListName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
   customerListPhone: {
     fontSize: 13,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
   },
   summaryCard: {
@@ -843,7 +860,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: 'rgba(255,255,255,0.7)',
     marginBottom: 12,
     textTransform: 'uppercase',
@@ -858,33 +875,46 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: 'rgba(255,255,255,0.6)',
     marginBottom: 2,
   },
   summaryVal: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   summaryValLarge: {
     fontSize: 24,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   statementListTitle: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 16,
   },
   statementItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: '#FFF',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderLeftWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statementIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   statementLeft: {
     flex: 1,
@@ -892,13 +922,13 @@ const styles = StyleSheet.create({
   },
   statementDate: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
   statementDesc: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -911,7 +941,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
   },
   statementRight: {
@@ -920,12 +950,12 @@ const styles = StyleSheet.create({
   },
   statementAmount: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     marginBottom: 4,
   },
   statementBalance: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   skeletonSummaryCard: {

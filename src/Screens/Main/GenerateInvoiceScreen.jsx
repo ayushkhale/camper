@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, ChevronDown, Check, X, Search, User, Filter, AlertCircle, FileText, Calendar } from 'lucide-react-native';
+import { ChevronLeft, ChevronDown, Check, X, Search, User, Filter, AlertCircle, FileText, Calendar , ArrowLeft} from 'lucide-react-native';
 import CurvedHeader from '../../components/CurvedHeader';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -25,6 +25,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
 import AddCustomerModal from '../../components/modals/AddCustomerModal';
+import Svg, { Defs, LinearGradient, Stop, Rect, Circle } from 'react-native-svg';
 
 const GenerateInvoiceScreen = () => {
   const { t } = useTranslation();
@@ -261,7 +262,7 @@ const GenerateInvoiceScreen = () => {
                 style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
                 onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
               >
-                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>+ Add New Customer</Text>
+                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>+ Add New Customer</Text>
               </TouchableOpacity>
             )}
             
@@ -316,7 +317,7 @@ const GenerateInvoiceScreen = () => {
       >
         <CurvedHeader
           title="Generate Invoices"
-          leftIcon={<ChevronLeft size={28} color="#FFF" />}
+          leftIcon={<ArrowLeft size={24} color="#0B409C" />}
           onLeftPress={() => navigation.goBack()}
           height={130}
           contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
@@ -336,19 +337,39 @@ const GenerateInvoiceScreen = () => {
           ) : null}
 
           {preSummary ? (
-            <View style={styles.preSummaryCard}>
-              <View style={styles.preSummaryHeader}>
-                <FileText size={16} color="rgba(255,255,255,0.8)" style={{marginRight: 6}} />
-                <Text style={styles.preSummaryTitle}>{t('deliveries.pendingToInvoice') || 'Pending to be Invoiced'}</Text>
+            <View style={[styles.preSummaryCard, { padding: 0 }]}>
+              <View style={[StyleSheet.absoluteFill, { overflow: 'hidden', borderRadius: 16 }]}>
+                <Svg height="100%" width="100%" preserveAspectRatio="none">
+                  <Defs>
+                    <LinearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
+                      <Stop offset="0" stopColor="#1E3A8A" />
+                      <Stop offset="1" stopColor="#0F172A" />
+                    </LinearGradient>
+                    <LinearGradient id="circleGrad" x1="0" y1="0" x2="1" y2="1">
+                      <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.15" />
+                      <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.0" />
+                    </LinearGradient>
+                  </Defs>
+                  <Rect width="100%" height="100%" fill="url(#cardGrad)" />
+                  <Circle cx="85%" cy="-15%" r="120" fill="url(#circleGrad)" />
+                  <Circle cx="10%" cy="120%" r="80" fill="url(#circleGrad)" />
+                </Svg>
               </View>
-              <View style={styles.preSummaryRow}>
-                <View style={styles.preSummaryStat}>
-                  <Text style={styles.preSummaryLabel}>Deliveries</Text>
-                  <Text style={styles.preSummaryValue}>{preSummary.deliveries}</Text>
+
+              <View style={{ padding: 20, zIndex: 1 }}>
+                <View style={styles.preSummaryHeader}>
+                  <FileText size={16} color="rgba(255,255,255,0.8)" style={{marginRight: 6}} />
+                  <Text style={styles.preSummaryTitle}>{t('invoices.pendingToInvoice') || 'Pending to be Invoiced'}</Text>
                 </View>
-                <View style={styles.preSummaryStat}>
-                  <Text style={styles.preSummaryLabel}>Estimated Total</Text>
-                  <Text style={[styles.preSummaryValue, { color: '#4ADE80' }]}>₹{preSummary.total}</Text>
+                <View style={styles.preSummaryRow}>
+                  <View style={styles.preSummaryStat}>
+                    <Text style={styles.preSummaryLabel}>Deliveries</Text>
+                    <Text style={styles.preSummaryValue}>{preSummary.deliveries}</Text>
+                  </View>
+                  <View style={styles.preSummaryStat}>
+                    <Text style={styles.preSummaryLabel}>Estimated Total</Text>
+                    <Text style={[styles.preSummaryValue, { color: '#4ADE80' }]}>₹{preSummary.total}</Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -499,7 +520,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
   preSummaryCard: {
@@ -521,7 +542,7 @@ const styles = StyleSheet.create({
   },
   preSummaryTitle: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: 'rgba(255,255,255,0.7)',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -535,13 +556,13 @@ const styles = StyleSheet.create({
   },
   preSummaryLabel: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: 'rgba(255,255,255,0.6)',
     marginBottom: 4,
   },
   preSummaryValue: {
     fontSize: 24,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#FFFFFF',
   },
   form: {
@@ -609,13 +630,13 @@ const styles = StyleSheet.create({
   },
   customerSelectorText: {
     fontSize: 15,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
   customerSelectorSubtext: {
     fontSize: 12,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textPlaceholder,
   },
   bottomBar: {
@@ -641,7 +662,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -739,3 +760,4 @@ const styles = StyleSheet.create({
 });
 
 export default GenerateInvoiceScreen;
+

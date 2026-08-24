@@ -1,56 +1,46 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { useRoute } from '@react-navigation/native';
+import Svg, { Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 
-const CurvedHeader = ({ 
-  title, 
-  leftIcon, 
-  onLeftPress, 
-  rightIcon, 
+const CurvedHeader = ({
+  title,
+  leftIcon,
+  onLeftPress,
+  rightIcon,
   onRightPress,
   children,
-  height = 140,
-  contentStyle
+  height = 160,
+  contentStyle,
+  startColor = '#063A8F', // Deep premium blue
 }) => {
   const insets = useSafeAreaInsets();
-  
-  // Since App.jsx handles the top notch with SafeAreaView, we don't add insets here to avoid double spacing
-  const totalHeight = height;
+  const route = useRoute();
+  const isHome = route.name === 'Home';
+
+  const bgImage = isHome
+    ? require('../../assets/header_bg9.png')
+    : require('../../assets/header_bg9.png');
+
+  const totalHeight = height + insets.top;
 
   // Wave setup
   const waveBase = totalHeight - 40;
 
   return (
-    <View style={[styles.container, { height: totalHeight }]}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      {/* Background SVG Waves */}
-      <Svg width={width} height={totalHeight} style={StyleSheet.absoluteFill}>
-        <Defs>
-        </Defs>
+    <View style={[styles.container, { height: totalHeight, backgroundColor: startColor }]}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      {/* Background Image - Set to stretch to perfectly fit the full curve into the header bounds without cropping */}
+      <Image
+        source={bgImage}
+        style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
+        resizeMode="stretch"
+      />
 
-        {/* Background base */}
-        <Path 
-          d={`M0,0 L0,${waveBase + 10} C${width * 0.4},${waveBase + 50} ${width * 0.7},${waveBase - 20} ${width},${waveBase + 10} L${width},0 Z`} 
-          fill="#0B409C" 
-        />
 
-        {/* Highlight wave 1 (subtle overlap) */}
-        <Path 
-          d={`M0,${waveBase + 10} C${width * 0.4},${waveBase + 50} ${width * 0.7},${waveBase - 20} ${width},${waveBase + 10} L${width},${waveBase + 30} C${width * 0.8},${waveBase - 10} ${width * 0.3},${waveBase + 60} 0,${waveBase + 25} Z`} 
-          fill="#FFFFFF" 
-          opacity="0.1"
-        />
-
-        {/* Highlight wave 2 (higher overlap) */}
-        <Path 
-          d={`M0,${waveBase - 10} C${width * 0.3},${waveBase + 40} ${width * 0.6},${waveBase - 30} ${width},${waveBase - 5} L${width},${waveBase + 10} C${width * 0.7},${waveBase - 20} ${width * 0.4},${waveBase + 50} 0,${waveBase + 10} Z`} 
-          fill="#FFFFFF" 
-          opacity="0.15"
-        />
-      </Svg>
 
       {/* Header Content */}
       <View style={[styles.content, contentStyle]}>
@@ -60,17 +50,17 @@ const CurvedHeader = ({
               {leftIcon}
             </TouchableOpacity>
           )}
-          
+
           {title && (
             typeof title === 'string' ? (
-              <Text style={[styles.title, !leftIcon && { marginLeft: 16 }]} numberOfLines={1}>{title}</Text>
+              <Text style={[styles.title, !leftIcon && { marginLeft: 16 }]} numberOfLines={2}>{title}</Text>
             ) : (
               <View style={styles.titleContainerNode}>{title}</View>
             )
           )}
-          
+
           <View style={{ flex: 1 }} />
-          
+
           {rightIcon && (
             onRightPress ? (
               <TouchableOpacity onPress={onRightPress} style={styles.iconButton} activeOpacity={0.7}>
@@ -83,7 +73,7 @@ const CurvedHeader = ({
             )
           )}
         </View>
-        
+
         {children && (
           <View style={styles.childrenContainer}>
             {children}
@@ -106,18 +96,20 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 56,
+    minHeight: 56,
   },
   title: {
-    color: '#FFFFFF',
+    color: '#0B409C',
     fontSize: 22,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     marginLeft: 8,
+    flexShrink: 1,
   },
   titleContainerNode: {
-    flex: 1,
+    flexShrink: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginLeft: 8,
   },
   iconButton: {
     width: 44,

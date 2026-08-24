@@ -11,7 +11,8 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Save, User, MapPin, Search, Plus, Minus } from 'lucide-react-native';
+import { ChevronLeft, Save, User, MapPin, Search, Plus, Minus, ArrowLeft, GripVertical } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -201,24 +202,32 @@ const RouteBuilderScreen = () => {
     const isSelected = sequenceIndex >= 0;
     const sequenceNumber = sequenceIndex + 1;
 
+    const CardContainer = isSelected ? LinearGradient : View;
+    const containerStyle = isSelected 
+      ? [styles.customerCard, styles.customerCardSelected] 
+      : styles.customerCard;
+    const containerProps = isSelected 
+      ? { colors: ['#FFFFFF', '#F0F9FF'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } }
+      : {};
+
     return (
-      <View
-        style={[
-          styles.customerCard,
-          isSelected && styles.customerCardSelected,
-        ]}
-      >
+      <CardContainer style={containerStyle} {...containerProps}>
         <TouchableOpacity
           style={styles.cardContent}
           activeOpacity={0.7}
           onPress={() => handleCustomerTap(itemId)}
         >
+          <View style={[styles.avatarBox, isSelected ? styles.avatarSelected : styles.avatarUnselected]}>
+            <User size={20} color={isSelected ? COLORS.primary : "#94A3B8"} />
+          </View>
           <View style={styles.infoCol}>
-            <Text style={styles.customerName}>{item.name || t('routes.unnamedCustomer') || 'Unnamed Customer'}</Text>
+            <Text style={[styles.customerName, isSelected && { color: COLORS.primary }]}>
+              {item.name || t('routes.unnamedCustomer') || 'Unnamed Customer'}
+            </Text>
             {item.address ? (
               <View style={styles.addressRow}>
-                <MapPin size={12} color={COLORS.textSecondary} />
-                <Text style={styles.addressText} numberOfLines={1}>{item.address}</Text>
+                <MapPin size={12} color={isSelected ? COLORS.primary : COLORS.textSecondary} />
+                <Text style={[styles.addressText, isSelected && { color: COLORS.primary }]} numberOfLines={1}>{item.address}</Text>
               </View>
             ) : null}
           </View>
@@ -233,7 +242,7 @@ const RouteBuilderScreen = () => {
                 onPress={() => handleSequenceInputChange(itemId, sequenceNumber - 1)}
                 disabled={sequenceNumber <= 1}
               >
-                <Minus size={16} color={sequenceNumber <= 1 ? '#CBD5E1' : COLORS.primary} />
+                <Minus size={14} color={sequenceNumber <= 1 ? '#93C5FD' : COLORS.primary} />
               </TouchableOpacity>
               
               <SequenceInput 
@@ -254,7 +263,7 @@ const RouteBuilderScreen = () => {
                 onPress={() => handleSequenceInputChange(itemId, sequenceNumber + 1)}
                 disabled={sequenceNumber >= selectedSequence.length}
               >
-                <Plus size={16} color={sequenceNumber >= selectedSequence.length ? '#CBD5E1' : COLORS.primary} />
+                <Plus size={14} color={sequenceNumber >= selectedSequence.length ? '#93C5FD' : COLORS.primary} />
               </TouchableOpacity>
             </View>
           ) : (
@@ -262,19 +271,19 @@ const RouteBuilderScreen = () => {
               style={styles.badgeUnselected}
               onPress={() => handleCustomerTap(itemId)}
             >
-              <View style={styles.badgeDot} />
+              <Plus size={18} color="#94A3B8" />
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </CardContainer>
     );
   };
 
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('routes.customerSequence')}</Text>}
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={t('routes.customerSequence')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -300,11 +309,11 @@ const RouteBuilderScreen = () => {
 
       <View style={styles.statsContainer}>
         <Text style={styles.statsText}>
-          <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 16 }}>
+          <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 16 }}>
             {(selectedSequence || []).length}
           </Text>
           {' '}{t('routes.sequenced') || 'sequenced'} {t('common.outOf') || 'out of'}{' '}
-          <Text style={{ color: COLORS.text, fontFamily: 'Geologica-Bold', fontSize: 16 }}>
+          <Text style={{ color: COLORS.text, fontFamily: 'Rubik-Bold', fontSize: 16 }}>
             {(customers || []).length}
           </Text>
           {' '}{t('routes.totalCustomers') || 'total customers'}
@@ -398,12 +407,12 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.text,
   },
   instructionsText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginTop: 4,
@@ -419,7 +428,7 @@ const styles = StyleSheet.create({
   },
   statsText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   centerContainer: {
@@ -431,12 +440,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   emptyText: {
     fontSize: 16,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
     textAlign: 'center',
   },
@@ -449,24 +458,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
+    padding: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
     elevation: 2,
   },
   customerCardSelected: {
-    borderColor: COLORS.primaryLight,
-    backgroundColor: '#F8FAFF',
+    borderColor: '#BFDBFE',
+    borderWidth: 1.5,
   },
   cardContent: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  avatarBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatarSelected: {
+    backgroundColor: '#DBEAFE',
+  },
+  avatarUnselected: {
+    backgroundColor: '#F1F5F9',
   },
   infoCol: {
     flex: 1,
@@ -474,8 +497,8 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 16,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.text,
+    fontFamily: 'Rubik-Bold',
+    color: '#1E293B',
     marginBottom: 4,
   },
   addressRow: {
@@ -484,13 +507,13 @@ const styles = StyleSheet.create({
   },
   addressText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Regular',
-    color: COLORS.textSecondary,
+    fontFamily: 'Rubik-Medium',
+    color: '#64748B',
     marginLeft: 4,
     flex: 1,
   },
   sequenceCol: {
-    marginLeft: 12,
+    marginLeft: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -498,43 +521,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 24,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   stepperBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   stepperBtnDisabled: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F0F9FF',
+    elevation: 0,
+    shadowOpacity: 0,
   },
   stepperInput: {
-    width: 44,
+    width: 36,
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
     textAlign: 'center',
-    paddingVertical: 4,
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
-    marginHorizontal: 6,
+    paddingVertical: 0,
+    marginHorizontal: 4,
   },
   badgeUnselected: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 20,
-  },
-  badgeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#CBD5E1',
+    marginRight: 6,
   },
   footer: {
     position: 'absolute',
@@ -571,8 +602,9 @@ const styles = StyleSheet.create({
   saveBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 });
 
 export default RouteBuilderScreen;
+

@@ -34,6 +34,7 @@ import {
   FileText,
   ShieldCheck,
   X,
+  Droplet,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -225,23 +226,23 @@ const CustomerDetailScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('customerDetail.customerDetail')}</Text>}
-        leftIcon={<ArrowLeft size={24} color="#FFF" />}
+        title={t('customerDetail.customerDetail')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
           user?.role !== 'staff' ? (
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity
-                style={styles.headerActionBtnDark}
+                style={[styles.headerActionBtnDark, { backgroundColor: '#E0E7FF' }]}
                 onPress={() => navigation.navigate('AddCustomer', { customer: customerData })}
               >
-                <Edit size={18} color="#FFF" />
+                <Edit size={18} color="#0B409C" />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(239,68,68,0.2)' }]}
+                style={[styles.headerActionBtnDark, { backgroundColor: '#FEE2E2' }]}
                 onPress={handleDeleteCustomer}
               >
-                <Trash2 size={18} color="#FECACA" />
+                <Trash2 size={18} color="#DC2626" />
               </TouchableOpacity>
             </View>
           ) : null
@@ -253,30 +254,44 @@ const CustomerDetailScreen = () => {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]} showsVerticalScrollIndicator={false}>
 
         {/* Profile Hero Section */}
-        <View style={styles.profileHero}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={require('../../../assets/customerfallback.png')}
-              style={styles.avatarImage}
-              resizeMode="cover"
-            />
-          </View>
-          <Text style={styles.customerName}>{customerData.name}</Text>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: customerData.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
-            <Text style={[styles.statusText, { color: customerData.status === 'active' ? '#15803D' : '#64748B' }]}>
-              {customerData.status.toUpperCase()}
-            </Text>
+        <View style={styles.profileHeroCard}>
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarContainer}>
+              <Image
+                source={require('../../../assets/customerfallback.png')}
+                style={styles.avatarImage}
+                resizeMode="cover"
+              />
+            </View>
+            <View style={[styles.avatarStatusDot, { backgroundColor: customerData.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
           </View>
 
-          <TouchableOpacity
-            style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', backgroundColor: '#EFF6FF', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}
-            onPress={() => navigation.navigate('CustomerHistory', { customerId: customerData.id })}
-            activeOpacity={0.7}
-          >
-            <Clock size={16} color="#3B82F6" style={{ marginRight: 6 }} />
-            <Text style={{ fontSize: 13, fontFamily: 'Geologica-Medium', color: '#1D4ED8' }}>View History</Text>
-          </TouchableOpacity>
+          <View style={styles.heroRight}>
+            <Text style={styles.customerNameHero}>{customerData.name}</Text>
+            
+            <View style={[styles.heroStatusPill, { backgroundColor: customerData.status === 'active' ? '#DCFCE7' : '#F1F5F9' }]}>
+              <View style={[styles.heroStatusDot, { backgroundColor: customerData.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
+              <Text style={[styles.heroStatusText, { color: customerData.status === 'active' ? '#16A34A' : '#64748B' }]}>
+                {customerData.status.toUpperCase()}
+              </Text>
+            </View>
+
+            {subscriptions.length > 0 && (
+              <View style={styles.planPill}>
+                <Droplet size={14} color="#0B409C" style={{ marginRight: 6 }} />
+                <Text style={styles.planPillText}>Plan: {subscriptions[0].Product?.name || 'Standard'}</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.historyBtn}
+              onPress={() => navigation.navigate('CustomerHistory', { customerId: customerData.id })}
+              activeOpacity={0.7}
+            >
+              <Clock size={14} color="#3B82F6" style={{ marginRight: 6 }} />
+              <Text style={styles.historyBtnText}>View History</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Subscriptions */}
@@ -349,8 +364,8 @@ const CustomerDetailScreen = () => {
 
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
-              <Phone size={18} color={COLORS.primary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#DCFCE7', borderColor: '#BBF7D0' }]}>
+              <Phone size={18} color="#16A34A" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.phone_label')}</Text>
@@ -361,8 +376,8 @@ const CustomerDetailScreen = () => {
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
-              <MapPin size={18} color={COLORS.primary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#E0E7FF', borderColor: '#C7D2FE' }]}>
+              <MapPin size={18} color="#4F46E5" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.address_label')}</Text>
@@ -373,8 +388,8 @@ const CustomerDetailScreen = () => {
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
-              <Route size={18} color={COLORS.primary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+              <Route size={18} color="#D97706" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.assignedRoute')}</Text>
@@ -388,8 +403,8 @@ const CustomerDetailScreen = () => {
 
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
-              <IndianRupee size={18} color={COLORS.primary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#FFE4E6', borderColor: '#FECDD3' }]}>
+              <IndianRupee size={18} color="#E11D48" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Opening Balance</Text>
@@ -400,8 +415,8 @@ const CustomerDetailScreen = () => {
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
-              <Clock size={18} color={COLORS.primary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#CFFAFE', borderColor: '#A5F3FC' }]}>
+              <Clock size={18} color="#0891B2" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.customerSince')}</Text>
@@ -444,7 +459,7 @@ const CustomerDetailScreen = () => {
               </View>
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>{t('customerDetail.depositBalance')}</Text>
-                <Text style={[styles.detailValue, { color: '#16A34A', fontFamily: 'Geologica-Bold' }]}>
+                <Text style={[styles.detailValue, { color: '#16A34A', fontFamily: 'Rubik-Bold' }]}>
                   ₹{depositData.depositBalance || 0}
                 </Text>
               </View>
@@ -505,7 +520,7 @@ const CustomerDetailScreen = () => {
             }
           })}
         >
-          <IndianRupee size={24} color="#FFF" />
+          <IndianRupee size={26} color="#FFF" />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -657,32 +672,105 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 120,
   },
-  profileHero: {
-    alignItems: 'center',
+  profileHeroCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 36,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0B409C',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 4,
+    alignItems: 'center',
+  },
+  avatarWrapper: {
+    position: 'relative',
+    marginRight: 20,
   },
   avatarContainer: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: COLORS.primaryLight,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#0B409C',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: COLORS.border,
+    borderWidth: 3,
+    borderColor: '#F8FAFC',
     overflow: 'hidden',
   },
   avatarImage: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
-  customerName: {
-    fontSize: 20,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.textPrimary,
+  avatarStatusDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  heroRight: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  customerNameHero: {
+    fontSize: 22,
+    fontFamily: 'Rubik-Bold',
+    color: '#0F172A',
     marginBottom: 8,
+  },
+  heroStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  heroStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  heroStatusText: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Bold',
+  },
+  planPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  planPillText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Medium',
+    color: '#0B409C',
+  },
+  historyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  historyBtnText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#1D4ED8',
   },
   statusBadge: {
     flexDirection: 'row',
@@ -696,11 +784,11 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
   },
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 12,
   },
@@ -713,7 +801,7 @@ const styles = StyleSheet.create({
   },
   sectionTitleFlex: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     flex: 1,
     marginRight: 8,
@@ -728,12 +816,17 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   detailsCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: 16,
+    padding: 20,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 3,
   },
   detailRow: {
     flexDirection: 'row',
@@ -755,13 +848,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   divider: {
@@ -798,7 +891,7 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
@@ -808,7 +901,7 @@ const styles = StyleSheet.create({
   },
   subMetaText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   metadataSection: {
@@ -821,7 +914,7 @@ const styles = StyleSheet.create({
   },
   metadataLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#64748B',
     marginBottom: 8,
   },
@@ -832,13 +925,13 @@ const styles = StyleSheet.create({
   },
   metadataValue: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#334155',
     marginLeft: 6,
   },
   metadataTime: {
     fontSize: 11,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: '#94A3B8',
   },
   dot: {
@@ -892,7 +985,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   subscriptionToggle: {
@@ -923,14 +1016,14 @@ const styles = StyleSheet.create({
   },
   subToggleTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
     marginBottom: 2,
   },
   subToggleSubtitle: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   fabContainer: {
     position: 'absolute',
@@ -953,17 +1046,17 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   fabSecondary: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: COLORS.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 10,
+    elevation: 6,
   },
   addMoreDepositBtn: {
     flexDirection: 'row',
@@ -977,7 +1070,7 @@ const styles = StyleSheet.create({
   },
   addMoreDepositText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
 
@@ -1002,7 +1095,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   modalInputGroup: {
@@ -1010,7 +1103,7 @@ const styles = StyleSheet.create({
   },
   modalLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -1028,7 +1121,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -1043,7 +1136,7 @@ const styles = StyleSheet.create({
   },
   modalSubmitBtnText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#FFFFFF',
   },
 });

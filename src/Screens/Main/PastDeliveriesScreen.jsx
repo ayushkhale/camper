@@ -34,6 +34,7 @@ import {
   Edit2,
   ChevronUp,
   Save,
+  ArrowLeft
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -98,7 +99,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewO
   };
 
   return (
-    <View style={[styles.deliveryCardWrapperOptionC, isExpanded && styles.deliveryCardExpandedOptionC]}>
+    <View style={[styles.deliveryCardWrapperOptionC, isExpanded && styles.deliveryCardExpandedOptionC, { borderLeftWidth: 4, borderLeftColor: getStatusColor ? (getStatusColor(delivery.status)?.dot || getStatusColor(delivery.status)) : '#EAB308', borderStyle: 'solid' }]}>
       {updating && isExpanded && (
         <View style={styles.cardUpdatingOverlay}>
           <ActivityIndicator color={COLORS.primary} />
@@ -482,6 +483,15 @@ const PastDeliveriesScreen = () => {
     }
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'delivered': return '#10B981'; // Green
+      case 'skipped': return '#EF4444'; // Red
+      case 'pending':
+      default: return '#EAB308'; // Yellow
+    }
+  };
+
   const getStatusBadge = (status, isPreview) => {
     if (isPreview) {
       return { label: 'PREVIEW', bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' };
@@ -508,16 +518,8 @@ const PastDeliveriesScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
-          >
-            All Deliveries
-          </Text>
-        }
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={t('deliveries.allDeliveries') || 'All Deliveries'}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
@@ -645,7 +647,7 @@ const PastDeliveriesScreen = () => {
               delivery={item}
               index={idx + 1}
               onUpdateStatus={async (id, data) => await handleUpdateStatus(id, data)}
-              getStatusColor={() => { }}
+              getStatusColor={getStatusColor}
               isViewOnly={String(item.id || '').startsWith('preview-') || isLocked}
             />
           )})

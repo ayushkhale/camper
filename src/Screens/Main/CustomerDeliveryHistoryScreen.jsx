@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { ChevronLeft, Truck, Repeat, IndianRupee, FileText, ShieldCheck, Ticket, Package, Activity, Clock, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ChevronLeft, Truck, Repeat, IndianRupee, FileText, ShieldCheck, Ticket, Package, Activity, Clock, CheckCircle, ChevronDown, ChevronUp , ArrowLeft} from 'lucide-react-native';
 import CurvedHeader from '../../components/CurvedHeader';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -254,7 +254,7 @@ const CustomerDeliveryHistoryScreen = () => {
             
             <View style={styles.dateRow}>
               <Clock size={12} color={COLORS.textPlaceholder} style={{ marginRight: 4 }} />
-              <Text style={styles.dateText}>{formattedDate} {formattedTime ? `• ${formattedTime}` : ''}</Text>
+              <Text style={styles.dateText}>{formattedDate} {formattedTime ? `â€¢ ${formattedTime}` : ''}</Text>
             </View>
           </View>
 
@@ -326,7 +326,7 @@ const CustomerDeliveryHistoryScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={`${customerName || 'Customer'} Activity`}
-        leftIcon={<ChevronLeft color="#FFF" size={28} />}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={130}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -385,13 +385,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   },
   filterText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   filterTextActive: {
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 12,
   },
@@ -453,13 +453,13 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
     marginBottom: 4,
   },
   summaryLabel: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   activityCard: {
@@ -505,12 +505,12 @@ const styles = StyleSheet.create({
   activityTitle: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   activitySubtitle: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   expandIconContainer: {
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   },
   dynamicBadgeText: {
     fontSize: 10,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   expandedContent: {
     marginTop: 12,
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   },
   activityAmount: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#059669',
   },
   detailsGrid: {
@@ -573,15 +573,16 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   }
 });
 
 export default CustomerDeliveryHistoryScreen;
+

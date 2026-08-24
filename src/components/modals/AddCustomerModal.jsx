@@ -211,7 +211,7 @@ const AddCustomerModal = ({ visible, onClose, onSuccess }) => {
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingHorizontal: 4, backgroundColor: '#FFFBEB', paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#FEF3C7' }}>
                     <AlertCircle size={14} color="#D97706" style={{ marginRight: 6 }} />
-                    <Text style={{ fontSize: 11.5, fontFamily: 'Geologica-Medium', color: '#D97706' }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: 'Rubik-SemiBold', color: '#D97706' }}>
                       Note: Opening balance once saved cannot be changed.
                     </Text>
                   </View>
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   },
   countryCode: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     marginRight: 8,
   },
@@ -386,14 +386,14 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     color: COLORS.textPrimary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontSize: 15,
     padding: 0,
   },
   dropdownText: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   btn: {
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   // Picker Styles
   pickerOverlay: {
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   },
   pickerTitle: {
     fontSize: 17,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   addInlineBtn: {
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   },
   addInlineBtnText: {
     color: COLORS.primary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   pickerItem: {
@@ -462,22 +462,22 @@ const styles = StyleSheet.create({
   },
   pickerItemText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary
   },
   pickerItemTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   emptyText: {
     textAlign: 'center',
     color: COLORS.textPlaceholder,
     padding: 20,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   helperText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textPlaceholder,
     marginTop: 6,
     paddingHorizontal: 2,

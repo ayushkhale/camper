@@ -10,7 +10,7 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
-import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink, Database } from 'lucide-react-native';
+import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink, Briefcase, Mail, MapPin, Map, Hash, Grid, Edit2, ArrowLeft } from 'lucide-react-native';
 import { seedDatabase } from '../../utils/seedDatabase';
 
 const SettingsScreen = () => {
@@ -128,30 +128,30 @@ const SettingsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right', 'top']}>
+      
+      {/* Flat Top Header */}
+      <View style={styles.topHeader}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <ArrowLeft size={24} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('settings.title') || "Settings"}</Text>
+        </View>
+        
+        <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editActionBtn}>
+          <Text style={isEditing ? styles.cancelText : styles.editActionText}>
+            {isEditing ? t('common.cancel') : t('common.edit')}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-
-          {/* Top Header Controls */}
-          <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuIconButton}>
-              <Menu size={28} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => isEditing ? setIsEditing(false) : setIsEditing(true)}
-              style={styles.editActionBtn}
-            >
-              <Text style={isEditing ? styles.cancelText : styles.editActionText}>
-                {isEditing ? t('common.cancel') : t('common.edit')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
           {/* Profile Hero Section */}
           <View style={styles.profileHero}>
             <View style={styles.avatarContainer}>
@@ -161,12 +161,13 @@ const SettingsScreen = () => {
             <Text style={styles.profileBusiness}>{businessName || t('settings.vendorAccount')}</Text>
           </View>
 
-          {/* Form Fields */}
-          <View style={styles.formContainer}>
+          {/* Form Fields Card */}
+          <View style={styles.cardContainer}>
             <Text style={styles.sectionTitle}>{t('settings.businessInfo')}</Text>
 
             <Text style={styles.inputLabel}>{t('settings.fullName')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
+              <User size={20} color={isEditing ? COLORS.primary : COLORS.textPlaceholder} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={name}
@@ -179,6 +180,7 @@ const SettingsScreen = () => {
 
             <Text style={styles.inputLabel}>{t('settings.businessName')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
+              <Briefcase size={20} color={isEditing ? COLORS.primary : COLORS.textPlaceholder} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={businessName}
@@ -191,6 +193,7 @@ const SettingsScreen = () => {
 
             <Text style={styles.inputLabel}>{t('settings.businessCategory')}</Text>
             <View style={[styles.inputContainer, styles.inputDisabled]}>
+              <Grid size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { color: COLORS.textPlaceholder }]}
                 value={categoryName || t('settings.notSet')}
@@ -200,6 +203,7 @@ const SettingsScreen = () => {
 
             <Text style={styles.inputLabel}>{t('settings.emailAddress')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
+              <Mail size={20} color={isEditing ? COLORS.primary : COLORS.textPlaceholder} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={email}
@@ -221,6 +225,7 @@ const SettingsScreen = () => {
               )}
             </View>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
+              <MapPin size={20} color={isEditing ? COLORS.primary : COLORS.textPlaceholder} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={address}
@@ -233,6 +238,7 @@ const SettingsScreen = () => {
 
             <Text style={styles.inputLabel}>{t('settings.city')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
+              <Map size={20} color={isEditing ? COLORS.primary : COLORS.textPlaceholder} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={city}
@@ -245,6 +251,7 @@ const SettingsScreen = () => {
 
             <Text style={styles.inputLabel}>{t('settings.pincode')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
+              <Hash size={20} color={isEditing ? COLORS.primary : COLORS.textPlaceholder} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={pincode}
@@ -258,6 +265,7 @@ const SettingsScreen = () => {
 
             <Text style={styles.inputLabel}>{t('settings.country')}</Text>
             <View style={[styles.inputContainer, !isEditing && styles.inputDisabled]}>
+              <Globe size={20} color={isEditing ? COLORS.primary : COLORS.textPlaceholder} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={country}
@@ -283,9 +291,8 @@ const SettingsScreen = () => {
           </View>
 
           {/* Preferences Section */}
-          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>{t('settings.appSettings')}</Text>
-
-          <View style={styles.preferencesContainer}>
+          <View style={[styles.cardContainer, { marginTop: 24 }]}>
+            <Text style={styles.sectionTitle}>{t('settings.appSettings')}</Text>
             <View style={styles.prefRow}>
               <View style={styles.prefLeft}>
                 <Globe size={20} color={COLORS.textSecondary} style={{ marginRight: 10 }} />
@@ -361,6 +368,42 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: COLORS.background,
+  },
+  backBtn: {
+    padding: 4,
+    marginLeft: -4,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.textPrimary,
+    marginLeft: 12,
+  },
+  editActionBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  editActionText: {
+    fontSize: 13,
+    fontFamily: 'Rubik-Bold',
+    color: '#3730A3',
+  },
+  cancelText: {
+    fontSize: 13,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.textSecondary,
+  },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -369,108 +412,107 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'ios' ? 24 : 16,
+    paddingHorizontal: 16,
     paddingBottom: 40,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  menuIconButton: {
-    padding: 4,
-    marginLeft: -4,
-  },
-  editActionBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  editActionText: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  cancelText: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: COLORS.textSecondary,
   },
   profileHero: {
     alignItems: 'center',
-    marginBottom: 36,
-    marginTop: 10,
+    marginBottom: 24,
+    backgroundColor: '#FFF',
+    paddingVertical: 24,
+    borderRadius: 20,
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   avatarContainer: {
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: COLORS.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    borderWidth: 2,
-    borderColor: COLORS.border,
+    borderWidth: 3,
+    borderColor: '#EFF6FF',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   avatarImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
   },
-  avatarText: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
   profileName: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 4,
   },
   profileBusiness: {
     fontSize: 14.5,
-    color: COLORS.textPlaceholder,
-    fontWeight: '500',
+    color: COLORS.textSecondary,
+    fontFamily: 'Rubik-SemiBold',
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontFamily: 'Rubik-Bold',
+    color: '#64748B',
     marginBottom: 20,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  formContainer: {
+  cardContainer: {
     width: '100%',
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1,
   },
   inputLabel: {
     fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginBottom: 6,
+    marginLeft: 4,
   },
   inputContainer: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
-    backgroundColor: COLORS.surface,
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    marginBottom: 20,
     height: 52,
-    justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   inputDisabled: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#F1F5F9',
-    opacity: 0.9,
+    backgroundColor: '#F1F5F9',
+    opacity: 0.7,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
+    flex: 1,
     height: '100%',
     color: COLORS.textPrimary,
     fontSize: 15,
-    paddingHorizontal: 16,
+    fontFamily: 'Rubik-Regular',
   },
   button: {
     width: '100%',
@@ -492,11 +534,6 @@ const styles = StyleSheet.create({
   },
   preferencesContainer: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
   },
   prefRow: {
     flexDirection: 'row',

@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { FileText, ChevronRight, Menu, CheckCircle } from 'lucide-react-native';
+import { FileText, ChevronRight, Menu, CheckCircle, User, Phone, IndianRupee, Package, Calendar, ArrowRight } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import CurvedHeader from '../../components/CurvedHeader';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -82,30 +83,43 @@ const UnbilledDeliveriesScreen = () => {
   const renderCustomerCard = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.customerName}>{item.customerName}</Text>
-          <Text style={styles.customerPhone}>{item.customerPhone || 'No Phone'}</Text>
+        <View style={styles.customerInfoContainer}>
+          <View style={[styles.avatarBox, { backgroundColor: '#F0F9FF' }]}>
+            <User size={20} color="#0EA5E9" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.customerName} numberOfLines={1}>{item.customerName}</Text>
+            <View style={styles.phoneRow}>
+              <Phone size={12} color={COLORS.textSecondary} style={{marginRight: 4}} />
+              <Text style={styles.customerPhone}>{item.customerPhone || 'No Phone'}</Text>
+            </View>
+          </View>
         </View>
         <View style={styles.amountContainer}>
           <Text style={styles.amountLabel}>{t('invoices.estimatedTotal')}</Text>
-          <Text style={styles.amountValue}>₹{Number(item.estimatedTotal).toFixed(2)}</Text>
+          <View style={styles.amountRow}>
+            <Text style={styles.amountValue}>₹{Number(item.estimatedTotal).toFixed(2)}</Text>
+          </View>
         </View>
       </View>
 
       <View style={styles.cardStats}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{item.uninvoicedDeliveries}</Text>
-          <Text style={styles.statLabel}>{t('deliveries.title')}</Text>
+        <View style={styles.statRow}>
+          <View style={styles.iconWrapperSmall}>
+            <Package size={14} color={COLORS.primary} />
+          </View>
+          <Text style={styles.statValueText}>{item.uninvoicedDeliveries} {t('deliveries.title') || 'Deliveries'}</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{item.earliestDeliveryDate}</Text>
-          <Text style={styles.statLabel}>{t('invoices.periodStartDate')}</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{item.latestDeliveryDate}</Text>
-          <Text style={styles.statLabel}>{t('invoices.periodEndDate')}</Text>
+        
+        <View style={styles.statRow}>
+          <View style={[styles.iconWrapperSmall, { backgroundColor: '#F8FAFC' }]}>
+            <Calendar size={14} color="#64748B" />
+          </View>
+          <View style={styles.dateTextContainer}>
+            <Text style={styles.dateText}>{item.earliestDeliveryDate}</Text>
+            <ArrowRight size={14} color="#CBD5E1" style={{marginHorizontal: 8}} />
+            <Text style={styles.dateText}>{item.latestDeliveryDate}</Text>
+          </View>
         </View>
       </View>
 
@@ -115,12 +129,13 @@ const UnbilledDeliveriesScreen = () => {
             style={styles.generateButton}
             onPress={() => handleGenerateInvoice(item.customerId, item.earliestDeliveryDate, item.latestDeliveryDate)}
             disabled={generatingForId === item.customerId}
+            activeOpacity={0.8}
           >
             {generatingForId === item.customerId ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : (
               <>
-                <CheckCircle size={16} color="#FFF" style={{ marginRight: 6 }} />
+                <FileText size={16} color="#FFF" style={{ marginRight: 6 }} />
                 <Text style={styles.generateButtonText}>{t('invoices.generateInvoices')}</Text>
               </>
             )}
@@ -133,8 +148,8 @@ const UnbilledDeliveriesScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('invoices.pendingToInvoice')}</Text>}
-        leftIcon={<Menu color="#FFF" size={24} />}
+        title={t('invoices.pendingToInvoice')}
+        leftIcon={<Menu color="#0B409C" size={24} />}
         onLeftPress={() => navigation.toggleDrawer()}
         height={130}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -179,13 +194,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
@@ -194,17 +209,17 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.primary,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -212,62 +227,94 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 16,
   },
+  customerInfoContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatarBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   customerName: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 4,
   },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   customerPhone: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
   },
   amountContainer: {
     alignItems: 'flex-end',
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
   },
   amountLabel: {
     fontSize: 10,
-    fontFamily: 'Geologica-Medium',
-    color: '#059669',
+    fontFamily: 'Rubik-Medium',
+    color: COLORS.textSecondary,
     textTransform: 'uppercase',
-    marginBottom: 2,
+    marginBottom: 4,
+    letterSpacing: 0.5,
   },
-  amountValue: {
-    fontSize: 16,
-    fontFamily: 'Geologica-Bold',
-    color: '#059669',
-  },
-  cardStats: {
+  amountRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  amountValue: {
+    fontSize: 15,
+    fontFamily: 'Rubik-Bold',
+    color: '#16A34A',
+  },
+  cardStats: {
     backgroundColor: '#F8FAFC',
     padding: 12,
     borderRadius: 12,
     marginBottom: 16,
   },
-  statItem: {
-    flex: 1,
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  iconWrapperSmall: {
+    backgroundColor: '#EFF6FF',
+    padding: 6,
+    borderRadius: 8,
+    marginRight: 10,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  statDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: '#E2E8F0',
-  },
-  statValue: {
+  statValueText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
-    marginBottom: 2,
   },
-  statLabel: {
-    fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+  dateTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  dateText: {
+    fontSize: 13,
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
   },
   cardActions: {
@@ -285,7 +332,7 @@ const styles = StyleSheet.create({
   generateButtonText: {
     color: '#FFF',
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   }
 });
 

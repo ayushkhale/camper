@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Truck, Users, Bell, CreditCard, Menu, Droplet } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +16,24 @@ import CustomerListScreen from '../Screens/Main/CustomerListScreen';
 import CurvedHeader from '../components/CurvedHeader';
 
 const Tab = createBottomTabNavigator();
+
+const CustomDropletIcon = ({ size = 20, color = "#0B409C", style }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
+    {/* Thick outer droplet path */}
+    <Path 
+      d="M12 2.5l-.27.27C7.6 7.07 4 11.23 4 15.5 4 19.92 7.58 23.5 12 23.5s8-3.58 8-8c0-4.27-3.6-8.43-7.73-12.54L12 2.5z" 
+      stroke={color} 
+      strokeWidth="2.5" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+    />
+    {/* Inner swoosh/crescent highlight */}
+    <Path 
+      d="M7 14.5 C7 17.5 9.5 20 12.5 20.5 C9 19.5 8 16.5 8.5 13.5 C8 13.8 7.5 14 7 14.5 Z"
+      fill={color}
+    />
+  </Svg>
+);
 
 const HomeHeader = () => {
   const { i18n } = useTranslation();
@@ -44,21 +63,22 @@ const HomeHeader = () => {
     <CurvedHeader
       height={120}
       contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
-      leftIcon={<Menu color="#FFF" size={28} strokeWidth={2} />}
+      leftIcon={<Menu color="#0B409C" size={28} strokeWidth={2} />}
       onLeftPress={() => navigation.toggleDrawer()}
       title={
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Droplet color="#FFF" fill="#FFF" size={20} style={{ marginRight: 6 }} />
-          <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Medium', letterSpacing: 0.5 }}>
-            Camper
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -8 }}>
+          <Image 
+            source={require('../../assets/logo1.png')} 
+            style={{ width: 140, height: 38 }}
+            resizeMode="contain" 
+          />
         </View>
       }
       rightIcon={
         vendorLogo ? (
-          <Image source={{ uri: vendorLogo }} style={[styles.vendorAvatar, { borderColor: '#FFF', borderWidth: 2 }]} />
+          <Image source={{ uri: vendorLogo }} style={[styles.vendorAvatar, { borderColor: '#0B409C', borderWidth: 2 }]} />
         ) : (
-          <Image source={require('../../assets/customerfallback.png')} style={[styles.vendorAvatar, { borderColor: '#FFF', borderWidth: 2 }]} />
+          <Image source={require('../../assets/customerfallback.png')} style={[styles.vendorAvatar, { borderColor: '#0B409C', borderWidth: 2 }]} />
         )
       }
       onRightPress={() => navigation.navigate('MainDrawer', { screen: 'Settings' })}
@@ -100,7 +120,7 @@ const MainTabs = () => {
         },
         tabBarLabelStyle: {
           fontSize: 10,
-          fontFamily: 'Geologica-Medium',
+          fontFamily: 'Rubik-SemiBold',
           marginTop: 4,
         },
         tabBarIcon: ({ focused }) => {
@@ -133,7 +153,7 @@ const MainTabs = () => {
             <Text style={{
               color,
               fontSize: 10,
-              fontFamily: focused ? 'Geologica-Bold' : 'Geologica-Medium',
+              fontFamily: focused ? 'Rubik-Bold' : 'Rubik-SemiBold',
               marginTop: 4
             }}>
               {label}

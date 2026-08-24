@@ -11,7 +11,9 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Search, AlertCircle, RefreshCw, Package, MapPin, Calendar, Clock, ChevronLeft, ChevronRight, Repeat, User } from 'lucide-react-native';
+import { Plus, Search, AlertCircle, RefreshCw, Package, MapPin, Calendar, Clock, ChevronLeft, ChevronRight, Repeat, User , ArrowLeft } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -62,10 +64,10 @@ const SubscriptionListScreen = () => {
 
   const getStatusColors = (status) => {
     switch (status) {
-      case 'active': return { dot: '#16A34A', text: '#15803D' };
-      case 'paused': return { dot: '#D97706', text: '#B45309' };
-      case 'ended': return { dot: '#94A3B8', text: '#64748B' };
-      default: return { dot: '#94A3B8', text: '#64748B' };
+      case 'active': return { border: '#10B981', badgeBg: '#D1FAE5', badgeText: '#10B981' };
+      case 'paused': return { border: '#F59E0B', badgeBg: '#FEF3C7', badgeText: '#D97706' };
+      case 'ended': return { border: '#94A3B8', badgeBg: '#F1F5F9', badgeText: '#64748B' };
+      default: return { border: '#94A3B8', badgeBg: '#F1F5F9', badgeText: '#64748B' };
     }
   };
 
@@ -96,44 +98,68 @@ const SubscriptionListScreen = () => {
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[
+          styles.card, 
+          { borderLeftWidth: 4, borderLeftColor: statusColors.border }
+        ]}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('SubscriptionDetail', { subscriptionId: item.id, subscription: item })}
       >
-        <View style={styles.cardHeader}>
+        <LinearGradient
+          colors={['#FFFFFF', '#F8FAFC']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardInner}
+        >
+          {/* Decorative Background Circles */}
+          <View style={StyleSheet.absoluteFillObject}>
+            <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+              <Circle cx="-5%" cy="-20%" r="55" fill="#F1F5F9" />
+              <Circle cx="105%" cy="120%" r="65" fill="#E2E8F0" opacity="0.5" />
+            </Svg>
+          </View>
+
+          {/* Icon Left */}
           <View style={styles.iconBox}>
-            <Package size={22} color={COLORS.primary} />
+            <Package size={24} color={COLORS.primary} />
+            <View style={[
+              styles.avatarBadge,
+              { backgroundColor: statusColors.border }
+            ]} />
           </View>
+
+          {/* Center Details */}
           <View style={styles.titleContainer}>
-            <Text style={styles.customerName} numberOfLines={1}>
-              {item.Customer?.name || 'Unknown Customer'}
-            </Text>
-            <Text style={styles.subText} numberOfLines={1}>
-              {item.Product?.name || 'Product'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <Text style={[styles.customerName, { marginBottom: 0 }]} numberOfLines={1}>
+                {item.Customer?.name || 'Unknown Customer'}
+              </Text>
+            </View>
+            
+            <View style={styles.infoRow}>
+              <Repeat size={12} color="#64748B" style={{ marginRight: 4 }} />
+              <Text style={styles.subText} numberOfLines={1}>
+                {item.Product?.name || 'Product'} • {t('subscriptions.qty')}: {item.baseQuantity} • {formatRecurrence(item.recurrencePattern)}
+              </Text>
+            </View>
           </View>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
-            <Text style={[styles.statusText, { color: statusColors.text }]}>
-              {item.status === 'active' ? t('subscriptions.active').toUpperCase() 
-               : item.status === 'paused' ? t('subscriptions.paused').toUpperCase() 
-               : item.status === 'ended' ? t('subscriptions.ended').toUpperCase() 
-               : (item.status || 'active').toUpperCase()}
-            </Text>
-          </View>
-        </View>
 
-        <View style={styles.divider} />
+          {/* Right Action & Status */}
+          <View style={styles.rightActionContainer}>
+            <View style={styles.statusCol}>
+              <View style={[styles.statusBadge, { backgroundColor: statusColors.badgeBg }]}>
+                <Text style={[styles.statusBadgeText, { color: statusColors.badgeText }]}>
+                  {item.status === 'active' ? t('subscriptions.active') 
+                   : item.status === 'paused' ? t('subscriptions.paused') 
+                   : item.status === 'ended' ? t('subscriptions.ended') 
+                   : (item.status || 'active')}
+                </Text>
+              </View>
+            </View>
 
-        <View style={styles.cardFooter}>
-          <View style={styles.metaContainer}>
-            <Repeat size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-            <Text style={styles.metaText} numberOfLines={1}>
-              {t('subscriptions.qty')}: {item.baseQuantity} • {formatRecurrence(item.recurrencePattern)}
-            </Text>
+            <ChevronRight size={18} color="#94A3B8" />
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} />
-        </View>
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
@@ -141,8 +167,8 @@ const SubscriptionListScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('subscriptions.title', 'Subscriptions')}</Text>}
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={t('subscriptions.title', 'Subscriptions')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 35 }}
@@ -302,7 +328,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontSize: 15,
     paddingVertical: 0,
   },
@@ -312,7 +338,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     borderRadius: 12,
     padding: 4,
-    marginTop: -25, // Overlap the curved header
+    marginTop: 10,
     marginBottom: 20,
     elevation: 2,
     shadowColor: '#000',
@@ -337,11 +363,11 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#64748B',
   },
   tabTextActive: {
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   listContent: {
@@ -355,86 +381,85 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
     marginBottom: 12,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    borderColor: '#F1F5F9',
+    overflow: 'hidden',
   },
-  cardHeader: {
+  cardInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
   },
   iconBox: {
-    width: 44,
-    height: 44,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
+  },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   titleContainer: {
     flex: 1,
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  subText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 14,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
-  },
-  metaText: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
+    fontFamily: 'Rubik-Bold',
+    color: '#1E293B',
+    marginBottom: 6,
     flexShrink: 1,
   },
-  statusBadge: {
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    marginBottom: 4,
   },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  statusText: {
+  subText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    color: '#64748B',
+    fontFamily: 'Rubik-Medium',
+  },
+  rightActionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  statusCol: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginRight: 8,
+    minWidth: 50,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Rubik-Bold',
+    textTransform: 'capitalize',
   },
   centerContainer: {
     flex: 1,
@@ -445,12 +470,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -465,7 +490,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 15,
   },
   emptyContainer: {
@@ -474,7 +499,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
@@ -484,7 +509,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 24,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   emptyAddBtn: {
     flexDirection: 'row',
@@ -496,7 +521,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 15,
   },
   fab: {
@@ -518,3 +543,4 @@ const styles = StyleSheet.create({
 });
 
 export default SubscriptionListScreen;
+

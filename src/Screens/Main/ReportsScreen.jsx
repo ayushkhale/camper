@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, ChevronDown, Filter, X, MapPin, User, Calendar as CalendarIcon, CheckCircle, IndianRupee, Package, AlertCircle } from 'lucide-react-native';
+import { ChevronLeft, ChevronDown, Filter, X, MapPin, User, Calendar as CalendarIcon, CheckCircle, IndianRupee, Package, AlertCircle , ArrowLeft} from 'lucide-react-native';
 import CurvedHeader from '../../components/CurvedHeader';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -26,27 +26,28 @@ import OutstandingReport from '../../components/reports/OutstandingReport';
 import OperationsReport from '../../components/reports/OperationsReport';
 import InventoryReport from '../../components/reports/InventoryReport';
 
-const PRESETS = [
-  { id: '7_days', label: 'Last 7 Days' },
-  { id: 'last_week', label: 'Last Week' },
-  { id: '15_days', label: 'Last 15 Days' },
-  { id: '30_days', label: 'Last 30 Days' },
-  { id: 'last_month', label: 'Last Month' },
-  { id: '3_months', label: 'Last 3 Months' },
-  { id: 'custom', label: 'Custom Range' },
-];
-
-const TABS = [
-  { id: 'financials', label: 'Financials', icon: IndianRupee },
-  { id: 'outstanding', label: 'Outstanding', icon: AlertCircle },
-  { id: 'operations', label: 'Operations', icon: CheckCircle },
-  { id: 'inventory', label: 'Inventory', icon: Package },
-];
 
 const ReportsScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
+
+  const PRESETS = [
+    { id: '7_days', label: t('reports.last7Days') },
+    { id: 'last_week', label: t('reports.lastWeek') },
+    { id: '15_days', label: t('reports.last15Days') },
+    { id: '30_days', label: t('reports.last30Days') },
+    { id: 'last_month', label: t('reports.lastMonth') },
+    { id: '3_months', label: t('reports.last3Months') },
+    { id: 'custom', label: t('reports.customRange') },
+  ];
+
+  const TABS = [
+    { id: 'financials', label: t('reports.financials'), icon: IndianRupee },
+    { id: 'outstanding', label: t('reports.outstanding'), icon: AlertCircle },
+    { id: 'operations', label: t('reports.operations'), icon: CheckCircle },
+    { id: 'inventory', label: t('reports.inventory'), icon: Package },
+  ];
 
   // Filters State
   const [activeTab, setActiveTab] = useState('financials');
@@ -93,21 +94,21 @@ const ReportsScreen = () => {
   };
 
   const getPresetLabel = () => {
-    if (rangePreset === 'custom') return 'Custom Range';
+    if (rangePreset === 'custom') return t('reports.customRange');
     const preset = PRESETS.find(p => p.id === rangePreset);
-    return preset ? preset.label : 'Select Date';
+    return preset ? preset.label : t('reports.selectDate');
   };
 
   const getRouteLabel = () => {
-    if (!routeId) return 'All Routes';
+    if (!routeId) return t('reports.allRoutes');
     const route = routes.find(r => String(r.id) === String(routeId));
-    return route ? route.name : 'All Routes';
+    return route ? route.name : t('reports.allRoutes');
   };
 
   const getStaffLabel = () => {
-    if (!staffId) return 'All Staff';
+    if (!staffId) return t('reports.allStaff');
     const staff = staffList.find(s => String(s.id) === String(staffId));
-    return staff ? staff.name : 'All Staff';
+    return staff ? staff.name : t('reports.allStaff');
   };
 
   const renderActiveTab = () => {
@@ -159,18 +160,18 @@ const ReportsScreen = () => {
         
         const diffDays = (parseDateString(newToDate).getTime() - parseDateString(formatted).getTime()) / (1000 * 3600 * 24);
         if (diffDays > 90) {
-          Alert.alert('Invalid Range', 'Custom date range cannot exceed 90 days.');
+          Alert.alert(t('reports.invalidRange'), t('reports.customDateLimit'));
           return;
         }
         setCustomFrom(formatted);
       } else if (pickerType === 'to') {
         if (formatted <= customFrom) {
-          Alert.alert('Invalid Range', 'End date must be strictly after Start date.');
+          Alert.alert(t('reports.invalidRange'), t('reports.endDateAfterStart'));
           return;
         }
         const diffDays = (parseDateString(formatted).getTime() - parseDateString(customFrom).getTime()) / (1000 * 3600 * 24);
         if (diffDays > 90) {
-          Alert.alert('Invalid Range', 'Custom date range cannot exceed 90 days.');
+          Alert.alert(t('reports.invalidRange'), t('reports.customDateLimit'));
           return;
         }
         setCustomTo(formatted);
@@ -191,18 +192,18 @@ const ReportsScreen = () => {
     let currentValue = '';
 
     if (activeSelect === 'preset') {
-      title = 'Select Date Range';
+      title = t('reports.selectDateRange');
       options = PRESETS;
       currentValue = rangePreset;
       onSelect = (val) => { setRangePreset(val); setFilterModalVisible(false); };
     } else if (activeSelect === 'route') {
-      title = 'Select Route';
-      options = [{ id: '', label: 'All Routes' }, ...routes.map(r => ({ id: r.id, label: r.name }))];
+      title = t('reports.selectRoute');
+      options = [{ id: '', label: t('reports.allRoutes') }, ...routes.map(r => ({ id: r.id, label: r.name }))];
       currentValue = routeId;
       onSelect = (val) => { setRouteId(val); setFilterModalVisible(false); };
     } else if (activeSelect === 'staff') {
-      title = 'Select Staff';
-      options = [{ id: '', label: 'All Staff' }, ...staffList.map(s => ({ id: s.id, label: s.name }))];
+      title = t('reports.selectStaff');
+      options = [{ id: '', label: t('reports.allStaff') }, ...staffList.map(s => ({ id: s.id, label: s.name }))];
       currentValue = staffId;
       onSelect = (val) => { setStaffId(val); setFilterModalVisible(false); };
     }
@@ -245,8 +246,8 @@ const ReportsScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title="Business Reports"
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={t('reports.title') || 'Business Reports'}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={110}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 15 }}
@@ -297,13 +298,13 @@ const ReportsScreen = () => {
                 style={styles.filterPill}
                 onPress={() => setActiveDatePicker('from')}
               >
-                <Text style={styles.filterText}>Fr: {formatDisplayDate(customFrom)}</Text>
+                <Text style={styles.filterText}>{t('reports.from') || 'Fr:'} {formatDisplayDate(customFrom)}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.filterPill}
                 onPress={() => setActiveDatePicker('to')}
               >
-                <Text style={styles.filterText}>To: {formatDisplayDate(customTo)}</Text>
+                <Text style={styles.filterText}>{t('reports.to') || 'To:'} {formatDisplayDate(customTo)}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -378,12 +379,12 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#64748B',
   },
   tabTextActive: {
     color: '#FFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   filterContainer: {
     backgroundColor: '#FFF',
@@ -410,7 +411,7 @@ const styles = StyleSheet.create({
   },
   filterText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   body: {
@@ -436,7 +437,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   modalCloseBtn: {
@@ -455,13 +456,14 @@ const styles = StyleSheet.create({
   },
   modalOptionText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   modalOptionTextSelected: {
     color: COLORS.primary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 });
 
 export default ReportsScreen;
+

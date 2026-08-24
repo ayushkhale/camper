@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Rect } from 'react-native-svg';
 import { ChevronRight, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
@@ -45,12 +46,13 @@ const CustomDrawerContent = (props) => {
     { title: t('deliveries.allRoutes'), type: 'navigate', screen: 'RouteList' },
     { title: t('tabs.customers'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Customers' } },
     { title: t('deliveries.unbilledDeliveries'), type: 'navigate', screen: 'UnbilledDeliveries', ownerOnly: true },
+    { title: t('invoices.title'), type: 'navigate', screen: 'InvoiceList' },
     { title: t('routes.customerSequence'), type: 'navigate', screen: 'RouteBuilder', ownerOnly: true },
     { title: t('subscriptions.title'), type: 'navigate', screen: 'SubscriptionList' },
     { title: t('oneTimeOrders.title'), type: 'navigate', screen: 'OneTimeOrderList' },
     { title: t('products.title'), type: 'navigate', screen: 'ProductCatalog' },
     { title: t('staff.title'), type: 'navigate', screen: 'StaffManagement', ownerOnly: true },
-    { title: 'Reports & Analytics', type: 'navigate', screen: 'Reports', ownerOnly: true },
+    { title: t('tabs.reports') || 'Reports & Analytics', type: 'navigate', screen: 'Reports', ownerOnly: true },
     { title: t('settings.title'), type: 'navigate', screen: 'Settings', ownerOnly: true },
     { title: t('settings.logout'), type: 'logout' },
   ];
@@ -80,6 +82,21 @@ const CustomDrawerContent = (props) => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left']}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+        <View style={StyleSheet.absoluteFill}>
+          <Svg height="100%" width="100%">
+            <Defs>
+              <SvgLinearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0%" stopColor="#9DCFFD" />
+                <Stop offset="25%" stopColor="#BEDDFE" />
+                <Stop offset="50%" stopColor="#D6E9FC" />
+                <Stop offset="75%" stopColor="#C1DFFE" />
+                <Stop offset="100%" stopColor="#A1D0FD" />
+              </SvgLinearGradient>
+            </Defs>
+            <Rect width="100%" height="100%" fill="url(#bgGrad)" />
+          </Svg>
+        </View>
+
         <View style={styles.headerLeft}>
           <Text style={styles.businessName} numberOfLines={1}>
             {businessName}
@@ -88,11 +105,6 @@ const CustomDrawerContent = (props) => {
             {ownerName}
           </Text>
           <Text style={styles.roleText}>{roleDisplay}</Text>
-        </View>
-
-        {/* User Avatar Circle */}
-        <View style={styles.avatarCircle}>
-          <Image source={require('../../assets/fallbackimage.png')} style={styles.avatarImage} />
         </View>
       </View>
 
@@ -107,7 +119,7 @@ const CustomDrawerContent = (props) => {
           if (props.state && item.type === 'navigate') {
             const currentRoute = props.state.routes[props.state.index];
             isActive = currentRoute.name === item.screen;
-            
+
             if (isActive && item.params?.screen) {
               if (currentRoute.state) {
                 // Check nested tab state
@@ -166,21 +178,21 @@ const styles = StyleSheet.create({
   },
   businessName: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
-    color: '#FFFFFF',
+    fontFamily: 'Rubik-Bold',
+    color: '#0B409C',
     fontWeight: '700',
     marginBottom: 4,
   },
   ownerName: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
-    color: '#CBD5E1',
+    fontFamily: 'Rubik-SemiBold',
+    color: '#1E293B',
     marginBottom: 2,
   },
   roleText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Regular',
-    color: '#94A3B8',
+    fontFamily: 'Rubik-Medium',
+    color: '#334155',
   },
   avatarCircle: {
     width: 52,
@@ -190,6 +202,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#0B409C',
   },
   avatarImage: {
     width: '100%',
@@ -219,7 +233,7 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 14.5,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     fontWeight: '500',
   },

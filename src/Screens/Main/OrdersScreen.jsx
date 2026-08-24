@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Truck, Package, CheckSquare, XCircle, ChevronRight, ChevronDown, ChevronUp, X, Play, Calendar, MapPin, AlertCircle, Edit2, Save, MoreVertical, Activity, FileText, Menu, User
+  Truck, Package, CheckSquare, XCircle, ChevronRight, ChevronDown, ChevronUp, X, Play, Calendar, MapPin, AlertCircle, Edit2, Save, MoreVertical, Activity, FileText, Menu, User, Droplet, RefreshCw
 } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
@@ -85,7 +85,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t, isLo
   };
 
   return (
-    <View style={[styles.deliveryCardWrapperOptionC, isExpanded && styles.deliveryCardExpandedOptionC]}>
+    <View style={[styles.deliveryCardWrapperOptionC, isExpanded && styles.deliveryCardExpandedOptionC, { borderLeftWidth: 4, borderLeftColor: getStatusColor ? (getStatusColor(delivery.status)?.dot || getStatusColor(delivery.status)) : '#EAB308', borderStyle: 'solid' }]}>
       {updating && isExpanded && (
         <View style={styles.cardUpdatingOverlay}>
           <ActivityIndicator color={COLORS.primary} />
@@ -105,9 +105,15 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t, isLo
             {delivery.Customer?.name || 'Unknown Customer'}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-            <Package size={12} color="#64748B" style={{ marginRight: 4 }} />
+            <Package size={11} color="#64748B" style={{ marginRight: 4 }} />
             <Text style={styles.subTextOptionC} numberOfLines={1}>
-              {delivery.Subscription?.Product?.name || (delivery.oneTimeOrderId ? 'One-Time Order' : 'Water Camper 20Ltr')} • Qty: {delivery.Subscription?.baseQuantity || delivery.expectedAddonUnits || delivery.fullUnitsDelivered || 1}
+              {delivery.Subscription?.Product?.name || (delivery.oneTimeOrderId ? 'One-Time Order' : 'Water Camper 20L')}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+            <MapPin size={11} color="#64748B" style={{ marginRight: 4 }} />
+            <Text style={styles.subTextOptionC} numberOfLines={1}>
+              {delivery.Customer?.address || delivery.Customer?.Address?.addressLine1 || 'No Address'}
             </Text>
           </View>
         </View>
@@ -184,12 +190,18 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t, isLo
             <View style={styles.sliderSectionOptionC}>
               <View style={styles.sliderUnitsRowOptionC}>
                 <View style={styles.sliderUnitOptionC}>
-                  <Text style={styles.sliderUnitLabelOptionC}>{t ? t('deliveries.emptyJars') : 'Empty Jars'}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <Package size={16} color="#3B82F6" style={{ marginRight: 8 }} />
+                    <Text style={styles.sliderUnitLabelOptionC}>{t ? t('deliveries.emptyJars') : 'Empty Jars'}</Text>
+                  </View>
                   <Text style={styles.sliderUnitValueOptionC}>{emptyUnits}</Text>
                 </View>
                 <View style={[styles.sliderUnitOptionC, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
-                  <Text style={[styles.sliderUnitLabelOptionC, { color: '#0B409C' }]}>{t ? t('deliveries.delivered') : 'Delivered'}</Text>
-                  <Text style={[styles.sliderUnitValueOptionC, { color: '#0B409C' }]}>{fullUnits}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <Droplet size={16} color="#3B82F6" style={{ marginRight: 8 }} />
+                    <Text style={[styles.sliderUnitLabelOptionC, { color: '#64748B' }]}>{t ? t('deliveries.delivered') : 'Delivered'}</Text>
+                  </View>
+                  <Text style={[styles.sliderUnitValueOptionC, { color: '#0F172A' }]}>{fullUnits}</Text>
                 </View>
               </View>
               <DeliveryStatusSlider
@@ -229,7 +241,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t, isLo
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                 <TouchableOpacity
                   style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
-                    selectedEditStatus === 'skipped' && { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }
+                  selectedEditStatus === 'skipped' && { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }
                   ]}
                   onPress={() => setSelectedEditStatus('skipped')}
                   activeOpacity={0.7}
@@ -241,7 +253,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t, isLo
 
                 <TouchableOpacity
                   style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
-                    selectedEditStatus === 'pending' && { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }
+                  selectedEditStatus === 'pending' && { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }
                   ]}
                   onPress={() => setSelectedEditStatus('pending')}
                   activeOpacity={0.7}
@@ -253,7 +265,7 @@ const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t, isLo
 
                 <TouchableOpacity
                   style={[{ flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
-                    selectedEditStatus === 'delivered' && { backgroundColor: '#ECFDF5', borderColor: '#10B981' }
+                  selectedEditStatus === 'delivered' && { backgroundColor: '#ECFDF5', borderColor: '#10B981' }
                   ]}
                   onPress={() => setSelectedEditStatus('delivered')}
                   activeOpacity={0.7}
@@ -332,6 +344,7 @@ const OrdersScreen = () => {
   const [allDeliveries, setAllDeliveries] = useState([]);
   const [loadingDeliveries, setLoadingDeliveries] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [expandedCardId, setExpandedCardId] = useState(null);
 
   // Modal State
   const [activeFilterModal, setActiveFilterModal] = useState(null); // 'route' | 'status' | null
@@ -469,7 +482,7 @@ const OrdersScreen = () => {
     switch (status) {
       case 'delivered': return { dot: '#16A34A', text: '#15803D' };
       case 'skipped': return { dot: '#EF4444', text: '#B91C1C' };
-      default: return { dot: '#D97706', text: '#B45309' }; // pending
+      default: return { dot: '#EAB308', text: '#CA8A04' }; // pending
     }
   };
 
@@ -512,8 +525,8 @@ const OrdersScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title="Today's Deliveries"
-        leftIcon={<Menu size={24} color="#FFF" />}
+        title={t('home.todaysDeliveries') || "Today's Deliveries"}
+        leftIcon={<Menu size={24} color="#0B409C" />}
         onLeftPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -529,10 +542,11 @@ const OrdersScreen = () => {
                 onPress={() => setActiveFilterModal('route')}
                 activeOpacity={0.7}
               >
-                <MapPin size={16} color="#334155" style={{ marginRight: 8 }} />
+                <MapPin size={16} color="#3B82F6" style={{ marginRight: 8 }} />
                 <Text style={styles.filterBtnTextOptionC} numberOfLines={1}>
                   {selectedRouteId ? (routes.find(r => String(r.id) === String(selectedRouteId))?.name || 'Route') : t('deliveries.allRoutes')}
                 </Text>
+                <ChevronDown size={16} color="#64748B" style={{ marginLeft: 8 }} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -540,10 +554,11 @@ const OrdersScreen = () => {
                 onPress={() => setActiveFilterModal('status')}
                 activeOpacity={0.7}
               >
-                <Truck size={16} color="#334155" style={{ marginRight: 8 }} />
+                <Truck size={16} color="#3B82F6" style={{ marginRight: 8 }} />
                 <Text style={styles.filterBtnTextOptionC} numberOfLines={1}>
                   {selectedStatus === 'pending' ? t('deliveries.pending') : selectedStatus === 'completed' ? t('deliveries.completed') : selectedStatus === 'skipped' ? t('deliveries.skipped') : t('common.all')}
                 </Text>
+                <ChevronDown size={16} color="#64748B" style={{ marginLeft: 8 }} />
               </TouchableOpacity>
             </View>
 
@@ -554,14 +569,14 @@ const OrdersScreen = () => {
               activeOpacity={0.7}
             >
               {generating ? (
-                <ActivityIndicator size="small" color="#0B409C" />
+                <ActivityIndicator size="small" color="#3B82F6" />
               ) : (
                 <>
-                  <FileText size={18} color="#0B409C" style={{ marginRight: 8 }} />
+                  <RefreshCw size={18} color="#3B82F6" style={{ marginRight: 8 }} />
                   <Text style={styles.generateBtnTextOptionC}>
                     {Array.isArray(allDeliveries) && allDeliveries.length === 0
                       ? t('deliveries.generateForToday')
-                      : t('deliveries.refresh')}
+                      : (t('common.refresh') || 'Refresh')}
                   </Text>
                 </>
               )}
@@ -570,15 +585,21 @@ const OrdersScreen = () => {
 
           <View style={styles.linearProgressCard}>
             <View style={styles.linearProgressInner}>
+              <View style={styles.statsIconCircle}>
+                <Package size={20} color="#3B82F6" />
+              </View>
+
               <View style={styles.linearProgressMain}>
                 <View style={styles.linearProgressHeader}>
                   <Text style={styles.linearProgressStats}>
-                    <Text style={styles.linearProgressStatsBig}>{completedDeliveries}</Text> <Text style={styles.linearProgressStatsSmall}>/ {totalDeliveries} Delivered</Text>
+                    <Text style={styles.linearProgressStatsBig}>{completedDeliveries}</Text>
+                    <Text style={styles.linearProgressStatsSmall}> / {totalDeliveries} Delivered</Text>
                   </Text>
                 </View>
                 <View style={styles.linearProgressBarBg}>
                   <View style={[styles.linearProgressBarFill, { width: `${deliveryProgress}%` }]} />
                 </View>
+                <Text style={styles.linearProgressPercentText}>{deliveryProgress}%</Text>
               </View>
 
               <View style={styles.linearProgressDivider} />
@@ -610,22 +631,25 @@ const OrdersScreen = () => {
                 <Text style={styles.emptySubtitle}>{t('deliveries.emptyDeliveriesSub')}</Text>
               </View>
             ) : (
-              filteredDeliveries.map((delivery, idx) => {
+              filteredDeliveries.map((item, idx) => {
                 const todayStr = new Date().toISOString().split('T')[0];
                 const isPastDate = selectedDate < todayStr;
-                const isLocked = user?.role === 'staff' && (delivery.status !== 'pending' || !!delivery.invoiceId || isPastDate);
+                const isLocked = user?.role === 'staff' && (item.status !== 'pending' || !!item.invoiceId || isPastDate);
 
                 return (
-                <DeliveryCard
-                  key={delivery.id}
-                  delivery={delivery}
-                  index={idx + 1}
-                  onUpdateStatus={handleDeliveryUpdate}
-                  getStatusColor={getStatusColor}
-                  t={t}
-                  isLocked={isLocked}
-                />
-              )})
+                  <DeliveryCard
+                    key={item.id}
+                    delivery={item}
+                    index={idx + 1}
+                    onUpdateStatus={handleDeliveryUpdate}
+                    getStatusColor={getStatusColor}
+                    t={t}
+                    isLocked={isLocked}
+                    isExpanded={expandedCardId === item.id}
+                    onToggleExpand={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
+                  />
+                )
+              })
             )}
           </View>
 
@@ -657,7 +681,7 @@ const OrdersScreen = () => {
                   style={styles.filterModalItem}
                   onPress={() => { setSelectedRouteId(''); setActiveFilterModal(null); }}
                 >
-                  <Text style={[styles.filterModalItemText, !selectedRouteId && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
+                  <Text style={[styles.filterModalItemText, !selectedRouteId && { color: COLORS.primary, fontFamily: 'Rubik-Bold' }]}>
                     {t('deliveries.allRoutes')}
                   </Text>
                 </TouchableOpacity>
@@ -667,7 +691,7 @@ const OrdersScreen = () => {
                     style={styles.filterModalItem}
                     onPress={() => { setSelectedRouteId(r.id); setActiveFilterModal(null); }}
                   >
-                    <Text style={[styles.filterModalItemText, selectedRouteId === r.id && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
+                    <Text style={[styles.filterModalItemText, selectedRouteId === r.id && { color: COLORS.primary, fontFamily: 'Rubik-Bold' }]}>
                       {r.name}
                     </Text>
                   </TouchableOpacity>
@@ -704,7 +728,7 @@ const OrdersScreen = () => {
                   style={styles.filterModalItem}
                   onPress={() => { setSelectedStatus('pending'); setActiveFilterModal(null); }}
                 >
-                  <Text style={[styles.filterModalItemText, selectedStatus === 'pending' && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
+                  <Text style={[styles.filterModalItemText, selectedStatus === 'pending' && { color: COLORS.primary, fontFamily: 'Rubik-Bold' }]}>
                     {t('deliveries.pending')}
                   </Text>
                 </TouchableOpacity>
@@ -714,7 +738,7 @@ const OrdersScreen = () => {
                   style={styles.filterModalItem}
                   onPress={() => { setSelectedStatus('completed'); setActiveFilterModal(null); }}
                 >
-                  <Text style={[styles.filterModalItemText, selectedStatus === 'completed' && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
+                  <Text style={[styles.filterModalItemText, selectedStatus === 'completed' && { color: COLORS.primary, fontFamily: 'Rubik-Bold' }]}>
                     {t('deliveries.completed')}
                   </Text>
                 </TouchableOpacity>
@@ -724,7 +748,7 @@ const OrdersScreen = () => {
                   style={styles.filterModalItem}
                   onPress={() => { setSelectedStatus('skipped'); setActiveFilterModal(null); }}
                 >
-                  <Text style={[styles.filterModalItemText, selectedStatus === 'skipped' && { color: COLORS.danger || '#EF4444', fontFamily: 'Geologica-Bold' }]}>
+                  <Text style={[styles.filterModalItemText, selectedStatus === 'skipped' && { color: COLORS.danger || '#EF4444', fontFamily: 'Rubik-Bold' }]}>
                     {t('deliveries.skipped')}
                   </Text>
                 </TouchableOpacity>
@@ -734,7 +758,7 @@ const OrdersScreen = () => {
                   style={styles.filterModalItem}
                   onPress={() => { setSelectedStatus('all'); setActiveFilterModal(null); }}
                 >
-                  <Text style={[styles.filterModalItemText, selectedStatus === 'all' && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
+                  <Text style={[styles.filterModalItemText, selectedStatus === 'all' && { color: COLORS.primary, fontFamily: 'Rubik-Bold' }]}>
                     {t('common.all')}
                   </Text>
                 </TouchableOpacity>
@@ -779,13 +803,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 26,
     fontWeight: 'bold',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#0F172A',
   },
   headerSubtitle: {
     fontSize: 13,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     marginTop: 4,
   },
   topHeaderIconBtn: {
@@ -817,7 +841,7 @@ const styles = StyleSheet.create({
   },
   calendarTitle: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   calHeaderLeft: {
@@ -837,7 +861,7 @@ const styles = StyleSheet.create({
   },
   todayPillText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   calendarIconBtn: {
@@ -870,7 +894,7 @@ const styles = StyleSheet.create({
   },
   dayName: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -889,7 +913,7 @@ const styles = StyleSheet.create({
   },
   dayNumber: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   dayNumberSelected: {
@@ -912,7 +936,7 @@ const styles = StyleSheet.create({
   },
   filterDropdownText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     flex: 1,
   },
@@ -929,7 +953,7 @@ const styles = StyleSheet.create({
   },
   generateBtnTextThick: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#1D4ED8',
   },
   loadingContainer: {
@@ -939,7 +963,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   deliveriesContainer: {
@@ -956,13 +980,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
     textAlign: 'center',
   },
@@ -1000,7 +1024,7 @@ const styles = StyleSheet.create({
   },
   editToggleText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   routeGroup: {
@@ -1014,7 +1038,7 @@ const styles = StyleSheet.create({
   },
   routeTitle: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#1D4ED8',
     letterSpacing: 0.5,
     borderBottomWidth: 2,
@@ -1031,7 +1055,7 @@ const styles = StyleSheet.create({
   },
   routeBadgeText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#1D4ED8',
   },
   sliderSection: {
@@ -1063,11 +1087,11 @@ const styles = StyleSheet.create({
   },
   sliderUnitLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   sliderUnitValue: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   cardUpdatingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -1083,7 +1107,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#0d66beff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -1117,13 +1141,13 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   subText: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     marginTop: 2,
   },
   statusBadge: {
@@ -1138,7 +1162,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     letterSpacing: 0.5,
   },
   divider: {
@@ -1159,13 +1183,13 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     flexShrink: 1,
   },
   qtyText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
 
@@ -1189,7 +1213,7 @@ const styles = StyleSheet.create({
   },
   inlineInputLabel: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
@@ -1201,7 +1225,7 @@ const styles = StyleSheet.create({
     height: 40,
     paddingHorizontal: 10,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   inlineSaveBtn: {
@@ -1215,7 +1239,7 @@ const styles = StyleSheet.create({
   inlineSaveBtnText: {
     color: '#FFF',
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 
   // Modals
@@ -1241,18 +1265,18 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   modalSubtitle: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -1276,7 +1300,7 @@ const styles = StyleSheet.create({
   },
   statusOptionText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
   },
   statusOptionTextActive: {
@@ -1297,7 +1321,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -1312,7 +1336,7 @@ const styles = StyleSheet.create({
   submitBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   filterModalContent: {
     width: '100%',
@@ -1329,7 +1353,7 @@ const styles = StyleSheet.create({
   },
   filterModalItemText: {
     fontSize: 14.5,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   skeletonCard: {
@@ -1384,7 +1408,7 @@ const styles = StyleSheet.create({
   },
   filterBtnTextOptionC: {
     color: '#0F172A',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   generateBtnOptionC: {
@@ -1399,7 +1423,7 @@ const styles = StyleSheet.create({
   },
   generateBtnTextOptionC: {
     color: '#0B409C',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 15,
   },
 
@@ -1446,31 +1470,31 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   iconBoxOptionC: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    marginRight: 12,
   },
   iconBoxTextOptionC: {
-    color: '#0B409C',
-    fontFamily: 'Geologica-Bold',
-    fontSize: 18,
+    color: '#3B82F6',
+    fontFamily: 'Rubik-Bold',
+    fontSize: 15,
   },
   titleContainerOptionC: {
     flex: 1,
     marginRight: 12,
   },
   customerNameOptionC: {
-    fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontSize: 15,
+    fontFamily: 'Rubik-Bold',
     color: '#0F172A',
   },
   subTextOptionC: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
     color: '#64748B',
     flexShrink: 1,
   },
@@ -1515,7 +1539,7 @@ const styles = StyleSheet.create({
   },
   editToggleTextOptionC: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#0B409C',
   },
   sliderSectionOptionC: {
@@ -1540,12 +1564,12 @@ const styles = StyleSheet.create({
   },
   sliderUnitLabelOptionC: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#475569',
   },
   sliderUnitValueOptionC: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#0F172A',
   },
 
@@ -1563,7 +1587,7 @@ const styles = StyleSheet.create({
   },
   inlineInputLabelOptionC: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#64748B',
     marginBottom: 6,
     marginLeft: 4,
@@ -1576,7 +1600,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#0F172A',
   },
   inlineSaveBtnOptionC: {
@@ -1589,15 +1613,15 @@ const styles = StyleSheet.create({
   },
   inlineSaveBtnTextOptionC: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
 
   // Linear Progress Card Styles
   linearProgressCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 14,
+    padding: 12,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#F1F5F9',
@@ -1611,6 +1635,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  statsIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   linearProgressMain: {
     flex: 1,
   },
@@ -1618,59 +1651,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   linearProgressStats: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
   linearProgressStatsBig: {
-    fontSize: 20,
-    fontFamily: 'Geologica-Bold',
+    fontSize: 18,
+    fontFamily: 'Rubik-Bold',
     color: '#0F172A',
   },
   linearProgressStatsSmall: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
     color: '#64748B',
   },
-  linearProgressPercent: {
-    fontSize: 14,
-    fontFamily: 'Geologica-Bold',
-    color: '#64748B',
+  linearProgressPercentText: {
+    fontSize: 10,
+    fontFamily: 'Rubik-Bold',
+    color: '#3B82F6',
+    marginTop: 4,
   },
   linearProgressBarBg: {
-    height: 8,
+    height: 6,
     backgroundColor: '#F1F5F9',
-    borderRadius: 4,
+    borderRadius: 3,
     width: '100%',
     overflow: 'hidden',
   },
   linearProgressBarFill: {
     height: '100%',
-    backgroundColor: '#0B409C',
-    borderRadius: 4,
+    backgroundColor: '#3B82F6',
+    borderRadius: 3,
   },
   linearProgressDivider: {
     width: 1,
-    height: 40,
+    height: 36,
     backgroundColor: '#E2E8F0',
-    marginHorizontal: 20,
+    marginHorizontal: 12,
   },
   linearProgressPending: {
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 50,
+    minWidth: 46,
   },
   linearProgressPendingNum: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#F97316',
   },
   linearProgressPendingText: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontSize: 11,
+    fontFamily: 'Rubik-SemiBold',
     color: '#F97316',
+    marginTop: 2,
   },
 });
 

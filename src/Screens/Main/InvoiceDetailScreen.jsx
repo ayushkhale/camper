@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+﻿import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -65,9 +65,9 @@ const InvoiceDetailScreen = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log('🔍 [INVOICE FETCH] Fetching invoice details for ID:', targetId);
+      console.log('ðŸ” [INVOICE FETCH] Fetching invoice details for ID:', targetId);
       const res = await api.getInvoiceById(userToken, targetId);
-      console.log('🧾 [INVOICE DETAILS RESPONSE]:', res);
+      console.log('ðŸ§¾ [INVOICE DETAILS RESPONSE]:', res);
 
       if (res && res.success && res.data) {
         setInvoiceData(res.data);
@@ -77,7 +77,7 @@ const InvoiceDetailScreen = () => {
         if (initialInvoice) setInvoiceData(initialInvoice);
       }
     } catch (err) {
-      console.error('❌ Error fetching invoice detail:', err);
+      console.error('âŒ Error fetching invoice detail:', err);
       setError(err.message || 'Failed to load invoice details');
       if (initialInvoice) setInvoiceData(initialInvoice);
     } finally {
@@ -741,7 +741,7 @@ const InvoiceDetailScreen = () => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <CurvedHeader
         title="Tax Invoice"
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={130}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
@@ -780,17 +780,17 @@ const InvoiceDetailScreen = () => {
               <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 {/* Left Navy Box: TAX INVOICE Badge */}
                 <View style={{ backgroundColor: '#1E3A8A', borderRadius: 6, paddingHorizontal: 14, paddingVertical: 9 }}>
-                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontFamily: 'Geologica-Bold', letterSpacing: 1.5 }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontFamily: 'Rubik-Bold', letterSpacing: 1.5 }}>
                     INVOICE
                   </Text>
                 </View>
 
                 {/* Right Vendor Details */}
                 <View style={{ flex: 1, alignItems: 'flex-end', paddingLeft: 12 }}>
-                  <Text style={{ color: '#1E3A8A', fontSize: 14, fontFamily: 'Geologica-Bold', textAlign: 'right' }}>
+                  <Text style={{ color: '#1E3A8A', fontSize: 14, fontFamily: 'Rubik-Bold', textAlign: 'right' }}>
                     {invoiceData?.businessName || invoiceData?.VendorProfile?.businessName || 'Patidar Water Plant'}
                   </Text>
-                  <Text style={{ color: '#475569', fontSize: 10.5, fontFamily: 'Geologica-Medium', textAlign: 'right', marginTop: 2, lineHeight: 14 }}>
+                  <Text style={{ color: '#475569', fontSize: 10.5, fontFamily: 'Rubik-SemiBold', textAlign: 'right', marginTop: 2, lineHeight: 14 }}>
                     {invoiceData?.businessAddress || invoiceData?.VendorProfile?.address || 'Indraprastha tower, Indore, Madhya Pradesh'}
                   </Text>
                 </View>
@@ -801,40 +801,40 @@ const InvoiceDetailScreen = () => {
               <View style={{ paddingHorizontal: 16, marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
                 {/* Left Column: Billed To */}
                 <View style={{ flex: 1.1, paddingRight: 6 }}>
-                  <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+                  <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Rubik-Bold', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
                     BILLED TO:
                   </Text>
-                  <Text style={{ fontSize: 13.5, color: '#0F172A', fontFamily: 'Geologica-Bold', marginBottom: 3 }}>
+                  <Text style={{ fontSize: 13.5, color: '#0F172A', fontFamily: 'Rubik-Bold', marginBottom: 3 }}>
                     {invoiceData.customerName || invoiceData.Customer?.name || 'Customer'}
                   </Text>
                   <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'flex-start' }}>
-                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 56 }}>Phone:</Text>
-                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Medium', flex: 1 }}>{cPhoneText}</Text>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Rubik-Bold', width: 56 }}>Phone:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Rubik-SemiBold', flex: 1 }}>{cPhoneText}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'flex-start' }}>
-                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 56 }}>Address:</Text>
-                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Medium', flex: 1, lineHeight: 14 }}>{cAddressText}</Text>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Rubik-Bold', width: 56 }}>Address:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Rubik-SemiBold', flex: 1, lineHeight: 14 }}>{cAddressText}</Text>
                   </View>
                 </View>
 
                 {/* Right Column: Invoice Details (Aligned from starting point) */}
                 <View style={{ flex: 1, paddingLeft: 6 }}>
-                  <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+                  <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Rubik-Bold', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
                     INVOICE DETAILS:
                   </Text>
                   <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 68 }}>Invoice #:</Text>
-                    <Text style={{ fontSize: 10.5, color: '#0F172A', fontFamily: 'Geologica-Bold', flex: 1 }}>{invoiceNum}</Text>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Rubik-Bold', width: 68 }}>Invoice #:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#0F172A', fontFamily: 'Rubik-Bold', flex: 1 }}>{invoiceNum}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 68 }}>Date:</Text>
-                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Medium', flex: 1 }}>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Rubik-Bold', width: 68 }}>Date:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Rubik-SemiBold', flex: 1 }}>
                       {invoiceData?.generatedAtFormatted || formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at)}
                     </Text>
                   </View>
                   <View style={{ flexDirection: 'row', marginTop: 2, alignItems: 'flex-start' }}>
-                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Geologica-Bold', width: 68 }}>Period:</Text>
-                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Medium', flex: 1, lineHeight: 14 }}>
+                    <Text style={{ fontSize: 10.5, color: '#1E3A8A', fontFamily: 'Rubik-Bold', width: 68 }}>Period:</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Rubik-SemiBold', flex: 1, lineHeight: 14 }}>
                       {invoiceData.periodStart && invoiceData.periodEnd
                         ? `${invoiceData.periodStartFormatted || formatDate(invoiceData.periodStart)} to ${invoiceData.periodEndFormatted || formatDate(invoiceData.periodEnd)}`
                         : 'Monthly'}
@@ -862,16 +862,16 @@ const InvoiceDetailScreen = () => {
                     {previousDues !== 0 && (
                       <View style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', backgroundColor: previousDues > 0 ? '#FFFBEB' : '#ECFDF5', alignItems: 'center' }}>
                         <View style={{ flex: 1, paddingRight: 6 }}>
-                          <Text style={{ fontSize: 11.5, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: 'Rubik-Bold', color: '#0F172A' }}>
                             {previousDues > 0 ? 'Opening Balance / Previous Dues' : 'Opening Balance / Advance Credit'}
                           </Text>
                           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 3 }}>
                             <View style={{ backgroundColor: previousDues > 0 ? '#FEF3C7' : '#D1FAE5', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, marginRight: 4, marginBottom: 2 }}>
-                              <Text style={{ fontSize: 8.5, fontFamily: 'Geologica-Bold', color: previousDues > 0 ? '#B45309' : '#047857', textTransform: 'uppercase' }}>
+                              <Text style={{ fontSize: 8.5, fontFamily: 'Rubik-Bold', color: previousDues > 0 ? '#B45309' : '#047857', textTransform: 'uppercase' }}>
                                 {previousDues > 0 ? 'PREVIOUS DUES' : 'ADVANCE CREDIT'}
                               </Text>
                             </View>
-                            <Text style={{ fontSize: 10, color: previousDues > 0 ? '#92400E' : '#065F46', fontFamily: 'Geologica-Medium', lineHeight: 14, flex: 1 }}>
+                            <Text style={{ fontSize: 10, color: previousDues > 0 ? '#92400E' : '#065F46', fontFamily: 'Rubik-SemiBold', lineHeight: 14, flex: 1 }}>
                               {previousDues > 0 ? 'Carried forward from previous billing period' : 'Prepaid balance / advance deposit'}
                             </Text>
                           </View>
@@ -879,19 +879,19 @@ const InvoiceDetailScreen = () => {
 
                         <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>1</Text>
                         <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#334155' }}>{formatCurrency(previousDues)}</Text>
-                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Geologica-Bold', color: previousDues > 0 ? '#0F172A' : '#047857' }}>{formatCurrency(previousDues)}</Text>
+                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Rubik-Bold', color: previousDues > 0 ? '#0F172A' : '#047857' }}>{formatCurrency(previousDues)}</Text>
                       </View>
                     )}
 
                     {allItems.length === 0 && previousDues === 0 ? (
                       <View style={{ flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>Jar 30 rs</Text>
-                          <Text style={{ fontSize: 10, color: '#15803D', fontFamily: 'Geologica-Medium', marginTop: 2 }}>[DELIVERED] Water Delivery</Text>
+                          <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#0F172A' }}>Jar 30 rs</Text>
+                          <Text style={{ fontSize: 10, color: '#15803D', fontFamily: 'Rubik-SemiBold', marginTop: 2 }}>[DELIVERED] Water Delivery</Text>
                         </View>
                         <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>1</Text>
                         <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#334155' }}>{formatCurrency(currentCharges)}</Text>
-                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{formatCurrency(currentCharges)}</Text>
+                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11, fontFamily: 'Rubik-Bold', color: '#0F172A' }}>{formatCurrency(currentCharges)}</Text>
                       </View>
                     ) : (
                       allItems.map((item, idx) => {
@@ -915,14 +915,14 @@ const InvoiceDetailScreen = () => {
                         return (
                           <View key={item.id || idx} style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC', alignItems: 'center' }}>
                             <View style={{ flex: 1, paddingRight: 6 }}>
-                              <Text style={{ fontSize: 11.5, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{productName}</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: 'Rubik-Bold', color: '#0F172A' }}>{productName}</Text>
                               <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 3 }}>
                                 <View style={{ backgroundColor: statusBg, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, marginRight: 4, marginBottom: 2 }}>
-                                  <Text style={{ fontSize: 8.5, fontFamily: 'Geologica-Bold', color: statusColor, textTransform: 'uppercase' }}>
+                                  <Text style={{ fontSize: 8.5, fontFamily: 'Rubik-Bold', color: statusColor, textTransform: 'uppercase' }}>
                                     {status || 'DELIVERY'}
                                   </Text>
                                 </View>
-                                <Text style={{ fontSize: 10, color: '#475569', fontFamily: 'Geologica-Medium', lineHeight: 14, flex: 1 }}>
+                                <Text style={{ fontSize: 10, color: '#475569', fontFamily: 'Rubik-SemiBold', lineHeight: 14, flex: 1 }}>
                                   {description}
                                 </Text>
                               </View>
@@ -930,7 +930,7 @@ const InvoiceDetailScreen = () => {
 
                             <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>{qty}</Text>
                             <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#334155' }}>{formatCurrency(rate)}</Text>
-                            <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{formatCurrency(amount)}</Text>
+                            <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Rubik-Bold', color: '#0F172A' }}>{formatCurrency(amount)}</Text>
                           </View>
                         );
                       })
@@ -941,7 +941,7 @@ const InvoiceDetailScreen = () => {
 
               <View style={{ flexDirection: 'row', borderTopWidth: 1.5, borderColor: '#CBD5E1' }}>
                 <View style={{ flex: 1, borderRightWidth: 1, borderColor: '#CBD5E1', padding: 10, backgroundColor: '#F8FAFC' }}>
-                  <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#1E3A8A', marginBottom: 3 }}>Notes</Text>
+                  <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#1E3A8A', marginBottom: 3 }}>Notes</Text>
                   <Text style={{ fontSize: 9.5, color: '#475569', lineHeight: 13 }}>
                     Thank you for choosing {invoiceData?.businessName || invoiceData?.VendorProfile?.businessName || 'Patidar Water Plant'}! Clean & Pure Water Delivery. All particulars are true and correct.
                   </Text>
@@ -951,7 +951,7 @@ const InvoiceDetailScreen = () => {
                 <View style={{ width: 175, backgroundColor: '#FFFFFF' }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
                     <Text style={{ fontSize: 10.5, color: '#64748B' }}>Current Charges</Text>
-                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Geologica-Bold' }}>{formatCurrency(currentCharges)}</Text>
+                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Rubik-Bold' }}>{formatCurrency(currentCharges)}</Text>
                   </View>
 
                   {previousDues !== 0 && (
@@ -959,7 +959,7 @@ const InvoiceDetailScreen = () => {
                       <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#64748B' : '#059669' }}>
                         {previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}
                       </Text>
-                      <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#334155' : '#059669', fontFamily: 'Geologica-Bold' }}>
+                      <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#334155' : '#059669', fontFamily: 'Rubik-Bold' }}>
                         {formatCurrency(previousDues)}
                       </Text>
                     </View>
@@ -968,14 +968,14 @@ const InvoiceDetailScreen = () => {
                   {amountPaid > 0 && (
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
                       <Text style={{ fontSize: 10.5, color: '#64748B' }}>Amount Paid</Text>
-                      <Text style={{ fontSize: 10.5, color: '#059669', fontFamily: 'Geologica-Bold' }}>{formatCurrency(amountPaid)}</Text>
+                      <Text style={{ fontSize: 10.5, color: '#059669', fontFamily: 'Rubik-Bold' }}>{formatCurrency(amountPaid)}</Text>
                     </View>
                   )}
 
                   {/* Solid Navy Total Row */}
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, paddingHorizontal: 8, backgroundColor: '#1E3A8A' }}>
-                    <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#FFFFFF' }}>Total Amount</Text>
-                    <Text style={{ fontSize: 12, fontFamily: 'Geologica-Bold', color: '#FFFFFF' }}>
+                    <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#FFFFFF' }}>Total Amount</Text>
+                    <Text style={{ fontSize: 12, fontFamily: 'Rubik-Bold', color: '#FFFFFF' }}>
                       {formatCurrency(balanceDue > 0 ? balanceDue : grandTotal)}
                     </Text>
                   </View>
@@ -984,7 +984,7 @@ const InvoiceDetailScreen = () => {
 
               {/* Footer Tag */}
               <View style={{ backgroundColor: '#F8FAFC', paddingVertical: 10, borderTopWidth: 1, borderColor: '#E2E8F0', alignItems: 'center' }}>
-                <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#1E3A8A' }}>
+                <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#1E3A8A' }}>
                   Thank you! We appreciate your business.
                 </Text>
               </View>
@@ -1123,7 +1123,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   centerContainer: {
@@ -1135,12 +1135,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.danger,
   },
   scrollContent: {
@@ -1160,13 +1160,13 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     fontSize: 20,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
     letterSpacing: 1.5,
   },
   invoiceNumText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginTop: 3,
   },
@@ -1177,7 +1177,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 9,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     letterSpacing: 0.6,
     textAlign: 'right',
     lineHeight: 11,
@@ -1199,7 +1199,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 10,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     letterSpacing: 0.8,
     marginBottom: 4,
@@ -1207,7 +1207,7 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 17,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 3,
   },
@@ -1218,12 +1218,12 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   metaValueText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   periodRow: {
@@ -1231,7 +1231,7 @@ const styles = StyleSheet.create({
   },
   periodValueText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginTop: 2,
   },
@@ -1248,13 +1248,13 @@ const styles = StyleSheet.create({
   },
   itemsHeaderTitle: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     letterSpacing: 0.8,
   },
   itemsHeaderTotalLabel: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     letterSpacing: 0.8,
   },
@@ -1273,7 +1273,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   itemMainCol: {
@@ -1282,7 +1282,7 @@ const styles = StyleSheet.create({
   },
   productNameText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     lineHeight: 18,
   },
@@ -1294,17 +1294,17 @@ const styles = StyleSheet.create({
   },
   subTagText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.primary,
   },
   emptyCansText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   qtyPriceText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
     marginTop: 4,
   },
@@ -1314,7 +1314,7 @@ const styles = StyleSheet.create({
   },
   rowAmountText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
 
@@ -1330,12 +1330,12 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   totalValue: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   balanceRow: {
@@ -1347,12 +1347,12 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   balanceValue: {
     fontSize: 20,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 
   // Record Payment Button
@@ -1368,7 +1368,7 @@ const styles = StyleSheet.create({
   },
   payBtnText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#FFFFFF',
   },
 
@@ -1395,7 +1395,7 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 
   // Footer
@@ -1408,13 +1408,13 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
     marginBottom: 2,
   },
   footerSubtext: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#94A3B8',
     marginTop: 2,
   },
@@ -1428,7 +1428,7 @@ const styles = StyleSheet.create({
   },
   metadataLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#64748B',
     marginBottom: 8,
   },
@@ -1439,15 +1439,16 @@ const styles = StyleSheet.create({
   },
   metadataValue: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#334155',
     marginLeft: 6,
   },
   metadataTime: {
     fontSize: 11,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: '#94A3B8',
   },
 });
 
 export default InvoiceDetailScreen;
+

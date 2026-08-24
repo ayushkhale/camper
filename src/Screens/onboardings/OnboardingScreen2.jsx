@@ -24,7 +24,7 @@ const OnboardingScreen2 = ({ navigation }) => {
       {/* Header with Logo and Back */}
       <View style={styles.header}>
         <Image
-          source={i18n.language === 'hi' ? require('../../../assets/hindilogo.png') : require('../../../assets/englishlogo.png')}
+          source={require('../../../assets/logo1.png')}
           style={styles.logo}
           resizeMode="contain"
         />

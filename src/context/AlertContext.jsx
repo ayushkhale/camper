@@ -226,13 +226,13 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#FFFFFF',
     marginBottom: 2,
   },
   alertMessage: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#FFFFFF',
     opacity: 0.95,
   },
@@ -269,14 +269,14 @@ const styles = StyleSheet.create({
   },
   iosTitle: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   iosMessage: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
@@ -303,14 +303,14 @@ const styles = StyleSheet.create({
   },
   iosBtnText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   iosDestructiveText: {
     color: COLORS.danger,
   },
   iosCancelText: {
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
 });

@@ -30,7 +30,7 @@ import {
   Edit2,
   Save,
   CheckSquare,
-} from 'lucide-react-native';
+  ArrowLeft} from 'lucide-react-native';
 import DeliveryStatusSlider from '../../components/DeliveryStatusSlider';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -114,13 +114,12 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
   };
 
   return (
-    <View style={[styles.card, isEditing && styles.cardEditing]}>
+    <View style={[styles.card, isEditing && styles.cardEditing, { borderLeftWidth: 4, borderLeftColor: '#3B82F6' }]}>
       {updating && (
         <View style={styles.cardUpdatingOverlay}>
           <ActivityIndicator color="#1D4ED8" />
         </View>
       )}
-      
       <TouchableOpacity 
         style={styles.cardHeader} 
         onPress={() => setIsExpanded(!isExpanded)}
@@ -139,12 +138,12 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
             </Text>
           </View>
           {additionalJars > 0 && (
-            <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#16A34A', marginTop: 2 }}>
+            <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#16A34A', marginTop: 2 }}>
               + {additionalJars} {t('deliveries.additionalJars')}
             </Text>
           )}
           {remainingJars > 0 && item.status === 'pending' && (
-            <Text style={{ fontSize: 11, fontFamily: 'Geologica-Medium', color: '#D97706', marginTop: 2 }}>
+            <Text style={{ fontSize: 11, fontFamily: 'Rubik-SemiBold', color: '#D97706', marginTop: 2 }}>
               {remainingJars} {t('deliveries.remainingJars')}
             </Text>
           )}
@@ -231,7 +230,7 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
                 <Text style={styles.deliveryLogsTitle}>{t('deliveries.deliveryLogs')} ({item.Deliveries.length})</Text>
                 {additionalJars > 0 && (
                   <View style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-                    <Text style={{ fontSize: 11, fontFamily: 'Geologica-Bold', color: '#15803D' }}>
+                    <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#15803D' }}>
                       +{additionalJars} {t('deliveries.additionalJars')}
                     </Text>
                   </View>
@@ -257,10 +256,10 @@ const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, format
                     </View>
                     <View style={styles.deliveryLogUnitsRow}>
                       <Text style={styles.deliveryLogUnitText}>
-                        {t('deliveries.delivered')}: <Text style={{ fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{delivery.fullUnitsDelivered ?? 0}</Text>
+                        {t('deliveries.delivered')}: <Text style={{ fontFamily: 'Rubik-Bold', color: '#0F172A' }}>{delivery.fullUnitsDelivered ?? 0}</Text>
                       </Text>
                       <Text style={styles.deliveryLogUnitText}>
-                        {t('deliveries.emptyCollected')}: <Text style={{ fontFamily: 'Geologica-Bold', color: '#0F172A' }}>{delivery.emptyUnitsCollected ?? 0}</Text>
+                        {t('deliveries.emptyCollected')}: <Text style={{ fontFamily: 'Rubik-Bold', color: '#0F172A' }}>{delivery.emptyUnitsCollected ?? 0}</Text>
                       </Text>
                     </View>
                   </View>
@@ -436,7 +435,7 @@ const OneTimeOrderListScreen = () => {
   };
 
   const formatDisplayDate = (str) => {
-    if (!str) return '—';
+    if (!str) return 'â€”';
     const [y, m, d] = str.split('-');
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${d} ${months[parseInt(m) - 1]} ${y}`;
@@ -465,16 +464,8 @@ const OneTimeOrderListScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={
-          <Text 
-            numberOfLines={1} 
-            adjustsFontSizeToFit 
-            style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
-          >
-            {t('oneTimeOrders.title', 'One-Time Orders')}
-          </Text>
-        }
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={t('oneTimeOrders.title', 'One-Time Orders')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 35 }}
@@ -584,7 +575,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontSize: 15,
     paddingVertical: 0,
   },
@@ -656,7 +647,7 @@ const styles = StyleSheet.create({
   editToggleText: {
     fontSize: 12,
     color: '#64748B',
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   sliderSection: {
     marginTop: 4,
@@ -673,12 +664,12 @@ const styles = StyleSheet.create({
   },
   sliderUnitLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     marginBottom: 4,
   },
   sliderUnitValue: {
     fontSize: 20,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   inlineEditContainer: {
     backgroundColor: '#F8FAFC',
@@ -699,7 +690,7 @@ const styles = StyleSheet.create({
   inlineInputLabel: {
     fontSize: 12,
     color: '#64748B',
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     marginBottom: 6,
   },
   inlineInput: {
@@ -710,7 +701,7 @@ const styles = StyleSheet.create({
     height: 44,
     paddingHorizontal: 12,
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#0F172A',
     textAlign: 'center',
   },
@@ -725,7 +716,7 @@ const styles = StyleSheet.create({
   inlineSaveBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 
   card: {
@@ -752,7 +743,7 @@ const styles = StyleSheet.create({
   },
   iconBoxTextOptionC: {
     color: '#1D4ED8',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   titleContainer: {
@@ -761,7 +752,7 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
@@ -773,7 +764,7 @@ const styles = StyleSheet.create({
   subText: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   statusBadge: {
     flexDirection: 'row',
@@ -787,7 +778,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
@@ -809,7 +800,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     flexShrink: 1,
   },
@@ -820,7 +811,7 @@ const styles = StyleSheet.create({
   },
   totalPrice: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   cancelBtn: {
@@ -846,7 +837,7 @@ const styles = StyleSheet.create({
   },
   deliverBlockBtnText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
     marginLeft: 8,
   },
@@ -860,12 +851,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -878,7 +869,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   emptyContainer: {
@@ -887,7 +878,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
@@ -896,7 +887,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textPlaceholder,
     textAlign: 'center',
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   fab: {
     position: 'absolute',
@@ -924,7 +915,7 @@ const styles = StyleSheet.create({
   },
   deliveryLogsTitle: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#475569',
     marginBottom: 8,
     textTransform: 'uppercase',
@@ -946,7 +937,7 @@ const styles = StyleSheet.create({
   },
   deliveryLogDate: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#334155',
   },
   deliveryLogBadge: {
@@ -956,7 +947,7 @@ const styles = StyleSheet.create({
   },
   deliveryLogBadgeText: {
     fontSize: 10,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   deliveryLogUnitsRow: {
     flexDirection: 'row',
@@ -965,7 +956,7 @@ const styles = StyleSheet.create({
   },
   deliveryLogUnitText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: '#64748B',
   },
   noDeliveriesInfo: {
@@ -977,9 +968,10 @@ const styles = StyleSheet.create({
   },
   noDeliveriesText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#64748B',
   },
 });
 
 export default OneTimeOrderListScreen;
+

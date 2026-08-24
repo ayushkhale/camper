@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, User, Phone, Mail, AlertCircle } from 'lucide-react-native';
+import { ChevronLeft, User, Phone, Mail, AlertCircle , ArrowLeft} from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -149,21 +149,11 @@ const AddStaffScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={
-          <View>
-            <Text 
-              numberOfLines={1} 
-              adjustsFontSizeToFit 
-              style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
-            >
-              {isEditMode ? t('staff.editStaff') : t('staff.addNew')}
-            </Text>
-          </View>
-        }
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={isEditMode ? t('staff.editStaff') : t('staff.addNew')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
-        height={140}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 
       <KeyboardAvoidingView 
@@ -188,7 +178,9 @@ const AddStaffScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('staff.name')}</Text>
               <View style={[styles.inputContainer, nameError ? styles.inputErrorBorder : null]}>
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#E0E7FF' }]}>
+                  <User size={18} color="#0B409C" />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t('staff.namePlaceholder')}
@@ -205,7 +197,9 @@ const AddStaffScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('staff.phone')}</Text>
               <View style={[styles.inputContainer, phoneError ? styles.inputErrorBorder : null, isEditMode && styles.inputDisabled]}>
-                <Phone size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#DCFCE7' }]}>
+                  <Phone size={18} color="#16A34A" />
+                </View>
                 <Text style={styles.countryCode}>+91</Text>
                 <TextInput
                   style={styles.input}
@@ -231,7 +225,9 @@ const AddStaffScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('staff.email')}</Text>
               <View style={[styles.inputContainer, emailError ? styles.inputErrorBorder : null]}>
-                <Mail size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <Mail size={18} color="#D97706" />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t('staff.emailPlaceholder')}
@@ -305,7 +301,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
   form: {
@@ -316,7 +312,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -327,19 +323,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 52,
+    paddingRight: 16,
+    paddingLeft: 6,
+    height: 56,
+  },
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   inputDisabled: {
     backgroundColor: '#F8FAFC',
     borderColor: '#E2E8F0',
   },
-  inputIcon: {
-    marginRight: 8,
-  },
   countryCode: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.primary,
     marginRight: 4,
   },
@@ -347,7 +349,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -356,13 +358,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     marginTop: 4,
   },
   helperText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
     marginTop: 6,
     paddingHorizontal: 2,
@@ -391,13 +393,14 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   btnTextSecondary: {
     color: COLORS.textSecondary,
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 });
 
 export default AddStaffScreen;
+

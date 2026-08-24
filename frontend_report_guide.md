@@ -27,7 +27,7 @@ For all temporal reports (`financials`, `operations`, and `inventory`), you must
 
 > [!WARNING]
 > **Custom Date Boundaries:**
-> When using `rangePreset=custom`, the `from` and `to` query parameters are **required** and must be in ISO Date format (`YYYY-MM-DD`). 
+> When using `rangePreset=c ustom`, the `from` and `to` query parameters are **required** and must be in ISO Date format (`YYYY-MM-DD`). 
 > The date span between `from` and `to` **cannot exceed 90 days** due to query performance restrictions. If it does, the server returns a `400 Bad Request` error.
 
 ---

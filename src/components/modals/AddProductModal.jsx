@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     color: COLORS.textPrimary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontSize: 15,
     padding: 0,
   },
@@ -398,11 +398,11 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   checkboxLabelActive: {
     color: COLORS.primary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   checkboxSquare: {
     width: 20,
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 });
 

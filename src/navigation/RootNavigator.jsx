@@ -102,10 +102,10 @@ const RootNavigatorContent = () => {
   );
 };
 
-const RootNavigator = () => {
+const RootNavigator = ({ navRef, onRouteReady, onStateChange }) => {
   return (
     <AuthProvider>
-      <NavigationContainer theme={MyTheme}>
+      <NavigationContainer theme={MyTheme} ref={navRef} onReady={onRouteReady} onStateChange={onStateChange}>
         <RootNavigatorContent />
       </NavigationContainer>
     </AuthProvider>

@@ -23,7 +23,10 @@ import {
   AlertCircle,
   RefreshCw,
   RefreshCcw,
+  ArrowLeft,
 } from 'lucide-react-native';
+import { LinearGradient } from 'react-native-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -102,49 +105,70 @@ const ProductCatalogScreen = () => {
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[
+          styles.card, 
+          { borderLeftWidth: 4, borderLeftColor: isActive ? '#10B981' : '#EF4444' }
+        ]}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
       >
-        <View style={styles.cardHeader}>
+        <LinearGradient
+          colors={['#FFFFFF', '#F8FAFC']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardInner}
+        >
+          {/* Decorative Background Circles */}
+          <View style={StyleSheet.absoluteFillObject}>
+            <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+              <Circle cx="-5%" cy="-20%" r="55" fill="#F1F5F9" />
+              <Circle cx="105%" cy="120%" r="65" fill="#E2E8F0" opacity="0.5" />
+            </Svg>
+          </View>
+
+          {/* Avatar Left */}
           <View style={styles.iconBox}>
             {item.imageUrl ? (
               <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
             ) : (
-              <Package size={22} color={COLORS.primary} />
+              <Package size={22} color="#0B409C" />
             )}
+            <View style={[
+              styles.avatarBadge,
+              { backgroundColor: isActive ? '#10B981' : '#EF4444' }
+            ]} />
           </View>
+
+          {/* Center Details */}
           <View style={styles.titleContainer}>
-            <Text style={styles.productName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <View style={styles.row}>
-              <Text style={styles.subText}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <Text style={styles.productName} numberOfLines={1}>
+                {item.name}
+              </Text>
+            </View>
+            
+            <View style={styles.infoRow}>
+              {item.isReturnableContainer && (
+                <RefreshCcw size={12} color="#64748B" style={{ marginRight: 4 }} />
+              )}
+              <Text style={styles.subText} numberOfLines={1}>
                 {item.unit ? `Unit: ${item.unit}` : 'No Unit'}
               </Text>
             </View>
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} />
-        </View>
 
-        <View style={styles.divider} />
+          {/* Right Action & Status */}
+          <View style={styles.rightActionContainer}>
+            <View style={styles.statusCol}>
+              <Text style={styles.priceAmount}>{priceStr}</Text>
+              <Text style={styles.statusSubtext}>
+                {isActive ? 'Active' : 'Inactive'}
+              </Text>
+            </View>
 
-        <View style={styles.cardFooter}>
-          <View style={styles.metaContainer}>
-            {item.isReturnableContainer && (
-              <RefreshCcw size={13} color={COLORS.primary} style={{ marginRight: 4 }} />
-            )}
-            <Text style={styles.metaText} numberOfLines={1}>
-              {priceStr}{returnableStr}
-            </Text>
+            <ChevronRight size={18} color="#94A3B8" />
           </View>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: isActive ? '#16A34A' : '#94A3B8' }]} />
-            <Text style={[styles.statusText, { color: isActive ? '#15803D' : '#64748B' }]}>
-              {isActive ? 'ACTIVE' : 'INACTIVE'}
-            </Text>
-          </View>
-        </View>
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
@@ -152,8 +176,12 @@ const ProductCatalogScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('products.title')}</Text>}
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={
+          <View>
+            <Text style={{ color: '#0B409C', fontSize: 20, fontFamily: 'Rubik-Bold' }}>{t('products.title')}</Text>
+          </View>
+        }
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
@@ -287,92 +315,96 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
   },
-  cardHeader: {
+  cardInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
   },
   iconBox: {
     width: 44,
     height: 44,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#E0E7FF',
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: 'hidden',
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   productImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+    borderRadius: 22,
   },
   titleContainer: {
     flex: 1,
   },
   productName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  subText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 14,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
-  },
-  metaText: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.primary,
+    fontFamily: 'Rubik-Bold',
+    color: '#1E293B',
+    marginBottom: 6,
     flexShrink: 1,
   },
-  statusBadge: {
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    marginBottom: 4,
   },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  statusText: {
+  subText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    color: '#64748B',
+    fontFamily: 'Rubik-Medium',
+  },
+  rightActionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  statusCol: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginRight: 8,
+    minWidth: 50,
+  },
+  priceAmount: {
+    fontSize: 13,
+    fontFamily: 'Rubik-Bold',
+    color: '#0B409C',
+    marginBottom: 4,
+  },
+  statusSubtext: {
+    fontSize: 10,
+    fontFamily: 'Rubik-Medium',
+    color: '#64748B',
   },
   centerContainer: {
     flex: 1,

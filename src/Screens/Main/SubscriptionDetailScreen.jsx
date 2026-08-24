@@ -31,7 +31,7 @@ import {
   Play,
   Pause,
   SkipForward,
-} from 'lucide-react-native';
+  ArrowLeft} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -92,7 +92,7 @@ const SubscriptionDetailScreen = () => {
   };
 
   const formatDisplayDate = (str) => {
-    if (!str) return '—';
+    if (!str) return 'â€”';
     const [y, m, d] = str.split('-');
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${d} ${months[parseInt(m) - 1]} ${y}`;
@@ -290,7 +290,7 @@ const SubscriptionDetailScreen = () => {
       case 'daily': return 'Daily';
       case 'weekly': return 'Weekly';
       case 'alternate': case 'alternate_days': return 'Alternate Days';
-      default: return pattern || '—';
+      default: return pattern || 'â€”';
     }
   };
 
@@ -320,30 +320,22 @@ const SubscriptionDetailScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={
-          <Text 
-            numberOfLines={1} 
-            adjustsFontSizeToFit 
-            style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold', flexShrink: 1 }}
-          >
-            {t('subscriptions.details', 'Subscription Details')}
-          </Text>
-        }
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={t('subscriptions.details', 'Subscription Details')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={user?.role !== 'staff' ? (
           <View style={{ flexDirection: 'row', gap: 12, marginRight: 16 }}>
             <TouchableOpacity
-              style={styles.headerActionBtnDark}
+              style={[styles.headerActionBtnDark, { backgroundColor: '#E0E7FF' }]}
               onPress={() => navigation.navigate('AddSubscription', { subscription })}
             >
-              <Edit size={18} color="#FFF" />
+              <Edit size={18} color="#0B409C" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(229, 62, 62, 0.2)' }]}
+              style={[styles.headerActionBtnDark, { backgroundColor: '#FEE2E2' }]}
               onPress={handleDeleteSubscription}
             >
-              <Trash2 size={18} color="#FFD1D1" />
+              <Trash2 size={18} color="#DC2626" />
             </TouchableOpacity>
           </View>
         ) : null}
@@ -353,52 +345,59 @@ const SubscriptionDetailScreen = () => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* ── Profile Hero Section ── */}
-        <View style={styles.profileHero}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatarFallback}>
-              <Package size={38} color={COLORS.primary} />
+        {/* â”€â”€ Profile Hero Section â”€â”€ */}
+        <View style={styles.profileHeroCard}>
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatarFallback}>
+                <Package size={38} color="#FFFFFF" />
+              </View>
             </View>
+            <View style={[styles.avatarStatusDot, { backgroundColor: isActive ? '#16A34A' : isPaused ? '#D97706' : '#94A3B8' }]} />
           </View>
-          <Text style={styles.productName}>{subscription.Product?.name || 'Subscription'}</Text>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: isActive ? '#16A34A' : isPaused ? '#D97706' : '#94A3B8' }]} />
-            <Text style={[styles.statusText, { color: isActive ? '#15803D' : isPaused ? '#B45309' : '#64748B' }]}>
-              {(subscription.status || 'ACTIVE').toUpperCase()}
-            </Text>
+
+          <View style={styles.heroRight}>
+            <Text style={styles.productNameHero}>{subscription.Product?.name || 'Subscription'}</Text>
+            
+            <View style={[styles.heroStatusPill, { backgroundColor: isActive ? '#DCFCE7' : isPaused ? '#FEF3C7' : '#F1F5F9' }]}>
+              <View style={[styles.heroStatusDot, { backgroundColor: isActive ? '#16A34A' : isPaused ? '#D97706' : '#94A3B8' }]} />
+              <Text style={[styles.heroStatusText, { color: isActive ? '#16A34A' : isPaused ? '#B45309' : '#64748B' }]}>
+                {(subscription.status || 'ACTIVE').toUpperCase()}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* ── Subscription Details Card ── */}
+        {/* -- Subscription Details Card -- */}
         <Text style={styles.sectionTitle}>{t('subscriptions.edit')}</Text>
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <User size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#E0E7FF', borderColor: '#C7D2FE' }]}>
+              <User size={18} color="#4F46E5" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.name')}</Text>
-              <Text style={styles.detailValue}>{subscription.Customer?.name || '—'}</Text>
+              <Text style={styles.detailValue}>{subscription.Customer?.name || 'N/A'}</Text>
             </View>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Phone size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#DCFCE7', borderColor: '#BBF7D0' }]}>
+              <Phone size={18} color="#16A34A" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.phone_label')}</Text>
-              <Text style={styles.detailValue}>{subscription.Customer?.phone || '—'}</Text>
+              <Text style={styles.detailValue}>{subscription.Customer?.phone || 'N/A'}</Text>
             </View>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Info size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+              <Info size={18} color="#D97706" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('subscriptions.quantityPerDelivery')}</Text>
@@ -411,8 +410,8 @@ const SubscriptionDetailScreen = () => {
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Repeat size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#FFE4E6', borderColor: '#FECDD3' }]}>
+              <Repeat size={18} color="#E11D48" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('subscriptions.frequency')}</Text>
@@ -429,13 +428,13 @@ const SubscriptionDetailScreen = () => {
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('subscriptions.startDate')}</Text>
               <Text style={styles.detailValue}>
-                {subscription.startDate ? formatDisplayDate(subscription.startDate.split('T')[0]) : '—'}
+                {subscription.startDate ? formatDisplayDate(subscription.startDate.split('T')[0]) : 'N/A'}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* ── Schedule Exceptions Log ── */}
+        {/* -- Schedule Exceptions Log -- */}
         <Text style={styles.sectionTitle}>{t('subscriptions.scheduleLog')}</Text>
         <View style={styles.detailsCard}>
           {timeline.length === 0 ? (
@@ -454,7 +453,7 @@ const SubscriptionDetailScreen = () => {
               const label = isPauseType ? 'Pause' : isSkipType ? 'Skip' : `Extra (+${item.quantity})`;
               const dateRange = item.from === item.to
                 ? formatDisplayDate(item.from)
-                : `${formatDisplayDate(item.from)} → ${formatDisplayDate(item.to)}`;
+                : `${formatDisplayDate(item.from)} â†’ ${formatDisplayDate(item.to)}`;
 
               return (
                 <View key={`${item.type}-${item.id}`}>
@@ -495,13 +494,15 @@ const SubscriptionDetailScreen = () => {
             </Text>
           )}
         </View>
+        <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* ── Simple Pill Bottom Action Buttons ── */}
+      {/* â”€â”€ Simple Pill Bottom Action Buttons â”€â”€ */}
       <View style={styles.floatingBar}>
         <TouchableOpacity
-          style={styles.pausePillBtn}
+          style={[styles.pausePillBtn, !isActive && { opacity: 0.5 }]}
           activeOpacity={0.8}
+          disabled={!isActive}
           onPress={() => { setPauseFrom(todayStr); setPauseTo(todayStr); setPauseModalVisible(true); }}
         >
           <Pause size={16} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
@@ -677,14 +678,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   errorText: {
     fontSize: 14,
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   retryButton: {
     backgroundColor: COLORS.primary,
@@ -725,70 +726,101 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 120, // space for floating bottom bar
+    paddingBottom: 160, // extra space for floating bottom bar
   },
 
-  // Profile Hero (matches Customer Detail layout exactly)
-  profileHero: {
-    alignItems: 'center',
-    marginTop: 12,
+  // Profile Hero Card
+  profileHeroCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 36,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0B409C',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 4,
+    alignItems: 'center',
+  },
+  avatarWrapper: {
+    position: 'relative',
+    marginRight: 20,
   },
   avatarContainer: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: COLORS.primaryLight,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#0B409C',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: COLORS.border,
+    borderWidth: 3,
+    borderColor: '#F8FAFC',
     overflow: 'hidden',
   },
   avatarFallback: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  productName: {
-    fontSize: 20,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.textPrimary,
+  avatarStatusDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  heroRight: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  productNameHero: {
+    fontSize: 22,
+    fontFamily: 'Rubik-Bold',
+    color: '#0F172A',
     marginBottom: 8,
   },
-  statusBadge: {
+  heroStatusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+  heroStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
   },
-  statusText: {
+  heroStatusText: {
     fontSize: 11,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
   },
 
   // Section details card
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 12,
   },
   detailsCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: 16,
+    padding: 20,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 3,
   },
   detailRow: {
     flexDirection: 'row',
@@ -810,13 +842,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   divider: {
@@ -833,7 +865,7 @@ const styles = StyleSheet.create({
   emptyHistoryText: {
     fontSize: 13,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   logRow: {
     flexDirection: 'row',
@@ -849,12 +881,12 @@ const styles = StyleSheet.create({
   },
   logBadgeText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   logDates: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
 
@@ -886,7 +918,7 @@ const styles = StyleSheet.create({
   },
   pausePillText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   editQtyPillBtn: {
@@ -900,7 +932,7 @@ const styles = StyleSheet.create({
   },
   editQtyPillText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
 
@@ -927,7 +959,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   modalClose: {
@@ -935,7 +967,7 @@ const styles = StyleSheet.create({
   },
   modalLabel: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -951,7 +983,7 @@ const styles = StyleSheet.create({
   },
   dateSelectorText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   reasonInput: {
@@ -983,7 +1015,7 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
   },
   confirmBtn: {
@@ -991,7 +1023,7 @@ const styles = StyleSheet.create({
   },
   confirmBtnText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.background,
   },
   confirmPauseBtn: {
@@ -999,7 +1031,7 @@ const styles = StyleSheet.create({
   },
   confirmPauseBtnText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.background,
   },
   typeSelectorRow: {
@@ -1022,12 +1054,12 @@ const styles = StyleSheet.create({
   },
   typeOptionText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   typeOptionTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   metadataSection: {
     marginTop: 20,
@@ -1039,7 +1071,7 @@ const styles = StyleSheet.create({
   },
   metadataLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#64748B',
     marginBottom: 8,
   },
@@ -1050,15 +1082,16 @@ const styles = StyleSheet.create({
   },
   metadataValue: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#334155',
     marginLeft: 6,
   },
   metadataTime: {
     fontSize: 11,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: '#94A3B8',
   },
 });
 
 export default SubscriptionDetailScreen;
+

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'react-native-linear-gradient';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
   ArrowLeft,
@@ -27,6 +28,8 @@ import {
   Check,
   ChevronRight,
   ListOrdered,
+  MapPin,
+  Map,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -281,25 +284,25 @@ const RouteDetailScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>{t('routes.routeDetails')}</Text>}
-        leftIcon={<ArrowLeft size={24} color="#FFF" />}
+        title={t('routes.routeDetails')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
           user?.role !== 'staff' ? (
-            <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity
-                style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
+                style={[styles.headerActionBtnDark, { backgroundColor: '#E0E7FF' }]}
                 onPress={() => navigation.navigate('AddRoute', { route: routeData })}
                 activeOpacity={0.7}
               >
-                <Edit size={18} color="#FFF" />
+                <Edit size={18} color="#0B409C" />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.headerActionBtnDark, { backgroundColor: 'rgba(239,68,68,0.2)' }]}
+                style={[styles.headerActionBtnDark, { backgroundColor: '#FEE2E2' }]}
                 onPress={handleDeleteRoute}
                 activeOpacity={0.7}
               >
-                <Trash2 size={18} color="#FECACA" />
+                <Trash2 size={18} color="#DC2626" />
               </TouchableOpacity>
             </View>
           ) : null
@@ -309,16 +312,30 @@ const RouteDetailScreen = () => {
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]} showsVerticalScrollIndicator={false}>
-        {/* Info card */}
-        <View style={styles.infoCard}>
-          <Text style={styles.routeNameText}>{routeData.name}</Text>
-          {routeData.areaCode ? (
-            <View style={styles.areaContainer}>
-              <Text style={styles.areaLabel}>{t('routes.areaCode')}:</Text>
-              <Text style={styles.areaValue}>{routeData.areaCode}</Text>
-            </View>
-          ) : null}
-        </View>
+        {/* Route Info Card (Premium Gradient) */}
+        <LinearGradient
+          colors={['#F59E0B', '#D97706']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.premiumRouteCard}
+        >
+          {/* Decorative Background Icon */}
+          <View style={{ position: 'absolute', right: -15, bottom: -25, opacity: 0.15, transform: [{ rotate: '-15deg' }] }}>
+            <MapPin size={120} color="#FFFFFF" />
+          </View>
+          
+          <View style={styles.premiumRouteIconBox}>
+            <MapPin size={26} color="#FFFFFF" />
+          </View>
+          <View style={styles.premiumRouteInfo}>
+            <Text style={styles.premiumRouteName} numberOfLines={1}>{routeData.name}</Text>
+            {routeData.areaCode ? (
+              <View style={styles.premiumRouteBadge}>
+                <Text style={styles.premiumRouteBadgeText} numberOfLines={1}>{t('routes.areaCode')}: {routeData.areaCode}</Text>
+              </View>
+            ) : null}
+          </View>
+        </LinearGradient>
 
         {/* Action Button: Assign Staff */}
         {user?.role !== 'staff' && (
@@ -346,6 +363,9 @@ const RouteDetailScreen = () => {
             ) : (
               activeAssignments.map((assignment) => (
                 <View key={assignment.id} style={styles.staffCard}>
+                  <View style={[styles.staffIconBox, { backgroundColor: '#E0E7FF' }]}>
+                    <User size={20} color="#4F46E5" />
+                  </View>
                   <View style={styles.staffInfo}>
                     <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
                     <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
@@ -377,6 +397,9 @@ const RouteDetailScreen = () => {
             ) : (
               pastAssignments.map((assignment) => (
                 <View key={assignment.id} style={[styles.staffCard, styles.historyCard]}>
+                  <View style={[styles.staffIconBox, { backgroundColor: '#F1F5F9' }]}>
+                    <History size={20} color="#64748B" />
+                  </View>
                   <View style={styles.staffInfo}>
                     <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
                     <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
@@ -489,7 +512,7 @@ const RouteDetailScreen = () => {
                 style={styles.inputBox}
                 onPress={() => setActiveDatePicker('effectiveFrom')}
               >
-                <Text style={{ color: COLORS.textPrimary, fontFamily: 'Geologica-Medium', fontSize: 14 }}>
+                <Text style={{ color: COLORS.textPrimary, fontFamily: 'Rubik-SemiBold', fontSize: 14 }}>
                   {effectiveFrom}
                 </Text>
               </TouchableOpacity>
@@ -529,7 +552,7 @@ const RouteDetailScreen = () => {
                   style={styles.inputBox}
                   onPress={() => setActiveDatePicker('effectiveTo')}
                 >
-                  <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Geologica-Medium', fontSize: 14 }}>
+                  <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Rubik-SemiBold', fontSize: 14 }}>
                     {effectiveTo || 'YYYY-MM-DD (Optional)'}
                   </Text>
                 </TouchableOpacity>
@@ -592,7 +615,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -620,43 +643,53 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 120,
   },
-  infoCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 18,
+  premiumRouteCard: {
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  routeNameText: {
-    fontSize: 20,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.textPrimary,
-  },
-  areaContainer: {
+    padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginBottom: 24,
+    overflow: 'hidden',
+    shadowColor: '#D97706',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  areaLabel: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
-    marginRight: 6,
+  premiumRouteIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  areaValue: {
-    fontSize: 13,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.primary,
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+  premiumRouteInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  premiumRouteName: {
+    fontSize: 22,
+    fontFamily: 'Rubik-Bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  premiumRouteBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  premiumRouteBadgeText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Medium',
+    color: '#FFFFFF',
   },
   assignBtn: {
     flexDirection: 'row',
@@ -670,7 +703,7 @@ const styles = StyleSheet.create({
   assignBtnText: {
     color: '#FFFFFF',
     fontSize: 14.5,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -680,7 +713,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
   },
   emptyCard: {
@@ -693,34 +726,49 @@ const styles = StyleSheet.create({
   },
   emptyCardText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   staffCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     borderRadius: 16,
     padding: 14,
-    marginBottom: 10,
+    marginBottom: 12,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   historyCard: {
     backgroundColor: '#F8FAFC',
     borderColor: '#E2E8F0',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  staffIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
   },
   staffInfo: {
     flex: 1,
   },
   staffName: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   staffPhone: {
     fontSize: 12.5,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginTop: 1,
   },
@@ -731,7 +779,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   endAssignBtn: {
@@ -745,7 +793,7 @@ const styles = StyleSheet.create({
   endAssignText: {
     color: '#EF4444',
     fontSize: 12,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
   },
   historyBadge: {
     paddingVertical: 4,
@@ -756,7 +804,7 @@ const styles = StyleSheet.create({
   historyBadgeText: {
     color: '#64748B',
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   centerContainer: {
     flex: 1,
@@ -768,12 +816,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -786,7 +834,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -812,7 +860,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -820,7 +868,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     marginBottom: 6,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontWeight: '600',
   },
   dropdownTrigger: {
@@ -837,13 +885,13 @@ const styles = StyleSheet.create({
   selectedStaffText: {
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontWeight: '600',
   },
   placeholderText: {
     color: COLORS.textPlaceholder,
     fontSize: 14,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
   },
   dropdownContainer: {
     backgroundColor: '#FFFFFF',
@@ -863,7 +911,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 13.5,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginRight: 8,
@@ -871,7 +919,7 @@ const styles = StyleSheet.create({
   dropdownItemPhone: {
     fontSize: 12.5,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
   },
   dropdownEmpty: {
     padding: 16,
@@ -880,7 +928,7 @@ const styles = StyleSheet.create({
   dropdownEmptyText: {
     color: COLORS.textPlaceholder,
     fontSize: 13,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
   },
   inputBox: {
     backgroundColor: '#F8FAFC',
@@ -894,7 +942,7 @@ const styles = StyleSheet.create({
   input: {
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     height: '100%',
   },
   toggleRow: {
@@ -905,7 +953,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -921,7 +969,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: COLORS.textSecondary,
     marginRight: 6,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontWeight: '500',
   },
   checkboxSquare: {
@@ -952,7 +1000,7 @@ const styles = StyleSheet.create({
   modalSaveText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '600',
   },
   metadataSection: {
@@ -965,7 +1013,7 @@ const styles = StyleSheet.create({
   },
   metadataLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#64748B',
     marginBottom: 8,
   },
@@ -976,13 +1024,13 @@ const styles = StyleSheet.create({
   },
   metadataValue: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#334155',
     marginLeft: 6,
   },
   metadataTime: {
     fontSize: 11,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: '#94A3B8',
   },
   // Toast
@@ -1003,7 +1051,7 @@ const styles = StyleSheet.create({
   toastText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontWeight: '700',
     textAlign: 'center',
   },

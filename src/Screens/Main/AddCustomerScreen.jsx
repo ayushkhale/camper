@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+﻿import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import Contacts from 'react-native-contacts';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, User, Phone, MapPin, AlertCircle, IndianRupee, X, Contact, Package, Repeat, Calendar, Plus, ChevronDown, ChevronUp, Hash, Search, ChevronRight, FileText } from 'lucide-react-native';
+import { ChevronLeft, User, Phone, MapPin, AlertCircle, IndianRupee, X, Contact, Package, Repeat, Calendar, Plus, ChevronDown, ChevronUp, Hash, Search, ChevronRight, FileText , ArrowLeft} from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -425,7 +425,7 @@ const AddCustomerScreen = () => {
               style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
               onPress={() => { setRouteModalVisible(false); setAddRouteVisible(true); }}
             >
-              <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewRoute')}</Text>
+              <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewRoute')}</Text>
             </TouchableOpacity>
           )}
 
@@ -549,7 +549,15 @@ const AddCustomerScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={isEditMode ? t('customers.editCustomer') : t('customers.addNew')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        onLeftPress={() => navigation.goBack()}
+        height={110}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
@@ -559,20 +567,6 @@ const AddCustomerScreen = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <ChevronLeft size={28} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>
-              {isEditMode ? t('customers.editCustomer') : t('customers.addNew')}
-            </Text>
-            <Text style={styles.pageSubtitle}>
-              {isEditMode ? t('customers.editSubtitle') : t('customers.addSubtitle')}
-            </Text>
-          </View>
 
           {apiError ? (
             <View style={styles.errorBanner}>
@@ -597,7 +591,9 @@ const AddCustomerScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('customers.name')} *</Text>
               <View style={[styles.inputContainer, nameError ? styles.inputErrorBorder : null]}>
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.inputIconBox, { backgroundColor: '#E0E7FF' }]}>
+                  <User size={18} color="#4F46E5" />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t('customers.namePlaceholder')}
@@ -614,7 +610,9 @@ const AddCustomerScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('customers.phone')}</Text>
               <View style={[styles.inputContainer, phoneError ? styles.inputErrorBorder : null]}>
-                <Phone size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.inputIconBox, { backgroundColor: '#DCFCE7' }]}>
+                  <Phone size={18} color="#16A34A" />
+                </View>
                 <Text style={styles.countryCode}>+91</Text>
                 <TextInput
                   style={styles.input}
@@ -632,10 +630,12 @@ const AddCustomerScreen = () => {
             {/* Address */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('customers.address')}</Text>
-              <View style={[styles.inputContainer, { height: 100, alignItems: 'flex-start', paddingVertical: 12 }]}>
-                <MapPin size={20} color={COLORS.textPlaceholder} style={[styles.inputIcon, { marginTop: Platform.OS === 'ios' ? 0 : 2 }]} />
+              <View style={[styles.inputContainer, { height: 'auto', minHeight: 110, alignItems: 'flex-start', paddingTop: 16, paddingBottom: 16 }]}>
+                <View style={[styles.inputIconBox, { backgroundColor: '#E0E7FF' }]}>
+                  <MapPin size={18} color="#4F46E5" />
+                </View>
                 <TextInput
-                  style={[styles.input, { height: 76, textAlignVertical: 'top' }]}
+                  style={[styles.input, { minHeight: 78, textAlignVertical: 'top', paddingTop: Platform.OS === 'ios' ? 7 : 4 }]}
                   placeholder={t('customers.addressPlaceholder')}
                   value={address}
                   onChangeText={setAddress}
@@ -649,7 +649,9 @@ const AddCustomerScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('customers.accountOverview')}</Text>
               <View style={[styles.inputContainer, isEditMode && { backgroundColor: '#F3F4F6' }]}>
-                <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.inputIconBox, { backgroundColor: '#FFE4E6' }]}>
+                  <IndianRupee size={18} color="#E11D48" />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 1500"
@@ -662,7 +664,7 @@ const AddCustomerScreen = () => {
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingHorizontal: 6, backgroundColor: '#FFFBEB', paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#FEF3C7' }}>
                 <AlertCircle size={14} color="#D97706" style={{ marginRight: 6 }} />
-                <Text style={{ fontSize: 11.5, fontFamily: 'Geologica-Medium', color: '#D97706' }}>
+                <Text style={{ fontSize: 11.5, fontFamily: 'Rubik-SemiBold', color: '#D97706' }}>
                   {t('customers.openingBalanceCantChange')}
                 </Text>
               </View>
@@ -676,7 +678,9 @@ const AddCustomerScreen = () => {
                 onPress={() => setRouteModalVisible(true)}
                 activeOpacity={0.7}
               >
-                <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.inputIconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <MapPin size={18} color="#D97706" />
+                </View>
                 <Text style={[styles.dropdownText, !routeId && { color: COLORS.textPlaceholder }]} numberOfLines={1}>
                   {routeId ? getRouteName(routeId) : t('customers.selectRoute')}
                 </Text>
@@ -714,7 +718,9 @@ const AddCustomerScreen = () => {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('products.depositAmountLabel')}</Text>
                     <View style={styles.inputContainer}>
-                      <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#FFE4E6' }]}>
+                        <IndianRupee size={18} color="#E11D48" />
+                      </View>
                       <TextInput
                         style={styles.input}
                         placeholder="e.g. 300"
@@ -730,7 +736,9 @@ const AddCustomerScreen = () => {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('customers.quantity')}</Text>
                     <View style={styles.inputContainer}>
-                      <Package size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#CFFAFE' }]}>
+                        <Package size={18} color="#0891B2" />
+                      </View>
                       <TextInput
                         style={styles.input}
                         placeholder="e.g. 3"
@@ -746,7 +754,9 @@ const AddCustomerScreen = () => {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('oneTimeOrders.driverNotes')}</Text>
                     <View style={styles.inputContainer}>
-                      <FileText size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#F1F5F9' }]}>
+                        <FileText size={18} color="#64748B" />
+                      </View>
                       <TextInput
                         style={styles.input}
                         placeholder={t('oneTimeOrders.notesPlaceholder')}
@@ -792,7 +802,9 @@ const AddCustomerScreen = () => {
                       style={styles.inputContainer}
                       onPress={() => setProductModalVisible(true)}
                     >
-                      <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#F3E8FF' }]}>
+                        <Package size={18} color="#9333EA" />
+                      </View>
                       <Text style={[styles.dropdownText, !productId && { color: COLORS.textPlaceholder }]} numberOfLines={1}>
                         {productId ? getProductName(productId) : t('customers.selectProduct')}
                       </Text>
@@ -803,7 +815,9 @@ const AddCustomerScreen = () => {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('customers.quantity')} *</Text>
                     <View style={styles.inputContainer}>
-                      <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#FEF3C7' }]}>
+                        <Hash size={18} color="#D97706" />
+                      </View>
                       <TextInput
                         style={styles.input}
                         value={baseQuantity}
@@ -821,7 +835,9 @@ const AddCustomerScreen = () => {
                       style={styles.inputContainer}
                       onPress={() => setRecurrenceModalVisible(true)}
                     >
-                      <Repeat size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#FFE4E6' }]}>
+                        <Repeat size={18} color="#E11D48" />
+                      </View>
                       <Text style={styles.dropdownText} numberOfLines={1}>
                         {formatRecurrence(recurrencePattern)}
                       </Text>
@@ -835,7 +851,9 @@ const AddCustomerScreen = () => {
                       style={styles.inputContainer}
                       onPress={() => setShowDatePicker(true)}
                     >
-                      <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#E0F2FE' }]}>
+                        <Calendar size={18} color="#0284C7" />
+                      </View>
                       <Text style={styles.dropdownText} numberOfLines={1}>
                         {startDate}
                       </Text>
@@ -878,7 +896,7 @@ const AddCustomerScreen = () => {
                     style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
                     onPress={() => { setProductModalVisible(false); setAddProductInlineVisible(true); }}
                   >
-                    <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
+                    <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
                   </TouchableOpacity>
                 )}
 
@@ -981,14 +999,14 @@ const AddCustomerScreen = () => {
           setProductId(newProduct.id);
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC', // Sleek background color for the form screen
   },
   keyboardAvoid: {
     flex: 1,
@@ -1003,37 +1021,18 @@ const styles = StyleSheet.create({
   },
   sectionHeaderTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
     marginBottom: 12,
   },
   scrollContent: {
     padding: 24,
-    paddingTop: 16,
+    paddingTop: 12,
     paddingBottom: 24,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    marginLeft: -8,
-  },
-  backButton: {
-    padding: 8,
-  },
-  titleContainer: {
-    marginBottom: 32,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 6,
   },
   pageSubtitle: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorBanner: {
@@ -1052,7 +1051,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
   importBtn: {
@@ -1069,7 +1068,7 @@ const styles = StyleSheet.create({
   importBtnText: {
     color: COLORS.primary,
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   form: {
     marginBottom: 0,
@@ -1078,27 +1077,37 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    marginBottom: 6,
+    fontSize: 13,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#475569',
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderRadius: 16,
-    paddingHorizontal: 12,
-    height: 52,
+    paddingHorizontal: 16,
+    height: 54,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  inputIcon: {
-    marginRight: 8,
+  inputIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   countryCode: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.primary,
     marginRight: 4,
   },
@@ -1106,8 +1115,8 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.primary,
+    fontFamily: 'Rubik-Medium',
+    color: '#1E293B',
     padding: 0,
   },
   inputErrorBorder: {
@@ -1115,13 +1124,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.danger,
     marginTop: 4,
   },
   helperText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textPlaceholder,
     marginTop: 6,
     paddingHorizontal: 2,
@@ -1149,7 +1158,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -1364,7 +1373,7 @@ const styles = StyleSheet.create({
   dropdownText: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   skeletonBar: {
@@ -1374,3 +1383,4 @@ const styles = StyleSheet.create({
 });
 
 export default AddCustomerScreen;
+

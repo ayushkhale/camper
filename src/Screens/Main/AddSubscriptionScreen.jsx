@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, User, Package, Calendar, Repeat, AlertCircle, CheckCircle, X, Hash, Search } from 'lucide-react-native';
+import { ChevronLeft, User, Package, Calendar, Repeat, AlertCircle, CheckCircle, X, Hash, Search , ArrowLeft} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -345,10 +345,8 @@ const AddSubscriptionScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={<Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>
-          {isEditMode ? t('subscriptions.edit') : t('subscriptions.title')}
-        </Text>}
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        title={isEditMode ? t('subscriptions.edit') : t('subscriptions.title')}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -363,11 +361,6 @@ const AddSubscriptionScreen = () => {
           showsVerticalScrollIndicator={false}
         >
           {/* Subtitle */}
-          <View style={styles.subtitleContainer}>
-            <Text style={styles.pageSubtitle}>
-              {isEditMode ? 'Update subscription details' : 'Set up a recurring delivery schedule'}
-            </Text>
-          </View>
 
           {apiError ? (
             <View style={styles.errorBanner}>
@@ -385,7 +378,9 @@ const AddSubscriptionScreen = () => {
                 onPress={() => !isEditMode && setActiveModal('customer')}
                 disabled={isEditMode}
               >
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#EEF2FF' }]}>
+                  <User size={18} color="#4F46E5" />
+                </View>
                 <Text style={[styles.dropdownText, !customerId && { color: COLORS.textPlaceholder }]}>
                   {getCustomerName(customerId)}
                 </Text>
@@ -400,7 +395,9 @@ const AddSubscriptionScreen = () => {
                 onPress={() => !isEditMode && setActiveModal('product')}
                 disabled={isEditMode}
               >
-                <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <Package size={18} color="#D97706" />
+                </View>
                 <Text style={[styles.dropdownText, !productId && { color: COLORS.textPlaceholder }]}>
                   {getProductName(productId)}
                 </Text>
@@ -411,7 +408,9 @@ const AddSubscriptionScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('subscriptions.quantity')} *</Text>
               <View style={styles.inputContainer}>
-                <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#E0E7FF' }]}>
+                  <Hash size={18} color="#4338CA" />
+                </View>
                 <TextInput
                   style={styles.input}
                   value={baseQuantity}
@@ -429,7 +428,9 @@ const AddSubscriptionScreen = () => {
                 style={styles.inputContainer}
                 onPress={() => setActiveModal('recurrence')}
               >
-                <Repeat size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#FFE4E6' }]}>
+                  <Repeat size={18} color="#E11D48" />
+                </View>
                 <Text style={styles.dropdownText}>
                   {formatRecurrence(recurrencePattern)}
                 </Text>
@@ -443,7 +444,9 @@ const AddSubscriptionScreen = () => {
                 style={styles.inputContainer}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: COLORS.primaryLight }]}>
+                  <Calendar size={18} color={COLORS.primary} />
+                </View>
                 <Text style={styles.dropdownText}>
                   {startDate}
                 </Text>
@@ -467,7 +470,9 @@ const AddSubscriptionScreen = () => {
                   style={styles.inputContainer}
                   onPress={() => setActiveModal('status')}
                 >
-                  <CheckCircle size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                  <View style={[styles.iconBox, { backgroundColor: '#DCFCE7' }]}>
+                    <CheckCircle size={18} color="#16A34A" />
+                  </View>
                   <Text style={styles.dropdownText}>
                     {status.toUpperCase()}
                   </Text>
@@ -540,7 +545,7 @@ const styles = StyleSheet.create({
   },
   pageSubtitle: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   headerRow: {
@@ -557,7 +562,7 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: 28,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 6,
@@ -578,7 +583,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
   form: {
@@ -607,8 +612,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
     opacity: 0.7,
   },
-  inputIcon: {
-    marginRight: 8,
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   dropdownText: {
     flex: 1,
@@ -620,7 +630,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -647,7 +657,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -708,7 +718,7 @@ const styles = StyleSheet.create({
   },
   addInlineBtnText: {
     color: COLORS.primary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   modalSearchInput: {
@@ -757,3 +767,4 @@ const styles = StyleSheet.create({
 });
 
 export default AddSubscriptionScreen;
+

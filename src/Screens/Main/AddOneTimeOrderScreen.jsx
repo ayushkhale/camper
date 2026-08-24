@@ -27,7 +27,7 @@ import {
   Hash,
   Trash2,
   Plus,
-} from 'lucide-react-native';
+  ArrowLeft} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
@@ -114,7 +114,7 @@ const AddOneTimeOrderScreen = () => {
   };
 
   const formatDisplayDate = (str) => {
-    if (!str) return '—';
+    if (!str) return 'â€”';
     const [y, m, d] = str.split('-');
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${d} ${months[parseInt(m) - 1]} ${y}`;
@@ -280,7 +280,7 @@ const AddOneTimeOrderScreen = () => {
                 style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
                 onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
               >
-                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
+                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
               </TouchableOpacity>
             )}
 
@@ -289,7 +289,7 @@ const AddOneTimeOrderScreen = () => {
                 style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
                 onPress={() => { setActiveModal(null); setAddProductVisible(true); }}
               >
-                <Text style={{ color: COLORS.primary, fontFamily: 'Geologica-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
+                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
               </TouchableOpacity>
             )}
 
@@ -313,7 +313,7 @@ const AddOneTimeOrderScreen = () => {
               }}
               ListEmptyComponent={
                 <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Geologica-Medium' }}>
+                  <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Rubik-SemiBold' }}>
                     No items available
                   </Text>
                 </View>
@@ -329,7 +329,7 @@ const AddOneTimeOrderScreen = () => {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder, fontFamily: 'Geologica-Medium' }}>
+        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder, fontFamily: 'Rubik-SemiBold' }}>
           {t('common.loading')}
         </Text>
       </SafeAreaView>
@@ -341,15 +341,15 @@ const AddOneTimeOrderScreen = () => {
       <CurvedHeader
         title={
           <View>
-            <Text style={{ color: '#FFF', fontSize: 20, fontFamily: 'Geologica-Bold' }}>
+            <Text style={{ color: '#0B409C', fontSize: 20, fontFamily: 'Rubik-Bold' }}>
               {t('oneTimeOrders.newOrder', 'New Order')}
             </Text>
-            {/* <Text style={{ color: '#E2E8F0', fontSize: 13, fontFamily: 'Geologica-Regular', marginTop: 2 }}>
+            {/* <Text style={{ color: '#E2E8F0', fontSize: 13, fontFamily: 'Rubik-Medium', marginTop: 2 }}>
               Create a one-time product delivery
             </Text> */}
           </View>
         }
-        leftIcon={<ChevronLeft size={28} color="#FFF" />}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
@@ -379,7 +379,9 @@ const AddOneTimeOrderScreen = () => {
                 onPress={() => setActiveModal('customer')}
                 activeOpacity={0.7}
               >
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#EEF2FF' }]}>
+                  <User size={18} color="#4F46E5" />
+                </View>
                 <Text style={[styles.inputText, !customerId && { color: COLORS.textPlaceholder }]}>
                   {customerId ? getCustomerName(customerId) : t('common.selectCustomer')}
                 </Text>
@@ -393,7 +395,9 @@ const AddOneTimeOrderScreen = () => {
                 onPress={() => setActiveDatePicker('orderFrom')}
                 activeOpacity={0.7}
               >
-                <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: COLORS.primaryLight }]}>
+                  <Calendar size={18} color={COLORS.primary} />
+                </View>
                 <Text style={styles.inputText}>{formatDisplayDate(orderFrom)}</Text>
               </TouchableOpacity>
             </View>
@@ -569,7 +573,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
   form: {
@@ -583,7 +587,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -597,20 +601,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 52,
   },
-  inputIcon: {
-    marginRight: 8,
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   inputText: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   input: {
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -641,7 +650,7 @@ const styles = StyleSheet.create({
   },
   addProductBtnText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   emptyProductsCard: {
@@ -656,7 +665,7 @@ const styles = StyleSheet.create({
   },
   emptyProductsText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   itemsListContainer: {
@@ -678,7 +687,7 @@ const styles = StyleSheet.create({
   },
   productItemName: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     flex: 1,
     marginRight: 10,
@@ -694,7 +703,7 @@ const styles = StyleSheet.create({
   },
   itemInputLabel: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
@@ -712,13 +721,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     padding: 0,
   },
   currencySymbol: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginRight: 4,
   },
@@ -745,7 +754,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -768,7 +777,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   modalItem: {
@@ -781,14 +790,15 @@ const styles = StyleSheet.create({
   },
   modalItemText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     flex: 1,
   },
   modalItemTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 });
 
 export default AddOneTimeOrderScreen;
+

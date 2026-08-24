@@ -18,20 +18,52 @@
       "sha1": "eb41484bba537d10397bc6fa741c534b4c0ae67b"
     },
     {
+      "path": "assets/fonts/Fredoka-Bold.ttf",
+      "sha1": "f7355ee56b4474e9ea73b468d8b347864ac39799"
+    },
+    {
+      "path": "assets/fonts/Fredoka-Medium.ttf",
+      "sha1": "a7efbc75247d434f1f6df96550423017561c8b70"
+    },
+    {
+      "path": "assets/fonts/Fredoka-Regular.ttf",
+      "sha1": "1241ff3b11c6998f5f2dd5301136e27631a32943"
+    },
+    {
+      "path": "assets/fonts/Fredoka-SemiBold.ttf",
+      "sha1": "b74aa2fdad08887d26896d5d3e1dbdca4be87ec1"
+    },
+    {
+      "path": "assets/fonts/Geologica-Bold.ttf",
+      "sha1": "2c30b2ba77bcf2a939afa1919a6ab04bc55b4925"
+    },
+    {
+      "path": "assets/fonts/Geologica-Medium.ttf",
+      "sha1": "243292a3178c6fc9a685b4a96d4ef384f0106d96"
+    },
+    {
+      "path": "assets/fonts/Geologica-Regular.ttf",
+      "sha1": "48c05b9fd670cc00de69ed3eb8ea90de0de70d8f"
+    },
+    {
+      "path": "assets/fonts/Geologica-SemiBold.ttf",
+      "sha1": "725c5629aaad81f33091d3f3f337e4d2f4f77f5d"
+    },
+    {
       "path": "assets/fonts/Inter-Bold.ttf",
-      "sha1": "04388c7a01e024b1b12125c4f7a7c311c77306aa"
+      "sha1": "01daa7ee291d88b5b7b0ca89794687688b2920e9"
     },
     {
       "path": "assets/fonts/Inter-Medium.ttf",
-      "sha1": "bac43f80077ab85b7fab7051eb1ca373c7fed157"
+      "sha1": "1c2afe53d5c0559f60f1544c3899c52abe5a46df"
     },
     {
       "path": "assets/fonts/Inter-Regular.ttf",
-      "sha1": "2c360cb421407046bccbc09315c0a4e35d7c0fca"
+      "sha1": "04c14878db625333c97400a1d3f7285019224df3"
     },
     {
       "path": "assets/fonts/Inter-SemiBold.ttf",
-      "sha1": "bb837be2bb58f53a8bea59a08917c67c7b82b699"
+      "sha1": "7946c3130fed32f7687e0ab6de3514bab05bdde2"
     },
     {
       "path": "assets/fonts/Poppins-Bold.ttf",
@@ -48,6 +80,62 @@
     {
       "path": "assets/fonts/Poppins-SemiBold.ttf",
       "sha1": "622ca6ccbe2f22c5611dffa016b745bd26be154c"
+    },
+    {
+      "path": "assets/fonts/Rubik-Bold.ttf",
+      "sha1": "fdf0640295eb6a6fffca72e87a4d5ee3558f3e20"
+    },
+    {
+      "path": "assets/fonts/Rubik-Medium.ttf",
+      "sha1": "7fe02c3bfd9cff54aa2908bbc1960053565ca895"
+    },
+    {
+      "path": "assets/fonts/Rubik-Regular.ttf",
+      "sha1": "43ef50d2ef322e813aee777f4f951b7dc307b796"
+    },
+    {
+      "path": "assets/fonts/Rubik-SemiBold.ttf",
+      "sha1": "7591245e3df3c294961f83a49a7b7420f54d2d03"
+    },
+    {
+      "path": "assets/fonts/SUSE-Black.ttf",
+      "sha1": "c8100e8814c56c73356a2b39d35a55c13c6e4a89"
+    },
+    {
+      "path": "assets/fonts/SUSE-Bold.ttf",
+      "sha1": "fc9c44ffd3dfc8be5cbe0e147afe7315dda79247"
+    },
+    {
+      "path": "assets/fonts/SUSE-ExtraBold.ttf",
+      "sha1": "7b66217e40a1c9d5ea1050b62561bab3fdb03293"
+    },
+    {
+      "path": "assets/fonts/SUSE-ExtraLight.ttf",
+      "sha1": "3bc2f0920ce0bf981f9048fe412ac48544eb342a"
+    },
+    {
+      "path": "assets/fonts/SUSE-Light.ttf",
+      "sha1": "19c50bcb259a0d0cfc5cc9b5ef0c521671dd803d"
+    },
+    {
+      "path": "assets/fonts/SUSE-Medium.ttf",
+      "sha1": "5b479b54f21e39d6d1b0c14fad0791a1fdd0bec3"
+    },
+    {
+      "path": "assets/fonts/SUSE-Regular.ttf",
+      "sha1": "e467c1f01c762d7ecddc36af526dc5c2d357797a"
+    },
+    {
+      "path": "assets/fonts/SUSE-SemiBold.ttf",
+      "sha1": "f4a6b5607b07a95ee65918e3a20f3240e35e604d"
+    },
+    {
+      "path": "assets/fonts/SUSE-Thin.ttf",
+      "sha1": "de21918096d8d8da322aebef23a63a034ecb10c4"
+    },
+    {
+      "path": "assets/fonts/SUSE.zip",
+      "sha1": "79cf2901677697a40389f1c0b265669794b5b89c"
     }
   ]
 }
