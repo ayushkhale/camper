@@ -232,12 +232,12 @@ const SubscriptionDetailScreen = () => {
     const isFuture = item.to >= todayStr;
     if (!isFuture) { showAlert('Cannot Delete', 'Past entries cannot be removed.', 'warning'); return; }
     showAlert(
-      'Remove Entry',
-      `Remove this ${item.type === 'pause' ? 'pause' : 'exception'}?`,
+      t('subscriptions.removeEntry'),
+      t(item.type === 'pause' ? 'subscriptions.removePauseConfirm' : 'subscriptions.removeExceptionConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Remove', style: 'destructive',
+          text: t('common.remove'), style: 'destructive',
           onPress: async () => {
             try {
               const res = item.type === 'pause'
@@ -260,12 +260,12 @@ const SubscriptionDetailScreen = () => {
 
   const handleDeleteSubscription = () => {
     showAlert(
-      'Delete Subscription',
-      'Are you sure you want to delete this subscription?',
+      t('subscriptions.deleteSubscription'),
+      t('subscriptions.deleteConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -524,27 +524,27 @@ const SubscriptionDetailScreen = () => {
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPauseModalVisible(false)}>
           <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pause Subscription</Text>
+              <Text style={styles.modalTitle}>{t('subscriptions.pauseSubscription')}</Text>
               <TouchableOpacity style={styles.modalClose} onPress={() => setPauseModalVisible(false)}>
                 <X size={20} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalLabel}>Pause From</Text>
+            <Text style={styles.modalLabel}>{t('subscriptions.pauseFrom')}</Text>
             <TouchableOpacity style={styles.dateSelector} onPress={() => setActiveDatePicker('pauseFrom')}>
               <Calendar size={16} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={styles.dateSelectorText}>{pauseFrom ? formatDisplayDate(pauseFrom) : 'Select Date'}</Text>
+              <Text style={styles.dateSelectorText}>{pauseFrom ? formatDisplayDate(pauseFrom) : t('common.selectDate')}</Text>
             </TouchableOpacity>
 
-            <Text style={[styles.modalLabel, { marginTop: 12 }]}>Pause To</Text>
+            <Text style={[styles.modalLabel, { marginTop: 12 }]}>{t('subscriptions.pauseTo')}</Text>
             <TouchableOpacity style={styles.dateSelector} onPress={() => setActiveDatePicker('pauseTo')}>
               <Calendar size={16} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={styles.dateSelectorText}>{pauseTo ? formatDisplayDate(pauseTo) : 'Select End Date (optional)'}</Text>
+              <Text style={styles.dateSelectorText}>{pauseTo ? formatDisplayDate(pauseTo) : t('common.selectEndDateOptional')}</Text>
             </TouchableOpacity>
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.modalBtn, styles.cancelBtn]} onPress={() => setPauseModalVisible(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.confirmPauseBtn]}
@@ -554,7 +554,7 @@ const SubscriptionDetailScreen = () => {
                 {submittingPause ? (
                   <ActivityIndicator size="small" color={COLORS.background} />
                 ) : (
-                  <Text style={styles.confirmPauseBtnText}>Confirm Pause</Text>
+                  <Text style={styles.confirmPauseBtnText}>{t('subscriptions.confirmPause')}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -567,7 +567,7 @@ const SubscriptionDetailScreen = () => {
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSkipModalVisible(false)}>
           <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Log Exception</Text>
+              <Text style={styles.modalTitle}>{t('subscriptions.logException')}</Text>
               <TouchableOpacity style={styles.modalClose} onPress={() => setSkipModalVisible(false)}>
                 <X size={20} color={COLORS.textSecondary} />
               </TouchableOpacity>
@@ -578,32 +578,32 @@ const SubscriptionDetailScreen = () => {
                 style={[styles.typeOption, overrideType === 'skip' && styles.typeOptionActive]}
                 onPress={() => setOverrideType('skip')}
               >
-                <Text style={[styles.typeOptionText, overrideType === 'skip' && styles.typeOptionTextActive]}>Skip Delivery</Text>
+                <Text style={[styles.typeOptionText, overrideType === 'skip' && styles.typeOptionTextActive]}>{t('subscriptions.skipDelivery')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.typeOption, overrideType === 'extra' && styles.typeOptionActive]}
                 onPress={() => setOverrideType('extra')}
               >
-                <Text style={[styles.typeOptionText, overrideType === 'extra' && styles.typeOptionTextActive]}>Change Qty</Text>
+                <Text style={[styles.typeOptionText, overrideType === 'extra' && styles.typeOptionTextActive]}>{t('subscriptions.changeQty')}</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={[styles.modalLabel, { marginTop: 12 }]}>From Date</Text>
+            <Text style={[styles.modalLabel, { marginTop: 12 }]}>{t('subscriptions.fromDate')}</Text>
             <TouchableOpacity style={styles.dateSelector} onPress={() => setActiveDatePicker('overrideFrom')}>
               <Calendar size={16} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={styles.dateSelectorText}>{overrideFrom ? formatDisplayDate(overrideFrom) : 'Select Date'}</Text>
+              <Text style={styles.dateSelectorText}>{overrideFrom ? formatDisplayDate(overrideFrom) : t('common.selectDate')}</Text>
             </TouchableOpacity>
 
-            <Text style={[styles.modalLabel, { marginTop: 12 }]}>To Date</Text>
+            <Text style={[styles.modalLabel, { marginTop: 12 }]}>{t('subscriptions.toDate')}</Text>
             <TouchableOpacity style={styles.dateSelector} onPress={() => setActiveDatePicker('overrideTo')}>
               <Calendar size={16} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={styles.dateSelectorText}>{overrideTo ? formatDisplayDate(overrideTo) : 'Select End Date (optional)'}</Text>
+              <Text style={styles.dateSelectorText}>{overrideTo ? formatDisplayDate(overrideTo) : t('common.selectEndDateOptional')}</Text>
             </TouchableOpacity>
 
             {overrideType === 'extra' && (
               <>
                 <Text style={[styles.modalLabel, { marginTop: 12 }]}>
-                  New Quantity (Base: {subscription?.baseQuantity || 0})
+                  {t('subscriptions.newQuantityBase', { quantity: subscription?.baseQuantity || 0 })}
                 </Text>
                 <TextInput
                   style={styles.reasonInput}
@@ -618,7 +618,7 @@ const SubscriptionDetailScreen = () => {
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.modalBtn, styles.cancelBtn]} onPress={() => setSkipModalVisible(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.confirmBtn]}
@@ -628,7 +628,7 @@ const SubscriptionDetailScreen = () => {
                 {submittingException ? (
                   <ActivityIndicator size="small" color={COLORS.background} />
                 ) : (
-                  <Text style={styles.confirmBtnText}>Confirm</Text>
+                  <Text style={styles.confirmBtnText}>{t('common.confirm')}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -726,6 +726,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
+    paddingTop: 24,
     paddingBottom: 160, // extra space for floating bottom bar
   },
 

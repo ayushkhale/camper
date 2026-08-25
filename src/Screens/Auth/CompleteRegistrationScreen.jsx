@@ -13,6 +13,7 @@ import {
   FlatList,
   ActivityIndicator
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { ChevronDown, LogOut } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -137,7 +138,7 @@ const CompleteRegistrationScreen = () => {
       if (response.success) {
         triggerToast(t('completeReg.success'), 'success');
         setTimeout(async () => {
-          await login(response.token, response.user);
+          await login(response.token, response.refreshToken, response.user);
         }, 1000);
       }
     } catch (error) {
@@ -171,7 +172,7 @@ const CompleteRegistrationScreen = () => {
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
           {/* Logo Branding */}
           <View style={styles.logoContainer}>
-            <Image
+            <FastImage
               source={i18n.language === 'hi' ? require('../../../assets/hindilogo.png') : require('../../../assets/englishlogo.png')}
               style={styles.logo}
               resizeMode="contain"

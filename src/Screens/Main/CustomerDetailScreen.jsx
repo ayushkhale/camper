@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
@@ -164,12 +165,12 @@ const CustomerDetailScreen = () => {
 
   const handleDeleteSubscription = (sub) => {
     showAlert(
-      'Delete Subscription',
-      'Are you sure you want to delete this subscription?',
+      t('subscriptions.deleteSubscription'),
+      t('subscriptions.deleteConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -189,10 +190,10 @@ const CustomerDetailScreen = () => {
 
   const formatRecurrence = (pattern) => {
     switch (pattern) {
-      case 'daily': return 'Daily';
-      case 'alternate_days': return 'Alternate Days';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
+      case 'daily': return t('subscriptions.daily');
+      case 'alternate_days': return t('subscriptions.alternateDays');
+      case 'weekly': return t('subscriptions.weekly');
+      case 'monthly': return t('subscriptions.monthly');
       default: return pattern;
     }
   };
@@ -257,7 +258,7 @@ const CustomerDetailScreen = () => {
         <View style={styles.profileHeroCard}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatarContainer}>
-              <Image
+              <FastImage
                 source={require('../../../assets/customerfallback.png')}
                 style={styles.avatarImage}
                 resizeMode="cover"
@@ -289,7 +290,7 @@ const CustomerDetailScreen = () => {
               activeOpacity={0.7}
             >
               <Clock size={14} color="#3B82F6" style={{ marginRight: 6 }} />
-              <Text style={styles.historyBtnText}>View History</Text>
+              <Text style={styles.historyBtnText}>{t('customerDetail.viewHistory')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -369,7 +370,7 @@ const CustomerDetailScreen = () => {
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.phone_label')}</Text>
-              <Text style={styles.detailValue}>{customerData.phone || 'Not Provided'}</Text>
+              <Text style={styles.detailValue}>{customerData.phone || t('customerDetail.notProvided')}</Text>
             </View>
           </View>
 
@@ -381,7 +382,7 @@ const CustomerDetailScreen = () => {
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.address_label')}</Text>
-              <Text style={styles.detailValue}>{customerData.address || 'Not Provided'}</Text>
+              <Text style={styles.detailValue}>{customerData.address || t('customerDetail.notProvided')}</Text>
             </View>
           </View>
 

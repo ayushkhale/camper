@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-  Alert,
   Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,11 +14,13 @@ import { ChevronRight, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
 import { AuthContext } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
 import { api } from '../services/api';
 
 const CustomDrawerContent = (props) => {
   const { t } = useTranslation();
   const { user, userToken, logout } = useContext(AuthContext);
+  const { showAlert } = useAlert();
   const { navigation } = props;
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = React.useState(null);
@@ -43,6 +44,7 @@ const CustomDrawerContent = (props) => {
   // Only list screens that actually exist and are registered in navigation
   const allMenuItems = [
     { title: t('tabs.home'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Home' } },
+    { title: t('deliveries.pastDeliveries') || 'Modify / Past Deliveries', type: 'navigate', screen: 'PastDeliveries' },
     { title: t('deliveries.allRoutes'), type: 'navigate', screen: 'RouteList' },
     { title: t('tabs.customers'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Customers' } },
     { title: t('deliveries.unbilledDeliveries'), type: 'navigate', screen: 'UnbilledDeliveries', ownerOnly: true },
@@ -64,7 +66,7 @@ const CustomDrawerContent = (props) => {
     if (item.type === 'navigate') {
       navigation.navigate(item.screen, item.params);
     } else if (item.type === 'logout') {
-      Alert.alert(t('settings.logout'), t('settings.logoutConfirm'), [
+      showAlert(t('settings.logout'), t('settings.logoutConfirm'), [
         { text: t('staff.cancel'), style: 'cancel' },
         { text: t('settings.logout'), style: 'destructive', onPress: () => logout() },
       ]);
@@ -95,6 +97,10 @@ const CustomDrawerContent = (props) => {
             </Defs>
             <Rect width="100%" height="100%" fill="url(#bgGrad)" />
           </Svg>
+        </View>
+
+        <View style={styles.avatarCircle}>
+          <Image source={require('../../assets/heroSetting.jpeg')} style={styles.avatarImage} />
         </View>
 
         <View style={styles.headerLeft}>
@@ -198,6 +204,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
+    marginRight: 14,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',

@@ -48,7 +48,7 @@ import { TextInput } from 'react-native';
 const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, isViewOnly }) => {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(index === 1);
   const [selectedEditStatus, setSelectedEditStatus] = useState(delivery.status || 'pending');
 
   useEffect(() => {
@@ -583,7 +583,7 @@ const PastDeliveriesScreen = () => {
           >
             <Truck size={15} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
             <Text style={styles.filterDropdownText} numberOfLines={1}>
-              {selectedStatus === 'all' ? 'All Status' : selectedStatus.toUpperCase()}
+              {selectedStatus === 'all' ? t('deliveries.allStatus') : t(`deliveries.${selectedStatus}`)}
             </Text>
             <ChevronRight size={15} color={COLORS.textPlaceholder} style={{ marginLeft: 'auto', transform: [{ rotate: '90deg' }] }} />
           </TouchableOpacity>
@@ -710,7 +710,7 @@ const PastDeliveriesScreen = () => {
                     onPress={() => { setSelectedStatus(st); setActiveFilterModal(null); }}
                   >
                     <Text style={[styles.filterModalItemText, selectedStatus === st && { color: COLORS.primary, fontFamily: 'Geologica-Bold' }]}>
-                      {st === 'all' ? 'All Status' : st.toUpperCase()}
+                      {st === 'all' ? t('deliveries.allStatus') : t(`deliveries.${st}`)}
                     </Text>
                   </TouchableOpacity>
                 ))}

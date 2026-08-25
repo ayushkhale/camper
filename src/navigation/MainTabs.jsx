@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import Svg, { Path } from 'react-native-svg';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Truck, Users, Bell, CreditCard, Menu, Droplet } from 'lucide-react-native';
@@ -7,8 +8,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
-import { AuthContext } from '../context/AuthContext';
-import { api } from '../services/api';
 import HomeScreen from '../Screens/Main/HomeScreen';
 import OrdersScreen from '../Screens/Main/OrdersScreen';
 import PaymentsScreen from '../Screens/Main/PaymentsScreen';
@@ -36,28 +35,7 @@ const CustomDropletIcon = ({ size = 20, color = "#0B409C", style }) => (
 );
 
 const HomeHeader = () => {
-  const { i18n } = useTranslation();
   const navigation = useNavigation();
-  const { userToken, user } = useContext(AuthContext);
-  const [profile, setProfile] = useState(null);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        if (userToken) {
-          const res = await api.getVendorProfile(userToken);
-          if (res.success && res.profile) {
-            setProfile(res.profile);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to fetch profile in HomeHeader', e);
-      }
-    };
-    fetchProfile();
-  }, [userToken]);
-
-  const vendorLogo = profile?.logoUrl || profile?.imageUrl || user?.logoUrl || user?.imageUrl;
 
   return (
     <CurvedHeader
@@ -65,22 +43,21 @@ const HomeHeader = () => {
       contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       leftIcon={<Menu color="#0B409C" size={28} strokeWidth={2} />}
       onLeftPress={() => navigation.toggleDrawer()}
-      title={
+      title={(
         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -8 }}>
-          <Image 
-            source={require('../../assets/logo1.png')} 
+          <FastImage
+            source={require('../../assets/logo1.png')}
             style={{ width: 140, height: 38 }}
-            resizeMode="contain" 
+            resizeMode="contain"
           />
         </View>
-      }
-      rightIcon={
-        vendorLogo ? (
-          <Image source={{ uri: vendorLogo }} style={[styles.vendorAvatar, { borderColor: '#0B409C', borderWidth: 2 }]} />
-        ) : (
-          <Image source={require('../../assets/customerfallback.png')} style={[styles.vendorAvatar, { borderColor: '#0B409C', borderWidth: 2 }]} />
-        )
-      }
+      )}
+      rightIcon={(
+        <FastImage
+          source={require('../../assets/heroSetting.jpeg')}
+          style={styles.vendorAvatar}
+        />
+      )}
       onRightPress={() => navigation.navigate('MainDrawer', { screen: 'Settings' })}
     />
   );
@@ -142,7 +119,7 @@ const MainTabs = () => {
         tabBarLabel: ({ focused }) => {
           let label = t('tabs.home');
           if (route.name === 'Deliveries') label = t('tabs.deliveries');
-          if (route.name === 'Payments') label = 'Payments';
+          if (route.name === 'Payments') label = t('tabs.payments');
           if (route.name === 'Customers') label = t('tabs.customers');
 
           const activeColor = '#1D4ED8';
@@ -179,7 +156,7 @@ const MainTabs = () => {
       <Tab.Screen
         name="Payments"
         component={PaymentsScreen}
-        options={{ tabBarLabel: 'Payments' }}
+        options={{ tabBarLabel: t('tabs.payments') }}
       />
       <Tab.Screen
         name="Customers"
@@ -211,7 +188,9 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-  }
+    borderWidth: 2,
+    borderColor: '#0B409C',
+  },
 });
 
 export default MainTabs;

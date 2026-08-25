@@ -8,8 +8,7 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
-  TouchableWithoutFeedback,
-  Alert
+  TouchableWithoutFeedback
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +18,7 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useTranslation } from 'react-i18next';
+import { useAlert } from '../../context/AlertContext';
 
 // Placeholder imports for child components
 import FinancialReport from '../../components/reports/FinancialReport';
@@ -31,6 +31,7 @@ const ReportsScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const PRESETS = [
     { id: '7_days', label: t('reports.last7Days') },
@@ -160,18 +161,18 @@ const ReportsScreen = () => {
         
         const diffDays = (parseDateString(newToDate).getTime() - parseDateString(formatted).getTime()) / (1000 * 3600 * 24);
         if (diffDays > 90) {
-          Alert.alert(t('reports.invalidRange'), t('reports.customDateLimit'));
+          showAlert(t('reports.invalidRange'), t('reports.customDateLimit'), 'warning');
           return;
         }
         setCustomFrom(formatted);
       } else if (pickerType === 'to') {
         if (formatted <= customFrom) {
-          Alert.alert(t('reports.invalidRange'), t('reports.endDateAfterStart'));
+          showAlert(t('reports.invalidRange'), t('reports.endDateAfterStart'), 'warning');
           return;
         }
         const diffDays = (parseDateString(formatted).getTime() - parseDateString(customFrom).getTime()) / (1000 * 3600 * 24);
         if (diffDays > 90) {
-          Alert.alert(t('reports.invalidRange'), t('reports.customDateLimit'));
+          showAlert(t('reports.invalidRange'), t('reports.customDateLimit'), 'warning');
           return;
         }
         setCustomTo(formatted);

@@ -84,6 +84,27 @@ const AddCustomerScreen = () => {
   const [contactSearch, setContactSearch] = useState('');
 
   const contactsPulseAnim = useRef(new Animated.Value(0.35)).current;
+  const formScrollRef = useRef(null);
+  const pendingSectionScrollRef = useRef(null);
+
+  const toggleExpandableSection = (section, isOpen, setIsOpen) => {
+    const willOpen = !isOpen;
+    pendingSectionScrollRef.current = willOpen ? section : null;
+    setIsOpen(willOpen);
+  };
+
+  const handleExpandedSectionLayout = (section, event) => {
+    if (pendingSectionScrollRef.current !== section) return;
+
+    const sectionY = event.nativeEvent.layout.y;
+    pendingSectionScrollRef.current = null;
+    requestAnimationFrame(() => {
+      formScrollRef.current?.scrollTo({
+        y: Math.max(0, sectionY - 16),
+        animated: true,
+      });
+    });
+  };
 
   useEffect(() => {
     if (loadingContacts) {
@@ -297,17 +318,17 @@ const AddCustomerScreen = () => {
 
   const formatRecurrence = (pattern) => {
     switch (pattern) {
-      case 'daily': return 'Daily';
-      case 'alternate_days': return 'Alternate Days';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
+      case 'daily': return t('subscriptions.daily');
+      case 'alternate_days': return t('subscriptions.alternateDays');
+      case 'weekly': return t('subscriptions.weekly');
+      case 'monthly': return t('subscriptions.monthly');
       default: return pattern;
     }
   };
 
   const getProductName = (id) => {
     const p = products.find(p => p.id === id);
-    return p ? p.name : 'Select Product';
+    return p ? p.name : t('customers.selectProduct');
   };
 
   const handleImportContacts = async () => {
@@ -322,7 +343,7 @@ const AddCustomerScreen = () => {
           {
             title: 'Contacts Permission',
             message: 'This app needs access to your contacts to import customer details.',
-            buttonPositive: 'OK',
+            buttonPositive: t('common.okay'),
           }
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
@@ -396,7 +417,7 @@ const AddCustomerScreen = () => {
 
   const getRouteName = (id) => {
     const r = routes.find(r => r.id === id);
-    return r ? r.name : 'Select Route';
+    return r ? r.name : t('customers.selectRoute');
   };
 
   const renderRouteModal = () => (
@@ -504,7 +525,7 @@ const AddCustomerScreen = () => {
             <Search size={17} color={COLORS.textPlaceholder} style={{ marginRight: 10 }} />
             <TextInput
               style={styles.modalSearchInput}
-              placeholder="Search by name or number..."
+              placeholder={t('customers.searchContactsPlaceholder')}
               value={contactSearch}
               onChangeText={handleSearchContacts}
               placeholderTextColor={COLORS.textPlaceholder}
@@ -514,7 +535,7 @@ const AddCustomerScreen = () => {
           {loadingContacts ? (
             renderContactsSkeleton()
           ) : filteredContacts.length === 0 ? (
-            <Text style={styles.modalEmptyText}>No contacts found.</Text>
+            <Text style={styles.modalEmptyText}>{t('customers.noContactsFound')}</Text>
           ) : (
             <FlatList
               data={filteredContacts}
@@ -563,6 +584,7 @@ const AddCustomerScreen = () => {
         style={styles.keyboardAvoid}
       >
         <ScrollView
+          ref={formScrollRef}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: 60 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -695,7 +717,7 @@ const AddCustomerScreen = () => {
             <>
               <TouchableOpacity
                 style={styles.subscriptionToggle}
-                onPress={() => setAddDeposit(!addDeposit)}
+                onPress={() => toggleExpandableSection('deposit', addDeposit, setAddDeposit)}
                 activeOpacity={0.7}
               >
                 <View style={styles.subscriptionToggleLeft}>
@@ -713,7 +735,10 @@ const AddCustomerScreen = () => {
               </TouchableOpacity>
 
               {addDeposit && (
-                <View style={styles.subscriptionSection}>
+                <View
+                  style={styles.subscriptionSection}
+                  onLayout={(event) => handleExpandedSectionLayout('deposit', event)}
+                >
                   {/* Deposit Amount */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('products.depositAmountLabel')}</Text>
@@ -776,7 +801,11 @@ const AddCustomerScreen = () => {
             <>
               <TouchableOpacity
                 style={styles.subscriptionToggle}
-                onPress={() => setAddSubscription(!addSubscription)}
+                onPress={() => toggleExpandableSection(
+                  'subscription',
+                  addSubscription,
+                  setAddSubscription,
+                )}
                 activeOpacity={0.7}
               >
                 <View style={styles.subscriptionToggleLeft}>
@@ -794,7 +823,10 @@ const AddCustomerScreen = () => {
               </TouchableOpacity>
 
               {addSubscription && (
-                <View style={styles.subscriptionSection}>
+                <View
+                  style={styles.subscriptionSection}
+                  onLayout={(event) => handleExpandedSectionLayout('subscription', event)}
+                >
                   {/* Product */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('customers.product')} *</Text>

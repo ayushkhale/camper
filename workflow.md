@@ -666,3 +666,37 @@
  B \ ) .   S t y l e d   t h e   s t a f f   b a d g e   w i t h   a   s u b t l e   s l a t e   c o l o r   t o   d i s t i n g u i s h   i t   f r o m   t h e   p r i m a r y   r o u t e   b a d g e . 
   
  
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/services/api.js, src/context/AuthContext.js, src/Screens/Auth/OtpVerificationScreen.jsx, src/Screens/Auth/CompleteRegistrationScreen.jsx
+- **User Request**: Implement persistent login using refresh tokens via local async storage.
+- **Root Cause / Task**: The backend migrated to short-lived access tokens (1 hour) and refresh tokens (30 days) for improved security. The app needed a robust, queued fetch interceptor to handle token refresh without disrupting the user experience.
+- **Changes Made**:
+  1. Built a custom fetchWithAuth interceptor wrapper inside api.js to automatically catch 401s, queue parallel requests, refresh the token, and replay the original requests seamlessly.
+  2. Modified AuthContext.js to securely manage refresh_token in AsyncStorage alongside jwt_token.
+  3. Updated the authentication screens (OTP and Registration) to capture and pass the new refreshToken to the global state.
+  4. Exposed a setLogoutCallback from api.js that AuthContext.js subscribes to, guaranteeing the app logs out and clears state if the refresh token expires or is revoked.
+
+### Date: 2026-08-25 (Tuesday)
+- **Component / File**: `CurvedHeader.jsx`, `MainTabs.jsx`, `HomeScreen.jsx`, `CustomDrawerContent.jsx`, `SettingsScreen.jsx`, `SubscriptionDetailScreen.jsx`, `ProductCatalogScreen.jsx`, `CustomerDetailScreen.jsx`, `PaymentsScreen.jsx`, `OrdersScreen.jsx`, `AlertContext.jsx`, `i18n/index.js`, and the affected modal/detail/form screens.
+- **User Request**: Consolidate the latest header, profile imagery, card spacing, global alerts, quick actions, Hindi localization, payment labels, and staff delivery-route filter improvements without changing existing business functionality.
+- **Root Cause / Task**: Several screens still had inconsistent header artwork and spacing, native generic alerts, hardcoded English strings, missing profile artwork, and a staff route filter that opened on All Routes instead of the most useful assigned route.
+- **Changes Made**:
+  1. Updated `CurvedHeader.jsx` so Home retains the `header_bg9.png` artwork while inner screens use the same light blue gradient language as the Custom Drawer; capped inner-screen header height at `55` while preserving each screen's existing header actions and navigation behavior.
+  2. Preserved the Home header layout with the Camper logo on the left and added `heroSetting.jpeg` as the right-side Settings shortcut image; tapping it continues to navigate to Settings.
+  3. Added `heroSetting.jpeg` beside the business information in the Custom Drawer as a visual-only enhancement, without changing drawer navigation behavior.
+  4. Replaced the Settings screen's flat header with the shared curved header, retained the Edit/Cancel action, replaced the old profile image with `heroSetting.jpeg`, and corrected top spacing so the profile card no longer sits inside the header.
+  5. Applied the same content-spacing correction to `SubscriptionDetailScreen.jsx` so its first card begins below the compact curved header.
+  6. Fixed the `FastImage` runtime error in `ProductCatalogScreen.jsx` by importing the component before preloading product images; also used `FastImage` in the touched image-heavy header/profile areas.
+  7. Standardized touched confirmation dialogs on the shared white custom alert/modal from `AlertContext.jsx`, including delete/remove actions and Custom Drawer/Settings logout confirmation; destructive actions now require confirmation before execution.
+  8. Added localized default alert labels and expanded English/Hindi translations for modal titles, confirmation messages, cancel/delete/remove buttons, validation notices, date labels, route assignment actions, invoice actions, and related fallback text.
+  9. Added **Unbilled Deliveries** as the final Home Quick Action while retaining the existing navigation and quick-action slider behavior.
+  10. Localized Customer Detail's **View History** and **Not Provided** text and converted subscription recurrence/delete text to translation keys.
+  11. Localized the bottom-navigation **Payments** label, the **Bank Transfer** payment chip, payment-mode badges, and missing-phone fallback text on the Payments screen.
+  12. Improved the staff Today Deliveries route filter: after the initial unfiltered delivery load, the app automatically selects the assigned route with the most deliveries matching the current status (Pending by default). If none match, it selects the route with the most overall delivery data, then falls back to the first assigned route when no delivery data exists.
+  13. Added a one-time initialization guard so staff can manually switch to another assigned route or All Routes and their choice is not overwritten afterward.
+  14. Redesigned the Home screen's empty **Today's Deliveries** state as a polished rounded white card with subtle neutral elevation, a layered delivery icon, and improved title/message typography. Removed colored borders and decorative highlighting after review; loading, populated-list, navigation, and API behavior remain unchanged.
+  15. Corrected the top spacing in `UnbilledDeliveriesScreen.jsx` so the first **Pending to be Invoiced** card begins below the compact curved header instead of visually entering the header area; delivery and invoice behavior remain unchanged.
+  16. Added a shared pulsing image skeleton to both onboarding screens. The placeholder occupies the illustration area until each onboarding image loads, then the image fades in smoothly; Skip, Back, Next, Get Started, and navigation behavior remain unchanged.
+  17. Replaced the static splash artwork with the selected **Animated Water Drop** concept. The splash reuses the exact inner-header gradient palette while a water droplet falls into the exact horizontal and vertical screen center, squashes on impact, produces two expanding ripple waves, and dissolves into the Camper logo with a soft spring/fade. To ensure consistent device positioning, the impact stage now uses its own full-screen flex-centering layer instead of percentage-based absolute coordinates; the tagline uses a separate centered layer offset below it. The localized tagline, white curved exit sweep, existing three-second completion callback, and authentication/navigation flow remain unchanged.
+- **Status**: Implemented; focused lint and diff validation completed for the latest delivery, Home empty-state, header-spacing, onboarding image-loading, and animated splash changes.

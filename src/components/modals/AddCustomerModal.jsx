@@ -61,7 +61,7 @@ const AddCustomerModal = ({ visible, onClose, onSuccess }) => {
 
   const getRouteName = (id) => {
     const r = routes.find(r => r.id === id);
-    return r ? r.name : 'Select Route';
+    return r ? r.name : t('customers.selectRoute');
   };
 
   const validateForm = () => {
@@ -212,7 +212,7 @@ const AddCustomerModal = ({ visible, onClose, onSuccess }) => {
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingHorizontal: 4, backgroundColor: '#FFFBEB', paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#FEF3C7' }}>
                     <AlertCircle size={14} color="#D97706" style={{ marginRight: 6 }} />
                     <Text style={{ fontSize: 11.5, fontFamily: 'Rubik-SemiBold', color: '#D97706' }}>
-                      Note: Opening balance once saved cannot be changed.
+                      {t('customers.openingBalanceCantChange')}
                     </Text>
                   </View>
                 </View>
@@ -261,7 +261,7 @@ const AddCustomerModal = ({ visible, onClose, onSuccess }) => {
         <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setRoutePickerVisible(false)}>
           <View style={styles.pickerContent}>
             <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Select Route</Text>
+              <Text style={styles.pickerTitle}>{t('customers.selectRoute')}</Text>
               <TouchableOpacity onPress={() => setRoutePickerVisible(false)}>
                 <X size={20} color={COLORS.textSecondary} />
               </TouchableOpacity>
@@ -271,14 +271,14 @@ const AddCustomerModal = ({ visible, onClose, onSuccess }) => {
               style={styles.addInlineBtn}
               onPress={() => { setRoutePickerVisible(false); setAddRouteVisible(true); }}
             >
-              <Text style={styles.addInlineBtnText}>+ Add New Route</Text>
+              <Text style={styles.addInlineBtnText}>{t('common.addNewRoute')}</Text>
             </TouchableOpacity>
 
             <ScrollView style={{ maxHeight: 300 }}>
               {loadingRoutes ? (
                 <ActivityIndicator style={{ padding: 20 }} color={COLORS.primary} />
               ) : routes.length === 0 ? (
-                <Text style={styles.emptyText}>No routes found.</Text>
+                <Text style={styles.emptyText}>{t('routes.noRoutesFound')}</Text>
               ) : (
                 routes.map(r => (
                   <TouchableOpacity 

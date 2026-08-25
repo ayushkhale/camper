@@ -13,6 +13,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -270,7 +271,7 @@ const AddProductScreen = () => {
             <View style={styles.imageBoxContainer}>
               {displayImageUri ? (
                 <View style={styles.selectedImageContainer}>
-                  <Image
+                  <FastImage
                     source={{ uri: displayImageUri }}
                     style={styles.previewImage}
                     resizeMode="cover"

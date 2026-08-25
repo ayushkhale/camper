@@ -6,8 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl,
-  Alert
+  RefreshControl
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +14,7 @@ import { FileText, ChevronRight, Menu, CheckCircle, User, Phone, IndianRupee, Pa
 import LinearGradient from 'react-native-linear-gradient';
 import CurvedHeader from '../../components/CurvedHeader';
 import { AuthContext } from '../../context/AuthContext';
+import { useAlert } from '../../context/AlertContext';
 import { api } from '../../services/api';
 import { COLORS } from '../../constants/colors';
 
@@ -22,6 +22,7 @@ const UnbilledDeliveriesScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -52,13 +53,13 @@ const UnbilledDeliveriesScreen = () => {
   };
 
   const handleGenerateInvoice = async (customerId, periodStart, periodEnd) => {
-    Alert.alert(
-      'Generate Invoice',
-      'Are you sure you want to generate an invoice for these deliveries?',
+    showAlert(
+      t('invoices.generateInvoice'),
+      t('invoices.generateConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: 'Generate', 
+          text: t('deliveries.generate'),
           style: 'default',
           onPress: async () => {
             try {
@@ -66,11 +67,11 @@ const UnbilledDeliveriesScreen = () => {
               const payload = { customerId, periodStart, periodEnd };
               const res = await api.generateInvoices(userToken, payload);
               if (res.success) {
-                Alert.alert('Success', res.message || 'Invoice generated successfully.');
+                showAlert('Success', res.message || 'Invoice generated successfully.', 'success');
                 fetchSummary(); // Refresh list to remove generated items
               }
             } catch (error) {
-              Alert.alert('Error', error.message || 'Failed to generate invoice.');
+              showAlert('Error', error.message || 'Failed to generate invoice.', 'error');
             } finally {
               setGeneratingForId(null);
             }
@@ -205,7 +206,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   listContainer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 24,
     paddingBottom: 40,
   },
   card: {

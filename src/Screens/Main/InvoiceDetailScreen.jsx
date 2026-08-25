@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Share,
   Linking,
-  Alert,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import RNPrint from 'react-native-print';
@@ -43,12 +42,14 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useTranslation } from 'react-i18next';
+import { useAlert } from '../../context/AlertContext';
 
 const InvoiceDetailScreen = () => {
   const { t, i18n } = useTranslation();
   const route = useRoute();
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
+  const { showAlert } = useAlert();
 
   const { invoiceId, invoice: initialInvoice } = route.params || {};
 
@@ -115,11 +116,11 @@ const InvoiceDetailScreen = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'paid':
-        return { label: 'PAID', bg: '#ECFDF5', text: '#129c00ff' };
+        return { label: t('invoices.paid').toUpperCase(), bg: '#ECFDF5', text: '#129c00ff' };
       case 'partially_paid':
-        return { label: 'PARTIALLY\nPAID', bg: '#EFF6FF', text: '#1D4ED8' };
+        return { label: t('invoices.partiallyPaid').toUpperCase(), bg: '#EFF6FF', text: '#1D4ED8' };
       default:
-        return { label: 'UNPAID', bg: '#FEF2F2', text: '#980000ff' };
+        return { label: t('invoices.unpaid').toUpperCase(), bg: '#FEF2F2', text: '#980000ff' };
     }
   };
 
@@ -618,7 +619,7 @@ const InvoiceDetailScreen = () => {
       }
     } catch (error) {
       console.error('Error printing invoice:', error);
-      Alert.alert('Print Error', error.message || 'Could not print invoice');
+      showAlert('Print Error', error.message || 'Could not print invoice', 'error');
     } finally {
       setIsPrintingPdf(false);
     }
@@ -639,12 +640,12 @@ const InvoiceDetailScreen = () => {
       }
 
       if (filePath) {
-        Alert.alert(
-          'Invoice Downloaded',
-          `PDF saved successfully!\n\nFile location:\n${filePath}`,
+        showAlert(
+          t('invoices.invoiceDownloaded'),
+          t('invoices.downloadedMessage', { path: filePath }),
           [
             {
-              text: 'Open / Share',
+              text: t('invoices.openShare'),
               onPress: () => {
                 const fileUrl = filePath.startsWith('file://') ? filePath : `file://${filePath}`;
                 RNShare.open({
@@ -654,7 +655,7 @@ const InvoiceDetailScreen = () => {
                 }).catch(() => {});
               }
             },
-            { text: 'OK' }
+            { text: t('common.okay') }
           ]
         );
       } else {
@@ -740,7 +741,7 @@ const InvoiceDetailScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <CurvedHeader
-        title="Tax Invoice"
+        title={t('invoices.taxInvoice')}
         leftIcon={<ArrowLeft size={24} color="#0B409C" />}
         onLeftPress={() => navigation.goBack()}
         height={130}

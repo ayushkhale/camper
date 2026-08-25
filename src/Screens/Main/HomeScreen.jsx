@@ -11,6 +11,7 @@ import {
   Modal,
   ImageBackground
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Package, MapPin, Repeat, ShoppingBag, FileText, Calendar, Truck, CheckCircle2, XCircle, AlertCircle, UserPlus, Plus, Clock, Globe
@@ -102,7 +103,7 @@ const AnimatedIcon = ({ source, delay = 0 }) => {
 
   return (
     <Animated.View style={{ position: 'absolute', bottom: 10, right: 10, opacity: anim, transform: [{ scale }] }}>
-      <Image source={source} style={{ width: 65, height: 65 }} resizeMode="contain" />
+      <FastImage source={source} style={{ width: 65, height: 65 }} resizeMode="contain" />
     </Animated.View>
   );
 };
@@ -349,22 +350,14 @@ const HomeScreen = () => {
             <View style={styles.modalIconContainer}>
               <MapPin size={40} color="#EF4444" strokeWidth={1.5} />
             </View>
-            <Text style={styles.modalTitle}>
-              {i18n.language === 'hi' ? 'कोई रूट नहीं मिला' : 'No Route Assigned'}
-            </Text>
-            <Text style={styles.modalText}>
-              {i18n.language === 'hi'
-                ? 'माफ़ करें! आपको डिलीवरी के लिए अभी तक कोई रूट नहीं दिया गया है। कृपया अपने मालिक/व्यवस्थापक से संपर्क करें ताकि वे आपको रूट असाइन कर सकें।'
-                : "Oops! It looks like you haven't been assigned to any route for delivery yet. Please contact your owner/admin to get a route assigned to you."}
-            </Text>
+            <Text style={styles.modalTitle}>{t('home.noRouteAssignedTitle')}</Text>
+            <Text style={styles.modalText}>{t('home.noRouteAssignedMessage')}</Text>
             <TouchableOpacity
               style={styles.modalBtn}
               activeOpacity={0.8}
               onPress={() => setNoAssignedRoutes(false)}
             >
-              <Text style={styles.modalBtnText}>
-                {i18n.language === 'hi' ? 'ठीक है, समझ गया' : 'Okay, I understand'}
-              </Text>
+              <Text style={styles.modalBtnText}>{t('home.noRouteAssignedConfirm')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -379,6 +372,7 @@ const HomeScreen = () => {
     { title: t('routes.title'), icon: MapPin, screen: 'RouteList', color: '#8B5CF6', iconBg: '#F5F3FF' },
     { title: t('invoices.title'), icon: FileText, screen: 'InvoiceList', color: '#EF4444', iconBg: '#FEF2F2' },
     { title: t('deliveries.title'), icon: Calendar, screen: 'PastDeliveries', color: '#6366F1', iconBg: '#EEF2FF' },
+    { title: t('deliveries.unbilledDeliveries'), icon: Clock, screen: 'UnbilledDeliveries', color: '#0EA5E9', iconBg: '#F0F9FF' },
   ];
 
   const totalDeliveries = Array.isArray(todaysDeliveries) ? todaysDeliveries.length : 0;
@@ -515,10 +509,10 @@ const HomeScreen = () => {
                   </View>
 
                   {/* Rickshaw Image (Right) */}
-                  <Image
+                  <FastImage
                     source={require('../../../assets/delivery_rickshaw.jpg')}
                     style={{ width: 85, height: 85, marginLeft: 4 }}
-                    resizeMode="contain"
+                    resizeMode={FastImage.resizeMode.contain}
                   />
                 </View>
               </View>
@@ -675,8 +669,10 @@ const HomeScreen = () => {
             <View style={styles.ordersListContainerOptionA}>
               {!Array.isArray(todaysDeliveries) || todaysDeliveries.length === 0 ? (
                 <View style={styles.emptyOrdersBox}>
-                  <View style={styles.emptyIconBg}>
-                    <Truck size={28} color="#3B82F6" strokeWidth={2} />
+                  <View style={styles.emptyIconOuterRing}>
+                    <View style={styles.emptyIconBg}>
+                      <Truck size={28} color="#2563EB" strokeWidth={2} />
+                    </View>
                   </View>
                   <Text style={styles.emptyOrdersTitle}>{t('deliveries.emptyDeliveries')}</Text>
                   <Text style={styles.emptyOrdersText}>{t('deliveries.emptyDeliveriesSub')}</Text>
@@ -1060,6 +1056,56 @@ const styles = StyleSheet.create({
   },
   ordersListContainerOptionA: {
     paddingTop: 4,
+  },
+  emptyOrdersBox: {
+    minHeight: 196,
+    marginTop: 2,
+    marginBottom: 4,
+    paddingVertical: 26,
+    paddingHorizontal: 28,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  emptyIconOuterRing: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#F8FBFF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyIconBg: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyOrdersTitle: {
+    fontSize: 17,
+    fontFamily: 'Rubik-Medium',
+    color: '#0F172A',
+    textAlign: 'center',
+    marginBottom: 7,
+  },
+  emptyOrdersText: {
+    maxWidth: 280,
+    fontSize: 13,
+    lineHeight: 20,
+    fontFamily: 'Rubik-Regular',
+    color: '#64748B',
+    textAlign: 'center',
   },
   orderRowOptionA: {
     flexDirection: 'row',

@@ -75,7 +75,7 @@ const AddRouteModal = ({ visible, onClose, onSuccess }) => {
         <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
           <View style={styles.modalHandle} />
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Create New Route</Text>
+            <Text style={styles.modalTitle}>{t('routes.createRoute')}</Text>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={onClose}>
               <X size={18} color={COLORS.textSecondary} />
             </TouchableOpacity>
@@ -83,12 +83,12 @@ const AddRouteModal = ({ visible, onClose, onSuccess }) => {
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Route Name *</Text>
+              <Text style={styles.label}>{t('routes.routeName')}</Text>
               <View style={styles.inputContainer}>
                 <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Satellite Area Route"
+                  placeholder={t('routes.namePlaceholder')}
                   placeholderTextColor={COLORS.textPlaceholder}
                   value={name}
                   onChangeText={setName}
@@ -97,12 +97,12 @@ const AddRouteModal = ({ visible, onClose, onSuccess }) => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Area Code (Optional)</Text>
+              <Text style={styles.label}>{t('routes.areaCode')}</Text>
               <View style={styles.inputContainer}>
                 <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. SAT-01"
+                  placeholder={t('routes.areaCodePlaceholder')}
                   placeholderTextColor={COLORS.textPlaceholder}
                   value={areaCode}
                   onChangeText={setAreaCode}
@@ -121,7 +121,7 @@ const AddRouteModal = ({ visible, onClose, onSuccess }) => {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.btnTextPrimary}>Create Route</Text>
+              <Text style={styles.btnTextPrimary}>{t('routes.createRoute')}</Text>
             )}
           </TouchableOpacity>
         </View>

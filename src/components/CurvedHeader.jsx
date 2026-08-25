@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
-import Svg, { Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 
@@ -21,26 +22,41 @@ const CurvedHeader = ({
   const route = useRoute();
   const isHome = route.name === 'Home';
 
-  const bgImage = isHome
-    ? require('../../assets/header_bg9.png')
-    : require('../../assets/header_bg9.png');
-
-  const totalHeight = height + insets.top;
-
-  // Wave setup
-  const waveBase = totalHeight - 40;
+  // Inner screens only need enough room for the status bar and title row.
+  // Home retains its taller artwork-led header.
+  const headerHeight = isHome ? height : Math.min(height, 55);
+  const totalHeight = headerHeight + insets.top;
+  const curveDepth = 14;
 
   return (
-    <View style={[styles.container, { height: totalHeight, backgroundColor: startColor }]}>
+    <View style={[
+      styles.container,
+      { height: totalHeight, backgroundColor: isHome ? startColor : 'transparent' },
+    ]}>
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-      {/* Background Image - Set to stretch to perfectly fit the full curve into the header bounds without cropping */}
-      <Image
-        source={bgImage}
-        style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
-        resizeMode="stretch"
-      />
-
-
+      {isHome ? (
+        <FastImage
+          source={require('../../assets/header_bg9.png')}
+          style={StyleSheet.absoluteFill}
+          resizeMode="stretch"
+        />
+      ) : (
+        <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+          <Defs>
+            <LinearGradient id="headerGradient" x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0%" stopColor="#9DCFFD" />
+              <Stop offset="25%" stopColor="#BEDDFE" />
+              <Stop offset="50%" stopColor="#D6E9FC" />
+              <Stop offset="75%" stopColor="#C1DFFE" />
+              <Stop offset="100%" stopColor="#A1D0FD" />
+            </LinearGradient>
+          </Defs>
+          <Path
+            d={`M0 0 H${width} V${totalHeight - curveDepth} Q${width / 2} ${totalHeight + curveDepth} 0 ${totalHeight - curveDepth} Z`}
+            fill="url(#headerGradient)"
+          />
+        </Svg>
+      )}
 
       {/* Header Content */}
       <View style={[styles.content, contentStyle]}>

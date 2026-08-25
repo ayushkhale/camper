@@ -153,12 +153,12 @@ const RouteDetailScreen = () => {
 
   const handleDeleteRoute = () => {
     showAlert(
-      'Delete Route',
-      'Are you sure you want to delete this route? Historical delivery records will be preserved.',
+      t('routes.deleteRoute'),
+      t('routes.deleteConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -180,12 +180,12 @@ const RouteDetailScreen = () => {
 
   const handleEndAssignment = (staffRouteId, staffName) => {
     showAlert(
-      'End Assignment',
-      `Are you sure you want to remove ${staffName} from this route?`,
+      t('routes.endAssignment'),
+      t('routes.endAssignmentConfirm', { name: staffName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: t('common.remove'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -454,7 +454,7 @@ const RouteDetailScreen = () => {
         <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Assign Staff Member</Text>
+              <Text style={styles.modalTitle}>{t('routes.assignStaff')}</Text>
               <TouchableOpacity onPress={() => setAssignModalVisible(false)}>
                 <X size={20} color={COLORS.textSecondary} />
               </TouchableOpacity>
@@ -462,14 +462,14 @@ const RouteDetailScreen = () => {
 
             {/* Modal Body */}
             <View style={{ zIndex: 10 }}>
-              <Text style={styles.inputLabel}>Select Staff Member *</Text>
+              <Text style={styles.inputLabel}>{t('routes.selectStaffMember')}</Text>
               <TouchableOpacity
                 style={styles.dropdownTrigger}
                 activeOpacity={0.8}
                 onPress={() => setStaffDropdownVisible(!staffDropdownVisible)}
               >
                 <Text style={selectedStaff ? styles.selectedStaffText : styles.placeholderText}>
-                  {selectedStaff ? `${selectedStaff.name} (${selectedStaff.phone})` : 'Choose staff member...'}
+                  {selectedStaff ? `${selectedStaff.name} (${selectedStaff.phone})` : t('routes.chooseStaffMember')}
                 </Text>
                 <ChevronRight size={16} color={COLORS.textPlaceholder} style={{ transform: [{ rotate: staffDropdownVisible ? '270deg' : '90deg' }] }} />
               </TouchableOpacity>
@@ -480,7 +480,7 @@ const RouteDetailScreen = () => {
                   <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 180 }}>
                     {allStaff.length === 0 ? (
                       <View style={styles.dropdownEmpty}>
-                        <Text style={styles.dropdownEmptyText}>No active staff members found</Text>
+                        <Text style={styles.dropdownEmptyText}>{t('routes.noActiveStaffMembers')}</Text>
                       </View>
                     ) : (
                       allStaff.map((staff) => (
@@ -507,7 +507,7 @@ const RouteDetailScreen = () => {
 
             {/* Date Inputs */}
             <View style={{ marginTop: 16 }}>
-              <Text style={styles.inputLabel}>Effective From *</Text>
+              <Text style={styles.inputLabel}>{t('routes.effectiveFrom')}</Text>
               <TouchableOpacity
                 style={styles.inputBox}
                 onPress={() => setActiveDatePicker('effectiveFrom')}
@@ -520,13 +520,13 @@ const RouteDetailScreen = () => {
 
             {/* Toggle permanent */}
             <View style={styles.toggleRow}>
-              <Text style={styles.toggleLabel}>Permanent Assignment</Text>
+              <Text style={styles.toggleLabel}>{t('routes.permanentAssignment')}</Text>
               <View style={styles.checkboxRow}>
                 <TouchableOpacity
                   style={styles.checkboxOption}
                   onPress={() => setIsPermanent(true)}
                 >
-                  <Text style={styles.checkboxLabel}>Yes</Text>
+                  <Text style={styles.checkboxLabel}>{t('common.yes')}</Text>
                   <View style={[styles.checkboxSquare, isPermanent && styles.checkboxSquareChecked]}>
                     {isPermanent && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                   </View>
@@ -536,7 +536,7 @@ const RouteDetailScreen = () => {
                   style={[styles.checkboxOption, { marginLeft: 16 }]}
                   onPress={() => setIsPermanent(false)}
                 >
-                  <Text style={styles.checkboxLabel}>Temporary</Text>
+                  <Text style={styles.checkboxLabel}>{t('routes.temporary')}</Text>
                   <View style={[styles.checkboxSquare, !isPermanent && styles.checkboxSquareChecked]}>
                     {!isPermanent && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                   </View>
@@ -547,13 +547,13 @@ const RouteDetailScreen = () => {
             {/* Conditional effectiveTo Date */}
             {!isPermanent && (
               <View style={{ marginTop: 12 }}>
-                <Text style={styles.inputLabel}>Effective To</Text>
+                <Text style={styles.inputLabel}>{t('routes.effectiveTo')}</Text>
                 <TouchableOpacity
                   style={styles.inputBox}
                   onPress={() => setActiveDatePicker('effectiveTo')}
                 >
                   <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Rubik-SemiBold', fontSize: 14 }}>
-                    {effectiveTo || 'YYYY-MM-DD (Optional)'}
+                    {effectiveTo || t('common.dateOptional')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -568,7 +568,7 @@ const RouteDetailScreen = () => {
               {assignLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.modalSaveText}>Assign Staff</Text>
+                <Text style={styles.modalSaveText}>{t('routes.assignStaffBtn')}</Text>
               )}
             </TouchableOpacity>
           </TouchableOpacity>

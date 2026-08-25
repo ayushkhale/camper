@@ -2,6 +2,7 @@ import React, { useState, useContext, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image, Linking
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +13,7 @@ import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
 import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink, Briefcase, Mail, MapPin, Map, Hash, Grid, Edit2, ArrowLeft } from 'lucide-react-native';
 import { seedDatabase } from '../../utils/seedDatabase';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
@@ -76,6 +78,17 @@ const SettingsScreen = () => {
     }
   };
 
+  const handleLogout = () => {
+    showAlert(
+      t('settings.logout'),
+      t('settings.logoutConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('settings.logout'), style: 'destructive', onPress: logout },
+      ]
+    );
+  };
+
   const handleSkipAddress = () => {
     if (!isEditing) return;
     setAddress('N/A');
@@ -91,12 +104,12 @@ const SettingsScreen = () => {
 
   const handleSeed = async () => {
     showAlert(
-      'Seed Database',
-      'This will create 10 dummy products, customers, and subscriptions. Continue?',
+      t('settings.seedDatabase'),
+      t('settings.seedConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Seed',
+          text: t('settings.seed'),
           onPress: async () => {
             setLoading(true);
             const res = await seedDatabase(userToken);
@@ -128,23 +141,21 @@ const SettingsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right', 'top']}>
-      
-      {/* Flat Top Header */}
-      <View style={styles.topHeader}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <ArrowLeft size={24} color={COLORS.textPrimary} />
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <CurvedHeader
+        title={t('settings.title') || 'Settings'}
+        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        onLeftPress={() => navigation.goBack()}
+        rightIcon={(
+          <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editActionBtn}>
+            <Text style={isEditing ? styles.cancelText : styles.editActionText}>
+              {isEditing ? t('common.cancel') : t('common.edit')}
+            </Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t('settings.title') || "Settings"}</Text>
-        </View>
-        
-        <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editActionBtn}>
-          <Text style={isEditing ? styles.cancelText : styles.editActionText}>
-            {isEditing ? t('common.cancel') : t('common.edit')}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        )}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
         <ScrollView
@@ -155,7 +166,7 @@ const SettingsScreen = () => {
           {/* Profile Hero Section */}
           <View style={styles.profileHero}>
             <View style={styles.avatarContainer}>
-              <Image source={require('../../../assets/fallbackimage.png')} style={styles.avatarImage} />
+              <FastImage source={require('../../../assets/heroSetting.jpeg')} style={styles.avatarImage} />
             </View>
             <Text style={styles.profileName}>{name || t('settings.yourProfile')}</Text>
             <Text style={styles.profileBusiness}>{businessName || t('settings.vendorAccount')}</Text>
@@ -346,7 +357,7 @@ const SettingsScreen = () => {
               <ExternalLink size={16} color={COLORS.danger} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.prefRow, { borderBottomWidth: 0, marginTop: 12 }]} onPress={logout}>
+            <TouchableOpacity style={[styles.prefRow, { borderBottomWidth: 0, marginTop: 12 }]} onPress={handleLogout}>
               <View style={styles.prefLeft}>
                 <LogOut size={20} color={COLORS.danger} style={{ marginRight: 10 }} />
                 <Text style={styles.logoutText}>{t('settings.logout')}</Text>
@@ -413,6 +424,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 16,
+    paddingTop: 24,
     paddingBottom: 40,
   },
   profileHero: {

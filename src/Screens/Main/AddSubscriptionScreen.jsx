@@ -176,22 +176,22 @@ const AddSubscriptionScreen = () => {
 
   const formatRecurrence = (pattern) => {
     switch (pattern) {
-      case 'daily': return 'Daily';
-      case 'alternate_days': return 'Alternate Days';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
+      case 'daily': return t('subscriptions.daily');
+      case 'alternate_days': return t('subscriptions.alternateDays');
+      case 'weekly': return t('subscriptions.weekly');
+      case 'monthly': return t('subscriptions.monthly');
       default: return pattern;
     }
   };
 
   const getCustomerName = (id) => {
     const c = customers.find(c => String(c.id) === String(id));
-    return c ? c.name : 'Select Customer';
+    return c ? c.name : t('common.selectCustomer');
   };
 
   const getProductName = (id) => {
     const p = products.find(p => String(p.id) === String(id));
-    return p ? p.name : 'Select Product';
+    return p ? p.name : t('customers.selectProduct');
   };
 
   const renderModal = () => {
@@ -205,36 +205,36 @@ const AddSubscriptionScreen = () => {
     let showSearch = false;
 
     if (activeModal === 'customer') {
-      title = 'Select Customer';
+      title = t('common.selectCustomer');
       data = customers;
       currentVal = customerId;
       renderItemText = (item) => `${item.name} ${item.phone ? `(${item.phone})` : ''}`;
       onSelect = (item) => { setCustomerId(item.id); setActiveModal(null); setModalSearch(''); };
       showSearch = true;
     } else if (activeModal === 'product') {
-      title = 'Select Product';
+      title = t('customers.selectProduct');
       data = products;
       currentVal = productId;
       renderItemText = (item) => item.name;
       onSelect = (item) => { setProductId(item.id); setActiveModal(null); setModalSearch(''); };
       showSearch = true;
     } else if (activeModal === 'recurrence') {
-      title = 'Select Frequency';
+      title = t('customers.selectFrequency');
       data = [
-        { id: 'daily', name: 'Daily' },
-        { id: 'alternate_days', name: 'Alternate Days' },
-        { id: 'weekly', name: 'Weekly' },
-        { id: 'monthly', name: 'Monthly' }
+        { id: 'daily', name: t('subscriptions.daily') },
+        { id: 'alternate_days', name: t('subscriptions.alternateDays') },
+        { id: 'weekly', name: t('subscriptions.weekly') },
+        { id: 'monthly', name: t('subscriptions.monthly') }
       ];
       currentVal = recurrencePattern;
       renderItemText = (item) => item.name;
       onSelect = (item) => { setRecurrencePattern(item.id); setActiveModal(null); };
     } else if (activeModal === 'status') {
-      title = 'Select Status';
+      title = t('common.selectStatus');
       data = [
-        { id: 'active', name: 'Active' },
-        { id: 'paused', name: 'Paused' },
-        { id: 'ended', name: 'Ended' }
+        { id: 'active', name: t('subscriptions.active') },
+        { id: 'paused', name: t('subscriptions.paused') },
+        { id: 'ended', name: t('subscriptions.ended') }
       ];
       currentVal = status;
       renderItemText = (item) => item.name;
@@ -274,7 +274,7 @@ const AddSubscriptionScreen = () => {
                 <Search size={17} color={COLORS.textPlaceholder} style={{ marginRight: 10 }} />
                 <TextInput
                   style={styles.modalSearchInput}
-                  placeholder="Search..."
+                  placeholder={t('common.searchPlaceholder')}
                   value={modalSearch}
                   onChangeText={setModalSearch}
                   placeholderTextColor={COLORS.textPlaceholder}
@@ -287,7 +287,7 @@ const AddSubscriptionScreen = () => {
                 style={styles.addInlineBtn}
                 onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
               >
-                <Text style={styles.addInlineBtnText}>+ Add New Customer</Text>
+                <Text style={styles.addInlineBtnText}>{t('common.addNewCustomer')}</Text>
               </TouchableOpacity>
             )}
 
@@ -296,13 +296,13 @@ const AddSubscriptionScreen = () => {
                 style={styles.addInlineBtn}
                 onPress={() => { setActiveModal(null); setAddProductVisible(true); }}
               >
-                <Text style={styles.addInlineBtnText}>+ Add New Product</Text>
+                <Text style={styles.addInlineBtnText}>{t('common.addNewProduct')}</Text>
               </TouchableOpacity>
             )}
 
             {filteredData.length === 0 ? (
               <Text style={styles.modalEmptyText}>
-                No options found.
+                {t('common.noOptionsFound')}
               </Text>
             ) : (
               <FlatList

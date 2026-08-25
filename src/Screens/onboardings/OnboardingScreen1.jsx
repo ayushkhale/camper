@@ -3,16 +3,15 @@ import {
   StyleSheet,
   View,
   Text,
-  Image,
   TouchableOpacity,
   Dimensions,
-  Platform,
-  StatusBar,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
+import ImageWithSkeleton from '../../components/ImageWithSkeleton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,7 +22,7 @@ const OnboardingScreen1 = ({ navigation }) => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {/* Header with Logo and Skip */}
       <View style={styles.header}>
-        <Image
+        <FastImage
           source={require('../../../assets/logo1.png')}
           style={styles.logo}
           resizeMode="contain"
@@ -36,10 +35,10 @@ const OnboardingScreen1 = ({ navigation }) => {
 
       {/* Illustration Area */}
       <View style={styles.illustrationContainer}>
-        <Image
+        <ImageWithSkeleton
           source={require('../../../assets/onboarding1.png')}
           style={styles.illustration}
-          resizeMode="contain"
+          resizeMode={FastImage.resizeMode.contain}
         />
       </View>
 

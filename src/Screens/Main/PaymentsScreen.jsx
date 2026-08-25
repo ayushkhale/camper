@@ -18,9 +18,19 @@ import AddCustomerModal from '../../components/modals/AddCustomerModal';
 const getPaymentModes = (t) => [
   { id: 'upi', label: t('payments.upi'), Icon: Smartphone },
   { id: 'cash', label: t('payments.cash'), Icon: Banknote },
-  { id: 'bank_transfer', label: 'Bank\nTransfer', Icon: Landmark },
+  { id: 'bank_transfer', label: t('payments.bankTransfer').replace(' ', '\n'), Icon: Landmark },
   { id: 'cheque', label: t('payments.cheque'), Icon: FileText }
 ];
+
+const getPaymentModeLabel = (mode, t) => {
+  switch ((mode || '').toLowerCase()) {
+    case 'upi': return t('payments.upi');
+    case 'cash': return t('payments.cash');
+    case 'bank_transfer': return t('payments.bankTransfer');
+    case 'cheque': return t('payments.cheque');
+    default: return mode || '';
+  }
+};
 
 const PaymentsScreen = () => {
   const { t } = useTranslation();
@@ -317,7 +327,7 @@ const PaymentsScreen = () => {
                     </View>
                     <View style={styles.customerListInfo}>
                       <Text style={styles.customerListName}>{item.name}</Text>
-                      <Text style={styles.customerListPhone}>{item.phone || 'No phone'}</Text>
+                      <Text style={styles.customerListPhone}>{item.phone || t('customers.noPhone')}</Text>
                     </View>
                   </TouchableOpacity>
                 )}
@@ -489,7 +499,7 @@ const PaymentsScreen = () => {
                   <Text style={styles.statementDesc} numberOfLines={2}>{item.description}</Text>
                   {item.paymentMode && (
                     <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{item.paymentMode.toUpperCase()}</Text>
+                      <Text style={styles.badgeText}>{getPaymentModeLabel(item.paymentMode, t)}</Text>
                     </View>
                   )}
                 </View>

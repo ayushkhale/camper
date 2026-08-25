@@ -1,7 +1,103 @@
 import ReactNativeBlobUtil from 'react-native-blob-util';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://192.168.1.5:3007';
-// const API_BASE_URL = 'https://api-camper.compunic.co.in';
+let isRefreshing = false;
+let failedQueue = [];
+
+let onLogoutCallback = null;
+export const setLogoutCallback = (cb) => { onLogoutCallback = cb; };
+
+let onTokenRefreshedCallback = null;
+export const setTokenRefreshedCallback = (cb) => { onTokenRefreshedCallback = cb; };
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+const fetchWithAuth = async (url, options, token = null) => {
+  let currentToken = token;
+  const headers = { ...options.headers };
+  if (currentToken) {
+    headers.Authorization = `Bearer ${currentToken}`;
+  }
+
+  try {
+    let response = await fetch(url, { ...options, headers });
+
+    if (response.status === 401 && currentToken && !url.includes('/api/auth/refresh-token')) {
+      console.log(`🔄 [API] 401 caught for ${url}. Initiating token refresh process...`);
+      if (isRefreshing) {
+        console.log(`⏳ [API] Refresh already in progress. Queueing request for ${url}`);
+        const newToken = await new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        });
+        console.log(`✅ [API] Resuming queued request with new token for ${url}`);
+        headers.Authorization = `Bearer ${newToken}`;
+        response = await fetch(url, { ...options, headers });
+        return response;
+      }
+
+      isRefreshing = true;
+      try {
+        const refreshToken = await AsyncStorage.getItem('refresh_token');
+        if (!refreshToken) {
+          console.warn(`❌ [API] No refresh token found in storage! Logging out...`);
+          throw new Error('No refresh token available');
+        }
+
+        console.log(`🚀 [API] Fetching new access token from /api/auth/refresh-token`);
+        const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken })
+        });
+
+        const refreshData = await refreshResponse.json();
+        
+        if (!refreshResponse.ok) {
+          console.error(`❌ [API] Refresh failed with status:`, refreshResponse.status, refreshData);
+          throw new Error(refreshData.message || 'Refresh failed');
+        }
+
+        console.log(`🎉 [API] Token refreshed successfully! Saving to storage...`);
+        const newAccessToken = refreshData.token;
+        const newRefreshToken = refreshData.refreshToken;
+
+        await AsyncStorage.setItem('jwt_token', newAccessToken);
+        await AsyncStorage.setItem('refresh_token', newRefreshToken);
+
+        if (onTokenRefreshedCallback) onTokenRefreshedCallback(newAccessToken);
+
+        processQueue(null, newAccessToken);
+        
+        headers.Authorization = `Bearer ${newAccessToken}`;
+        response = await fetch(url, { ...options, headers });
+
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        await AsyncStorage.removeItem('jwt_token');
+        await AsyncStorage.removeItem('refresh_token');
+        if (onLogoutCallback) onLogoutCallback();
+        throw refreshError;
+      } finally {
+        isRefreshing = false;
+      }
+    }
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// const API_BASE_URL = 'http://192.168.1.5:3007';
+const API_BASE_URL = 'https://api-camper.compunic.co.in';
 
 
 let apiPrefix = '/api/vendor';
@@ -31,16 +127,12 @@ const logError = (url, error) => {
 
 const getRequest = async (endpoint, token = null) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
   console.log(`🚀 [API Request] GET ${url}`);
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
-    });
+      headers: { 'Content-Type': 'application/json' }
+    }, token);
 
     const data = await response.json();
     logResponse(url, response.status, data);
@@ -60,19 +152,14 @@ const getRequest = async (endpoint, token = null) => {
 
 const postRequest = async (endpoint, body, token = null) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
   logRequest(url, body);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    });
+    }, token);
 
     if (response.status === 429) {
       const error = new Error('TOO_MANY_REQUESTS');
@@ -100,19 +187,14 @@ const postRequest = async (endpoint, body, token = null) => {
 
 const patchRequest = async (endpoint, body, token = null) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
   logRequest(url, body);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'PATCH',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    });
+    }, token);
 
     const data = await response.json();
     logResponse(url, response.status, data);
@@ -132,19 +214,14 @@ const patchRequest = async (endpoint, body, token = null) => {
 
 const postMultipartRequest = async (endpoint, formData, token = null) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const headers = {};
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
   console.log(`🚀 [API Request] POST Multipart ${url}`);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'POST',
-      headers,
+      headers: {},
       body: formData,
-    });
+    }, token);
 
     if (response.status === 429) {
       const error = new Error('TOO_MANY_REQUESTS');
@@ -172,19 +249,14 @@ const postMultipartRequest = async (endpoint, formData, token = null) => {
 
 const patchMultipartRequest = async (endpoint, formData, token = null) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const headers = {};
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
   console.log(`🚀 [API Request] PATCH Multipart ${url}`);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'PATCH',
-      headers,
+      headers: {},
       body: formData,
-    });
+    }, token);
 
     const data = await response.json();
     logResponse(url, response.status, data);
@@ -204,17 +276,12 @@ const patchMultipartRequest = async (endpoint, formData, token = null) => {
 
 const deleteRequest = async (endpoint, token = null) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
   console.log(`🚀 [API Request] DELETE ${url}`);
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'DELETE',
-      headers,
-    });
+      headers: { 'Content-Type': 'application/json' }
+    }, token);
 
     const data = await response.json();
     logResponse(url, response.status, data);
@@ -233,6 +300,8 @@ const deleteRequest = async (endpoint, token = null) => {
 };
 
 export const api = {
+  logout: (refreshToken) =>
+    postRequest('/api/auth/logout', { refreshToken }),
   // Signup Flow - Step 1: Request OTP
   signupRequestOtp: (phone) =>
     postRequest('/api/auth/signup-request-otp', { phone }),

@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -54,6 +55,14 @@ const ProductCatalogScreen = () => {
     try {
       const response = await api.listProducts(userToken);
       if (response.success && Array.isArray(response.data)) {
+        const urisToPreload = response.data
+          .filter(p => p.imageUrl)
+          .map(p => ({ uri: p.imageUrl }));
+
+        if (urisToPreload.length > 0) {
+          FastImage.preload(urisToPreload);
+        }
+
         setProducts(response.data);
         filterList(response.data, searchQuery);
       } else {
@@ -363,6 +372,7 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
     borderRadius: 22,
+    backgroundColor: '#E2E8F0',
   },
   titleContainer: {
     flex: 1,

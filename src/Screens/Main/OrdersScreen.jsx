@@ -45,7 +45,7 @@ const getNext7Days = () => {
 
 const DeliveryCard = ({ delivery, index, onUpdateStatus, getStatusColor, t, isLocked }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(index === 1);
   const [selectedEditStatus, setSelectedEditStatus] = useState(delivery.status || 'pending');
 
   useEffect(() => {
@@ -343,6 +343,7 @@ const OrdersScreen = () => {
   // Deliveries State
   const [allDeliveries, setAllDeliveries] = useState([]);
   const [loadingDeliveries, setLoadingDeliveries] = useState(false);
+  const [hasLoadedInitialDeliveries, setHasLoadedInitialDeliveries] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState(null);
 
@@ -353,6 +354,7 @@ const OrdersScreen = () => {
   const [routes, setRoutes] = useState([]);
   const [selectedRouteId, setSelectedRouteId] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('pending'); // Default: 'pending'
+  const hasInitializedRouteFilter = useRef(false);
 
   const pulseAnim = useRef(new Animated.Value(0.35)).current;
 
@@ -396,11 +398,18 @@ const OrdersScreen = () => {
     try {
       const res = await api.listRoutes(userToken);
       if (res.success) {
-        setRoutes(res.data || []);
+        const routeList = res.data || [];
+        setRoutes(routeList);
       }
     } catch (err) {
       console.error('Error fetching routes:', err);
     }
+  };
+
+  const handleRouteFilterChange = (routeId) => {
+    hasInitializedRouteFilter.current = true;
+    setSelectedRouteId(routeId);
+    setActiveFilterModal(null);
   };
 
   const fetchDeliveries = async (dateStr, routeId = '') => {
@@ -414,6 +423,9 @@ const OrdersScreen = () => {
         rawList = rawList.filter(item => !item.oneTimeOrderId && !item.one_time_order_item_id);
 
         setAllDeliveries(rawList);
+        if (!routeId) {
+          setHasLoadedInitialDeliveries(true);
+        }
       }
     } catch (err) {
       console.error('Error fetching deliveries:', err);
@@ -433,6 +445,54 @@ const OrdersScreen = () => {
       fetchRoutes();
     }
   }, [userToken]);
+
+  useEffect(() => {
+    if (
+      user?.role !== 'staff' ||
+      hasInitializedRouteFilter.current ||
+      !hasLoadedInitialDeliveries ||
+      routes.length === 0
+    ) {
+      return;
+    }
+
+    const matchesSelectedStatus = (delivery) => {
+      const status = (delivery.status || '').toLowerCase();
+      if (selectedStatus === 'pending') return status === 'pending';
+      if (selectedStatus === 'completed') return status === 'delivered' || status === 'completed';
+      if (selectedStatus === 'skipped') return status === 'skipped' || status === 'skip';
+      return true;
+    };
+
+    const visibleDeliveries = allDeliveries.filter(matchesSelectedStatus);
+    const deliveriesToRank = visibleDeliveries.length > 0 ? visibleDeliveries : allDeliveries;
+
+    const rankedRoutes = routes
+      .map((route, index) => {
+        const count = deliveriesToRank.filter((delivery) => {
+          const deliveryRouteId = delivery.routeId
+            ?? delivery.Customer?.routeId
+            ?? delivery.Customer?.Route?.id;
+          const deliveryRouteName = delivery.Customer?.Route?.name || delivery.routeName;
+
+          if (deliveryRouteId != null) {
+            return String(deliveryRouteId) === String(route.id);
+          }
+
+          return deliveryRouteName
+            && String(deliveryRouteName).toLowerCase() === String(route.name || '').toLowerCase();
+        }).length;
+
+        return { route, count, index };
+      })
+      .sort((a, b) => b.count - a.count || a.index - b.index);
+
+    const defaultRoute = rankedRoutes[0]?.route;
+    if (defaultRoute) {
+      hasInitializedRouteFilter.current = true;
+      setSelectedRouteId(defaultRoute.id);
+    }
+  }, [allDeliveries, hasLoadedInitialDeliveries, routes, selectedStatus, user?.role]);
 
   const handleGenerateDeliveries = async () => {
     setGenerating(true);
@@ -679,7 +739,7 @@ const OrdersScreen = () => {
               <ScrollView showsVerticalScrollIndicator={false}>
                 <TouchableOpacity
                   style={styles.filterModalItem}
-                  onPress={() => { setSelectedRouteId(''); setActiveFilterModal(null); }}
+                  onPress={() => handleRouteFilterChange('')}
                 >
                   <Text style={[styles.filterModalItemText, !selectedRouteId && { color: COLORS.primary, fontFamily: 'Rubik-Bold' }]}>
                     {t('deliveries.allRoutes')}
@@ -689,7 +749,7 @@ const OrdersScreen = () => {
                   <TouchableOpacity
                     key={r.id}
                     style={styles.filterModalItem}
-                    onPress={() => { setSelectedRouteId(r.id); setActiveFilterModal(null); }}
+                    onPress={() => handleRouteFilterChange(r.id)}
                   >
                     <Text style={[styles.filterModalItemText, selectedRouteId === r.id && { color: COLORS.primary, fontFamily: 'Rubik-Bold' }]}>
                       {r.name}

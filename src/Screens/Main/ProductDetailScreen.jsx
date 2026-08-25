@@ -11,6 +11,7 @@ import {
   Switch,
   Platform,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -195,7 +196,7 @@ const ProductDetailScreen = () => {
           <View style={styles.avatarWrapper}>
             <View style={styles.avatarContainer}>
               {product.imageUrl ? (
-                <Image source={{ uri: product.imageUrl }} style={styles.avatarImage} />
+                <FastImage source={{ uri: product.imageUrl }} style={styles.avatarImage} />
               ) : (
                 <View style={styles.avatarFallback}>
                   <Package size={38} color="#0B409C" />

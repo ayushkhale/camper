@@ -71,7 +71,7 @@ const OtpVerificationScreen = ({ route, navigation }) => {
       if (response.success) {
         triggerToast(t('login.loginSuccess'), 'success');
         setTimeout(async () => {
-          await login(response.token, response.user);
+          await login(response.token, response.refreshToken || null, response.user);
         }, 1000);
       }
     } catch (error) {

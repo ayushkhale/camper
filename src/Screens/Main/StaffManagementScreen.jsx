@@ -102,7 +102,7 @@ const StaffManagementScreen = () => {
   const handleDeleteStaff = (item) => {
     showAlert(
       t('staff.remove'),
-      `${t('staff.removeConfirm')}\n\nName: ${item.name}`,
+      `${t('staff.removeConfirm')}\n\n${t('customers.name')}: ${item.name}`,
       [
         { text: t('staff.cancel'), style: 'cancel' },
         { 

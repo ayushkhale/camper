@@ -183,7 +183,7 @@ const AddOneTimeOrderScreen = () => {
 
   const getCustomerName = (id) => {
     const c = customers.find((c) => c.id === id);
-    return c ? c.name : 'Select Customer';
+    return c ? c.name : t('common.selectCustomer');
   };
 
   const handleAddProductItem = (product) => {
@@ -314,7 +314,7 @@ const AddOneTimeOrderScreen = () => {
               ListEmptyComponent={
                 <View style={{ padding: 20, alignItems: 'center' }}>
                   <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Rubik-SemiBold' }}>
-                    No items available
+                    {t('common.noItemsAvailable')}
                   </Text>
                 </View>
               }

@@ -132,10 +132,10 @@ const GenerateInvoiceScreen = () => {
   };
 
   const validate = () => {
-    if (!customerId) return 'Please select a customer';
-    if (!periodStart || !/^\d{4}-\d{2}-\d{2}$/.test(periodStart)) return 'Start Date must be in YYYY-MM-DD format';
-    if (!periodEnd || !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd)) return 'End Date must be in YYYY-MM-DD format';
-    if (new Date(periodStart) > new Date(periodEnd)) return 'Start Date cannot be after End Date';
+    if (!customerId) return t('invoices.selectCustomerRequired');
+    if (!periodStart || !/^\d{4}-\d{2}-\d{2}$/.test(periodStart)) return t('invoices.invalidStartDate');
+    if (!periodEnd || !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd)) return t('invoices.invalidEndDate');
+    if (new Date(periodStart) > new Date(periodEnd)) return t('invoices.startAfterEnd');
     return null;
   };
 
@@ -143,7 +143,7 @@ const GenerateInvoiceScreen = () => {
     const errorMsg = validate();
     if (errorMsg) {
       setApiError(errorMsg);
-      showPopup('Notice', errorMsg, [{ text: 'OK' }]);
+      showPopup(t('common.notice'), errorMsg, [{ text: t('common.okay') }]);
       return;
     }
     
@@ -160,7 +160,7 @@ const GenerateInvoiceScreen = () => {
       const msg = response?.message || '';
 
       const customerName = customerId ? getCustomerName(customerId) : '';
-      const searchQuery = customerName !== 'Select a Customer' ? customerName : '';
+      const searchQuery = customerName !== t('common.selectCustomer') ? customerName : '';
 
       const navigateToInvoice = () => {
         if (response.data?.invoices && response.data.invoices.length === 1) {
@@ -182,7 +182,7 @@ const GenerateInvoiceScreen = () => {
       }
     } catch (err) {
       const customerName = customerId ? getCustomerName(customerId) : '';
-      const searchQuery = customerName !== 'Select a Customer' ? customerName : '';
+      const searchQuery = customerName !== t('common.selectCustomer') ? customerName : '';
       showAlert('Notice', 'Invoice already generated for this period. Redirecting...', 'info');
       setTimeout(() => {
         navigation.navigate('InvoiceList', { searchQuery });
@@ -194,7 +194,7 @@ const GenerateInvoiceScreen = () => {
 
   const getCustomerName = (id) => {
     const c = customers.find(c => String(c.id) === String(id));
-    return c ? c.name : 'Select a Customer';
+    return c ? c.name : t('common.selectCustomer');
   };
 
   const renderModal = () => {
@@ -208,7 +208,7 @@ const GenerateInvoiceScreen = () => {
     let showSearch = false;
 
     if (activeModal === 'customer') {
-      title = 'Select Customer';
+      title = t('common.selectCustomer');
       data = customers;
       currentVal = customerId;
       renderItemText = (item) => `${item.name} ${item.phone ? `(${item.phone})` : ''}`;
@@ -249,7 +249,7 @@ const GenerateInvoiceScreen = () => {
                 <Search size={17} color={COLORS.textPlaceholder} style={{ marginRight: 10 }} />
                 <TextInput
                   style={styles.modalSearchInput}
-                  placeholder="Search..."
+                  placeholder={t('common.searchPlaceholder')}
                   value={modalSearch}
                   onChangeText={setModalSearch}
                   placeholderTextColor={COLORS.textPlaceholder}
@@ -262,13 +262,13 @@ const GenerateInvoiceScreen = () => {
                 style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
                 onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
               >
-                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>+ Add New Customer</Text>
+                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
               </TouchableOpacity>
             )}
             
             {filteredData.length === 0 ? (
               <Text style={styles.modalEmptyText}>
-                No options found.
+                {t('common.noOptionsFound')}
               </Text>
             ) : (
               <FlatList
@@ -316,7 +316,7 @@ const GenerateInvoiceScreen = () => {
         style={styles.keyboardAvoid}
       >
         <CurvedHeader
-          title="Generate Invoices"
+          title={t('invoices.generateInvoices')}
           leftIcon={<ArrowLeft size={24} color="#0B409C" />}
           onLeftPress={() => navigation.goBack()}
           height={130}
@@ -363,11 +363,11 @@ const GenerateInvoiceScreen = () => {
                 </View>
                 <View style={styles.preSummaryRow}>
                   <View style={styles.preSummaryStat}>
-                    <Text style={styles.preSummaryLabel}>Deliveries</Text>
+                    <Text style={styles.preSummaryLabel}>{t('invoices.deliveries')}</Text>
                     <Text style={styles.preSummaryValue}>{preSummary.deliveries}</Text>
                   </View>
                   <View style={styles.preSummaryStat}>
-                    <Text style={styles.preSummaryLabel}>Estimated Total</Text>
+                    <Text style={styles.preSummaryLabel}>{t('invoices.estimatedTotal')}</Text>
                     <Text style={[styles.preSummaryValue, { color: '#4ADE80' }]}>₹{preSummary.total}</Text>
                   </View>
                 </View>
@@ -401,7 +401,7 @@ const GenerateInvoiceScreen = () => {
 
             {/* Start Date */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Period Start Date *</Text>
+              <Text style={styles.label}>{t('invoices.periodStartDate')}</Text>
               <TouchableOpacity 
                 style={styles.inputContainer}
                 onPress={() => setShowStartDatePicker(true)}
@@ -423,7 +423,7 @@ const GenerateInvoiceScreen = () => {
             
             {/* End Date */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Period End Date *</Text>
+              <Text style={styles.label}>{t('invoices.periodEndDate')}</Text>
               <TouchableOpacity 
                 style={styles.inputContainer}
                 onPress={() => setShowEndDatePicker(true)}
@@ -459,7 +459,7 @@ const GenerateInvoiceScreen = () => {
               <View style={{flexDirection: 'row', alignItems: 'center'}}>
                 <FileText size={18} color="#FFFFFF" style={{marginRight: 8}} />
                 <Text style={styles.btnTextPrimary}>
-                  Generate Invoices
+                  {t('invoices.generateInvoice')}
                 </Text>
               </View>
             )}
