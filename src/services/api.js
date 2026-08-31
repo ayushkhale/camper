@@ -60,7 +60,7 @@ const fetchWithAuth = async (url, options, token = null) => {
         });
 
         const refreshData = await refreshResponse.json();
-        
+
         if (!refreshResponse.ok) {
           console.error(`❌ [API] Refresh failed with status:`, refreshResponse.status, refreshData);
           throw new Error(refreshData.message || 'Refresh failed');
@@ -76,7 +76,7 @@ const fetchWithAuth = async (url, options, token = null) => {
         if (onTokenRefreshedCallback) onTokenRefreshedCallback(newAccessToken);
 
         processQueue(null, newAccessToken);
-        
+
         headers.Authorization = `Bearer ${newAccessToken}`;
         response = await fetch(url, { ...options, headers });
 
@@ -96,8 +96,8 @@ const fetchWithAuth = async (url, options, token = null) => {
   }
 };
 
-// const API_BASE_URL = 'http://192.168.1.5:3007';
-const API_BASE_URL = 'https://api-camper.compunic.co.in';
+const API_BASE_URL = 'http://192.168.1.8:3007';
+// const API_BASE_URL = 'https://api-camper.compunic.co.in';
 
 
 let apiPrefix = '/api/vendor';
@@ -624,6 +624,10 @@ export const api = {
 
   settleDepositToBill: (token, data) =>
     postRequest(`${apiPrefix}/deposits/settle-to-bill`, data, token),
+
+  // --- Auth & Profile ---
+  deleteAccount: (token) =>
+    deleteRequest(`/api/auth/delete-account`, token),
 
   refundDeposit: (token, data) =>
     postRequest(`${apiPrefix}/deposits/refund`, data, token),

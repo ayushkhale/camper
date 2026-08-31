@@ -1,6 +1,6 @@
 import React, { useState, useContext, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image, Linking
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image, Linking, Modal
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,13 +17,15 @@ import CurvedHeader from '../../components/CurvedHeader';
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
-  const { logout, userToken } = useContext(AuthContext);
+  const { logout, userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
   const navigation = useNavigation();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -88,6 +90,29 @@ const SettingsScreen = () => {
       ]
     );
   };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await api.deleteAccount(userToken);
+      if (response.success) {
+        setIsDeleteModalVisible(false);
+        // Alert user
+        showAlert("Account Deleted", response.message || "Your account has been successfully scheduled for deletion.", [{ text: "OK" }]);
+        // Logout internally clears tokens and redirects to Login
+        logout();
+      }
+    } catch (error) {
+      if (error?.response?.status === 403 || error?.status === 403 || error?.message?.includes('403')) {
+        showAlert("Error", "Only the vendor owner can delete this account.", [{ text: "OK" }]);
+      } else {
+        showAlert("Error", "An error occurred while deleting your account.", [{ text: "OK" }]);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
 
   const handleSkipAddress = () => {
     if (!isEditing) return;
@@ -346,16 +371,17 @@ const SettingsScreen = () => {
               </View>
             </TouchableOpacity> */}
 
-            <TouchableOpacity
-              style={[styles.prefRow, { marginTop: 12 }]}
-              onPress={() => Linking.openURL('https://docs.google.com/document/d/e/2PACX-1vR4_iNcbJV3YstWuk7ZibvNSdqbFLpYu10iVqAWjg7y8HsqvzgxfeoTcvl-nF_kIGUf77OKuoWuibzY/pub')}
-            >
-              <View style={styles.prefLeft}>
-                <Trash2 size={20} color={COLORS.danger} style={{ marginRight: 10 }} />
-                <Text style={[styles.prefLabel, { color: COLORS.danger }]}>{t('settings.deleteAccount')}</Text>
-              </View>
-              <ExternalLink size={16} color={COLORS.danger} />
-            </TouchableOpacity>
+            {user?.role === 'owner' && (
+              <TouchableOpacity
+                style={[styles.prefRow, { marginTop: 12 }]}
+                onPress={() => setIsDeleteModalVisible(true)}
+              >
+                <View style={styles.prefLeft}>
+                  <Trash2 size={20} color={COLORS.danger} style={{ marginRight: 10 }} />
+                  <Text style={[styles.prefLabel, { color: COLORS.danger }]}>{t('settings.deleteAccount')}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity style={[styles.prefRow, { borderBottomWidth: 0, marginTop: 12 }]} onPress={handleLogout}>
               <View style={styles.prefLeft}>
@@ -367,6 +393,48 @@ const SettingsScreen = () => {
 
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={isDeleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsDeleteModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIconContainer}>
+              <Trash2 size={32} color={COLORS.danger} />
+            </View>
+            <Text style={styles.modalTitle}>Delete Account?</Text>
+            <Text style={styles.modalBody}>
+              Are you sure you want to delete your account? This action will permanently wipe all your routes, customers, deliveries, and invoices. Your data will be permanently destroyed after a 30-day grace period.
+            </Text>
+            
+            <View style={styles.modalButtonGroup}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setIsDeleteModalVisible(false)}
+                disabled={isDeleting}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.modalDeleteBtn}
+                onPress={handleDeleteAccount}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text style={styles.modalDeleteText}>Delete My Account</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 };
@@ -589,6 +657,77 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     color: COLORS.danger,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  modalIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 12,
+  },
+  modalBody: {
+    fontSize: 15,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  modalButtonGroup: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  modalDeleteBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    backgroundColor: COLORS.danger,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalDeleteText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   }
 });
 
