@@ -283,7 +283,7 @@ const RouteBuilderScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={t('routes.customerSequence')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}

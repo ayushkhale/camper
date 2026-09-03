@@ -34,7 +34,7 @@ function App() {
       }
     }
     // Force the status bar to remain dark-content regardless of navigation stack cache
-    StatusBar.setBarStyle('dark-content', true);
+    StatusBar.setBarStyle('light-content', true);
   };
 
   useEffect(() => {
@@ -133,7 +133,7 @@ function App() {
         <StatusBar
           translucent
           backgroundColor="transparent"
-          barStyle="dark-content"
+          barStyle="light-content"
         />
         <SafeAreaView
           style={{ flex: 1, backgroundColor: 'transparent' }}
@@ -144,11 +144,11 @@ function App() {
             <Svg height="100%" width="100%">
               <Defs>
                 <LinearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0%" stopColor="#9DCFFD" />
-                  <Stop offset="25%" stopColor="#BEDDFE" />
-                  <Stop offset="50%" stopColor="#D6E9FC" />
-                  <Stop offset="75%" stopColor="#C1DFFE" />
-                  <Stop offset="100%" stopColor="#A1D0FD" />
+                  <Stop offset="0%" stopColor="#063A8F" />
+                  <Stop offset="20%" stopColor="#073996" />
+                  <Stop offset="45%" stopColor="#043997" />
+                  <Stop offset="70%" stopColor="#063A99" />
+                  <Stop offset="100%" stopColor="#043B97" />
                 </LinearGradient>
               </Defs>
               <Rect width="100%" height="100%" fill="url(#bgGrad)" />

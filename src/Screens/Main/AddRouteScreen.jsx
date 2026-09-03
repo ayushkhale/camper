@@ -82,7 +82,7 @@ const AddRouteScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={isEditing ? t('routes.editRoute') : t('routes.createRoute')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}

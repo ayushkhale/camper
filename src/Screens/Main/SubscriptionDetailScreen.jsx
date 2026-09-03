@@ -114,15 +114,11 @@ const SubscriptionDetailScreen = () => {
     if (showLoading) setLoading(true);
     setError('');
     try {
-      let subData = subscription;
-      if (!subData || !subData.Customer) {
-        const subRes = await api.getSubscription(userToken, subscriptionId);
-        if (subRes.success) {
-          subData = subRes.data;
-          setSubscription(subData);
-        } else {
-          throw new Error(subRes.message || 'Failed to load subscription');
-        }
+      const subRes = await api.getSubscription(userToken, subscriptionId);
+      if (subRes.success) {
+        setSubscription(subRes.data);
+      } else {
+        throw new Error(subRes.message || 'Failed to load subscription');
       }
 
       const [pausesRes, overridesRes] = await Promise.all([
@@ -321,7 +317,7 @@ const SubscriptionDetailScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={t('subscriptions.details', 'Subscription Details')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={user?.role !== 'staff' ? (
           <View style={{ flexDirection: 'row', gap: 12, marginRight: 16 }}>
@@ -357,7 +353,9 @@ const SubscriptionDetailScreen = () => {
           </View>
 
           <View style={styles.heroRight}>
-            <Text style={styles.productNameHero}>{subscription.Product?.name || 'Subscription'}</Text>
+            <Text style={styles.productNameHero}>
+              {subscription.Product ? `${subscription.Product.name} (₹${Number(subscription.Product.price || 0)}${subscription.Product.unit ? ` • ${subscription.Product.unit}` : ''})` : 'Subscription'}
+            </Text>
             
             <View style={[styles.heroStatusPill, { backgroundColor: isActive ? '#DCFCE7' : isPaused ? '#FEF3C7' : '#F1F5F9' }]}>
               <View style={[styles.heroStatusDot, { backgroundColor: isActive ? '#16A34A' : isPaused ? '#D97706' : '#94A3B8' }]} />

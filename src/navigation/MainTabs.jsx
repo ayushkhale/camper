@@ -19,15 +19,15 @@ const Tab = createBottomTabNavigator();
 const CustomDropletIcon = ({ size = 20, color = "#0B409C", style }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
     {/* Thick outer droplet path */}
-    <Path 
-      d="M12 2.5l-.27.27C7.6 7.07 4 11.23 4 15.5 4 19.92 7.58 23.5 12 23.5s8-3.58 8-8c0-4.27-3.6-8.43-7.73-12.54L12 2.5z" 
-      stroke={color} 
-      strokeWidth="2.5" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
+    <Path
+      d="M12 2.5l-.27.27C7.6 7.07 4 11.23 4 15.5 4 19.92 7.58 23.5 12 23.5s8-3.58 8-8c0-4.27-3.6-8.43-7.73-12.54L12 2.5z"
+      stroke={color}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
     {/* Inner swoosh/crescent highlight */}
-    <Path 
+    <Path
       d="M7 14.5 C7 17.5 9.5 20 12.5 20.5 C9 19.5 8 16.5 8.5 13.5 C8 13.8 7.5 14 7 14.5 Z"
       fill={color}
     />
@@ -41,12 +41,12 @@ const HomeHeader = () => {
     <CurvedHeader
       height={120}
       contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
-      leftIcon={<Menu color="#0B409C" size={28} strokeWidth={2} />}
+      leftIcon={<Menu color="#FFFFFF" size={28} strokeWidth={2} />}
       onLeftPress={() => navigation.toggleDrawer()}
       title={(
         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -8 }}>
           <FastImage
-            source={require('../../assets/logo1.png')}
+            source={require('../../assets/logo2.png')}
             style={{ width: 140, height: 38 }}
             resizeMode="contain"
           />
@@ -110,7 +110,7 @@ const MainTabs = () => {
           if (route.name === 'Customers') IconComponent = Users;
 
           // Match the image: Blue for active, Slate for inactive
-          const activeColor = '#1D4ED8'; // Deep blue matching the image
+          const activeColor = '#04297A'; // Deep blue matching the image
           const inactiveColor = '#64748B'; // Slate gray
           const color = focused ? activeColor : inactiveColor;
 
@@ -122,7 +122,7 @@ const MainTabs = () => {
           if (route.name === 'Payments') label = t('tabs.payments');
           if (route.name === 'Customers') label = t('tabs.customers');
 
-          const activeColor = '#1D4ED8';
+          const activeColor = '#04297A';
           const inactiveColor = '#64748B';
           const color = focused ? activeColor : inactiveColor;
 

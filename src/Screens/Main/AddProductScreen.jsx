@@ -249,7 +249,7 @@ const AddProductScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={isEditing ? t('products.editProduct') : t('products.addNew')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={110}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}

@@ -171,7 +171,7 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
     <View style={styles.container}>
       <CurvedHeader
         title={t('customerDetail.viewHistory')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={130}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}

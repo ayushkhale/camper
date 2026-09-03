@@ -586,7 +586,7 @@ const OrdersScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={t('home.todaysDeliveries') || "Today's Deliveries"}
-        leftIcon={<Menu size={24} color="#0B409C" />}
+        leftIcon={<Menu size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}

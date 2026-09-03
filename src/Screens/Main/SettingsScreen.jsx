@@ -169,7 +169,7 @@ const SettingsScreen = () => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <CurvedHeader
         title={t('settings.title') || 'Settings'}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={(
           <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editActionBtn}>

@@ -326,7 +326,7 @@ const CustomerDeliveryHistoryScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={`${customerName || 'Customer'} Activity`}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={130}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}

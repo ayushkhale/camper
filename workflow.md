@@ -700,3 +700,15 @@
   16. Added a shared pulsing image skeleton to both onboarding screens. The placeholder occupies the illustration area until each onboarding image loads, then the image fades in smoothly; Skip, Back, Next, Get Started, and navigation behavior remain unchanged.
   17. Replaced the static splash artwork with the selected **Animated Water Drop** concept. The splash reuses the exact inner-header gradient palette while a water droplet falls into the exact horizontal and vertical screen center, squashes on impact, produces two expanding ripple waves, and dissolves into the Camper logo with a soft spring/fade. To ensure consistent device positioning, the impact stage now uses its own full-screen flex-centering layer instead of percentage-based absolute coordinates; the tagline uses a separate centered layer offset below it. The localized tagline, white curved exit sweep, existing three-second completion callback, and authentication/navigation flow remain unchanged.
 - **Status**: Implemented; focused lint and diff validation completed for the latest delivery, Home empty-state, header-spacing, onboarding image-loading, and animated splash changes.
+
+### Date: 2026-09-03 (Wednesday)
+- **Component / File**: `LoginScreen.jsx`, `RegisterScreen.jsx`
+- **User Request**: Add a language change tab (EN/HI) on the Login and Register screens, aligned to the right of the form header title text.
+- **Root Cause / Task**: Vendors needed the ability to switch languages before logging in, without navigating to a settings screen first.
+- **Changes Made**:
+  1. Added `AsyncStorage` import and `i18n` destructuring to both `LoginScreen.jsx` and `RegisterScreen.jsx`.
+  2. Created a `changeLanguage()` helper that calls `i18n.changeLanguage(lng)` and persists the selection to `AsyncStorage` (same pattern as `SettingsScreen.jsx`).
+  3. Wrapped the existing `headerTitleContainer` and a new `langSwitcher` view inside a `headerRow` (flexDirection: 'row', justifyContent: 'space-between') so the title sits on the left and the language tabs sit cleanly on the right.
+  4. The language switcher is a compact pill with EN and HI tabs. The active tab uses the deep brand blue (`#043994`) background with white text; inactive tabs use slate gray text on a light gray background (`#F1F5F9`).
+  5. No existing functionality, images, or form behavior was changed.
+- **Status**: Implemented.

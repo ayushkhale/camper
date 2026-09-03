@@ -106,10 +106,16 @@ const OtpVerificationScreen = ({ route, navigation }) => {
   const otpArray = Array(6).fill('');
 
   return (
-    <ImageBackground
-      source={require('../../../assets/login5.png')}
+    
+      <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'position' : 'position'}
+      style={{ flex: 1 }}
+      contentContainerStyle={{ flex: 1 }}
+    >
+      <ImageBackground
+      source={require('../../../assets/login7.png')}
       style={styles.backgroundImage}
-      resizeMode="stretch"
+      resizeMode="cover"
     >
       <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
         {/* Dynamic Custom Toast Notification */}
@@ -119,10 +125,7 @@ const OtpVerificationScreen = ({ route, navigation }) => {
           </View>
         )}
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
-        >
+        
           <ScrollView
             contentContainerStyle={styles.scrollContainer}
             keyboardShouldPersistTaps="handled"
@@ -208,9 +211,11 @@ const OtpVerificationScreen = ({ route, navigation }) => {
               </View>
             </View>
           </ScrollView>
-        </KeyboardAvoidingView>
+        
       </SafeAreaView>
     </ImageBackground>
+    </KeyboardAvoidingView>
+    
   );
 };
 

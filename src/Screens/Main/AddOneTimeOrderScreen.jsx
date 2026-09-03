@@ -250,7 +250,7 @@ const AddOneTimeOrderScreen = () => {
     } else if (activeModal === 'product') {
       title = t('customers.selectProduct');
       data = products;
-      renderItemText = (item) => `${item.name} (₹${item.price || '0'})`;
+      renderItemText = (item) => `${item.name} (₹${Number(item.price || 0)})`;
       onSelect = (item) => {
         handleAddProductItem(item);
       };
@@ -341,7 +341,7 @@ const AddOneTimeOrderScreen = () => {
       <CurvedHeader
         title={
           <View>
-            <Text style={{ color: '#0B409C', fontSize: 20, fontFamily: 'Rubik-Bold' }}>
+            <Text style={{ color: '#FFFFFF', fontSize: 20, fontFamily: 'Rubik-Bold' }}>
               {t('oneTimeOrders.newOrder', 'New Order')}
             </Text>
             {/* <Text style={{ color: '#E2E8F0', fontSize: 13, fontFamily: 'Rubik-Medium', marginTop: 2 }}>
@@ -349,7 +349,7 @@ const AddOneTimeOrderScreen = () => {
             </Text> */}
           </View>
         }
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
@@ -427,7 +427,7 @@ const AddOneTimeOrderScreen = () => {
                     <View key={item.productId} style={styles.productItemCard}>
                       <View style={styles.productItemHeader}>
                         <Text style={styles.productItemName} numberOfLines={1}>
-                          {item.Product?.name}
+                          {item.Product ? `${item.Product.name} (₹${Number(item.Product.price || 0)}${item.Product.unit ? ` • ${item.Product.unit}` : ''})` : 'Product'}
                         </Text>
                         <TouchableOpacity
                           style={styles.removeItemBtn}

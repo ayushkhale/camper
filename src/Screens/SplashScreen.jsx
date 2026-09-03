@@ -9,20 +9,19 @@ import {
   View,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import { Droplet } from 'lucide-react-native';
-import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import { Check, ClipboardCheck } from 'lucide-react-native';
+import Svg, { Defs, LinearGradient, Stop, Rect, Path } from 'react-native-svg';
 
 const initialWindow = Dimensions.get('window');
-const IMPACT_STAGE_HEIGHT = 170;
-const TAGLINE_OFFSET = 105;
-const BACKGROUND_BUBBLES = [
-  { x: 0.07, y: 0.12, size: 58, outline: false, reverse: false },
-  { x: 0.82, y: 0.18, size: 30, outline: true, reverse: true },
-  { x: 0.89, y: 0.43, size: 64, outline: false, reverse: false },
-  { x: 0.05, y: 0.64, size: 34, outline: true, reverse: true },
-  { x: 0.72, y: 0.74, size: 46, outline: true, reverse: false },
-  { x: 0.24, y: 0.86, size: 22, outline: false, reverse: true },
-];
+
+const PARTICLES = Array.from({ length: 8 }).map((_, i) => {
+  const angle = (i * (Math.PI * 2)) / 8;
+  return {
+    x: Math.cos(angle) * 160, // Spread distance
+    y: Math.sin(angle) * 160,
+    size: Math.random() * 8 + 6,
+  };
+});
 
 const SplashScreen = ({ onFinish }) => {
   const onFinishRef = useRef(onFinish);
@@ -31,305 +30,218 @@ const SplashScreen = ({ onFinish }) => {
     height: initialWindow.height,
   });
 
-  const dropProgress = useRef(new Animated.Value(0)).current;
-  const dropOpacity = useRef(new Animated.Value(0)).current;
-  const dropScaleX = useRef(new Animated.Value(1)).current;
-  const dropScaleY = useRef(new Animated.Value(1)).current;
-  const impactGlow = useRef(new Animated.Value(0)).current;
-  const firstRipple = useRef(new Animated.Value(0)).current;
-  const secondRipple = useRef(new Animated.Value(0)).current;
+  // Animation values
+  const tabletOpacity = useRef(new Animated.Value(0)).current;
+  const tabletScale = useRef(new Animated.Value(0.8)).current;
+  const tabletTranslateY = useRef(new Animated.Value(20)).current;
+
+  const checkTranslateY = useRef(new Animated.Value(-400)).current;
+  const checkScale = useRef(new Animated.Value(1)).current;
+  const checkOpacity = useRef(new Animated.Value(1)).current;
+
+  const particleProgress = useRef(new Animated.Value(0)).current;
+  const particleOpacity = useRef(new Animated.Value(0)).current;
+
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoScale = useRef(new Animated.Value(0.58)).current;
-  const logoTranslateY = useRef(new Animated.Value(18)).current;
+  const logoScale = useRef(new Animated.Value(0.5)).current;
+  const logoTranslateY = useRef(new Animated.Value(20)).current;
+
   const taglineOpacity = useRef(new Animated.Value(0)).current;
-  const taglineTranslateY = useRef(new Animated.Value(12)).current;
+  const taglineTranslateY = useRef(new Animated.Value(15)).current;
+
   const contentExitOpacity = useRef(new Animated.Value(1)).current;
   const exitWaveTranslateY = useRef(new Animated.Value(initialWindow.height + 180)).current;
-  const bubbleMotion = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     onFinishRef.current = onFinish;
   }, [onFinish]);
 
   useEffect(() => {
-    const bubbleAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(bubbleMotion, {
-          toValue: 1,
-          duration: 2600,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(bubbleMotion, {
-          toValue: 0,
-          duration: 2600,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
+    // 1. Tablet floats in
+    const tabletIn = Animated.parallel([
+      Animated.timing(tabletOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(tabletScale, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.back(1.5)),
+        useNativeDriver: true,
+      }),
+      Animated.timing(tabletTranslateY, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]);
 
-    const animation = Animated.sequence([
-      Animated.delay(150),
-      Animated.parallel([
-        Animated.timing(dropOpacity, {
-          toValue: 1,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-        Animated.timing(dropProgress, {
-          toValue: 1,
-          duration: 850,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.parallel([
-        Animated.sequence([
-          Animated.parallel([
-            Animated.timing(dropScaleX, {
-              toValue: 1.28,
-              duration: 110,
-              easing: Easing.out(Easing.quad),
-              useNativeDriver: true,
-            }),
-            Animated.timing(dropScaleY, {
-              toValue: 0.58,
-              duration: 110,
-              easing: Easing.out(Easing.quad),
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.timing(dropOpacity, {
-            toValue: 0,
-            duration: 190,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(impactGlow, {
-            toValue: 1,
-            duration: 160,
-            useNativeDriver: true,
-          }),
-          Animated.timing(impactGlow, {
-            toValue: 0,
-            duration: 440,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.timing(firstRipple, {
-          toValue: 1,
-          duration: 760,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.sequence([
-          Animated.delay(130),
-          Animated.timing(secondRipple, {
-            toValue: 1,
-            duration: 720,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.delay(170),
-          Animated.parallel([
-            Animated.timing(logoOpacity, {
-              toValue: 1,
-              duration: 420,
-              useNativeDriver: true,
-            }),
-            Animated.spring(logoScale, {
-              toValue: 1,
-              speed: 8,
-              bounciness: 4,
-              useNativeDriver: true,
-            }),
-            Animated.timing(logoTranslateY, {
-              toValue: 0,
-              duration: 520,
-              easing: Easing.out(Easing.cubic),
-              useNativeDriver: true,
-            }),
-          ]),
-        ]),
-      ]),
-      Animated.parallel([
-        Animated.timing(taglineOpacity, {
-          toValue: 1,
-          duration: 420,
-          useNativeDriver: true,
-        }),
-        Animated.timing(taglineTranslateY, {
+    // 2. Checkmark drops and violently hits the tablet
+    const checkDrop = Animated.sequence([
+      Animated.delay(200),
+      Animated.timing(checkTranslateY, {
+        toValue: 0,
+        duration: 350,
+        easing: Easing.in(Easing.poly(4)), // Fast drop
+        useNativeDriver: true,
+      }),
+      // Impact squash
+      Animated.timing(checkScale, {
+        toValue: 1.3,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    // 3. The shatter impact
+    const shatter = Animated.parallel([
+      // Tablet instantly shrinks
+      Animated.timing(tabletScale, {
+        toValue: 0,
+        duration: 150,
+        easing: Easing.in(Easing.back(2)),
+        useNativeDriver: true,
+      }),
+      Animated.timing(tabletOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      // Checkmark disappears
+      Animated.timing(checkOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(checkScale, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      // Particles explode outwards
+      Animated.timing(particleOpacity, {
+        toValue: 1,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(particleProgress, {
+        toValue: 1,
+        duration: 400,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.sequence([
+        Animated.delay(200),
+        Animated.timing(particleOpacity, {
           toValue: 0,
-          duration: 480,
-          easing: Easing.out(Easing.cubic),
+          duration: 200,
           useNativeDriver: true,
         }),
       ]),
     ]);
 
-    let exitAnimation;
-    const exitTimer = setTimeout(() => {
-      exitAnimation = Animated.parallel([
+    // 4. Logo and Tagline Reveal
+    const logoReveal = Animated.parallel([
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoScale, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.back(1.5)),
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoTranslateY, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.sequence([
+        Animated.delay(200),
+        Animated.parallel([
+          Animated.timing(taglineOpacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(taglineTranslateY, {
+            toValue: 0,
+            duration: 400,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    ]);
+
+    // 5. Exit Transition
+    const exitSequence = Animated.sequence([
+      Animated.delay(1000), // Hold logo on screen
+      Animated.parallel([
         Animated.timing(contentExitOpacity, {
           toValue: 0,
-          duration: 320,
+          duration: 350,
           useNativeDriver: true,
         }),
         Animated.timing(exitWaveTranslateY, {
-          toValue: -120,
-          duration: 650,
+          toValue: -200,
+          duration: 750,
           easing: Easing.inOut(Easing.cubic),
           useNativeDriver: true,
         }),
-      ]);
-      exitAnimation.start();
-    }, 3000);
+      ]),
+    ]);
 
-    const finishTimer = setTimeout(() => {
-      onFinishRef.current?.();
-    }, 3800);
+    // Orchestrate everything
+    Animated.sequence([
+      Animated.delay(300),
+      tabletIn,
+      Animated.delay(200),
+      checkDrop,
+      shatter,
+      logoReveal,
+      exitSequence,
+    ]).start(() => {
+      if (onFinishRef.current) {
+        onFinishRef.current();
+      }
+    });
+  }, []);
 
-    bubbleAnimation.start();
-    animation.start();
-
-    return () => {
-      clearTimeout(exitTimer);
-      clearTimeout(finishTimer);
-      bubbleAnimation.stop();
-      animation.stop();
-      exitAnimation?.stop();
-    };
-  }, [
-    bubbleMotion,
-    contentExitOpacity,
-    dropOpacity,
-    dropProgress,
-    dropScaleX,
-    dropScaleY,
-    exitWaveTranslateY,
-    firstRipple,
-    impactGlow,
-    logoOpacity,
-    logoScale,
-    logoTranslateY,
-    secondRipple,
-    taglineOpacity,
-    taglineTranslateY,
-  ]);
-
-  const handleLayout = ({ nativeEvent }) => {
-    const measured = nativeEvent.layout;
-    if (measured.width <= 0 || measured.height <= 0) return;
-
-    setViewport((current) => (
-      current.width === measured.width && current.height === measured.height
-        ? current
-        : { width: measured.width, height: measured.height }
-    ));
-  };
-
-  const centerY = viewport.height / 2;
-  const impactTop = centerY - IMPACT_STAGE_HEIGHT / 2;
-  const taglineTop = centerY + TAGLINE_OFFSET;
-  const waveCanvasHeight = viewport.height + 220;
-  const logoWidth = Math.min(viewport.width * 0.92, 390);
-  const logoHeight = Math.min(viewport.width * 0.31, 132);
-
-  const dropTranslateY = dropProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-(centerY - 42), 0],
-  });
-  const firstRippleScale = firstRipple.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.35, 3.2],
-  });
-  const firstRippleOpacity = firstRipple.interpolate({
-    inputRange: [0, 0.12, 1],
-    outputRange: [0, 0.48, 0],
-  });
-  const secondRippleScale = secondRipple.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 2.75],
-  });
-  const secondRippleOpacity = secondRipple.interpolate({
-    inputRange: [0, 0.14, 1],
-    outputRange: [0, 0.34, 0],
-  });
-  const impactGlowScale = impactGlow.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.45, 1.25],
-  });
-  const bubbleTranslateY = bubbleMotion.interpolate({
-    inputRange: [0, 1],
-    outputRange: [9, -9],
-  });
-  const reverseBubbleTranslateY = bubbleMotion.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-7, 7],
-  });
-  const bubbleScale = bubbleMotion.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.97, 1.04],
-  });
+  const logoWidth = viewport.width * 0.65;
+  const logoHeight = logoWidth * 0.35;
+  const waveCanvasHeight = viewport.height + 400;
 
   return (
-    <View style={styles.container} onLayout={handleLayout}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+    <View
+      style={styles.container}
+      onLayout={(e) => {
+        setViewport({
+          width: e.nativeEvent.layout.width,
+          height: e.nativeEvent.layout.height,
+        });
+      }}
+    >
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
 
-      <Svg
-        width={viewport.width}
-        height={viewport.height}
-        style={StyleSheet.absoluteFill}
-      >
+      {/* Deep Blue Background Gradient */}
+      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
         <Defs>
-          <LinearGradient id="splashGradient" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0%" stopColor="#9DCFFD" />
-            <Stop offset="25%" stopColor="#BEDDFE" />
-            <Stop offset="50%" stopColor="#D6E9FC" />
-            <Stop offset="75%" stopColor="#C1DFFE" />
-            <Stop offset="100%" stopColor="#A1D0FD" />
+          <LinearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0%" stopColor="#063A8F" />
+            <Stop offset="20%" stopColor="#073996" />
+            <Stop offset="45%" stopColor="#043997" />
+            <Stop offset="70%" stopColor="#063A99" />
+            <Stop offset="100%" stopColor="#043B97" />
           </LinearGradient>
         </Defs>
-        <Rect width={viewport.width} height={viewport.height} fill="url(#splashGradient)" />
-        <Path
-          d={`M0 ${viewport.height * 0.82} Q${viewport.width * 0.48} ${viewport.height * 0.75} ${viewport.width} ${viewport.height * 0.84} L${viewport.width} ${viewport.height} L0 ${viewport.height} Z`}
-          fill="rgba(255,255,255,0.16)"
-        />
+        <Rect width="100%" height="100%" fill="url(#bgGrad)" />
       </Svg>
-
-      <Animated.View
-        pointerEvents="none"
-        style={[styles.bubbleLayer, { opacity: contentExitOpacity }]}
-      >
-        {BACKGROUND_BUBBLES.map((bubble, index) => (
-          <Animated.View
-            key={`${bubble.x}-${bubble.y}-${index}`}
-            style={[
-              styles.backgroundBubble,
-              bubble.outline ? styles.outlineBubble : styles.filledBubble,
-              {
-                left: viewport.width * bubble.x,
-                top: viewport.height * bubble.y,
-                width: bubble.size,
-                height: bubble.size,
-                borderRadius: bubble.size / 2,
-                transform: [
-                  {
-                    translateY: bubble.reverse
-                      ? reverseBubbleTranslateY
-                      : bubbleTranslateY,
-                  },
-                  { scale: bubbleScale },
-                ],
-              },
-            ]}
-          />
-        ))}
-      </Animated.View>
 
       <Animated.View
         pointerEvents="none"
@@ -342,57 +254,78 @@ const SplashScreen = ({ onFinish }) => {
           },
         ]}
       >
-        <View
-          style={[
-            styles.impactStage,
-            {
-              top: impactTop,
-              width: viewport.width,
-            },
-          ]}
-        >
-          <Animated.View
-            style={[
-              styles.impactGlow,
-              { opacity: impactGlow, transform: [{ scale: impactGlowScale }] },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.ripple,
-              {
-                opacity: firstRippleOpacity,
-                transform: [{ scale: firstRippleScale }, { scaleY: 0.34 }],
-              },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.ripple,
-              styles.rippleSecondary,
-              {
-                opacity: secondRippleOpacity,
-                transform: [{ scale: secondRippleScale }, { scaleY: 0.34 }],
-              },
-            ]}
-          />
+        <View style={styles.centerStage}>
+          {/* Particles Layer */}
+          <View style={StyleSheet.absoluteFill}>
+            {PARTICLES.map((particle, idx) => {
+              const translateX = particleProgress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, particle.x],
+              });
+              const translateY = particleProgress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, particle.y],
+              });
 
+              return (
+                <Animated.View
+                  key={`particle-${idx}`}
+                  style={[
+                    styles.particle,
+                    {
+                      width: particle.size,
+                      height: particle.size,
+                      borderRadius: particle.size / 2,
+                      opacity: particleOpacity,
+                      transform: [
+                        { translateX },
+                        { translateY },
+                        { scale: particleOpacity },
+                      ],
+                    },
+                  ]}
+                />
+              );
+            })}
+          </View>
+
+          {/* The Digital Tablet */}
           <Animated.View
             style={[
-              styles.fallingDrop,
+              styles.tablet,
               {
-                opacity: dropOpacity,
+                opacity: tabletOpacity,
+                transform: [{ translateY: tabletTranslateY }, { scale: tabletScale }],
+              },
+            ]}
+          >
+            <View style={styles.tabletLineGroup}>
+              <View style={[styles.tabletLine, { width: '80%' }]} />
+              <View style={[styles.tabletLine, { width: '60%' }]} />
+              <View style={[styles.tabletLine, { width: '90%' }]} />
+              <View style={[styles.tabletLine, { width: '40%' }]} />
+            </View>
+          </Animated.View>
+
+          {/* The Checkmark Stamp */}
+          <Animated.View
+            style={[
+              styles.checkmarkWrapper,
+              {
+                opacity: checkOpacity,
                 transform: [
-                  { translateY: dropTranslateY },
-                  { scaleX: dropScaleX },
-                  { scaleY: dropScaleY },
+                  { translateY: checkTranslateY },
+                  { scale: checkScale },
                 ],
               },
             ]}
           >
-            <Droplet size={58} color="#0B409C" fill="#3B82F6" strokeWidth={1.8} />
+            <View style={styles.checkmarkGlow}>
+              <Check size={80} color="#043994" strokeWidth={3} />
+            </View>
           </Animated.View>
 
+          {/* Final Logo Reveal */}
           <Animated.View
             style={[
               styles.logoWrapper,
@@ -402,71 +335,29 @@ const SplashScreen = ({ onFinish }) => {
               },
             ]}
           >
-            <View style={{ width: logoWidth, height: logoHeight }}>
-              <View
-                style={[
-                  styles.logoCrop,
-                  {
-                    width: logoWidth * 0.355,
-                    height: logoHeight,
-                  },
-                ]}
-              >
-                <FastImage
-                  source={require('../../assets/logo1.png')}
-                  style={{ width: logoWidth, height: logoHeight }}
-                  resizeMode={FastImage.resizeMode.contain}
-                />
-              </View>
-
-              <View
-                style={[
-                  styles.logoCrop,
-                  {
-                    left: logoWidth * 0.35,
-                    top: logoHeight * 0.36,
-                    width: logoWidth * 0.65,
-                    height: logoHeight * 0.36,
-                  },
-                ]}
-              >
-                <FastImage
-                  source={require('../../assets/logo1.png')}
-                  style={{
-                    position: 'absolute',
-                    left: -logoWidth * 0.35,
-                    top: -logoHeight * 0.36,
-                    width: logoWidth,
-                    height: logoHeight,
-                  }}
-                  resizeMode={FastImage.resizeMode.contain}
-                />
-              </View>
-            </View>
+            <FastImage
+              source={require('../../assets/logo2.png')}
+              style={{ width: logoWidth, height: logoHeight }}
+              resizeMode={FastImage.resizeMode.contain}
+            />
           </Animated.View>
         </View>
 
-        <View
-          style={[
-            styles.taglinePosition,
-            {
-              top: taglineTop,
-              width: viewport.width,
-            },
-          ]}
-        >
+        {/* Tagline */}
+        <View style={[styles.taglinePosition, { width: viewport.width }]}>
           <Animated.View
             style={[
               styles.taglinePill,
               { opacity: taglineOpacity, transform: [{ translateY: taglineTranslateY }] },
             ]}
           >
-            <Droplet size={15} color="#0B409C" fill="#DBEAFE" style={styles.taglineIcon} />
-            <Text style={styles.tagline}>Pure Water, Better Life</Text>
+            <ClipboardCheck size={16} color="#FFFFFF" style={styles.taglineIcon} />
+            <Text style={styles.tagline}>Get the Job Done</Text>
           </Animated.View>
         </View>
       </Animated.View>
 
+      {/* Exit Transition Wave */}
       <Animated.View
         pointerEvents="none"
         style={[
@@ -492,106 +383,101 @@ const SplashScreen = ({ onFinish }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D6E9FC',
     overflow: 'hidden',
+    backgroundColor: '#043994', // Base fallback
   },
   animationLayer: {
     position: 'absolute',
     top: 0,
     left: 0,
   },
-  bubbleLayer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  backgroundBubble: {
-    position: 'absolute',
-  },
-  filledBubble: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.16,
-    shadowRadius: 7,
-  },
-  outlineBubble: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1.25,
-    borderColor: 'rgba(255,255,255,0.30)',
-  },
-  impactStage: {
+  centerStage: {
     position: 'absolute',
     left: 0,
-    height: IMPACT_STAGE_HEIGHT,
+    top: '32%',
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fallingDrop: {
+  tablet: {
+    position: 'absolute',
+    width: 120,
+    height: 160,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 12,
+    padding: 16,
+    zIndex: 1,
+  },
+  tabletLineGroup: {
+    flex: 1,
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+  },
+  tabletLine: {
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 2,
+  },
+  checkmarkWrapper: {
     position: 'absolute',
     zIndex: 3,
-    shadowColor: '#0B409C',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    elevation: 6,
   },
-  impactGlow: {
+  checkmarkGlow: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  particle: {
     position: 'absolute',
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: 'rgba(255,255,255,0.78)',
-  },
-  ripple: {
-    position: 'absolute',
-    width: 86,
-    height: 86,
-    borderRadius: 43,
-    borderWidth: 2,
-    borderColor: '#2563EB',
-  },
-  rippleSecondary: {
-    borderColor: '#60A5FA',
-    borderWidth: 1.5,
+    backgroundColor: '#FFFFFF',
+    zIndex: 2,
+    left: '50%',
+    top: '50%',
+    marginLeft: -4,
+    marginTop: -4,
   },
   logoWrapper: {
     position: 'absolute',
-    zIndex: 2,
+    zIndex: 4,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logoCrop: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    overflow: 'hidden',
   },
   taglinePosition: {
     position: 'absolute',
     left: 0,
+    bottom: '15%',
     alignItems: 'center',
   },
   taglinePill: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 10,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.74)',
-    shadowColor: '#0B409C',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   taglineIcon: {
-    marginRight: 7,
+    marginRight: 8,
   },
   tagline: {
-    color: '#0B409C',
-    fontSize: 13,
-    fontFamily: 'Rubik-Medium',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Rubik-SemiBold',
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   exitWave: {
     position: 'absolute',

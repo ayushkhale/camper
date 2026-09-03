@@ -33,10 +33,10 @@ const CurvedHeader = ({
       styles.container,
       { height: totalHeight, backgroundColor: isHome ? startColor : 'transparent' },
     ]}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
       {isHome ? (
         <FastImage
-          source={require('../../assets/header_bg9.png')}
+          source={require('../../assets/header_bg1.png')}
           style={StyleSheet.absoluteFill}
           resizeMode="stretch"
         />
@@ -44,11 +44,11 @@ const CurvedHeader = ({
         <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
           <Defs>
             <LinearGradient id="headerGradient" x1="0" y1="0" x2="1" y2="0">
-              <Stop offset="0%" stopColor="#9DCFFD" />
-              <Stop offset="25%" stopColor="#BEDDFE" />
-              <Stop offset="50%" stopColor="#D6E9FC" />
-              <Stop offset="75%" stopColor="#C1DFFE" />
-              <Stop offset="100%" stopColor="#A1D0FD" />
+              <Stop offset="0%" stopColor="#063A8F" />
+              <Stop offset="20%" stopColor="#073996" />
+              <Stop offset="45%" stopColor="#043997" />
+              <Stop offset="70%" stopColor="#063A99" />
+              <Stop offset="100%" stopColor="#043B97" />
             </LinearGradient>
           </Defs>
           <Path
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   title: {
-    color: '#0B409C',
+    color: '#FFFFFF',
     fontSize: 22,
     fontFamily: 'Rubik-Bold',
     marginLeft: 8,

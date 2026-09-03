@@ -526,10 +526,10 @@ const PaymentsScreen = () => {
       <CurvedHeader
         title={
           <View>
-            <Text style={{ color: '#0B409C', fontSize: 20, fontFamily: 'Rubik-Bold' }}>{t('payments.title')}</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 20, fontFamily: 'Rubik-Bold' }}>{t('payments.title')}</Text>
           </View>
         }
-        leftIcon={<Menu size={24} color="#0B409C" />}
+        leftIcon={<Menu size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}

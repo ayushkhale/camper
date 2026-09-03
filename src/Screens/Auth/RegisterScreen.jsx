@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowRight } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { api } from '../../services/api';
@@ -22,7 +23,12 @@ const { height } = Dimensions.get('window');
 const RegisterScreen = ({ navigation }) => {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const changeLanguage = async (lng) => {
+    i18n.changeLanguage(lng);
+    await AsyncStorage.setItem('app_language', lng);
+  };
   const insets = useSafeAreaInsets();
 
   // Custom Toast state
@@ -67,10 +73,16 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground
-      source={require('../../../assets/login5.png')}
+    
+      <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'position' : 'position'}
+      style={{ flex: 1 }}
+      contentContainerStyle={{ flex: 1 }}
+    >
+      <ImageBackground
+      source={require('../../../assets/login7.png')}
       style={styles.backgroundImage}
-      resizeMode="stretch"
+      resizeMode="cover"
     >
       <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
         {/* Custom Toast Notification */}
@@ -80,10 +92,7 @@ const RegisterScreen = ({ navigation }) => {
           </View>
         )}
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
-        >
+        
           <ScrollView
             contentContainerStyle={styles.scrollContainer}
             keyboardShouldPersistTaps="handled"
@@ -94,9 +103,25 @@ const RegisterScreen = ({ navigation }) => {
 
             {/* Form Section */}
             <View style={[styles.formContainer, { paddingBottom: Math.max(insets.bottom + 48, 64) }]}>
-              <View style={styles.headerTitleContainer}>
-                <Text style={styles.headerTitle}>{t('register.title')}</Text>
-                <View style={styles.titleUnderline} />
+              <View style={styles.headerRow}>
+                <View style={styles.headerTitleContainer}>
+                  <Text style={styles.headerTitle}>{t('register.title')}</Text>
+                  <View style={styles.titleUnderline} />
+                </View>
+                <View style={styles.langSwitcher}>
+                  <TouchableOpacity
+                    style={[styles.langTab, i18n.language === 'en' && styles.langTabActive]}
+                    onPress={() => changeLanguage('en')}
+                  >
+                    <Text style={[styles.langTabText, i18n.language === 'en' && styles.langTabTextActive]}>EN</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.langTab, i18n.language === 'hi' && styles.langTabActive]}
+                    onPress={() => changeLanguage('hi')}
+                  >
+                    <Text style={[styles.langTabText, i18n.language === 'hi' && styles.langTabTextActive]}>HI</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {/* Mobile Input */}
@@ -141,9 +166,11 @@ const RegisterScreen = ({ navigation }) => {
               </View>
             </View>
           </ScrollView>
-        </KeyboardAvoidingView>
+        
       </SafeAreaView>
     </ImageBackground>
+    </KeyboardAvoidingView>
+    
   );
 };
 
@@ -180,9 +207,36 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 20,
   },
-  headerTitleContainer: {
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 32,
+  },
+  headerTitleContainer: {
     alignItems: 'flex-start',
+  },
+  langSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 10,
+    padding: 3,
+  },
+  langTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  langTabActive: {
+    backgroundColor: '#043994',
+  },
+  langTabText: {
+    fontSize: 13,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#64748B',
+  },
+  langTabTextActive: {
+    color: '#FFFFFF',
   },
   headerTitle: {
     fontSize: 26,

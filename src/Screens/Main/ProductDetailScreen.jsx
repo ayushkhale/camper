@@ -160,7 +160,7 @@ const ProductDetailScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={t('products.editProduct')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         rightIcon={
           user?.role !== 'staff' ? (

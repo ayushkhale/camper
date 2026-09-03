@@ -88,11 +88,11 @@ const CustomDrawerContent = (props) => {
           <Svg height="100%" width="100%">
             <Defs>
               <SvgLinearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="0">
-                <Stop offset="0%" stopColor="#9DCFFD" />
-                <Stop offset="25%" stopColor="#BEDDFE" />
-                <Stop offset="50%" stopColor="#D6E9FC" />
-                <Stop offset="75%" stopColor="#C1DFFE" />
-                <Stop offset="100%" stopColor="#A1D0FD" />
+                <Stop offset="0%" stopColor="#063A8F" />
+                <Stop offset="20%" stopColor="#073996" />
+                <Stop offset="45%" stopColor="#043997" />
+                <Stop offset="70%" stopColor="#063A99" />
+                <Stop offset="100%" stopColor="#043B97" />
               </SvgLinearGradient>
             </Defs>
             <Rect width="100%" height="100%" fill="url(#bgGrad)" />
@@ -153,7 +153,7 @@ const CustomDrawerContent = (props) => {
                 {item.title}
               </Text>
               {item.type !== 'logout' && (
-                <ChevronRight size={18} color={isActive ? COLORS.primary : COLORS.textPlaceholder} strokeWidth={2.5} />
+                <ChevronRight size={18} color={isActive ? '#04297A' : COLORS.textPlaceholder} strokeWidth={2.5} />
               )}
             </TouchableOpacity>
           );
@@ -185,20 +185,20 @@ const styles = StyleSheet.create({
   businessName: {
     fontSize: 18,
     fontFamily: 'Rubik-Bold',
-    color: '#0B409C',
+    color: '#FFFFFF',
     fontWeight: '700',
     marginBottom: 4,
   },
   ownerName: {
     fontSize: 14,
     fontFamily: 'Rubik-SemiBold',
-    color: '#1E293B',
+    color: '#E2E8F0',
     marginBottom: 2,
   },
   roleText: {
     fontSize: 12,
     fontFamily: 'Rubik-Medium',
-    color: '#334155',
+    color: '#CBD5E1',
   },
   avatarCircle: {
     width: 52,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   activeMenuItem: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: 'rgba(4, 41, 122, 0.08)', // Very soft deep blue background
   },
   itemText: {
     fontSize: 14.5,
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeItemText: {
-    color: COLORS.primary,
+    color: '#04297A', // Deep premium blue text
     fontWeight: 'bold',
   },
 });

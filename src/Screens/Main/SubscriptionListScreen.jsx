@@ -168,7 +168,7 @@ const SubscriptionListScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={t('subscriptions.title', 'Subscriptions')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 35 }}

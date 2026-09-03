@@ -184,14 +184,19 @@ const AddSubscriptionScreen = () => {
     }
   };
 
-  const getCustomerName = (id) => {
-    const c = customers.find(c => String(c.id) === String(id));
-    return c ? c.name : t('common.selectCustomer');
-  };
-
   const getProductName = (id) => {
     const p = products.find(p => String(p.id) === String(id));
-    return p ? p.name : t('customers.selectProduct');
+    return p ? `${p.name} (₹${Number(p.price || 0)}${p.unit ? ` • ${p.unit}` : ''})` : t('customers.selectProduct');
+  };
+
+  const getCustomerName = (id) => {
+    const c = customers.find(c => String(c.id) === String(id));
+    return c ? `${c.name} ${c.phone ? `(${c.phone})` : ''}` : t('common.selectCustomer');
+  };
+
+  const openModal = (type) => {
+    setModalSearch('');
+    setActiveModal(type);
   };
 
   const renderModal = () => {
@@ -215,7 +220,7 @@ const AddSubscriptionScreen = () => {
       title = t('customers.selectProduct');
       data = products;
       currentVal = productId;
-      renderItemText = (item) => item.name;
+      renderItemText = (item) => `${item.name} (₹${Number(item.price || 0)}${item.unit ? ` • ${item.unit}` : ''})`;
       onSelect = (item) => { setProductId(item.id); setActiveModal(null); setModalSearch(''); };
       showSearch = true;
     } else if (activeModal === 'recurrence') {
@@ -346,7 +351,7 @@ const AddSubscriptionScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={isEditMode ? t('subscriptions.edit') : t('subscriptions.title')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}

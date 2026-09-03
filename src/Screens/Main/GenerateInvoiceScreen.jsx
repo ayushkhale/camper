@@ -37,14 +37,15 @@ const GenerateInvoiceScreen = () => {
   const initialCustomerId = route.params?.customerId || '';
 
   const [customerId, setCustomerId] = useState(initialCustomerId);
-  const [periodStart, setPeriodStart] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
-  const [periodEnd, setPeriodEnd] = useState(new Date().toISOString().split('T')[0]);
+  const [periodStart, setPeriodStart] = useState(route.params?.periodStart || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  const [periodEnd, setPeriodEnd] = useState(route.params?.periodEnd || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
   
   const [customers, setCustomers] = useState([]);
   const [apiError, setApiError] = useState('');
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [preSummary, setPreSummary] = useState(null);
+  const [rawUninvoicedData, setRawUninvoicedData] = useState(null);
 
   // Modals state
   const [activeModal, setActiveModal] = useState(null); // 'customer'
@@ -94,26 +95,47 @@ const GenerateInvoiceScreen = () => {
     fetchPreSummary();
   }, [customerId]);
 
-  const fetchPreSummary = async () => {
-    try {
-      const res = await api.getUninvoicedPreSummary(userToken, customerId);
-      if (res.success && res.data) {
-        let totalUninvoiced = 0;
-        let totalEst = 0;
-        res.data.forEach(item => {
-          totalUninvoiced += (item.uninvoicedDeliveries || 0);
-          totalEst += (item.estimatedTotal || 0);
-        });
-        if (totalUninvoiced > 0) {
-          setPreSummary({ deliveries: totalUninvoiced, total: totalEst });
-        } else {
-          setPreSummary(null);
+  useEffect(() => {
+    if (rawUninvoicedData && periodStart && periodEnd) {
+      let totalUninvoiced = 0;
+      let totalEst = 0;
+      
+      rawUninvoicedData.forEach(item => {
+        if (item.deliveries && Array.isArray(item.deliveries)) {
+          item.deliveries.forEach(del => {
+            if (del.deliveryDate >= periodStart && del.deliveryDate <= periodEnd) {
+              totalUninvoiced += 1;
+              totalEst += (del.estimatedAmount || 0);
+            }
+          });
         }
+      });
+      
+      if (totalUninvoiced > 0) {
+        setPreSummary({ deliveries: totalUninvoiced, total: totalEst });
       } else {
         setPreSummary(null);
       }
+    } else {
+      setPreSummary(null);
+    }
+  }, [rawUninvoicedData, periodStart, periodEnd]);
+
+  const fetchPreSummary = async () => {
+    try {
+      if (!customerId) {
+        setRawUninvoicedData(null);
+        return;
+      }
+      const res = await api.getUninvoicedPreSummary(userToken, customerId);
+      if (res.success && res.data) {
+        setRawUninvoicedData(res.data);
+      } else {
+        setRawUninvoicedData(null);
+      }
     } catch (err) {
       console.log('Error fetching pre-summary', err);
+      setRawUninvoicedData(null);
     }
   };
 
@@ -317,7 +339,7 @@ const GenerateInvoiceScreen = () => {
       >
         <CurvedHeader
           title={t('invoices.generateInvoices')}
-          leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+          leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
           onLeftPress={() => navigation.goBack()}
           height={130}
           contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}

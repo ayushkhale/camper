@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   View,
   Text,
@@ -327,8 +327,8 @@ const AddCustomerScreen = () => {
   };
 
   const getProductName = (id) => {
-    const p = products.find(p => p.id === id);
-    return p ? p.name : t('customers.selectProduct');
+    const p = products.find(p => String(p.id) === String(id));
+    return p ? `${p.name} (₹${Number(p.price || 0)}${p.unit ? ` • ${p.unit}` : ''})` : t('customers.selectProduct');
   };
 
   const handleImportContacts = async () => {
@@ -573,7 +573,7 @@ const AddCustomerScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={isEditMode ? t('customers.editCustomer') : t('customers.addNew')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={110}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
@@ -948,7 +948,7 @@ const AddCustomerScreen = () => {
                         onPress={() => { setProductId(item.id); setProductModalVisible(false); }}
                       >
                         <Text style={[styles.modalItemText, productId === item.id && styles.modalItemTextActive]}>
-                          {item.name}
+                          {item.name} (₹{Number(item.price || 0)}{item.unit ? ` • ${item.unit}` : ''})
                         </Text>
                       </TouchableOpacity>
                     )}

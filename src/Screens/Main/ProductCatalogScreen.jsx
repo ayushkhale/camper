@@ -187,10 +187,10 @@ const ProductCatalogScreen = () => {
       <CurvedHeader
         title={
           <View>
-            <Text style={{ color: '#0B409C', fontSize: 20, fontFamily: 'Rubik-Bold' }}>{t('products.title')}</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 20, fontFamily: 'Rubik-Bold' }}>{t('products.title')}</Text>
           </View>
         }
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
         height={140}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}

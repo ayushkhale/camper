@@ -150,7 +150,7 @@ const AddStaffScreen = () => {
     <View style={styles.container}>
       <CurvedHeader
         title={isEditMode ? t('staff.editStaff') : t('staff.addNew')}
-        leftIcon={<ArrowLeft size={24} color="#0B409C" />}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}

@@ -11,12 +11,129 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { FileText, ChevronRight, Menu, CheckCircle, User, Phone, IndianRupee, Package, Calendar, ArrowRight } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import LinearGradient from 'react-native-linear-gradient';
 import CurvedHeader from '../../components/CurvedHeader';
 import { AuthContext } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
 import { api } from '../../services/api';
 import { COLORS } from '../../constants/colors';
+
+const CustomerCard = ({ item, handleGenerateInvoice, user, generatingForId, t }) => {
+  const [periodStart, setPeriodStart] = useState(item.earliestDeliveryDate || new Date().toISOString().split('T')[0]);
+  const [periodEnd, setPeriodEnd] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+
+  const formatDateString = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const parseDateString = (str) => {
+    if (!str) return new Date();
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    }
+    return new Date();
+  };
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <View style={styles.customerInfoContainer}>
+          <View style={[styles.avatarBox, { backgroundColor: '#F0F9FF' }]}>
+            <User size={20} color="#0EA5E9" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.customerName} numberOfLines={1}>{item.customerName}</Text>
+            <View style={styles.phoneRow}>
+              <Phone size={12} color={COLORS.textSecondary} style={{marginRight: 4}} />
+              <Text style={styles.customerPhone}>{item.customerPhone || 'No Phone'}</Text>
+            </View>
+          </View>
+        </View>
+        <View style={styles.amountContainer}>
+          <Text style={styles.amountLabel}>{t('invoices.estimatedTotal')}</Text>
+          <View style={styles.amountRow}>
+            <Text style={styles.amountValue}>₹{Number(item.estimatedTotal).toFixed(2)}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.cardStats}>
+        <View style={styles.statRow}>
+          <View style={styles.iconWrapperSmall}>
+            <Package size={14} color={COLORS.primary} />
+          </View>
+          <Text style={styles.statValueText}>{item.uninvoicedDeliveries} {t('deliveries.title') || 'Deliveries'}</Text>
+        </View>
+        
+        <View style={styles.statRow}>
+          <View style={[styles.iconWrapperSmall, { backgroundColor: '#F8FAFC' }]}>
+            <Calendar size={14} color="#64748B" />
+          </View>
+          <View style={styles.dateTextContainer}>
+            <TouchableOpacity onPress={() => setShowStartPicker(true)}>
+                <Text style={[styles.dateText, { textDecorationLine: 'underline', color: COLORS.primary }]}>{periodStart}</Text>
+            </TouchableOpacity>
+            
+            <ArrowRight size={14} color="#CBD5E1" style={{marginHorizontal: 8}} />
+            
+            <TouchableOpacity onPress={() => setShowEndPicker(true)}>
+                <Text style={[styles.dateText, { textDecorationLine: 'underline', color: COLORS.primary }]}>{periodEnd}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {showStartPicker && (
+        <DateTimePicker
+          value={parseDateString(periodStart)}
+          mode="date"
+          onChange={(event, date) => {
+            setShowStartPicker(false);
+            if (date) setPeriodStart(formatDateString(date));
+          }}
+        />
+      )}
+      
+      {showEndPicker && (
+        <DateTimePicker
+          value={parseDateString(periodEnd)}
+          mode="date"
+          onChange={(event, date) => {
+            setShowEndPicker(false);
+            if (date) setPeriodEnd(formatDateString(date));
+          }}
+        />
+      )}
+
+      <View style={styles.cardActions}>
+        {user?.role !== 'staff' && (
+          <TouchableOpacity 
+            style={styles.generateButton}
+            onPress={() => handleGenerateInvoice(item.customerId, periodStart, periodEnd)}
+            disabled={generatingForId === item.customerId}
+            activeOpacity={0.8}
+          >
+            {generatingForId === item.customerId ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <>
+                <FileText size={16} color="#FFF" style={{ marginRight: 6 }} />
+                <Text style={styles.generateButtonText}>{t('invoices.generateInvoices')}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+};
 
 const UnbilledDeliveriesScreen = () => {
   const { t } = useTranslation();
@@ -68,7 +185,7 @@ const UnbilledDeliveriesScreen = () => {
               const res = await api.generateInvoices(userToken, payload);
               if (res.success) {
                 showAlert('Success', res.message || 'Invoice generated successfully.', 'success');
-                fetchSummary(); // Refresh list to remove generated items
+                fetchSummary();
               }
             } catch (error) {
               showAlert('Error', error.message || 'Failed to generate invoice.', 'error');
@@ -82,75 +199,14 @@ const UnbilledDeliveriesScreen = () => {
   };
 
   const renderCustomerCard = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.customerInfoContainer}>
-          <View style={[styles.avatarBox, { backgroundColor: '#F0F9FF' }]}>
-            <User size={20} color="#0EA5E9" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.customerName} numberOfLines={1}>{item.customerName}</Text>
-            <View style={styles.phoneRow}>
-              <Phone size={12} color={COLORS.textSecondary} style={{marginRight: 4}} />
-              <Text style={styles.customerPhone}>{item.customerPhone || 'No Phone'}</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.amountContainer}>
-          <Text style={styles.amountLabel}>{t('invoices.estimatedTotal')}</Text>
-          <View style={styles.amountRow}>
-            <Text style={styles.amountValue}>₹{Number(item.estimatedTotal).toFixed(2)}</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.cardStats}>
-        <View style={styles.statRow}>
-          <View style={styles.iconWrapperSmall}>
-            <Package size={14} color={COLORS.primary} />
-          </View>
-          <Text style={styles.statValueText}>{item.uninvoicedDeliveries} {t('deliveries.title') || 'Deliveries'}</Text>
-        </View>
-        
-        <View style={styles.statRow}>
-          <View style={[styles.iconWrapperSmall, { backgroundColor: '#F8FAFC' }]}>
-            <Calendar size={14} color="#64748B" />
-          </View>
-          <View style={styles.dateTextContainer}>
-            <Text style={styles.dateText}>{item.earliestDeliveryDate}</Text>
-            <ArrowRight size={14} color="#CBD5E1" style={{marginHorizontal: 8}} />
-            <Text style={styles.dateText}>{item.latestDeliveryDate}</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.cardActions}>
-        {user?.role !== 'staff' && (
-          <TouchableOpacity 
-            style={styles.generateButton}
-            onPress={() => handleGenerateInvoice(item.customerId, item.earliestDeliveryDate, item.latestDeliveryDate)}
-            disabled={generatingForId === item.customerId}
-            activeOpacity={0.8}
-          >
-            {generatingForId === item.customerId ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <>
-                <FileText size={16} color="#FFF" style={{ marginRight: 6 }} />
-                <Text style={styles.generateButtonText}>{t('invoices.generateInvoices')}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
+    <CustomerCard item={item} handleGenerateInvoice={handleGenerateInvoice} user={user} generatingForId={generatingForId} t={t} />
   );
 
   return (
     <View style={styles.container}>
       <CurvedHeader
         title={t('invoices.pendingToInvoice')}
-        leftIcon={<Menu color="#0B409C" size={24} />}
+        leftIcon={<Menu color="#FFFFFF" size={24} />}
         onLeftPress={() => navigation.toggleDrawer()}
         height={130}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
