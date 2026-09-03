@@ -2,8 +2,9 @@ import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import MainTabs from './MainTabs';
 import SettingsScreen from '../Screens/Main/SettingsScreen';
+import UnbilledDeliveriesScreen from '../Screens/Main/UnbilledDeliveriesScreen';
 import CustomDrawerContent from './CustomDrawerContent';
-import { Home, Settings } from 'lucide-react-native';
+import { Home, Settings, FileText } from 'lucide-react-native';
 import { COLORS } from '../constants/colors';
 
 const Drawer = createDrawerNavigator();
@@ -18,7 +19,7 @@ const MainDrawer = () => {
         drawerActiveTintColor: COLORS.primary,
         drawerInactiveTintColor: COLORS.textSecondary,
         drawerLabelStyle: {
-          fontFamily: 'Geologica-Medium',
+          fontFamily: 'Rubik-SemiBold',
           fontSize: 13.5,
           marginLeft: -10,
         },
@@ -44,6 +45,15 @@ const MainDrawer = () => {
           title: 'Settings',
           headerShown: false,
           drawerIcon: ({ color }) => <Settings color={color} size={22} /> 
+        }} 
+      />
+      <Drawer.Screen 
+        name="UnbilledDeliveries" 
+        component={UnbilledDeliveriesScreen} 
+        options={{ 
+          title: 'Unbilled Deliveries',
+          headerShown: false,
+          drawerIcon: ({ color }) => <FileText color={color} size={22} /> 
         }} 
       />
     </Drawer.Navigator>

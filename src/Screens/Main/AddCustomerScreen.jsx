@@ -15,21 +15,25 @@ import {
   FlatList,
   PermissionsAndroid,
   Animated,
+  TouchableWithoutFeedback
 } from 'react-native';
 import Contacts from 'react-native-contacts';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, User, Phone, MapPin, AlertCircle, IndianRupee, X, Contact, Package, Repeat, Calendar, Plus, ChevronDown, ChevronUp, Hash, Search, ChevronRight, FileText } from 'lucide-react-native';
+import { ChevronLeft, User, Phone, MapPin, AlertCircle, IndianRupee, X, Contact, Package, Repeat, Calendar, Plus, ChevronDown, ChevronUp, Hash, Search, ChevronRight, FileText , ArrowLeft} from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
+import AddRouteModal from '../../components/modals/AddRouteModal';
+import AddProductModal from '../../components/modals/AddProductModal';
 
 const AddCustomerScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { t } = useTranslation();
   const { showAlert } = useAlert();
 
@@ -39,7 +43,7 @@ const AddCustomerScreen = () => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [creditLimit, setCreditLimit] = useState('');
+  const [openingBalance, setOpeningBalance] = useState('');
   const [routeId, setRouteId] = useState('');
 
   // Deposit state (Module 3a)
@@ -69,6 +73,8 @@ const AddCustomerScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [recurrenceModalVisible, setRecurrenceModalVisible] = useState(false);
+  const [addRouteVisible, setAddRouteVisible] = useState(false);
+  const [addProductInlineVisible, setAddProductInlineVisible] = useState(false);
 
   // Contacts Modal States
   const [contactModalVisible, setContactModalVisible] = useState(false);
@@ -78,6 +84,27 @@ const AddCustomerScreen = () => {
   const [contactSearch, setContactSearch] = useState('');
 
   const contactsPulseAnim = useRef(new Animated.Value(0.35)).current;
+  const formScrollRef = useRef(null);
+  const pendingSectionScrollRef = useRef(null);
+
+  const toggleExpandableSection = (section, isOpen, setIsOpen) => {
+    const willOpen = !isOpen;
+    pendingSectionScrollRef.current = willOpen ? section : null;
+    setIsOpen(willOpen);
+  };
+
+  const handleExpandedSectionLayout = (section, event) => {
+    if (pendingSectionScrollRef.current !== section) return;
+
+    const sectionY = event.nativeEvent.layout.y;
+    pendingSectionScrollRef.current = null;
+    requestAnimationFrame(() => {
+      formScrollRef.current?.scrollTo({
+        y: Math.max(0, sectionY - 16),
+        animated: true,
+      });
+    });
+  };
 
   useEffect(() => {
     if (loadingContacts) {
@@ -154,7 +181,7 @@ const AddCustomerScreen = () => {
       }
       setPhone(rawPhone);
       setAddress(editCustomer.address || '');
-      setCreditLimit(editCustomer.creditLimit?.toString() || '');
+      setOpeningBalance(editCustomer.openingBalance?.toString() || editCustomer.creditLimit?.toString() || '');
       setRouteId(editCustomer.routeId || '');
     }
   }, [isEditMode, editCustomer]);
@@ -169,7 +196,7 @@ const AddCustomerScreen = () => {
       setNameError('');
     }
 
-    if (!isEditMode && phone.trim()) {
+    if (phone.trim()) {
       const cleanPhone = phone.replace(/[^0-9]/g, '');
       if (cleanPhone.length !== 10) {
         setPhoneError('Enter a valid 10-digit number');
@@ -199,11 +226,14 @@ const AddCustomerScreen = () => {
     const customerData = {
       name: name.trim(),
       address: address.trim() || undefined,
-      creditLimit: creditLimit ? parseFloat(creditLimit) : undefined,
       routeId: routeId || undefined,
     };
 
-    if (!isEditMode && formattedPhone) {
+    if (!isEditMode) {
+      customerData.openingBalance = openingBalance ? parseFloat(openingBalance) : 0;
+    }
+
+    if (formattedPhone) {
       customerData.phone = formattedPhone;
     }
 
@@ -288,40 +318,46 @@ const AddCustomerScreen = () => {
 
   const formatRecurrence = (pattern) => {
     switch (pattern) {
-      case 'daily': return 'Daily';
-      case 'alternate_days': return 'Alternate Days';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
+      case 'daily': return t('subscriptions.daily');
+      case 'alternate_days': return t('subscriptions.alternateDays');
+      case 'weekly': return t('subscriptions.weekly');
+      case 'monthly': return t('subscriptions.monthly');
       default: return pattern;
     }
   };
 
   const getProductName = (id) => {
-    const p = products.find(p => p.id === id);
-    return p ? p.name : 'Select Product';
+    const p = products.find(p => String(p.id) === String(id));
+    return p ? `${p.name} (₹${Number(p.price || 0)}${p.unit ? ` • ${p.unit}` : ''})` : t('customers.selectProduct');
   };
 
   const handleImportContacts = async () => {
+    setContactModalVisible(true);
+    setLoadingContacts(true);
+    setContactSearch('');
+
     try {
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-          PermissionsAndroid.PERMISSIONS.READ_CONTACTS
+          {
+            title: 'Contacts Permission',
+            message: 'This app needs access to your contacts to import customer details.',
+            buttonPositive: t('common.okay'),
+          }
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          showAlert('Permission denied', 'Cannot access contacts', 'warning');
+          showAlert('Permission Denied', 'Cannot access contacts without permission', 'warning');
           setLoadingContacts(false);
           setContactModalVisible(false);
           return;
         }
-      }
-
-      if (Platform.OS === 'ios') {
+      } else if (Platform.OS === 'ios') {
         const status = await Contacts.checkPermission();
-        if (status === 'undefined' || status === 'denied') {
+        if (status === 'undefined' || status === 'denied' || status === 'notAuthorized') {
           const res = await Contacts.requestPermission();
           if (res !== 'authorized') {
-            showAlert('Permission denied', 'Cannot access contacts', 'warning');
+            showAlert('Permission Denied', 'Cannot access contacts without permission', 'warning');
             setLoadingContacts(false);
             setContactModalVisible(false);
             return;
@@ -329,17 +365,19 @@ const AddCustomerScreen = () => {
         }
       }
 
-      setLoadingContacts(true);
-
       const allContacts = await Contacts.getAll();
 
-      const formatted = allContacts
+      const formatted = (allContacts || [])
         .filter(c => c.phoneNumbers && c.phoneNumbers.length > 0)
-        .map(c => ({
-          id: c.recordID,
-          name: c.displayName || `${c.givenName || ''} ${c.familyName || ''}`.trim() || 'Unknown',
-          phone: c.phoneNumbers[0].number
-        }))
+        .map(c => {
+          const rawPhone = c.phoneNumbers[0].number || '';
+          const cleanPhone = rawPhone.replace(/\s+/g, '').replace(/-/g, '');
+          return {
+            id: c.recordID || String(Math.random()),
+            name: c.displayName || `${c.givenName || ''} ${c.familyName || ''}`.trim() || 'Unknown',
+            phone: cleanPhone,
+          };
+        })
         .sort((a, b) => a.name.localeCompare(b.name));
 
       setContactsList(formatted);
@@ -379,7 +417,7 @@ const AddCustomerScreen = () => {
 
   const getRouteName = (id) => {
     const r = routes.find(r => r.id === id);
-    return r ? r.name : 'Select Route';
+    return r ? r.name : t('customers.selectRoute');
   };
 
   const renderRouteModal = () => (
@@ -389,12 +427,11 @@ const AddCustomerScreen = () => {
       animationType="slide"
       onRequestClose={() => setRouteModalVisible(false)}
     >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setRouteModalVisible(false)}
-      >
-        <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+      <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+        <TouchableWithoutFeedback onPress={() => setRouteModalVisible(false)}>
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+        </TouchableWithoutFeedback>
+        <View style={styles.modalContent}>
           {/* Handle bar */}
           <View style={styles.modalHandle} />
           <View style={styles.modalHeader}>
@@ -404,15 +441,25 @@ const AddCustomerScreen = () => {
             </TouchableOpacity>
           </View>
 
+          {user?.role !== 'staff' && (
+            <TouchableOpacity 
+              style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
+              onPress={() => { setRouteModalVisible(false); setAddRouteVisible(true); }}
+            >
+              <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewRoute')}</Text>
+            </TouchableOpacity>
+          )}
+
           {loadingRoutes ? (
             <View style={{ padding: 30, alignItems: 'center' }}>
               <ActivityIndicator size="small" color={COLORS.primary} />
             </View>
           ) : routes.length === 0 ? (
-            <Text style={styles.modalEmptyText}>No routes available.</Text>
+            <Text style={styles.modalEmptyText}>{t('customers.noRouteAssigned')}</Text>
           ) : (
             <FlatList
               data={routes}
+              keyboardShouldPersistTaps="handled"
               keyExtractor={item => item.id}
               style={{ maxHeight: 320 }}
               showsVerticalScrollIndicator={false}
@@ -448,7 +495,7 @@ const AddCustomerScreen = () => {
             <Text style={styles.modalClearBtnText}>{t('customers.clearRoute')}</Text>
           </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     </Modal>
   );
 
@@ -478,7 +525,7 @@ const AddCustomerScreen = () => {
             <Search size={17} color={COLORS.textPlaceholder} style={{ marginRight: 10 }} />
             <TextInput
               style={styles.modalSearchInput}
-              placeholder="Search by name or number..."
+              placeholder={t('customers.searchContactsPlaceholder')}
               value={contactSearch}
               onChangeText={handleSearchContacts}
               placeholderTextColor={COLORS.textPlaceholder}
@@ -488,10 +535,11 @@ const AddCustomerScreen = () => {
           {loadingContacts ? (
             renderContactsSkeleton()
           ) : filteredContacts.length === 0 ? (
-            <Text style={styles.modalEmptyText}>No contacts found.</Text>
+            <Text style={styles.modalEmptyText}>{t('customers.noContactsFound')}</Text>
           ) : (
             <FlatList
               data={filteredContacts}
+              keyboardShouldPersistTaps="handled"
               keyExtractor={item => item.id}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 12 }}
@@ -522,30 +570,25 @@ const AddCustomerScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={isEditMode ? t('customers.editCustomer') : t('customers.addNew')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={110}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          ref={formScrollRef}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 60 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <ChevronLeft size={28} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>
-              {isEditMode ? t('customers.editCustomer') : t('customers.addNew')}
-            </Text>
-            <Text style={styles.pageSubtitle}>
-              {isEditMode ? t('customers.editSubtitle') : t('customers.addSubtitle')}
-            </Text>
-          </View>
 
           {apiError ? (
             <View style={styles.errorBanner}>
@@ -570,7 +613,9 @@ const AddCustomerScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('customers.name')} *</Text>
               <View style={[styles.inputContainer, nameError ? styles.inputErrorBorder : null]}>
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.inputIconBox, { backgroundColor: '#E0E7FF' }]}>
+                  <User size={18} color="#4F46E5" />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t('customers.namePlaceholder')}
@@ -587,7 +632,9 @@ const AddCustomerScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('customers.phone')}</Text>
               <View style={[styles.inputContainer, phoneError ? styles.inputErrorBorder : null]}>
-                <Phone size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.inputIconBox, { backgroundColor: '#DCFCE7' }]}>
+                  <Phone size={18} color="#16A34A" />
+                </View>
                 <Text style={styles.countryCode}>+91</Text>
                 <TextInput
                   style={styles.input}
@@ -597,23 +644,20 @@ const AddCustomerScreen = () => {
                   keyboardType="number-pad"
                   maxLength={10}
                   placeholderTextColor={COLORS.textPlaceholder}
-                  disabled={isEditMode && !!editCustomer?.phone}
-                  editable={!(isEditMode && !!editCustomer?.phone)}
                 />
               </View>
               {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
-              {isEditMode && editCustomer?.phone && (
-                <Text style={styles.helperText}>{t('customers.phoneCantChange')}</Text>
-              )}
             </View>
 
             {/* Address */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('customers.address')}</Text>
-              <View style={[styles.inputContainer, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
-                <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+              <View style={[styles.inputContainer, { height: 'auto', minHeight: 110, alignItems: 'flex-start', paddingTop: 16, paddingBottom: 16 }]}>
+                <View style={[styles.inputIconBox, { backgroundColor: '#E0E7FF' }]}>
+                  <MapPin size={18} color="#4F46E5" />
+                </View>
                 <TextInput
-                  style={[styles.input, { height: 60 }]}
+                  style={[styles.input, { minHeight: 78, textAlignVertical: 'top', paddingTop: Platform.OS === 'ios' ? 7 : 4 }]}
                   placeholder={t('customers.addressPlaceholder')}
                   value={address}
                   onChangeText={setAddress}
@@ -623,23 +667,30 @@ const AddCustomerScreen = () => {
               </View>
             </View>
 
-            {/* Credit Limit */}
+            {/* Opening Balance */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('customers.creditLimit')}</Text>
-              <View style={styles.inputContainer}>
-                <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+              <Text style={styles.label}>{t('customers.accountOverview')}</Text>
+              <View style={[styles.inputContainer, isEditMode && { backgroundColor: '#F3F4F6' }]}>
+                <View style={[styles.inputIconBox, { backgroundColor: '#FFE4E6' }]}>
+                  <IndianRupee size={18} color="#E11D48" />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 1500"
-                  value={creditLimit}
-                  onChangeText={(val) => setCreditLimit(val.replace(/[^0-9.]/g, ''))}
+                  value={openingBalance}
+                  onChangeText={(val) => setOpeningBalance(val.replace(/[^0-9.]/g, ''))}
                   keyboardType="decimal-pad"
                   placeholderTextColor={COLORS.textPlaceholder}
+                  editable={!isEditMode}
                 />
               </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingHorizontal: 6, backgroundColor: '#FFFBEB', paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#FEF3C7' }}>
+                <AlertCircle size={14} color="#D97706" style={{ marginRight: 6 }} />
+                <Text style={{ fontSize: 11.5, fontFamily: 'Rubik-SemiBold', color: '#D97706' }}>
+                  {t('customers.openingBalanceCantChange')}
+                </Text>
+              </View>
             </View>
-
-
 
             {/* Route */}
             <View style={styles.inputGroup}>
@@ -649,8 +700,10 @@ const AddCustomerScreen = () => {
                 onPress={() => setRouteModalVisible(true)}
                 activeOpacity={0.7}
               >
-                <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                <Text style={[styles.dropdownText, !routeId && { color: COLORS.textPlaceholder }]}>
+                <View style={[styles.inputIconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <MapPin size={18} color="#D97706" />
+                </View>
+                <Text style={[styles.dropdownText, !routeId && { color: COLORS.textPlaceholder }]} numberOfLines={1}>
                   {routeId ? getRouteName(routeId) : t('customers.selectRoute')}
                 </Text>
                 <ChevronDown size={18} color={COLORS.textPlaceholder} />
@@ -664,16 +717,16 @@ const AddCustomerScreen = () => {
             <>
               <TouchableOpacity
                 style={styles.subscriptionToggle}
-                onPress={() => setAddDeposit(!addDeposit)}
+                onPress={() => toggleExpandableSection('deposit', addDeposit, setAddDeposit)}
                 activeOpacity={0.7}
               >
                 <View style={styles.subscriptionToggleLeft}>
                   <View style={styles.subToggleIcon}>
                     <IndianRupee size={18} color={COLORS.primary} />
                   </View>
-                  <View>
-                    <Text style={styles.subToggleTitle}>Add Security Deposit</Text>
-                    <Text style={styles.subToggleSubtitle}>Record container/jar deposit collected at onboarding</Text>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={styles.subToggleTitle} numberOfLines={1}>{t('products.depositAmount')}</Text>
+                    <Text style={styles.subToggleSubtitle} numberOfLines={2}>{t('customers.addSubDesc')}</Text>
                   </View>
                 </View>
                 {addDeposit
@@ -682,12 +735,17 @@ const AddCustomerScreen = () => {
               </TouchableOpacity>
 
               {addDeposit && (
-                <View style={styles.subscriptionSection}>
+                <View
+                  style={styles.subscriptionSection}
+                  onLayout={(event) => handleExpandedSectionLayout('deposit', event)}
+                >
                   {/* Deposit Amount */}
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Deposit Amount (₹) *</Text>
+                    <Text style={styles.label}>{t('products.depositAmountLabel')}</Text>
                     <View style={styles.inputContainer}>
-                      <IndianRupee size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#FFE4E6' }]}>
+                        <IndianRupee size={18} color="#E11D48" />
+                      </View>
                       <TextInput
                         style={styles.input}
                         placeholder="e.g. 300"
@@ -701,9 +759,11 @@ const AddCustomerScreen = () => {
 
                   {/* Container Count */}
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Containers/Jars Deposited</Text>
+                    <Text style={styles.label}>{t('customers.quantity')}</Text>
                     <View style={styles.inputContainer}>
-                      <Package size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#CFFAFE' }]}>
+                        <Package size={18} color="#0891B2" />
+                      </View>
                       <TextInput
                         style={styles.input}
                         placeholder="e.g. 3"
@@ -717,12 +777,14 @@ const AddCustomerScreen = () => {
 
                   {/* Deposit Notes */}
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Deposit Notes (Optional)</Text>
+                    <Text style={styles.label}>{t('oneTimeOrders.driverNotes')}</Text>
                     <View style={styles.inputContainer}>
-                      <FileText size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#F1F5F9' }]}>
+                        <FileText size={18} color="#64748B" />
+                      </View>
                       <TextInput
                         style={styles.input}
-                        placeholder="e.g. 3 jar deposit collected at onboarding"
+                        placeholder={t('oneTimeOrders.notesPlaceholder')}
                         value={depositNotes}
                         onChangeText={setDepositNotes}
                         placeholderTextColor={COLORS.textPlaceholder}
@@ -739,16 +801,20 @@ const AddCustomerScreen = () => {
             <>
               <TouchableOpacity
                 style={styles.subscriptionToggle}
-                onPress={() => setAddSubscription(!addSubscription)}
+                onPress={() => toggleExpandableSection(
+                  'subscription',
+                  addSubscription,
+                  setAddSubscription,
+                )}
                 activeOpacity={0.7}
               >
                 <View style={styles.subscriptionToggleLeft}>
                   <View style={styles.subToggleIcon}>
                     <Plus size={18} color={COLORS.primary} />
                   </View>
-                  <View>
-                    <Text style={styles.subToggleTitle}>{t('customers.addSubscription')}</Text>
-                    <Text style={styles.subToggleSubtitle}>{t('customers.addSubDesc')}</Text>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={styles.subToggleTitle} numberOfLines={1}>{t('customers.addSubscription')}</Text>
+                    <Text style={styles.subToggleSubtitle} numberOfLines={2}>{t('customers.addSubDesc')}</Text>
                   </View>
                 </View>
                 {addSubscription
@@ -757,7 +823,10 @@ const AddCustomerScreen = () => {
               </TouchableOpacity>
 
               {addSubscription && (
-                <View style={styles.subscriptionSection}>
+                <View
+                  style={styles.subscriptionSection}
+                  onLayout={(event) => handleExpandedSectionLayout('subscription', event)}
+                >
                   {/* Product */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('customers.product')} *</Text>
@@ -765,8 +834,10 @@ const AddCustomerScreen = () => {
                       style={styles.inputContainer}
                       onPress={() => setProductModalVisible(true)}
                     >
-                      <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                      <Text style={[styles.dropdownText, !productId && { color: COLORS.textPlaceholder }]}>
+                      <View style={[styles.inputIconBox, { backgroundColor: '#F3E8FF' }]}>
+                        <Package size={18} color="#9333EA" />
+                      </View>
+                      <Text style={[styles.dropdownText, !productId && { color: COLORS.textPlaceholder }]} numberOfLines={1}>
                         {productId ? getProductName(productId) : t('customers.selectProduct')}
                       </Text>
                     </TouchableOpacity>
@@ -776,7 +847,9 @@ const AddCustomerScreen = () => {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('customers.quantity')} *</Text>
                     <View style={styles.inputContainer}>
-                      <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                      <View style={[styles.inputIconBox, { backgroundColor: '#FEF3C7' }]}>
+                        <Hash size={18} color="#D97706" />
+                      </View>
                       <TextInput
                         style={styles.input}
                         value={baseQuantity}
@@ -794,8 +867,10 @@ const AddCustomerScreen = () => {
                       style={styles.inputContainer}
                       onPress={() => setRecurrenceModalVisible(true)}
                     >
-                      <Repeat size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                      <Text style={styles.dropdownText}>
+                      <View style={[styles.inputIconBox, { backgroundColor: '#FFE4E6' }]}>
+                        <Repeat size={18} color="#E11D48" />
+                      </View>
+                      <Text style={styles.dropdownText} numberOfLines={1}>
                         {formatRecurrence(recurrencePattern)}
                       </Text>
                     </TouchableOpacity>
@@ -808,8 +883,10 @@ const AddCustomerScreen = () => {
                       style={styles.inputContainer}
                       onPress={() => setShowDatePicker(true)}
                     >
-                      <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                      <Text style={styles.dropdownText}>
+                      <View style={[styles.inputIconBox, { backgroundColor: '#E0F2FE' }]}>
+                        <Calendar size={18} color="#0284C7" />
+                      </View>
+                      <Text style={styles.dropdownText} numberOfLines={1}>
                         {startDate}
                       </Text>
                     </TouchableOpacity>
@@ -834,21 +911,35 @@ const AddCustomerScreen = () => {
             animationType="slide"
             onRequestClose={() => setProductModalVisible(false)}
           >
-            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setProductModalVisible(false)}>
-              <View style={[styles.modalContent, { maxHeight: '70%' }]} onStartShouldSetResponder={() => true}>
+            <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+              <TouchableWithoutFeedback onPress={() => setProductModalVisible(false)}>
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+              </TouchableWithoutFeedback>
+              <View style={[styles.modalContent, { maxHeight: '70%' }]}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>{t('customers.selectProduct')}</Text>
                   <TouchableOpacity onPress={() => setProductModalVisible(false)}>
                     <X size={24} color={COLORS.textPlaceholder} />
                   </TouchableOpacity>
                 </View>
+
+                {user?.role !== 'staff' && (
+                  <TouchableOpacity 
+                    style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
+                    onPress={() => { setProductModalVisible(false); setAddProductInlineVisible(true); }}
+                  >
+                    <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
+                  </TouchableOpacity>
+                )}
+
                 {loadingProducts ? (
                   <ActivityIndicator size="small" color={COLORS.primary} style={{ padding: 20 }} />
                 ) : products.length === 0 ? (
-                  <Text style={{ textAlign: 'center', padding: 20, color: COLORS.textPlaceholder }}>No products available.</Text>
+                  <Text style={{ textAlign: 'center', padding: 20, color: COLORS.textPlaceholder }}>{t('products.noProductsTitle')}</Text>
                 ) : (
                   <FlatList
                     data={products}
+                    keyboardShouldPersistTaps="handled"
                     keyExtractor={item => item.id}
                     style={{ maxHeight: 300 }}
                     renderItem={({ item }) => (
@@ -857,14 +948,14 @@ const AddCustomerScreen = () => {
                         onPress={() => { setProductId(item.id); setProductModalVisible(false); }}
                       >
                         <Text style={[styles.modalItemText, productId === item.id && styles.modalItemTextActive]}>
-                          {item.name}
+                          {item.name} (₹{Number(item.price || 0)}{item.unit ? ` • ${item.unit}` : ''})
                         </Text>
                       </TouchableOpacity>
                     )}
                   />
                 )}
               </View>
-            </TouchableOpacity>
+            </View>
           </Modal>
 
           {/* Recurrence Modal */}
@@ -874,8 +965,11 @@ const AddCustomerScreen = () => {
             animationType="slide"
             onRequestClose={() => setRecurrenceModalVisible(false)}
           >
-            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setRecurrenceModalVisible(false)}>
-              <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+              <TouchableWithoutFeedback onPress={() => setRecurrenceModalVisible(false)}>
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+              </TouchableWithoutFeedback>
+              <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>{t('customers.selectFrequency')}</Text>
                   <TouchableOpacity onPress={() => setRecurrenceModalVisible(false)}>
@@ -894,7 +988,7 @@ const AddCustomerScreen = () => {
                   </TouchableOpacity>
                 ))}
               </View>
-            </TouchableOpacity>
+            </View>
           </Modal>
 
         </ScrollView>
@@ -917,14 +1011,34 @@ const AddCustomerScreen = () => {
       </KeyboardAvoidingView>
       {renderRouteModal()}
       {renderContactsModal()}
-    </SafeAreaView>
+
+      <AddRouteModal 
+        visible={addRouteVisible}
+        onClose={() => setAddRouteVisible(false)}
+        onSuccess={(newRoute) => {
+          setAddRouteVisible(false);
+          setRoutes(prev => [...prev, newRoute]);
+          setRouteId(newRoute.id);
+        }}
+      />
+      
+      <AddProductModal 
+        visible={addProductInlineVisible}
+        onClose={() => setAddProductInlineVisible(false)}
+        onSuccess={(newProduct) => {
+          setAddProductInlineVisible(false);
+          setProducts(prev => [...prev, newProduct]);
+          setProductId(newProduct.id);
+        }}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC', // Sleek background color for the form screen
   },
   keyboardAvoid: {
     flex: 1,
@@ -939,37 +1053,18 @@ const styles = StyleSheet.create({
   },
   sectionHeaderTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
     marginBottom: 12,
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'ios' ? 10 : 20,
-    paddingBottom: 40,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    marginLeft: -8,
-  },
-  backButton: {
-    padding: 8,
-  },
-  titleContainer: {
-    marginBottom: 32,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 6,
+    padding: 24,
+    paddingTop: 12,
+    paddingBottom: 24,
   },
   pageSubtitle: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorBanner: {
@@ -988,7 +1083,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
   importBtn: {
@@ -1005,7 +1100,7 @@ const styles = StyleSheet.create({
   importBtnText: {
     color: COLORS.primary,
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   form: {
     marginBottom: 0,
@@ -1014,27 +1109,37 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    marginBottom: 6,
+    fontSize: 13,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#475569',
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderRadius: 16,
-    paddingHorizontal: 12,
-    height: 52,
+    paddingHorizontal: 16,
+    height: 54,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  inputIcon: {
-    marginRight: 8,
+  inputIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   countryCode: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.primary,
     marginRight: 4,
   },
@@ -1042,8 +1147,8 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.primary,
+    fontFamily: 'Rubik-Medium',
+    color: '#1E293B',
     padding: 0,
   },
   inputErrorBorder: {
@@ -1051,13 +1156,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.danger,
     marginTop: 4,
   },
   helperText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textPlaceholder,
     marginTop: 6,
     paddingHorizontal: 2,
@@ -1065,7 +1170,8 @@ const styles = StyleSheet.create({
   bottomBar: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 60,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },
@@ -1084,7 +1190,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -1299,7 +1405,7 @@ const styles = StyleSheet.create({
   dropdownText: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   skeletonBar: {
@@ -1309,3 +1415,4 @@ const styles = StyleSheet.create({
 });
 
 export default AddCustomerScreen;
+

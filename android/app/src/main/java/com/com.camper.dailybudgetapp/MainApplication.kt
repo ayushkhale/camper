@@ -1,4 +1,4 @@
-package com.camper.compunic
+package com.camper.dailybudgetapp
 
 import android.app.Application
 import com.facebook.react.PackageList

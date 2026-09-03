@@ -8,13 +8,17 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
-  Image,
+  ImageBackground,
+  Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { api } from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
+
+const { height } = Dimensions.get('window');
 
 const OtpVerificationScreen = ({ route, navigation }) => {
   const { contextId, phone, flow } = route.params;
@@ -23,13 +27,14 @@ const OtpVerificationScreen = ({ route, navigation }) => {
   const [timer, setTimer] = useState(60);
   const [resendCount, setResendCount] = useState(0);
   const [activeContextId, setActiveContextId] = useState(contextId);
-  
+
   // Custom Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
 
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { login } = useContext(AuthContext);
   const inputRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   const triggerToast = (message, type = 'error') => {
     setToast({ visible: true, message, type });
@@ -66,7 +71,7 @@ const OtpVerificationScreen = ({ route, navigation }) => {
       if (response.success) {
         triggerToast(t('login.loginSuccess'), 'success');
         setTimeout(async () => {
-          await login(response.token, response.user);
+          await login(response.token, response.refreshToken || null, response.user);
         }, 1000);
       }
     } catch (error) {
@@ -101,159 +106,185 @@ const OtpVerificationScreen = ({ route, navigation }) => {
   const otpArray = Array(6).fill('');
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Dynamic Custom Toast Notification */}
-      {toast.visible && (
-        <View style={[styles.toast, toast.type === 'success' ? styles.toastSuccess : styles.toastError]}>
-          <Text style={styles.toastText}>{toast.message}</Text>
-        </View>
-      )}
-
+    
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-          {/* Logo Branding */}
-          <View style={styles.logoContainer}>
-            <Image
-              source={i18n.language === 'hi' ? require('../../../assets/hindilogo.png') : require('../../../assets/englishlogo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.tagline}>{t('login.tagline')}</Text>
+      behavior={Platform.OS === 'ios' ? 'position' : 'position'}
+      style={{ flex: 1 }}
+      contentContainerStyle={{ flex: 1 }}
+    >
+      <ImageBackground
+      source={require('../../../assets/login7.png')}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
+        {/* Dynamic Custom Toast Notification */}
+        {toast.visible && (
+          <View style={[styles.toast, toast.type === 'success' ? styles.toastSuccess : styles.toastError]}>
+            <Text style={styles.toastText}>{toast.message}</Text>
           </View>
+        )}
 
-          <View style={styles.formContainer}>
-            <Text style={styles.headerTitle}>{t('otp.title')}</Text>
-            <Text style={styles.subtitle}>
-              {t('otp.subtitle')} <Text style={styles.phoneText}>{phone}</Text>
-            </Text>
+        
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Spacer to push form up when keyboard opens */}
+            <View style={styles.spacer} />
 
-            {/* Premium Minimal OTP Grid */}
-            <TouchableOpacity 
-              activeOpacity={1} 
-              onPress={() => inputRef.current?.focus()} 
-              style={styles.inputWrapper}
-            >
-              <View style={styles.otpGrid} pointerEvents="none">
-                {otpArray.map((_, index) => {
-                  const char = otp[index] || '';
-                  const isFocused = otp.length === index;
-                  return (
-                    <View
-                      key={index}
-                      style={[
-                        styles.otpBox,
-                        char ? styles.otpBoxFilled : null,
-                        isFocused ? styles.otpBoxFocused : null,
-                      ]}
-                    >
-                      <Text style={styles.otpBoxText}>{char}</Text>
-                    </View>
-                  );
-                })}
+            <View style={[styles.formContainer, { paddingBottom: Math.max(insets.bottom + 48, 64) }]}>
+              <View style={styles.headerTitleContainer}>
+                <Text style={styles.headerTitle}>{t('otp.title')}</Text>
+                <View style={styles.titleUnderline} />
               </View>
-              <TextInput
-                ref={inputRef}
-                style={styles.hiddenTextInput}
-                keyboardType="numeric"
-                maxLength={6}
-                value={otp}
-                onChangeText={setOtp}
-                caretHidden
-                editable={!loading}
-              />
-            </TouchableOpacity>
 
-            {/* Submit Button */}
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleVerify}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? '...' : t('otp.verifyButton')}
+              <Text style={styles.subtitle}>
+                {t('otp.subtitle')} <Text style={styles.phoneText}>{phone}</Text>
               </Text>
-            </TouchableOpacity>
 
-            {/* Resend Cooldown Section */}
-            <View style={styles.resendContainer}>
-              <Text style={styles.resendText}>{t('otp.resendText')} </Text>
-              {timer > 0 ? (
-                <Text style={styles.timerText}>
-                  {t('otp.resendTimer', { seconds: timer })}
+              {/* Premium Minimal OTP Grid */}
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => inputRef.current?.focus()}
+                style={styles.inputWrapper}
+              >
+                <View style={styles.otpGrid} pointerEvents="none">
+                  {otpArray.map((_, index) => {
+                    const char = otp[index] || '';
+                    const isFocused = otp.length === index;
+                    return (
+                      <View
+                        key={index}
+                        style={[
+                          styles.otpBox,
+                          char ? styles.otpBoxFilled : null,
+                          isFocused ? styles.otpBoxFocused : null,
+                        ]}
+                      >
+                        <Text style={styles.otpBoxText}>{char}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+                <TextInput
+                  ref={inputRef}
+                  style={styles.hiddenTextInput}
+                  keyboardType="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChangeText={setOtp}
+                  caretHidden
+                  editable={!loading}
+                />
+              </TouchableOpacity>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleVerify}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? '...' : t('otp.verifyButton')}
                 </Text>
-              ) : (
-                <TouchableOpacity onPress={handleResend} disabled={loading}>
-                  <Text style={styles.resendLink}>{t('otp.resendBtn')}</Text>
-                </TouchableOpacity>
-              )}
+                {!loading && (
+                  <View style={styles.iconWrapper}>
+                    <ArrowRight color="#FFFFFF" size={18} strokeWidth={2.5} />
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* Resend Cooldown Section */}
+              <View style={styles.resendContainer}>
+                <Text style={styles.resendText}>{t('otp.resendText')} </Text>
+                {timer > 0 ? (
+                  <Text style={styles.timerText}>
+                    {t('otp.resendTimer', { seconds: timer })}
+                  </Text>
+                ) : (
+                  <TouchableOpacity onPress={handleResend} disabled={loading}>
+                    <Text style={styles.resendLink}>{t('otp.resendBtn')}</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        
+      </SafeAreaView>
+    </ImageBackground>
+    </KeyboardAvoidingView>
+    
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  backgroundImage: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    width: '100%',
+    height: '100%',
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 40,
+    justifyContent: 'flex-end',
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 36,
-  },
-  logo: {
-    width: 160,
-    height: 60,
-    marginBottom: 8,
-  },
-  tagline: {
-    fontSize: 13,
-    color: COLORS.textPlaceholder,
-    fontWeight: '500',
-    textAlign: 'center',
+  spacer: {
+    flex: 1,
   },
   formContainer: {
     width: '100%',
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingTop: 48,
+    paddingHorizontal: 28,
+    // Soft premium shadow pointing up
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 20,
+  },
+  headerTitleContainer: {
+    marginBottom: 16,
+    alignItems: 'flex-start',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#0F172A',
     marginBottom: 8,
-    textAlign: 'center',
+  },
+  titleUnderline: {
+    width: 48,
+    height: 4,
+    backgroundColor: '#0A429B',
+    borderRadius: 2,
   },
   subtitle: {
-    fontSize: 13.5,
-    color: COLORS.textPlaceholder,
-    textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 20,
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'left',
+    marginBottom: 24,
+    lineHeight: 22,
+    alignSelf: 'flex-start',
   },
   phoneText: {
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
+    fontWeight: '700',
+    color: '#0F172A',
   },
   inputWrapper: {
     width: '100%',
     position: 'relative',
     height: 60,
-    marginVertical: 24,
+    marginBottom: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -263,26 +294,28 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   otpBox: {
-    width: 44,
-    height: 52,
+    width: 48,
+    height: 56,
     borderWidth: 1,
-    borderColor: COLORS.textPlaceholder,
+    borderColor: '#E2E8F0',
     borderRadius: 16,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   otpBoxFilled: {
-    borderColor: COLORS.primary,
+    borderColor: '#0A429B',
+    backgroundColor: '#F8FAFC',
   },
   otpBoxFocused: {
-    borderColor: COLORS.primary,
+    borderColor: '#0A429B',
     borderWidth: 2,
+    backgroundColor: '#FFFFFF',
   },
   otpBoxText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
   },
   hiddenTextInput: {
     position: 'absolute',
@@ -293,9 +326,10 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    backgroundColor: COLORS.primary,
-    height: 48,
+    backgroundColor: '#0A429B',
+    height: 60,
     borderRadius: 16,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
@@ -305,32 +339,40 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '700',
+    marginRight: 8,
+  },
+  iconWrapper: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 4,
+    borderRadius: 12,
+    marginLeft: 4,
   },
   resendContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 8,
     marginTop: 8,
   },
   resendText: {
-    color: COLORS.textPlaceholder,
-    fontSize: 13,
+    color: '#64748B',
+    fontSize: 14,
   },
   timerText: {
-    color: COLORS.textPlaceholder,
-    fontSize: 13,
-    fontWeight: '600',
+    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '700',
   },
   resendLink: {
-    color: COLORS.primary,
-    fontSize: 13,
-    fontWeight: 'bold',
+    color: '#0A429B',
+    fontSize: 14,
+    fontWeight: '700',
   },
   toast: {
     position: 'absolute',
-    top: 16,
+    top: 40,
     left: 24,
     right: 24,
     paddingVertical: 12,

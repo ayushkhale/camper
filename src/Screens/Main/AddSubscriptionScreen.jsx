@@ -1,33 +1,36 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
-  TextInput, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  ScrollView, 
-  KeyboardAvoidingView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
   Platform,
   Alert,
   Modal,
-  FlatList
+  FlatList,
+  TouchableWithoutFeedback
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, User, Package, Calendar, Repeat, AlertCircle, CheckCircle, X, Hash, Search } from 'lucide-react-native';
+import { ChevronLeft, User, Package, Calendar, Repeat, AlertCircle, CheckCircle, X, Hash, Search , ArrowLeft} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import AddCustomerModal from '../../components/modals/AddCustomerModal';
+import AddProductModal from '../../components/modals/AddProductModal';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const AddSubscriptionScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
 
   const editSub = route.params?.subscription || null;
@@ -40,10 +43,10 @@ const AddSubscriptionScreen = () => {
   const [recurrencePattern, setRecurrencePattern] = useState('daily');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState('active');
-  
+
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
-  
+
   const [apiError, setApiError] = useState('');
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -52,6 +55,10 @@ const AddSubscriptionScreen = () => {
   const [activeModal, setActiveModal] = useState(null); // 'customer', 'product', 'recurrence', 'status'
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [modalSearch, setModalSearch] = useState('');
+
+  // Inline creation modals state
+  const [addCustomerVisible, setAddCustomerVisible] = useState(false);
+  const [addProductVisible, setAddProductVisible] = useState(false);
 
   const formatDateString = (date) => {
     const yyyy = date.getFullYear();
@@ -89,7 +96,7 @@ const AddSubscriptionScreen = () => {
         api.listCustomers(userToken),
         api.listProducts(userToken)
       ]);
-      
+
       if (custRes.success) setCustomers(custRes.data || []);
       if (prodRes.success) setProducts(prodRes.data || []);
 
@@ -126,7 +133,7 @@ const AddSubscriptionScreen = () => {
       showAlert('Validation Error', errorMsg, 'warning');
       return;
     }
-    
+
     setSubmitting(true);
     setApiError('');
 
@@ -168,23 +175,28 @@ const AddSubscriptionScreen = () => {
   };
 
   const formatRecurrence = (pattern) => {
-    switch(pattern) {
-      case 'daily': return 'Daily';
-      case 'alternate_days': return 'Alternate Days';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
+    switch (pattern) {
+      case 'daily': return t('subscriptions.daily');
+      case 'alternate_days': return t('subscriptions.alternateDays');
+      case 'weekly': return t('subscriptions.weekly');
+      case 'monthly': return t('subscriptions.monthly');
       default: return pattern;
     }
   };
 
-  const getCustomerName = (id) => {
-    const c = customers.find(c => c.id === id);
-    return c ? c.name : 'Select Customer';
+  const getProductName = (id) => {
+    const p = products.find(p => String(p.id) === String(id));
+    return p ? `${p.name} (₹${Number(p.price || 0)}${p.unit ? ` • ${p.unit}` : ''})` : t('customers.selectProduct');
   };
 
-  const getProductName = (id) => {
-    const p = products.find(p => p.id === id);
-    return p ? p.name : 'Select Product';
+  const getCustomerName = (id) => {
+    const c = customers.find(c => String(c.id) === String(id));
+    return c ? `${c.name} ${c.phone ? `(${c.phone})` : ''}` : t('common.selectCustomer');
+  };
+
+  const openModal = (type) => {
+    setModalSearch('');
+    setActiveModal(type);
   };
 
   const renderModal = () => {
@@ -192,42 +204,42 @@ const AddSubscriptionScreen = () => {
 
     let title = '';
     let data = [];
-    let onSelect = () => {};
-    let renderItemText = () => {};
+    let onSelect = () => { };
+    let renderItemText = () => { };
     let currentVal = null;
     let showSearch = false;
 
     if (activeModal === 'customer') {
-      title = 'Select Customer';
+      title = t('common.selectCustomer');
       data = customers;
       currentVal = customerId;
       renderItemText = (item) => `${item.name} ${item.phone ? `(${item.phone})` : ''}`;
       onSelect = (item) => { setCustomerId(item.id); setActiveModal(null); setModalSearch(''); };
       showSearch = true;
     } else if (activeModal === 'product') {
-      title = 'Select Product';
+      title = t('customers.selectProduct');
       data = products;
       currentVal = productId;
-      renderItemText = (item) => item.name;
+      renderItemText = (item) => `${item.name} (₹${Number(item.price || 0)}${item.unit ? ` • ${item.unit}` : ''})`;
       onSelect = (item) => { setProductId(item.id); setActiveModal(null); setModalSearch(''); };
       showSearch = true;
     } else if (activeModal === 'recurrence') {
-      title = 'Select Frequency';
+      title = t('customers.selectFrequency');
       data = [
-        { id: 'daily', name: 'Daily' },
-        { id: 'alternate_days', name: 'Alternate Days' },
-        { id: 'weekly', name: 'Weekly' },
-        { id: 'monthly', name: 'Monthly' }
+        { id: 'daily', name: t('subscriptions.daily') },
+        { id: 'alternate_days', name: t('subscriptions.alternateDays') },
+        { id: 'weekly', name: t('subscriptions.weekly') },
+        { id: 'monthly', name: t('subscriptions.monthly') }
       ];
       currentVal = recurrencePattern;
       renderItemText = (item) => item.name;
       onSelect = (item) => { setRecurrencePattern(item.id); setActiveModal(null); };
     } else if (activeModal === 'status') {
-      title = 'Select Status';
+      title = t('common.selectStatus');
       data = [
-        { id: 'active', name: 'Active' },
-        { id: 'paused', name: 'Paused' },
-        { id: 'ended', name: 'Ended' }
+        { id: 'active', name: t('subscriptions.active') },
+        { id: 'paused', name: t('subscriptions.paused') },
+        { id: 'ended', name: t('subscriptions.ended') }
       ];
       currentVal = status;
       renderItemText = (item) => item.name;
@@ -236,10 +248,10 @@ const AddSubscriptionScreen = () => {
 
     const filteredData = showSearch && modalSearch.trim()
       ? data.filter(item => {
-          const nameMatch = item.name?.toLowerCase().includes(modalSearch.toLowerCase());
-          const phoneMatch = item.phone?.toLowerCase().includes(modalSearch.toLowerCase());
-          return nameMatch || phoneMatch;
-        })
+        const nameMatch = item.name?.toLowerCase().includes(modalSearch.toLowerCase());
+        const phoneMatch = item.phone?.toLowerCase().includes(modalSearch.toLowerCase());
+        return nameMatch || phoneMatch;
+      })
       : data;
 
     return (
@@ -249,12 +261,11 @@ const AddSubscriptionScreen = () => {
         animationType="slide"
         onRequestClose={() => { setActiveModal(null); setModalSearch(''); }}
       >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => { setActiveModal(null); setModalSearch(''); }}
-        >
-          <View style={[styles.modalContent, { maxHeight: '80%' }]} onStartShouldSetResponder={() => true}>
+        <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+          <TouchableWithoutFeedback onPress={() => { setActiveModal(null); setModalSearch(''); }}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+          </TouchableWithoutFeedback>
+          <View style={[styles.modalContent, { maxHeight: '80%' }]}>
             <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{title}</Text>
@@ -268,22 +279,40 @@ const AddSubscriptionScreen = () => {
                 <Search size={17} color={COLORS.textPlaceholder} style={{ marginRight: 10 }} />
                 <TextInput
                   style={styles.modalSearchInput}
-                  placeholder="Search..."
+                  placeholder={t('common.searchPlaceholder')}
                   value={modalSearch}
                   onChangeText={setModalSearch}
                   placeholderTextColor={COLORS.textPlaceholder}
                 />
               </View>
             )}
-            
+
+            {activeModal === 'customer' && (
+              <TouchableOpacity
+                style={styles.addInlineBtn}
+                onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
+              >
+                <Text style={styles.addInlineBtnText}>{t('common.addNewCustomer')}</Text>
+              </TouchableOpacity>
+            )}
+
+            {activeModal === 'product' && user?.role !== 'staff' && (
+              <TouchableOpacity
+                style={styles.addInlineBtn}
+                onPress={() => { setActiveModal(null); setAddProductVisible(true); }}
+              >
+                <Text style={styles.addInlineBtnText}>{t('common.addNewProduct')}</Text>
+              </TouchableOpacity>
+            )}
+
             {filteredData.length === 0 ? (
               <Text style={styles.modalEmptyText}>
-                No options found.
+                {t('common.noOptionsFound')}
               </Text>
             ) : (
               <FlatList
                 data={filteredData}
-                keyExtractor={item => item.id}
+                keyExtractor={item => String(item.id)}
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => {
                   const selected = currentVal === item.id;
@@ -304,45 +333,39 @@ const AddSubscriptionScreen = () => {
               />
             )}
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     );
   };
 
   if (loadingData) {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={{ marginTop: 10, color: COLORS.textPlaceholder }}>{t('deliveries.updating')}</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+    <View style={styles.container}>
+      <CurvedHeader
+        title={isEditMode ? t('subscriptions.edit') : t('subscriptions.title')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <ChevronLeft size={28} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>
-              {isEditMode ? t('subscriptions.edit') : t('subscriptions.title')}
-            </Text>
-            <Text style={styles.pageSubtitle}>
-              {isEditMode ? 'Update subscription details' : 'Set up a recurring delivery schedule'}
-            </Text>
-          </View>
+          {/* Subtitle */}
 
           {apiError ? (
             <View style={styles.errorBanner}>
@@ -355,12 +378,14 @@ const AddSubscriptionScreen = () => {
             {/* Customer */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('tabs.customers')} *</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.inputContainer, isEditMode && styles.inputDisabled]}
                 onPress={() => !isEditMode && setActiveModal('customer')}
                 disabled={isEditMode}
               >
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#EEF2FF' }]}>
+                  <User size={18} color="#4F46E5" />
+                </View>
                 <Text style={[styles.dropdownText, !customerId && { color: COLORS.textPlaceholder }]}>
                   {getCustomerName(customerId)}
                 </Text>
@@ -370,12 +395,14 @@ const AddSubscriptionScreen = () => {
             {/* Product */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('oneTimeOrders.items')} *</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.inputContainer, isEditMode && styles.inputDisabled]}
                 onPress={() => !isEditMode && setActiveModal('product')}
                 disabled={isEditMode}
               >
-                <Package size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <Package size={18} color="#D97706" />
+                </View>
                 <Text style={[styles.dropdownText, !productId && { color: COLORS.textPlaceholder }]}>
                   {getProductName(productId)}
                 </Text>
@@ -386,7 +413,9 @@ const AddSubscriptionScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('subscriptions.quantity')} *</Text>
               <View style={styles.inputContainer}>
-                <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#E0E7FF' }]}>
+                  <Hash size={18} color="#4338CA" />
+                </View>
                 <TextInput
                   style={styles.input}
                   value={baseQuantity}
@@ -400,11 +429,13 @@ const AddSubscriptionScreen = () => {
             {/* Frequency */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('subscriptions.frequency')} *</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.inputContainer}
                 onPress={() => setActiveModal('recurrence')}
               >
-                <Repeat size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#FFE4E6' }]}>
+                  <Repeat size={18} color="#E11D48" />
+                </View>
                 <Text style={styles.dropdownText}>
                   {formatRecurrence(recurrencePattern)}
                 </Text>
@@ -414,11 +445,13 @@ const AddSubscriptionScreen = () => {
             {/* Start Date */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('subscriptions.startDate')} *</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.inputContainer}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: COLORS.primaryLight }]}>
+                  <Calendar size={18} color={COLORS.primary} />
+                </View>
                 <Text style={styles.dropdownText}>
                   {startDate}
                 </Text>
@@ -429,6 +462,7 @@ const AddSubscriptionScreen = () => {
                   mode="date"
                   display="default"
                   onChange={onDateChange}
+                  minimumDate={user?.role === 'staff' ? new Date() : undefined}
                 />
               )}
             </View>
@@ -437,11 +471,13 @@ const AddSubscriptionScreen = () => {
             {isEditMode && (
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{t('products.status')}</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.inputContainer}
                   onPress={() => setActiveModal('status')}
                 >
-                  <CheckCircle size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                  <View style={[styles.iconBox, { backgroundColor: '#DCFCE7' }]}>
+                    <CheckCircle size={18} color="#16A34A" />
+                  </View>
                   <Text style={styles.dropdownText}>
                     {status.toUpperCase()}
                   </Text>
@@ -454,7 +490,7 @@ const AddSubscriptionScreen = () => {
 
         {/* Floating Bottom Bar */}
         <View style={styles.bottomBar}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.btn, styles.btnPrimary, submitting && styles.btnDisabled]}
             onPress={handleSubmit}
             disabled={submitting}
@@ -470,7 +506,27 @@ const AddSubscriptionScreen = () => {
         </View>
       </KeyboardAvoidingView>
       {renderModal()}
-    </SafeAreaView>
+
+      <AddCustomerModal
+        visible={addCustomerVisible}
+        onClose={() => setAddCustomerVisible(false)}
+        onSuccess={(newCustomer) => {
+          setAddCustomerVisible(false);
+          setCustomers(prev => [...prev, newCustomer]);
+          setCustomerId(newCustomer.id);
+        }}
+      />
+
+      <AddProductModal
+        visible={addProductVisible}
+        onClose={() => setAddProductVisible(false)}
+        onSuccess={(newProduct) => {
+          setAddProductVisible(false);
+          setProducts(prev => [...prev, newProduct]);
+          setProductId(newProduct.id);
+        }}
+      />
+    </View>
   );
 };
 
@@ -487,6 +543,16 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 10 : 20,
     paddingBottom: 100,
   },
+  subtitleContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  pageSubtitle: {
+    fontSize: 15,
+    fontFamily: 'Rubik-SemiBold',
+    color: COLORS.textPlaceholder,
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -501,15 +567,10 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: 28,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 6,
-  },
-  pageSubtitle: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
   },
   errorBanner: {
     flexDirection: 'row',
@@ -527,7 +588,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
   form: {
@@ -556,8 +617,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
     opacity: 0.7,
   },
-  inputIcon: {
-    marginRight: 8,
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   dropdownText: {
     flex: 1,
@@ -569,14 +635,15 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     padding: 0,
   },
   bottomBar: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 60,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },
@@ -595,7 +662,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -647,6 +714,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 16,
   },
+  addInlineBtn: {
+    backgroundColor: COLORS.primaryLight,
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  addInlineBtnText: {
+    color: COLORS.primary,
+    fontFamily: 'Rubik-Bold',
+    fontSize: 14,
+  },
   modalSearchInput: {
     flex: 1,
     fontSize: 14,
@@ -693,3 +772,4 @@ const styles = StyleSheet.create({
 });
 
 export default AddSubscriptionScreen;
+

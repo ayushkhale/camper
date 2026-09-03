@@ -1,11 +1,16 @@
-import React, { useContext } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import React, { useContext, useState } from 'react';
+import {
+  ActivityIndicator,
+  View,
+} from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import SplashScreen from '../Screens/SplashScreen';
 import AuthStack from './AuthStack';
 import MainDrawer from './MainDrawer';
 import CompleteRegistrationScreen from '../Screens/Auth/CompleteRegistrationScreen';
 import StaffManagementScreen from '../Screens/Main/StaffManagementScreen';
+import PastDeliveriesScreen from '../Screens/Main/PastDeliveriesScreen';
 import AddStaffScreen from '../Screens/Main/AddStaffScreen';
 import ProductCatalogScreen from '../Screens/Main/ProductCatalogScreen';
 import AddProductScreen from '../Screens/Main/AddProductScreen';
@@ -13,9 +18,12 @@ import ProductDetailScreen from '../Screens/Main/ProductDetailScreen';
 import RouteListScreen from '../Screens/Main/RouteListScreen';
 import AddRouteScreen from '../Screens/Main/AddRouteScreen';
 import RouteDetailScreen from '../Screens/Main/RouteDetailScreen';
+import RouteBuilderScreen from '../Screens/Main/RouteBuilderScreen';
 import CustomerListScreen from '../Screens/Main/CustomerListScreen';
 import AddCustomerScreen from '../Screens/Main/AddCustomerScreen';
 import CustomerDetailScreen from '../Screens/Main/CustomerDetailScreen';
+import CustomerDeliveryHistoryScreen from '../Screens/Main/CustomerDeliveryHistoryScreen';
+import CustomerHistoryScreen from '../Screens/Main/CustomerHistoryScreen';
 import SubscriptionListScreen from '../Screens/Main/SubscriptionListScreen';
 import AddSubscriptionScreen from '../Screens/Main/AddSubscriptionScreen';
 import SubscriptionDetailScreen from '../Screens/Main/SubscriptionDetailScreen';
@@ -24,6 +32,7 @@ import AddOneTimeOrderScreen from '../Screens/Main/AddOneTimeOrderScreen';
 import InvoiceListScreen from '../Screens/Main/InvoiceListScreen';
 import InvoiceDetailScreen from '../Screens/Main/InvoiceDetailScreen';
 import GenerateInvoiceScreen from '../Screens/Main/GenerateInvoiceScreen';
+import ReportsScreen from '../Screens/Main/ReportsScreen';
 import { AuthProvider, AuthContext } from '../context/AuthContext';
 import { COLORS } from '../constants/colors';
 
@@ -39,6 +48,11 @@ const Stack = createNativeStackNavigator();
 
 const RootNavigatorContent = () => {
   const { isLoading, userToken, user } = useContext(AuthContext);
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   if (isLoading) {
     return (
@@ -66,9 +80,12 @@ const RootNavigatorContent = () => {
           <Stack.Screen name="RouteList" component={RouteListScreen} />
           <Stack.Screen name="AddRoute" component={AddRouteScreen} />
           <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
+          <Stack.Screen name="RouteBuilder" component={RouteBuilderScreen} />
           <Stack.Screen name="CustomerList" component={CustomerListScreen} />
           <Stack.Screen name="AddCustomer" component={AddCustomerScreen} />
           <Stack.Screen name="CustomerDetail" component={CustomerDetailScreen} />
+          <Stack.Screen name="CustomerDeliveryHistory" component={CustomerDeliveryHistoryScreen} />
+          <Stack.Screen name="CustomerHistory" component={CustomerHistoryScreen} />
           <Stack.Screen name="SubscriptionList" component={SubscriptionListScreen} />
           <Stack.Screen name="AddSubscription" component={AddSubscriptionScreen} />
           <Stack.Screen name="SubscriptionDetail" component={SubscriptionDetailScreen} />
@@ -77,16 +94,18 @@ const RootNavigatorContent = () => {
           <Stack.Screen name="InvoiceList" component={InvoiceListScreen} />
           <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} />
           <Stack.Screen name="GenerateInvoice" component={GenerateInvoiceScreen} />
+          <Stack.Screen name="PastDeliveries" component={PastDeliveriesScreen} />
+          <Stack.Screen name="Reports" component={ReportsScreen} />
         </>
       )}
     </Stack.Navigator>
   );
 };
 
-const RootNavigator = () => {
+const RootNavigator = ({ navRef, onRouteReady, onStateChange }) => {
   return (
     <AuthProvider>
-      <NavigationContainer theme={MyTheme}>
+      <NavigationContainer theme={MyTheme} ref={navRef} onReady={onRouteReady} onStateChange={onStateChange}>
         <RootNavigatorContent />
       </NavigationContainer>
     </AuthProvider>

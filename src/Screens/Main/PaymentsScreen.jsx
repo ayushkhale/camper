@@ -1,34 +1,48 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { 
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, 
-  TextInput, FlatList, ActivityIndicator, Alert, Modal, ScrollView, Animated
+import {
+  View, Text, StyleSheet, TouchableOpacity,
+  TextInput, FlatList, SectionList, ActivityIndicator, Alert, Modal, ScrollView, Animated, Platform, Image, TouchableWithoutFeedback
 } from 'react-native';
-import { 
-  CreditCard, User, FileText, CheckCircle, ChevronDown, 
-  X, Search, DollarSign
-} from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { User, ChevronDown, DollarSign, FileText, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, X, Search, Menu, Info, Banknote, Smartphone, Landmark } from 'lucide-react-native';
+import Svg, { Path, Defs, LinearGradient, Stop, Rect, Circle } from 'react-native-svg';
 import { COLORS } from '../../constants/colors';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
-import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, DrawerActions, useRoute } from '@react-navigation/native';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
+import AddCustomerModal from '../../components/modals/AddCustomerModal';
 
-const PAYMENT_MODES = [
-  { id: 'cash', label: 'Cash' },
-  { id: 'upi', label: 'UPI' },
-  { id: 'bank_transfer', label: 'Bank Transfer' },
-  { id: 'cheque', label: 'Cheque' }
+const getPaymentModes = (t) => [
+  { id: 'upi', label: t('payments.upi'), Icon: Smartphone },
+  { id: 'cash', label: t('payments.cash'), Icon: Banknote },
+  { id: 'bank_transfer', label: t('payments.bankTransfer').replace(' ', '\n'), Icon: Landmark },
+  { id: 'cheque', label: t('payments.cheque'), Icon: FileText }
 ];
+
+const getPaymentModeLabel = (mode, t) => {
+  switch ((mode || '').toLowerCase()) {
+    case 'upi': return t('payments.upi');
+    case 'cash': return t('payments.cash');
+    case 'bank_transfer': return t('payments.bankTransfer');
+    case 'cheque': return t('payments.cheque');
+    default: return mode || '';
+  }
+};
 
 const PaymentsScreen = () => {
   const { t } = useTranslation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const route = useRoute();
+  const navigation = useNavigation();
   const { showAlert } = useAlert();
 
-  const [activeTab, setActiveTab] = useState('record'); // 'record' | 'statement'
-  
+  const vendorLogo = user?.logoUrl || user?.imageUrl;
+
+  const [activeTab, setActiveTab] = useState(user?.role === 'staff' ? 'statement' : 'record'); // 'record' | 'statement'
+
   // Customer Selection State
   const [customers, setCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
@@ -36,6 +50,7 @@ const PaymentsScreen = () => {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
   const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [addCustomerVisible, setAddCustomerVisible] = useState(false);
 
   // Record Payment State
   const [amount, setAmount] = useState('');
@@ -71,26 +86,37 @@ const PaymentsScreen = () => {
   }, [loadingStatement, loadingCustomers]);
 
   const renderStatementSkeleton = () => (
-    <View style={{ flex: 1, padding: 16, gap: 16 }}>
-      <Animated.View style={[styles.skeletonSummaryCard, { opacity: pulseAnim }]}>
-        <View style={[styles.skeletonBar, { width: 140, height: 16, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 16 }]} />
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View style={[styles.skeletonBar, { width: 90, height: 28, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
-          <View style={[styles.skeletonBar, { width: 90, height: 28, backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+    <View style={{ flex: 1, padding: 16 }}>
+      <Animated.View style={[styles.skeletonSummaryCard, { opacity: pulseAnim, padding: 16, borderRadius: 16, marginBottom: 16 }]}>
+        <View style={[styles.skeletonBar, { width: 100, height: 12, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 8 }]} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+          <View style={[styles.skeletonBar, { width: 140, height: 28, backgroundColor: 'rgba(255,255,255,0.4)' }]} />
+          <View style={[styles.skeletonBar, { width: 60, height: 20, backgroundColor: 'rgba(255,255,255,0.2)', marginLeft: 12, borderRadius: 6 }]} />
+        </View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.08)', padding: 12, borderRadius: 10 }}>
+          <View style={{ flex: 1 }}>
+            <View style={[styles.skeletonBar, { width: 70, height: 10, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 6 }]} />
+            <View style={[styles.skeletonBar, { width: 90, height: 16, backgroundColor: 'rgba(255,255,255,0.4)' }]} />
+          </View>
+          <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 12 }} />
+          <View style={{ flex: 1 }}>
+            <View style={[styles.skeletonBar, { width: 70, height: 10, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 6 }]} />
+            <View style={[styles.skeletonBar, { width: 90, height: 16, backgroundColor: 'rgba(255,255,255,0.4)' }]} />
+          </View>
         </View>
       </Animated.View>
 
-      <View style={{ gap: 12, marginTop: 8 }}>
+      <View style={{ marginTop: 8, gap: 16 }}>
+        <View style={[styles.skeletonBar, { width: 120, height: 20, marginBottom: 8 }]} />
         {[1, 2, 3, 4].map((key) => (
           <Animated.View key={key} style={[styles.skeletonTxItem, { opacity: pulseAnim }]}>
             <View style={{ flex: 1 }}>
-              <View style={[styles.skeletonBar, { width: 80, height: 12, marginBottom: 8 }]} />
-              <View style={[styles.skeletonBar, { width: '70%', height: 14, marginBottom: 6 }]} />
-              <View style={[styles.skeletonBar, { width: 50, height: 16, borderRadius: 6 }]} />
+              <View style={[styles.skeletonBar, { width: '80%', height: 16, marginBottom: 8 }]} />
+              <View style={[styles.skeletonBar, { width: '40%', height: 12 }]} />
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <View style={[styles.skeletonBar, { width: 70, height: 18, marginBottom: 6 }]} />
-              <View style={[styles.skeletonBar, { width: 80, height: 12 }]} />
+              <View style={[styles.skeletonBar, { width: 60, height: 18, marginBottom: 8 }]} />
+              <View style={[styles.skeletonBar, { width: 70, height: 12 }]} />
             </View>
           </Animated.View>
         ))}
@@ -130,8 +156,26 @@ const PaymentsScreen = () => {
   useEffect(() => {
     if (route.params?.preselectedCustomer) {
       selectCustomer(route.params.preselectedCustomer);
+      navigation.setParams({ preselectedCustomer: undefined });
     }
   }, [route.params?.preselectedCustomer]);
+
+  // Handle route params from InvoiceDetailScreen
+  useEffect(() => {
+    if (customers.length > 0 && route.params?.customerId) {
+      const foundCustomer = customers.find(c => c.id === route.params.customerId || c.id === Number(route.params.customerId) || String(c.id) === String(route.params.customerId));
+      if (foundCustomer && (!selectedCustomer || selectedCustomer.id !== foundCustomer.id)) {
+        selectCustomer(foundCustomer);
+        navigation.setParams({ customerId: undefined });
+      }
+    }
+  }, [route.params?.customerId, customers]);
+
+  useEffect(() => {
+    if (route.params?.prefillAmount) {
+      setAmount(String(route.params.prefillAmount));
+    }
+  }, [route.params?.prefillAmount]);
 
   const fetchCustomers = async () => {
     if (!userToken) return;
@@ -156,8 +200,8 @@ const PaymentsScreen = () => {
       return;
     }
     const lower = text.toLowerCase();
-    const filtered = customers.filter(c => 
-      (c.name && c.name.toLowerCase().includes(lower)) || 
+    const filtered = customers.filter(c =>
+      (c.name && c.name.toLowerCase().includes(lower)) ||
       (c.phone && c.phone.includes(lower))
     );
     setFilteredCustomers(filtered);
@@ -238,10 +282,13 @@ const PaymentsScreen = () => {
 
   const renderCustomerModal = () => (
     <Modal visible={showCustomerModal} animationType="slide" transparent={true}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+        <TouchableWithoutFeedback onPress={() => setShowCustomerModal(false)}>
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+        </TouchableWithoutFeedback>
+        <View style={[styles.modalContent, { maxHeight: '80%' }]}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Customer</Text>
+            <Text style={styles.modalTitle}>{t('payments.selectCustomerTitle')}</Text>
             <TouchableOpacity onPress={() => setShowCustomerModal(false)}>
               <X size={24} color={COLORS.textPrimary} />
             </TouchableOpacity>
@@ -250,7 +297,7 @@ const PaymentsScreen = () => {
             <Search size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search customer by name or phone"
+              placeholder={t('payments.searchCustomer')}
               value={customerSearch}
               onChangeText={handleCustomerSearch}
               placeholderTextColor={COLORS.textPlaceholder}
@@ -259,24 +306,33 @@ const PaymentsScreen = () => {
           {loadingCustomers ? (
             renderCustomerSkeleton()
           ) : (
-            <FlatList
-              data={filteredCustomers}
-              keyExtractor={item => item.id || Math.random().toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.customerListItem} 
-                  onPress={() => selectCustomer(item)}
-                >
-                  <View style={styles.customerListIcon}>
-                    <User size={20} color={COLORS.primary} />
-                  </View>
-                  <View style={styles.customerListInfo}>
-                    <Text style={styles.customerListName}>{item.name}</Text>
-                    <Text style={styles.customerListPhone}>{item.phone || 'No phone'}</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
+            <>
+              <TouchableOpacity 
+                style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
+                onPress={() => { setShowCustomerModal(false); setAddCustomerVisible(true); }}
+              >
+                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
+              </TouchableOpacity>
+              <FlatList
+                data={filteredCustomers}
+                keyboardShouldPersistTaps="handled"
+                keyExtractor={item => item.id || Math.random().toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.customerListItem}
+                    onPress={() => selectCustomer(item)}
+                  >
+                    <View style={styles.customerListIcon}>
+                      <User size={20} color={COLORS.primary} />
+                    </View>
+                    <View style={styles.customerListInfo}>
+                      <Text style={styles.customerListName}>{item.name}</Text>
+                      <Text style={styles.customerListPhone}>{item.phone || t('customers.noPhone')}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            </>
           )}
         </View>
       </View>
@@ -284,9 +340,9 @@ const PaymentsScreen = () => {
   );
 
   const renderRecordPayment = () => (
-    <ScrollView contentContainerStyle={styles.tabContent}>
+    <ScrollView contentContainerStyle={styles.tabContent} keyboardShouldPersistTaps="handled">
       <View style={styles.card}>
-        <Text style={styles.label}>Amount (₹)</Text>
+        <Text style={styles.label}>{t('payments.amount')}</Text>
         <TextInput
           style={styles.input}
           placeholder="0.00"
@@ -296,22 +352,23 @@ const PaymentsScreen = () => {
           placeholderTextColor={COLORS.textPlaceholder}
         />
 
-        <Text style={styles.label}>Payment Mode</Text>
+        <Text style={styles.label}>{t('payments.paymentMode')}</Text>
         <View style={styles.chipsContainer}>
-          {PAYMENT_MODES.map(mode => (
+          {getPaymentModes(t).map(mode => (
             <TouchableOpacity
               key={mode.id}
               style={[styles.chip, paymentMode === mode.id && styles.chipActive]}
               onPress={() => setPaymentMode(mode.id)}
             >
-              <Text style={[styles.chipText, paymentMode === mode.id && styles.chipTextActive]}>
+              <mode.Icon size={16} color={paymentMode === mode.id ? COLORS.primary : COLORS.textSecondary} style={{ marginBottom: 4 }} />
+              <Text style={[styles.chipText, paymentMode === mode.id && styles.chipTextActive]} textAlign="center">
                 {mode.label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.label}>Reference Note (Optional)</Text>
+        <Text style={styles.label}>{t('payments.referenceNote')}</Text>
         <TextInput
           style={styles.input}
           placeholder="e.g. July bill payment via GPay"
@@ -320,15 +377,15 @@ const PaymentsScreen = () => {
           placeholderTextColor={COLORS.textPlaceholder}
         />
 
-        <TouchableOpacity 
-          style={[styles.primaryBtn, (!selectedCustomer || !amount) && styles.primaryBtnDisabled]} 
+        <TouchableOpacity
+          style={[styles.primaryBtn, (!selectedCustomer || !amount) && styles.primaryBtnDisabled]}
           onPress={handleRecordPayment}
           disabled={submittingPayment || !selectedCustomer || !amount}
         >
           {submittingPayment ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.primaryBtnText}>Record Payment</Text>
+            <Text style={styles.primaryBtnText}>{t('payments.recordPayment')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -340,8 +397,8 @@ const PaymentsScreen = () => {
       return (
         <View style={styles.emptyTabContent}>
           <User size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-          <Text style={styles.emptyTitle}>Select a Customer</Text>
-          <Text style={styles.emptySubtitle}>Please select a customer to view their statement.</Text>
+          <Text style={styles.emptyTitle}>{t('payments.selectCustomerTitle')}</Text>
+          <Text style={styles.emptySubtitle}>{t('payments.selectCustomerSubtitle')}</Text>
         </View>
       );
     }
@@ -357,41 +414,84 @@ const PaymentsScreen = () => {
 
     return (
       <View style={{ flex: 1 }}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Account Summary</Text>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryCol}>
-              <Text style={styles.summaryLabel}>Total Charged</Text>
-              <Text style={[styles.summaryVal, { color: '#FFF' }]}>{formatCurrency(summary.totalCharged)}</Text>
-            </View>
-            <View style={styles.summaryCol}>
-              <Text style={styles.summaryLabel}>Total Paid</Text>
-              <Text style={[styles.summaryVal, { color: '#E2E8F0' }]}>{formatCurrency(summary.totalPaid)}</Text>
-            </View>
-          </View>
-          <View style={[styles.summaryRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', paddingTop: 16 }]}>
-            <View style={styles.summaryCol}>
-              <Text style={styles.summaryLabel}>{owesMoney ? 'Amount Due' : 'Balance'}</Text>
-              <Text style={[styles.summaryValLarge, { color: owesMoney ? '#FECACA' : '#86EFAC' }]}>
-                {formatCurrency(summary.outstandingBalance)}
-              </Text>
-            </View>
-          </View>
-        </View>
-
         <FlatList
           data={statement}
           keyExtractor={item => item.id || Math.random().toString()}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={<Text style={styles.statementListTitle}>Transactions</Text>}
+          ListHeaderComponent={
+            <View>
+              <View style={[styles.summaryCard, { marginHorizontal: 0, paddingVertical: 16, paddingHorizontal: 16, marginBottom: 16, borderRadius: 16 }]}>
+                <View style={[StyleSheet.absoluteFill, { overflow: 'hidden', borderRadius: 16 }]}>
+                  <Svg height="100%" width="100%" preserveAspectRatio="none">
+                    <Defs>
+                      <LinearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0" stopColor="#1E3A8A" />
+                        <Stop offset="1" stopColor="#0F172A" />
+                      </LinearGradient>
+                      <LinearGradient id="circleGrad" x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.15" />
+                        <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.0" />
+                      </LinearGradient>
+                    </Defs>
+                    <Rect width="100%" height="100%" fill="url(#cardGrad)" />
+                    <Circle cx="85%" cy="-15%" r="120" fill="url(#circleGrad)" />
+                    <Circle cx="10%" cy="120%" r="80" fill="url(#circleGrad)" />
+                  </Svg>
+                </View>
+
+                <View style={{ zIndex: 1 }}>
+                  <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontFamily: 'Rubik-SemiBold', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                    {owesMoney ? t('payments.totalAmountDue') : t('payments.availableBalance')}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                    <Text style={{ fontSize: 28, color: '#FFF', fontFamily: 'Rubik-Bold', includeFontPadding: false }}>
+                      {formatCurrency(Math.abs(summary.outstandingBalance))}
+                    </Text>
+                    {owesMoney ? (
+                      <View style={{ backgroundColor: 'rgba(239,68,68,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
+                        <Text style={{ color: '#FCA5A5', fontSize: 10, fontFamily: 'Rubik-Bold' }}>{t('payments.toCollect')}</Text>
+                      </View>
+                    ) : (
+                       <View style={{ backgroundColor: 'rgba(16,185,129,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
+                        <Text style={{ color: '#6EE7B7', fontSize: 10, fontFamily: 'Rubik-Bold' }}>{t('payments.settled')}</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.08)', padding: 12, borderRadius: 10 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Rubik-Medium', marginBottom: 2 }}>{t('payments.totalBilled')}</Text>
+                      <Text style={{ fontSize: 15, color: '#FFF', fontFamily: 'Rubik-Bold' }}>{formatCurrency(summary.totalCharged)}</Text>
+                    </View>
+                    <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginHorizontal: 12 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Rubik-Medium', marginBottom: 2 }}>{t('payments.totalReceived')}</Text>
+                      <Text style={{ fontSize: 15, color: '#4ADE80', fontFamily: 'Rubik-Bold' }}>{formatCurrency(summary.totalPaid)}</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+              <Text style={[styles.statementListTitle, { marginTop: 4, marginBottom: 16 }]}>{t('payments.recentTransactions')}</Text>
+            </View>
+          }
           renderItem={({ item }) => {
             const isCredit = item.credit !== null;
             const amountStr = isCredit ? `+${formatCurrency(item.credit)}` : `-${formatCurrency(item.debit)}`;
             const amountColor = isCredit ? COLORS.success : COLORS.danger;
+            
+            // Icon Selection
+            const isInvoice = item.entryType === 'delivery_charge' || item.description?.toLowerCase().includes('invoice');
+            const IconComponent = isInvoice ? FileText : Banknote;
+            const iconColor = isInvoice ? '#0B409C' : '#10B981'; // Blue for invoice, Green for payment
+            const iconBg = isInvoice ? '#E0E7FF' : '#D1FAE5'; // Light background for circle
+            const borderColor = isInvoice ? '#0B409C' : '#10B981';
 
             return (
-              <View style={styles.statementItem}>
+              <View style={[styles.statementItem, { borderLeftColor: borderColor }]}>
+                <View style={[styles.statementIconCircle, { backgroundColor: iconBg }]}>
+                  <IconComponent size={20} color={iconColor} />
+                </View>
                 <View style={styles.statementLeft}>
                   <Text style={styles.statementDate}>
                     {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -399,7 +499,7 @@ const PaymentsScreen = () => {
                   <Text style={styles.statementDesc} numberOfLines={2}>{item.description}</Text>
                   {item.paymentMode && (
                     <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{item.paymentMode.toUpperCase()}</Text>
+                      <Text style={styles.badgeText}>{getPaymentModeLabel(item.paymentMode, t)}</Text>
                     </View>
                   )}
                 </View>
@@ -412,7 +512,7 @@ const PaymentsScreen = () => {
           }}
           ListEmptyComponent={
             <View style={{ alignItems: 'center', padding: 30 }}>
-              <Text style={{ color: COLORS.textPlaceholder }}>No transactions found.</Text>
+              <Text style={{ color: COLORS.textPlaceholder }}>{t('payments.noTransactions')}</Text>
             </View>
           }
         />
@@ -421,54 +521,84 @@ const PaymentsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Payments & Ledger</Text>
-      </View>
-
-      {/* Customer Selector */}
-      <TouchableOpacity 
-        style={styles.customerSelector} 
-        onPress={() => setShowCustomerModal(true)}
-      >
-        <View style={styles.customerSelectorLeft}>
-          <User size={20} color={selectedCustomer ? COLORS.primary : COLORS.textPlaceholder} style={{ marginRight: 10 }} />
+      <CurvedHeader
+        title={
           <View>
-            <Text style={styles.customerSelectorLabel}>Customer</Text>
-            <Text style={[styles.customerSelectorValue, !selectedCustomer && { color: COLORS.textPlaceholder }]}>
-              {selectedCustomer ? selectedCustomer.name : 'Select a customer'}
-            </Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 20, fontFamily: 'Rubik-Bold' }}>{t('payments.title')}</Text>
           </View>
+        }
+        leftIcon={<Menu size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
+
+      <View style={styles.contentWrapper}>
+        {/* Customer Selector */}
+        <TouchableOpacity
+          style={styles.customerSelector}
+          onPress={() => setShowCustomerModal(true)}
+        >
+          <View style={styles.customerSelectorLeft}>
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+              <User size={22} color={COLORS.primary} fill={COLORS.primary} />
+            </View>
+            <View>
+              <Text style={styles.customerSelectorLabel}>{t('customers.title')}</Text>
+              <Text style={[styles.customerSelectorValue, !selectedCustomer && { color: COLORS.textPlaceholder }]}>
+                {selectedCustomer ? selectedCustomer.name : t('common.selectCustomer')}
+              </Text>
+            </View>
+          </View>
+          <ChevronDown size={20} color={COLORS.textPlaceholder} />
+        </TouchableOpacity>
+
+        {/* Tabs */}
+        <View style={styles.tabContainer}>
+          {user?.role !== 'staff' && (
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'record' && styles.tabBtnActive]}
+              onPress={() => handleTabSwitch('record')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tabText, activeTab === 'record' && styles.tabTextActive]}>
+                ₹  {t('payments.recordPayment')}
+              </Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'statement' && styles.tabBtnActive]}
+            onPress={() => handleTabSwitch('statement')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, activeTab === 'statement' && styles.tabTextActive]}>
+              ₹  {t('payments.statement')}
+            </Text>
+          </TouchableOpacity>
         </View>
-        <ChevronDown size={20} color={COLORS.textPlaceholder} />
-      </TouchableOpacity>
 
-      {/* Tabs */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tabBtn, activeTab === 'record' && styles.tabBtnActive]}
-          onPress={() => handleTabSwitch('record')}
-        >
-          <DollarSign size={16} color={activeTab === 'record' ? COLORS.primary : COLORS.textSecondary} style={{ marginRight: 6 }} />
-          <Text style={[styles.tabText, activeTab === 'record' && styles.tabTextActive]}>Record Payment</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tabBtn, activeTab === 'statement' && styles.tabBtnActive]}
-          onPress={() => handleTabSwitch('statement')}
-        >
-          <FileText size={16} color={activeTab === 'statement' ? COLORS.primary : COLORS.textSecondary} style={{ marginRight: 6 }} />
-          <Text style={[styles.tabText, activeTab === 'statement' && styles.tabTextActive]}>Statement</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Main Content */}
+        <View style={styles.content}>
+          {activeTab === 'record' ? renderRecordPayment() : renderStatement()}
+        </View>
 
-      {/* Main Content */}
-      <View style={styles.content}>
-        {activeTab === 'record' ? renderRecordPayment() : renderStatement()}
       </View>
 
       {renderCustomerModal()}
-    </SafeAreaView>
+
+      <AddCustomerModal 
+        visible={addCustomerVisible}
+        onClose={() => setAddCustomerVisible(false)}
+        onSuccess={(newCustomer) => {
+          setAddCustomerVisible(false);
+          setCustomers(prev => [...prev, newCustomer]);
+          setFilteredCustomers(prev => [...prev, newCustomer]);
+          setSelectedCustomer(newCustomer);
+        }}
+      />
+    </View>
   );
 };
 
@@ -477,15 +607,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
+  contentWrapper: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    paddingTop: 8,
   },
   customerSelector: {
     flexDirection: 'row',
@@ -493,11 +618,29 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    padding: 16,
+    padding: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#F1F5F9',
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  customerAvatarPlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customerAvatarText: {
+    fontSize: 16,
+    fontFamily: 'Rubik-Bold',
+    color: '#1D4ED8',
   },
   customerSelectorLeft: {
     flexDirection: 'row',
@@ -505,53 +648,50 @@ const styles = StyleSheet.create({
   },
   customerSelectorLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
-    marginBottom: 2,
+    marginTop: 2,
   },
   customerSelectorValue: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   tabContainer: {
     flexDirection: 'row',
     marginHorizontal: 16,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 4,
-    marginBottom: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   tabBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   tabBtnActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: '#0B409C',
   },
   tabText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#64748B',
   },
   tabTextActive: {
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.primary,
+    fontFamily: 'Rubik-Bold',
+    color: '#FFFFFF',
   },
   content: {
     flex: 1,
   },
   tabContent: {
     padding: 16,
+    paddingBottom: 120,
   },
   emptyTabContent: {
     flex: 1,
@@ -561,13 +701,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
@@ -580,7 +720,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 8,
   },
@@ -592,35 +732,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 50,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     marginBottom: 20,
   },
   chipsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginBottom: 20,
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    flex: 1,
+    paddingHorizontal: 4,
+    paddingVertical: 12,
+    borderRadius: 14,
     backgroundColor: '#F1F5F9',
     borderWidth: 1,
     borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipActive: {
     backgroundColor: COLORS.primaryLight,
     borderColor: COLORS.primary,
   },
   chipText: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontSize: 11,
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
+    textAlign: 'center',
   },
   chipTextActive: {
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   primaryBtn: {
@@ -642,7 +786,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     color: '#FFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -664,7 +808,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   searchInputWrapper: {
@@ -679,7 +823,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   customerListItem: {
@@ -703,32 +847,32 @@ const styles = StyleSheet.create({
   },
   customerListName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
   customerListPhone: {
     fontSize: 13,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
     color: COLORS.textSecondary,
   },
   summaryCard: {
-    backgroundColor: COLORS.primary,
-    marginHorizontal: 16,
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-    marginBottom: 20,
+    backgroundColor: '#1E3A8A',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#1E3A8A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 16,
+    overflow: 'hidden',
   },
   summaryTitle: {
-    fontSize: 14,
-    fontFamily: 'Geologica-Medium',
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: 16,
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -740,34 +884,47 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   summaryLabel: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Medium',
-    color: 'rgba(255,255,255,0.7)',
-    marginBottom: 4,
+    fontSize: 11,
+    fontFamily: 'Rubik-SemiBold',
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 2,
   },
   summaryVal: {
-    fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontSize: 16,
+    fontFamily: 'Rubik-Bold',
   },
   summaryValLarge: {
-    fontSize: 28,
-    fontFamily: 'Geologica-Bold',
+    fontSize: 24,
+    fontFamily: 'Rubik-Bold',
   },
   statementListTitle: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 16,
   },
   statementItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: '#FFF',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderLeftWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statementIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   statementLeft: {
     flex: 1,
@@ -775,13 +932,13 @@ const styles = StyleSheet.create({
   },
   statementDate: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
   statementDesc: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -794,7 +951,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
   },
   statementRight: {
@@ -803,28 +960,27 @@ const styles = StyleSheet.create({
   },
   statementAmount: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     marginBottom: 4,
   },
   statementBalance: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   skeletonSummaryCard: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 20,
+    backgroundColor: '#1E3A8A', // Custom dark blue for skeleton to match summaryCard
+    borderRadius: 16,
     padding: 20,
-    height: 140,
+    height: 120,
+    justifyContent: 'center',
   },
   skeletonTxItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
   skeletonCustomerRow: {
     flexDirection: 'row',

@@ -10,14 +10,18 @@ import {
   RefreshControl,
   Platform,
   Animated,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Search, User, ChevronRight, AlertCircle, RefreshCw, MapPin, Phone } from 'lucide-react-native';
+import { LinearGradient } from 'react-native-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
+import { useNavigation, useFocusEffect, DrawerActions } from '@react-navigation/native';
+import { Plus, Search, User, ChevronRight, AlertCircle, RefreshCw, MapPin, Phone, Menu, Droplet } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const CustomerListScreen = () => {
   const navigation = useNavigation();
@@ -108,56 +112,112 @@ const CustomerListScreen = () => {
   });
 
   const renderCustomerCard = ({ item }) => {
+    const balance = parseFloat(item.currentBalance) || 0;
+    const isPaused = item.status === 'inactive';
+    const isDue = balance > 0;
+    
+
+
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[
+          styles.card, 
+          { borderLeftWidth: 4, borderLeftColor: isPaused ? '#EF4444' : '#0B409C' }
+        ]}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('CustomerDetail', { customerId: item.id })}
       >
-        <View style={styles.cardHeader}>
+        <LinearGradient
+          colors={['#FFFFFF', '#F8FAFC']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardInner}
+        >
+          {/* Decorative Background Circles */}
+          <View style={StyleSheet.absoluteFillObject}>
+            <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+              <Circle cx="-5%" cy="-20%" r="55" fill="#F1F5F9" />
+              <Circle cx="105%" cy="120%" r="65" fill="#E2E8F0" opacity="0.5" />
+            </Svg>
+          </View>
+
+          {/* Avatar Left */}
           <View style={styles.iconBox}>
-            <User size={22} color={COLORS.primary} />
+            <User size={24} color="#0B409C" />
+            <View style={[
+              styles.avatarBadge,
+              { backgroundColor: isPaused ? '#EF4444' : '#10B981' }
+            ]} />
           </View>
+
+          {/* Center Details */}
           <View style={styles.titleContainer}>
-            <Text style={styles.customerName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            {item.phone ? (
-              <View style={styles.row}>
-                <Phone size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                <Text style={styles.subText}>{item.phone}</Text>
-              </View>
-            ) : null}
-          </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} />
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.cardFooter}>
-          <View style={styles.routeContainer}>
-            <MapPin size={14} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-            <Text style={styles.routeText} numberOfLines={1} ellipsizeMode="tail">
-              {item.Route ? item.Route.name : 'No Route'}
-            </Text>
-          </View>
-            <View style={styles.statusBadge}>
-              <View style={[styles.statusDot, { backgroundColor: item.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
-              <Text style={[styles.statusText, { color: item.status === 'active' ? '#15803D' : '#64748B' }]}>
-                {item.status.toUpperCase()}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <Text style={[styles.customerName, { marginBottom: 0 }]} numberOfLines={1}>
+                {item.name}
               </Text>
             </View>
-        </View>
+            
+            <View style={styles.infoRow}>
+              <MapPin size={12} color="#64748B" style={{ marginRight: 4 }} />
+              <Text style={styles.subText} numberOfLines={1}>
+                {item.Route ? item.Route.name : 'No Route'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Right Action & Status */}
+          <View style={styles.rightActionContainer}>
+            <View style={styles.statusCol}>
+              {isDue ? (
+                <>
+                  <Text style={styles.dueAmount}>₹{balance.toFixed(2)}</Text>
+                  <Text style={styles.statusSubtext}>Due</Text>
+                </>
+              ) : (
+                <>
+                  <View style={[styles.statusBadge, { backgroundColor: '#D1FAE5' }]}>
+                    <Text style={[styles.statusBadgeText, { color: '#10B981' }]}>Paid</Text>
+                  </View>
+                  <Text style={styles.statusSubtext}>Adv: ₹{Math.abs(balance).toFixed(2)}</Text>
+                </>
+              )}
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.phoneButton, !item.phone && { opacity: 0.3 }]} 
+              activeOpacity={0.7}
+              disabled={!item.phone}
+              onPress={() => {
+                if (item.phone) {
+                  Linking.openURL(`tel:${item.phone}`);
+                }
+              }}
+            >
+              <Phone size={18} color="#0B409C" />
+            </TouchableOpacity>
+
+            <ChevronRight size={18} color="#94A3B8" />
+          </View>
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <View style={styles.container}>
+      <CurvedHeader 
+        title={
+          <View>
+            <Text style={{ color: '#FFFFFF', fontSize: 20, fontFamily: 'Rubik-Bold' }}>{t('customers.title')}</Text>
+          </View>
+        }
+        leftIcon={<Menu size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        height={110}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
       <View style={styles.contentWrapper}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>{t('customers.title')}</Text>
-        </View>
 
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
@@ -233,7 +293,7 @@ const CustomerListScreen = () => {
           <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -244,17 +304,7 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 24 : 16,
-  },
-  headerRow: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
+    paddingTop: 8,
   },
   searchContainer: {
     paddingHorizontal: 24,
@@ -276,13 +326,13 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontSize: 15,
     paddingVertical: 0,
   },
   listContent: {
     paddingHorizontal: 24,
-    paddingBottom: 90,
+    paddingBottom: 120,
   },
   emptyListContent: {
     flexGrow: 1,
@@ -291,86 +341,110 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
   },
-  cardHeader: {
+  cardInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
   },
   iconBox: {
     width: 44,
     height: 44,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#E0E7FF',
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   titleContainer: {
     flex: 1,
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  subText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 14,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  routeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
-  },
-  routeText: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.primary,
+    fontFamily: 'Rubik-Bold',
+    color: '#1E293B',
+    marginBottom: 6,
     flexShrink: 1,
   },
-  statusBadge: {
+
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    marginBottom: 4,
   },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  statusText: {
+  subText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    color: '#64748B',
+    fontFamily: 'Rubik-Medium',
+  },
+  rightActionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  statusCol: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginRight: 8,
+    minWidth: 50,
+  },
+  dueAmount: {
+    fontSize: 13,
+    fontFamily: 'Rubik-Bold',
+    color: '#DC2626',
+    marginBottom: 4,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Rubik-Bold',
+  },
+  statusSubtext: {
+    fontSize: 10,
+    fontFamily: 'Rubik-Medium',
+    color: '#64748B',
+  },
+  phoneButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
   centerContainer: {
     flex: 1,
@@ -381,12 +455,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -401,7 +475,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 15,
   },
   emptyContainer: {
@@ -410,7 +484,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
@@ -419,7 +493,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textPlaceholder,
     textAlign: 'center',
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     marginBottom: 24,
   },
   emptyAddBtn: {
@@ -432,19 +506,24 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 15,
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 120 : 130,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
   skeletonCustomerCard: {
     backgroundColor: '#FFFFFF',

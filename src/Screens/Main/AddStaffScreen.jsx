@@ -14,11 +14,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, User, Phone, Mail, AlertCircle } from 'lucide-react-native';
+import { ChevronLeft, User, Phone, Mail, AlertCircle , ArrowLeft} from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const AddStaffScreen = () => {
   const { t } = useTranslation();
@@ -146,14 +147,14 @@ const AddStaffScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header Row - Matches AddCustomer Header Row */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRightSpacing} />
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={isEditMode ? t('staff.editStaff') : t('staff.addNew')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
 
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -171,23 +172,15 @@ const AddStaffScreen = () => {
             </View>
           ) : null}
 
-          {/* Title Container */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>
-              {isEditMode ? t('staff.editStaff') : t('staff.addNew')}
-            </Text>
-            <Text style={styles.pageSubtitle}>
-              {isEditMode ? 'Update staff member profile' : 'Fill details to add a new team member'}
-            </Text>
-          </View>
-
           {/* Form Fields */}
           <View style={styles.form}>
             {/* Name Field */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('staff.name')}</Text>
               <View style={[styles.inputContainer, nameError ? styles.inputErrorBorder : null]}>
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#E0E7FF' }]}>
+                  <User size={18} color="#0B409C" />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t('staff.namePlaceholder')}
@@ -204,7 +197,9 @@ const AddStaffScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('staff.phone')}</Text>
               <View style={[styles.inputContainer, phoneError ? styles.inputErrorBorder : null, isEditMode && styles.inputDisabled]}>
-                <Phone size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#DCFCE7' }]}>
+                  <Phone size={18} color="#16A34A" />
+                </View>
                 <Text style={styles.countryCode}>+91</Text>
                 <TextInput
                   style={styles.input}
@@ -230,7 +225,9 @@ const AddStaffScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('staff.email')}</Text>
               <View style={[styles.inputContainer, emailError ? styles.inputErrorBorder : null]}>
-                <Mail size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <Mail size={18} color="#D97706" />
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t('staff.emailPlaceholder')}
@@ -271,52 +268,22 @@ const AddStaffScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 10 : 14,
-    paddingBottom: 4,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerRightSpacing: {
-    width: 32,
+    backgroundColor: '#F8FAFC',
   },
   keyboardAvoid: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 10,
+    paddingTop: 24,
     paddingBottom: 40,
-  },
-  titleContainer: {
-    marginBottom: 32,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 6,
-  },
-  pageSubtitle: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
   },
   errorBanner: {
     flexDirection: 'row',
@@ -334,7 +301,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
   form: {
@@ -345,7 +312,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -356,19 +323,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 52,
+    paddingRight: 16,
+    paddingLeft: 6,
+    height: 56,
+  },
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   inputDisabled: {
     backgroundColor: '#F8FAFC',
     borderColor: '#E2E8F0',
   },
-  inputIcon: {
-    marginRight: 8,
-  },
   countryCode: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.primary,
     marginRight: 4,
   },
@@ -376,7 +349,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -385,13 +358,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     marginTop: 4,
   },
   helperText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
     marginTop: 6,
     paddingHorizontal: 2,
@@ -420,13 +393,14 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   btnTextSecondary: {
     color: COLORS.textSecondary,
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 });
 
 export default AddStaffScreen;
+

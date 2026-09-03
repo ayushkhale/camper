@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform, Modal } from 'react-native';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
 
 const AlertContext = createContext();
 
 export const AlertProvider = ({ children }) => {
+  const { t } = useTranslation();
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: '',
@@ -19,10 +22,11 @@ export const AlertProvider = ({ children }) => {
     visible: false,
     title: '',
     message: '',
-    buttons: [{ text: 'OK' }],
+    buttons: [{ text: t('common.okay') }],
   });
 
   const translateY = useRef(new Animated.Value(-120)).current;
+  const insets = useSafeAreaInsets();
 
   const showAlert = (titleOrMsg, messageOrType, typeOrButtons, optionalType) => {
     let title = '';
@@ -52,12 +56,19 @@ export const AlertProvider = ({ children }) => {
       type = messageOrType || 'error';
     }
 
+    if (message.toLowerCase().includes('token')) {
+      type = 'info';
+    }
+
     setAlertConfig({ visible: true, title, message, type, buttons: null });
 
+    const topInset = insets.top > 0 ? insets.top : (Platform.OS === 'ios' ? 50 : 20);
+
     Animated.spring(translateY, {
-      toValue: Platform.OS === 'ios' ? 50 : 20,
+      toValue: topInset + 10,
       useNativeDriver: true,
       tension: 80,
+
       friction: 10,
     }).start();
 
@@ -76,12 +87,12 @@ export const AlertProvider = ({ children }) => {
     });
   };
 
-  const showPopup = (title, message, buttons = [{ text: 'OK' }]) => {
+  const showPopup = (title, message, buttons = [{ text: t('common.okay') }]) => {
     setModalConfig({
       visible: true,
-      title: title || 'Notice',
+      title: title || t('common.notice'),
       message: message || '',
-      buttons: buttons && buttons.length > 0 ? buttons : [{ text: 'OK' }],
+      buttons: buttons && buttons.length > 0 ? buttons : [{ text: t('common.okay') }],
     });
   };
 
@@ -162,7 +173,7 @@ export const AlertProvider = ({ children }) => {
                       btn.style === 'cancel' && styles.iosCancelText,
                     ]}
                   >
-                    {btn.text || 'OK'}
+                    {btn.text || t('common.okay')}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -221,13 +232,13 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#FFFFFF',
     marginBottom: 2,
   },
   alertMessage: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: '#FFFFFF',
     opacity: 0.95,
   },
@@ -264,14 +275,14 @@ const styles = StyleSheet.create({
   },
   iosTitle: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   iosMessage: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
@@ -298,14 +309,14 @@ const styles = StyleSheet.create({
   },
   iosBtnText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   iosDestructiveText: {
     color: COLORS.danger,
   },
   iosCancelText: {
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
 });

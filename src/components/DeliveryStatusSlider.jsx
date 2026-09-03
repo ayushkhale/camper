@@ -118,10 +118,10 @@ const DeliveryStatusSlider = ({ status, onStatusChange }) => {
         <View style={styles.indicatorsContainer}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16 }}>
             <X size={16} color={COLORS.danger} />
-            <Text style={{ color: COLORS.danger, fontSize: 12, fontFamily: 'Geologica-Bold', marginLeft: 4 }}>Skip</Text>
+            <Text style={{ color: COLORS.danger, fontSize: 12, fontFamily: 'Rubik-Bold', marginLeft: 4 }}>Skip</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
-            <Text style={{ color: COLORS.success, fontSize: 12, fontFamily: 'Geologica-Bold', marginRight: 4 }}>Deliver</Text>
+            <Text style={{ color: COLORS.success, fontSize: 12, fontFamily: 'Rubik-Bold', marginRight: 4 }}>Deliver</Text>
             <Check size={16} color={COLORS.success} />
           </View>
         </View>
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   fixedText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#FFFFFF',
   },
   iconCircleWhite: {

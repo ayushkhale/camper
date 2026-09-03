@@ -1,0 +1,1 @@
+Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Bitmap]::FromFile('c:\Camper\assets\header_bg5.png'); $pixel = $img.GetPixel(0,0); Write-Output ('HEX: #{0:X2}{1:X2}{2:X2}' -f $pixel.R, $pixel.G, $pixel.B); $img.Dispose()

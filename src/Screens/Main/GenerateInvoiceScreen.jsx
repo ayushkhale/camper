@@ -12,16 +12,20 @@ import {
   Platform,
   Alert,
   Modal,
-  FlatList
+  FlatList,
+  TouchableWithoutFeedback
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, User, Calendar, AlertCircle, X, Search, FileText } from 'lucide-react-native';
+import { ChevronLeft, ChevronDown, Check, X, Search, User, Filter, AlertCircle, FileText, Calendar , ArrowLeft} from 'lucide-react-native';
+import CurvedHeader from '../../components/CurvedHeader';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import AddCustomerModal from '../../components/modals/AddCustomerModal';
+import Svg, { Defs, LinearGradient, Stop, Rect, Circle } from 'react-native-svg';
 
 const GenerateInvoiceScreen = () => {
   const { t } = useTranslation();
@@ -33,19 +37,22 @@ const GenerateInvoiceScreen = () => {
   const initialCustomerId = route.params?.customerId || '';
 
   const [customerId, setCustomerId] = useState(initialCustomerId);
-  const [periodStart, setPeriodStart] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
-  const [periodEnd, setPeriodEnd] = useState(new Date().toISOString().split('T')[0]);
+  const [periodStart, setPeriodStart] = useState(route.params?.periodStart || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  const [periodEnd, setPeriodEnd] = useState(route.params?.periodEnd || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
   
   const [customers, setCustomers] = useState([]);
   const [apiError, setApiError] = useState('');
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [preSummary, setPreSummary] = useState(null);
+  const [rawUninvoicedData, setRawUninvoicedData] = useState(null);
 
   // Modals state
   const [activeModal, setActiveModal] = useState(null); // 'customer'
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [modalSearch, setModalSearch] = useState('');
+  const [addCustomerVisible, setAddCustomerVisible] = useState(false);
 
   const formatDateString = (date) => {
     const yyyy = date.getFullYear();
@@ -84,6 +91,54 @@ const GenerateInvoiceScreen = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    fetchPreSummary();
+  }, [customerId]);
+
+  useEffect(() => {
+    if (rawUninvoicedData && periodStart && periodEnd) {
+      let totalUninvoiced = 0;
+      let totalEst = 0;
+      
+      rawUninvoicedData.forEach(item => {
+        if (item.deliveries && Array.isArray(item.deliveries)) {
+          item.deliveries.forEach(del => {
+            if (del.deliveryDate >= periodStart && del.deliveryDate <= periodEnd) {
+              totalUninvoiced += 1;
+              totalEst += (del.estimatedAmount || 0);
+            }
+          });
+        }
+      });
+      
+      if (totalUninvoiced > 0) {
+        setPreSummary({ deliveries: totalUninvoiced, total: totalEst });
+      } else {
+        setPreSummary(null);
+      }
+    } else {
+      setPreSummary(null);
+    }
+  }, [rawUninvoicedData, periodStart, periodEnd]);
+
+  const fetchPreSummary = async () => {
+    try {
+      if (!customerId) {
+        setRawUninvoicedData(null);
+        return;
+      }
+      const res = await api.getUninvoicedPreSummary(userToken, customerId);
+      if (res.success && res.data) {
+        setRawUninvoicedData(res.data);
+      } else {
+        setRawUninvoicedData(null);
+      }
+    } catch (err) {
+      console.log('Error fetching pre-summary', err);
+      setRawUninvoicedData(null);
+    }
+  };
+
   const fetchData = async () => {
     try {
       const custRes = await api.listCustomers(userToken);
@@ -99,10 +154,10 @@ const GenerateInvoiceScreen = () => {
   };
 
   const validate = () => {
-    if (!customerId) return 'Please select a customer';
-    if (!periodStart || !/^\d{4}-\d{2}-\d{2}$/.test(periodStart)) return 'Start Date must be in YYYY-MM-DD format';
-    if (!periodEnd || !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd)) return 'End Date must be in YYYY-MM-DD format';
-    if (new Date(periodStart) > new Date(periodEnd)) return 'Start Date cannot be after End Date';
+    if (!customerId) return t('invoices.selectCustomerRequired');
+    if (!periodStart || !/^\d{4}-\d{2}-\d{2}$/.test(periodStart)) return t('invoices.invalidStartDate');
+    if (!periodEnd || !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd)) return t('invoices.invalidEndDate');
+    if (new Date(periodStart) > new Date(periodEnd)) return t('invoices.startAfterEnd');
     return null;
   };
 
@@ -110,7 +165,7 @@ const GenerateInvoiceScreen = () => {
     const errorMsg = validate();
     if (errorMsg) {
       setApiError(errorMsg);
-      showPopup('Notice', errorMsg, [{ text: 'OK' }]);
+      showPopup(t('common.notice'), errorMsg, [{ text: t('common.okay') }]);
       return;
     }
     
@@ -121,29 +176,47 @@ const GenerateInvoiceScreen = () => {
     if (customerId) payload.customerId = customerId;
 
     try {
+      console.log('--- GenerateInvoiceScreen: Payload ---', payload);
       const response = await api.generateInvoices(userToken, payload);
+      console.log('--- GenerateInvoiceScreen: Response ---', JSON.stringify(response, null, 2));
       const msg = response?.message || '';
+
+      const customerName = customerId ? getCustomerName(customerId) : '';
+      const searchQuery = customerName !== t('common.selectCustomer') ? customerName : '';
+
+      const navigateToInvoice = () => {
+        if (response.data?.invoices && response.data.invoices.length === 1) {
+          const inv = response.data.invoices[0];
+          navigation.replace('InvoiceDetail', { invoiceId: inv.id, invoice: inv });
+        } else {
+          navigation.navigate('InvoiceList', { searchQuery });
+        }
+      };
 
       if (response && response.success && (response.data?.invoicesGenerated === undefined || response.data?.invoicesGenerated > 0)) {
         showAlert('Success', msg || 'Invoices generated successfully', 'success');
-        navigation.goBack();
+        navigateToInvoice();
       } else {
-        const displayMsg = msg || 'All invoices have already been generated for selected date range.';
-        setApiError(displayMsg);
-        showPopup('Notice', displayMsg, [{ text: 'OK' }]);
+        showAlert('Notice', 'Invoice already generated for this period. Redirecting...', 'info');
+        setTimeout(() => {
+          navigation.navigate('InvoiceList', { searchQuery });
+        }, 1500);
       }
     } catch (err) {
-      const displayMsg = err.message || 'All invoices have already been generated for selected date range.';
-      setApiError(displayMsg);
-      showPopup('Notice', displayMsg, [{ text: 'OK' }]);
+      const customerName = customerId ? getCustomerName(customerId) : '';
+      const searchQuery = customerName !== t('common.selectCustomer') ? customerName : '';
+      showAlert('Notice', 'Invoice already generated for this period. Redirecting...', 'info');
+      setTimeout(() => {
+        navigation.navigate('InvoiceList', { searchQuery });
+      }, 1500);
     } finally {
       setSubmitting(false);
     }
   };
 
   const getCustomerName = (id) => {
-    const c = customers.find(c => c.id === id);
-    return c ? c.name : 'Select a Customer';
+    const c = customers.find(c => String(c.id) === String(id));
+    return c ? c.name : t('common.selectCustomer');
   };
 
   const renderModal = () => {
@@ -157,7 +230,7 @@ const GenerateInvoiceScreen = () => {
     let showSearch = false;
 
     if (activeModal === 'customer') {
-      title = 'Select Customer';
+      title = t('common.selectCustomer');
       data = customers;
       currentVal = customerId;
       renderItemText = (item) => `${item.name} ${item.phone ? `(${item.phone})` : ''}`;
@@ -180,12 +253,11 @@ const GenerateInvoiceScreen = () => {
         animationType="slide"
         onRequestClose={() => { setActiveModal(null); setModalSearch(''); }}
       >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => { setActiveModal(null); setModalSearch(''); }}
-        >
-          <View style={[styles.modalContent, { maxHeight: '80%' }]} onStartShouldSetResponder={() => true}>
+        <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+          <TouchableWithoutFeedback onPress={() => { setActiveModal(null); setModalSearch(''); }}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+          </TouchableWithoutFeedback>
+          <View style={[styles.modalContent, { maxHeight: '80%' }]}>
             <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{title}</Text>
@@ -199,7 +271,7 @@ const GenerateInvoiceScreen = () => {
                 <Search size={17} color={COLORS.textPlaceholder} style={{ marginRight: 10 }} />
                 <TextInput
                   style={styles.modalSearchInput}
-                  placeholder="Search..."
+                  placeholder={t('common.searchPlaceholder')}
                   value={modalSearch}
                   onChangeText={setModalSearch}
                   placeholderTextColor={COLORS.textPlaceholder}
@@ -207,13 +279,23 @@ const GenerateInvoiceScreen = () => {
               </View>
             )}
             
+            {activeModal === 'customer' && (
+              <TouchableOpacity 
+                style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12, marginHorizontal: 24, marginTop: 10 }}
+                onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
+              >
+                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
+              </TouchableOpacity>
+            )}
+            
             {filteredData.length === 0 ? (
               <Text style={styles.modalEmptyText}>
-                No options found.
+                {t('common.noOptionsFound')}
               </Text>
             ) : (
               <FlatList
                 data={filteredData}
+                keyboardShouldPersistTaps="handled"
                 keyExtractor={item => item.id || 'all'}
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => {
@@ -235,7 +317,7 @@ const GenerateInvoiceScreen = () => {
               />
             )}
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     );
   };
@@ -255,25 +337,19 @@ const GenerateInvoiceScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
       >
+        <CurvedHeader
+          title={t('invoices.generateInvoices')}
+          leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+          onLeftPress={() => navigation.goBack()}
+          height={130}
+          contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        />
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <ChevronLeft size={28} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-          </View>
 
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>
-              Generate Invoices
-            </Text>
-            <Text style={styles.pageSubtitle}>
-              Create bills for a specific period
-            </Text>
-          </View>
 
           {apiError ? (
             <View style={styles.errorBanner}>
@@ -282,24 +358,72 @@ const GenerateInvoiceScreen = () => {
             </View>
           ) : null}
 
+          {preSummary ? (
+            <View style={[styles.preSummaryCard, { padding: 0 }]}>
+              <View style={[StyleSheet.absoluteFill, { overflow: 'hidden', borderRadius: 16 }]}>
+                <Svg height="100%" width="100%" preserveAspectRatio="none">
+                  <Defs>
+                    <LinearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
+                      <Stop offset="0" stopColor="#1E3A8A" />
+                      <Stop offset="1" stopColor="#0F172A" />
+                    </LinearGradient>
+                    <LinearGradient id="circleGrad" x1="0" y1="0" x2="1" y2="1">
+                      <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.15" />
+                      <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.0" />
+                    </LinearGradient>
+                  </Defs>
+                  <Rect width="100%" height="100%" fill="url(#cardGrad)" />
+                  <Circle cx="85%" cy="-15%" r="120" fill="url(#circleGrad)" />
+                  <Circle cx="10%" cy="120%" r="80" fill="url(#circleGrad)" />
+                </Svg>
+              </View>
+
+              <View style={{ padding: 20, zIndex: 1 }}>
+                <View style={styles.preSummaryHeader}>
+                  <FileText size={16} color="rgba(255,255,255,0.8)" style={{marginRight: 6}} />
+                  <Text style={styles.preSummaryTitle}>{t('invoices.pendingToInvoice') || 'Pending to be Invoiced'}</Text>
+                </View>
+                <View style={styles.preSummaryRow}>
+                  <View style={styles.preSummaryStat}>
+                    <Text style={styles.preSummaryLabel}>{t('invoices.deliveries')}</Text>
+                    <Text style={styles.preSummaryValue}>{preSummary.deliveries}</Text>
+                  </View>
+                  <View style={styles.preSummaryStat}>
+                    <Text style={styles.preSummaryLabel}>{t('invoices.estimatedTotal')}</Text>
+                    <Text style={[styles.preSummaryValue, { color: '#4ADE80' }]}>₹{preSummary.total}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          ) : null}
+
           <View style={styles.form}>
             {/* Customer */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('tabs.customers')} *</Text>
               <TouchableOpacity 
-                style={styles.inputContainer}
+                style={styles.customerSelector}
                 onPress={() => setActiveModal('customer')}
+                activeOpacity={0.7}
               >
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                <Text style={[styles.dropdownText, !customerId && { color: COLORS.textPlaceholder }]}>
-                  {getCustomerName(customerId)}
-                </Text>
+                <View style={styles.customerSelectorAvatar}>
+                  <User size={22} color={COLORS.primary} />
+                </View>
+                <View style={styles.customerSelectorInfo}>
+                  <Text style={[styles.customerSelectorText, !customerId && { color: COLORS.textPlaceholder }]}>
+                    {getCustomerName(customerId)}
+                  </Text>
+                  <Text style={styles.customerSelectorSubtext}>
+                    {customerId ? 'Tap to change customer' : 'Tap to select customer'}
+                  </Text>
+                </View>
+                <ChevronDown size={20} color={COLORS.textPlaceholder} />
               </TouchableOpacity>
             </View>
 
             {/* Start Date */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Period Start Date *</Text>
+              <Text style={styles.label}>{t('invoices.periodStartDate')}</Text>
               <TouchableOpacity 
                 style={styles.inputContainer}
                 onPress={() => setShowStartDatePicker(true)}
@@ -321,7 +445,7 @@ const GenerateInvoiceScreen = () => {
             
             {/* End Date */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Period End Date *</Text>
+              <Text style={styles.label}>{t('invoices.periodEndDate')}</Text>
               <TouchableOpacity 
                 style={styles.inputContainer}
                 onPress={() => setShowEndDatePicker(true)}
@@ -357,7 +481,7 @@ const GenerateInvoiceScreen = () => {
               <View style={{flexDirection: 'row', alignItems: 'center'}}>
                 <FileText size={18} color="#FFFFFF" style={{marginRight: 8}} />
                 <Text style={styles.btnTextPrimary}>
-                  Generate Invoices
+                  {t('invoices.generateInvoice')}
                 </Text>
               </View>
             )}
@@ -365,6 +489,16 @@ const GenerateInvoiceScreen = () => {
         </View>
       </KeyboardAvoidingView>
       {renderModal()}
+
+      <AddCustomerModal 
+        visible={addCustomerVisible}
+        onClose={() => setAddCustomerVisible(false)}
+        onSuccess={(newCustomer) => {
+          setAddCustomerVisible(false);
+          setCustomers(prev => [...prev, newCustomer]);
+          setCustomerId(newCustomer.id);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -391,21 +525,7 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
-  titleContainer: {
-    marginBottom: 32,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 6,
-  },
-  pageSubtitle: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
-  },
+
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -422,11 +542,64 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
+  preSummaryCard: {
+    backgroundColor: '#1E3A8A',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#1E3A8A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 24,
+    overflow: 'hidden',
+  },
+  preSummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  preSummaryTitle: {
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
+    color: 'rgba(255,255,255,0.7)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  preSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  preSummaryStat: {
+    flex: 1,
+  },
+  preSummaryLabel: {
+    fontSize: 11,
+    fontFamily: 'Rubik-SemiBold',
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 4,
+  },
+  preSummaryValue: {
+    fontSize: 24,
+    fontFamily: 'Rubik-Bold',
+    color: '#FFFFFF',
+  },
   form: {
-    marginBottom: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    paddingTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    marginBottom: 20,
   },
   inputGroup: {
     marginBottom: 20,
@@ -440,12 +613,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#F1F5F9',
     borderRadius: 16,
-    paddingHorizontal: 12,
-    height: 52,
+    paddingHorizontal: 16,
+    height: 56,
   },
   inputIcon: {
     marginRight: 8,
@@ -456,10 +629,43 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: COLORS.textPrimary,
   },
+  customerSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    borderRadius: 16,
+    padding: 12,
+  },
+  customerSelectorAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  customerSelectorInfo: {
+    flex: 1,
+  },
+  customerSelectorText: {
+    fontSize: 15,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.textPrimary,
+    marginBottom: 2,
+  },
+  customerSelectorSubtext: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Medium',
+    color: COLORS.textPlaceholder,
+  },
   bottomBar: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 60,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },
@@ -478,7 +684,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -576,3 +782,4 @@ const styles = StyleSheet.create({
 });
 
 export default GenerateInvoiceScreen;
+

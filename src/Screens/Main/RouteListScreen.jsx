@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+﻿import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -8,17 +8,23 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'react-native-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Search, MapPin, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import { MapPin, Plus, Search, ChevronRight, AlertCircle, RefreshCw, ChevronLeft , ArrowLeft} from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const RouteListScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
 
   const [routes, setRoutes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,15 +36,16 @@ const RouteListScreen = () => {
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      const res = await api.listRoutes(userToken);
-      if (res.success) {
-        setRoutes(res.data || []);
+      const getFn = api.getRoutes || api.listRoutes;
+      const res = getFn ? await getFn(userToken) : { success: false };
+      if (res && res.success && Array.isArray(res.data)) {
+        setRoutes(res.data);
       } else {
-        throw new Error(res.message || 'Failed to fetch routes');
+        setRoutes([]);
       }
     } catch (err) {
-      console.error('Error fetching routes:', err);
-      setError(err.message || 'Something went wrong');
+      console.error('Fetch routes error:', err);
+      setError(err.message || 'Failed to load routes');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -47,8 +54,8 @@ const RouteListScreen = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchRoutes(true);
-    }, [])
+      fetchRoutes();
+    }, [userToken])
   );
 
   const onRefresh = () => {
@@ -56,57 +63,80 @@ const RouteListScreen = () => {
     fetchRoutes(false);
   };
 
-  const filteredRoutes = routes.filter((item) => {
-    const query = searchQuery.toLowerCase();
-    const nameMatch = item.name?.toLowerCase().includes(query);
-    const areaMatch = item.areaCode?.toLowerCase().includes(query);
-    return nameMatch || areaMatch;
+  const filteredRoutes = routes.filter((route) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    const nameMatch = route.name?.toLowerCase().includes(q);
+    const codeMatch = route.areaCode?.toLowerCase().includes(q);
+    return nameMatch || codeMatch;
   });
 
   const renderRouteCard = ({ item }) => {
-    // Active staff count where effectiveTo is null (currently assigned)
-    const activeStaffCount = (item.StaffRoutes || []).filter(
-      (sr) => sr.effectiveTo === null
-    ).length;
+    const staffCount = item.StaffRoutes?.length || 0;
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { borderLeftWidth: 4, borderLeftColor: '#D97706' }]}
         activeOpacity={0.7}
-        onPress={() => navigation.navigate('RouteDetail', { routeId: item.id })}
+        onPress={() => navigation.navigate('RouteDetail', { route: item })}
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.iconBox}>
-            <MapPin size={20} color={COLORS.primary} />
+        <LinearGradient
+          colors={['#FFFFFF', '#F8FAFC']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardInner}
+        >
+          {/* Decorative Background Circles (Route Theme) */}
+          <View style={StyleSheet.absoluteFillObject}>
+            <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+              {/* Big backdrop circles */}
+              <Circle cx="-5%" cy="-20%" r="45" fill="#FEF3C7" opacity="0.8" />
+              <Circle cx="105%" cy="120%" r="55" fill="#FDE68A" opacity="0.6" />
+              
+              {/* Route Nodes & Path */}
+              {/* Fake dashed path connecting the nodes */}
+              <Circle cx="75%" cy="25%" r="6" fill="#F59E0B" opacity="0.4" />
+              <Circle cx="90%" cy="50%" r="8" fill="#F59E0B" opacity="0.3" />
+              <Circle cx="70%" cy="80%" r="5" fill="#F59E0B" opacity="0.4" />
+            </Svg>
           </View>
-          <View style={styles.titleContainer}>
-            <Text style={styles.routeName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            {item.areaCode ? (
-              <Text style={styles.areaCode}>{item.areaCode}</Text>
-            ) : null}
+
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconBox, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+              <MapPin size={22} color="#D97706" />
+            </View>
+            <View style={styles.titleContainer}>
+              <Text style={styles.routeName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              {item.areaCode ? (
+                <Text style={styles.areaCode}>Code: {item.areaCode}</Text>
+              ) : null}
+            </View>
+            <ChevronRight size={20} color={COLORS.textPlaceholder} />
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} />
-        </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.cardFooter}>
-          <Text style={styles.staffCountText}>
-            Active Staff: <Text style={styles.staffCountValue}>{activeStaffCount}</Text>
-          </Text>
-        </View>
+          <View style={styles.cardFooter}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {staffCount} {staffCount === 1 ? 'Staff Member' : 'Staff Members'}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Delivery Routes</Text>
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader 
+        title={t('home.routes')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
 
       {/* Search Header */}
       <View style={styles.searchHeader}>
@@ -114,7 +144,7 @@ const RouteListScreen = () => {
           <Search size={18} color={COLORS.textSecondary} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search routes by name or area..."
+            placeholder={t('customers.searchPlaceholder')}
             placeholderTextColor={COLORS.textPlaceholder}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -126,7 +156,7 @@ const RouteListScreen = () => {
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading routes...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       ) : error ? (
         <View style={styles.centerContainer}>
@@ -134,7 +164,7 @@ const RouteListScreen = () => {
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => fetchRoutes(true)}>
             <RefreshCw size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.retryText}>Retry</Text>
+            <Text style={styles.retryText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -159,19 +189,19 @@ const RouteListScreen = () => {
               <View style={styles.emptyIconCircle}>
                 <MapPin size={28} color={COLORS.textPlaceholder} />
               </View>
-              <Text style={styles.emptyTitle}>No routes found</Text>
+              <Text style={styles.emptyTitle}>{t('customers.noRouteAssigned')}</Text>
               <Text style={styles.emptySubtitle}>
                 {searchQuery
-                  ? 'Try adjusting your search criteria'
-                  : 'Start by creating your first delivery route zone'}
+                  ? t('customers.noCustomersSearch')
+                  : t('customers.noCustomersSub')}
               </Text>
-              {!searchQuery && (
+              {!searchQuery && user?.role !== 'staff' && (
                 <TouchableOpacity
                   style={styles.emptyAddBtn}
                   onPress={() => navigation.navigate('AddRoute')}
                 >
                   <Plus size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-                  <Text style={styles.emptyAddBtnText}>Add Route</Text>
+                  <Text style={styles.emptyAddBtnText}>{t('common.addNewRoute')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -180,7 +210,7 @@ const RouteListScreen = () => {
       )}
 
       {/* Floating Action Button */}
-      {!loading && !error && (
+      {!loading && !error && user?.role !== 'staff' && (
         <TouchableOpacity
           style={styles.fab}
           activeOpacity={0.85}
@@ -189,7 +219,7 @@ const RouteListScreen = () => {
           <Plus size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -198,25 +228,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  header: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 16 : 12,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
-  },
   searchHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    marginBottom: 8,
     backgroundColor: '#F8FAFC',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
   },
   searchBar: {
     flexDirection: 'row',
@@ -235,13 +251,13 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     paddingVertical: 0,
   },
   listContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 90,
+    paddingBottom: 120,
   },
   emptyListContent: {
     flexGrow: 1,
@@ -250,63 +266,67 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  cardInner: {
+    padding: 12,
+    position: 'relative',
+    overflow: 'hidden',
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
+    zIndex: 1,
   },
   iconBox: {
-    width: 42,
-    height: 42,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 21,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    marginRight: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   titleContainer: {
     flex: 1,
   },
   routeName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
   },
   areaCode: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginTop: 2,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 12,
+    fontSize: 13,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#94A3B8',
+    marginTop: 4,
   },
   cardFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
+    zIndex: 1,
   },
-  staffCountText: {
+  badge: {
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  badgeText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
-  },
-  staffCountValue: {
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.primary,
+    fontFamily: 'Rubik-Bold',
+    color: '#0284C7',
   },
   centerContainer: {
     flex: 1,
@@ -317,12 +337,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -337,7 +357,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   emptyContainer: {
@@ -357,14 +377,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
@@ -379,25 +399,26 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14.5,
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
-    right: 20,
-    width: 54,
-    height: 54,
-    borderRadius: 18,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
 
 export default RouteListScreen;
+

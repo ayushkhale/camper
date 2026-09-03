@@ -14,11 +14,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Plus, Search, Trash2, Edit2, User, Phone, Mail, AlertCircle } from 'lucide-react-native';
+import { ChevronLeft, Plus, Search, Trash2, Edit2, User, Phone, Mail, AlertCircle , ArrowLeft} from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
+import LinearGradient from 'react-native-linear-gradient';
 
 const getInitials = (name) => {
   if (!name) return '?';
@@ -100,7 +102,7 @@ const StaffManagementScreen = () => {
   const handleDeleteStaff = (item) => {
     showAlert(
       t('staff.remove'),
-      `${t('staff.removeConfirm')}\n\nName: ${item.name}`,
+      `${t('staff.removeConfirm')}\n\n${t('customers.name')}: ${item.name}`,
       [
         { text: t('staff.cancel'), style: 'cancel' },
         { 
@@ -133,12 +135,22 @@ const StaffManagementScreen = () => {
     const initials = getInitials(item.name);
 
     return (
-      <View style={[styles.card, !isActive && styles.cardInactive]}>
+      <LinearGradient 
+        colors={isActive ? ['#FFFFFF', '#F4F7FA'] : ['#F8FAFC', '#F1F5F9']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={[styles.card, !isActive && styles.cardInactive]}
+      >
         <View style={styles.cardHeader}>
           {/* Avatar */}
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
+          <LinearGradient
+            colors={isActive ? ['#0B409C', '#3B82F6'] : ['#94A3B8', '#CBD5E1']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.avatar}
+          >
+            <Text style={[styles.avatarText, { color: '#FFFFFF' }]}>{initials}</Text>
+          </LinearGradient>
           
           {/* Staff Info */}
           <View style={styles.infoContainer}>
@@ -178,12 +190,12 @@ const StaffManagementScreen = () => {
         {/* Footer split actions */}
         <View style={styles.subActions}>
           <TouchableOpacity 
-            style={[styles.subActionBtn, { borderRightWidth: 1, borderRightColor: '#F1F5F9' }]}
+            style={[styles.subActionBtn, { borderRightWidth: 1, borderRightColor: '#E2E8F0' }]}
             onPress={() => navigation.navigate('AddStaff', { staff: item })}
             disabled={isUpdating}
           >
             <Edit2 size={15} color={COLORS.primary} style={{ marginRight: 6 }} />
-            <Text style={styles.subActionText}>Edit</Text>
+            <Text style={styles.subActionText}>{t('common.edit') || 'Edit'}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -192,26 +204,25 @@ const StaffManagementScreen = () => {
             disabled={isUpdating}
           >
             <Trash2 size={15} color={COLORS.danger} style={{ marginRight: 6 }} />
-            <Text style={[styles.subActionText, { color: COLORS.danger }]}>Delete</Text>
+            <Text style={[styles.subActionText, { color: COLORS.danger }]}>{t('common.delete') || 'Delete'}</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={t('staff.title')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
+
       <View style={styles.contentWrapper}>
         
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <ChevronLeft size={28} color={COLORS.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t('staff.title')}</Text>
-          <View style={styles.headerRightSpacing} />
-        </View>
-
         {/* Search Box */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
@@ -255,7 +266,7 @@ const StaffManagementScreen = () => {
         ) : (
           <FlatList
             data={filteredList}
-            keyExtractor={(item) => item.id}
+            keyExtractor={item => String(item.id)}
             renderItem={renderStaffCard}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
@@ -272,44 +283,22 @@ const StaffManagementScreen = () => {
           <Plus size={26} color="#FFFFFF" />
         </TouchableOpacity>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   contentWrapper: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 24 : 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  backButton: {
-    padding: 4,
-    marginLeft: -4,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-    flex: 1,
-  },
-  headerRightSpacing: {
-    width: 32,
   },
   searchContainer: {
     paddingHorizontal: 24,
     marginBottom: 16,
+    marginTop: 10,
   },
   searchBar: {
     flexDirection: 'row',
@@ -327,7 +316,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontSize: 15,
     paddingVertical: 0,
   },
@@ -345,12 +334,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -363,7 +352,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   emptyIconContainer: {
@@ -379,20 +368,19 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 13.5,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 25,
   },
   card: {
-    backgroundColor: COLORS.surface,
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -401,7 +389,6 @@ const styles = StyleSheet.create({
   },
   cardInactive: {
     opacity: 0.7,
-    backgroundColor: '#F8FAFC',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -413,9 +400,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: COLORS.primaryLight,
-    borderWidth: 1,
-    borderColor: COLORS.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -423,14 +407,14 @@ const styles = StyleSheet.create({
   avatarText: {
     color: COLORS.primary,
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   infoContainer: {
     flex: 1,
   },
   staffName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: 'bold',
     color: COLORS.textPrimary,
     marginBottom: 4,
@@ -448,7 +432,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   switchContainer: {
@@ -461,7 +445,7 @@ const styles = StyleSheet.create({
   },
   subActions: {
     flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
   },
   subActionBtn: {
     flex: 1,
@@ -472,20 +456,26 @@ const styles = StyleSheet.create({
   },
   subActionText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
 
 export default StaffManagementScreen;
+

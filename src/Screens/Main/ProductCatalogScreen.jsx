@@ -11,26 +11,32 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Search,
   Package,
   ChevronRight,
+  ChevronLeft,
   AlertCircle,
   RefreshCw,
   RefreshCcw,
+  ArrowLeft,
 } from 'lucide-react-native';
+import { LinearGradient } from 'react-native-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const ProductCatalogScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
 
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -49,6 +55,14 @@ const ProductCatalogScreen = () => {
     try {
       const response = await api.listProducts(userToken);
       if (response.success && Array.isArray(response.data)) {
+        const urisToPreload = response.data
+          .filter(p => p.imageUrl)
+          .map(p => ({ uri: p.imageUrl }));
+
+        if (urisToPreload.length > 0) {
+          FastImage.preload(urisToPreload);
+        }
+
         setProducts(response.data);
         filterList(response.data, searchQuery);
       } else {
@@ -100,75 +114,96 @@ const ProductCatalogScreen = () => {
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[
+          styles.card, 
+          { borderLeftWidth: 4, borderLeftColor: isActive ? '#10B981' : '#EF4444' }
+        ]}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
       >
-        <View style={styles.cardHeader}>
+        <LinearGradient
+          colors={['#FFFFFF', '#F8FAFC']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardInner}
+        >
+          {/* Decorative Background Circles */}
+          <View style={StyleSheet.absoluteFillObject}>
+            <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+              <Circle cx="-5%" cy="-20%" r="55" fill="#F1F5F9" />
+              <Circle cx="105%" cy="120%" r="65" fill="#E2E8F0" opacity="0.5" />
+            </Svg>
+          </View>
+
+          {/* Avatar Left */}
           <View style={styles.iconBox}>
             {item.imageUrl ? (
               <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
             ) : (
-              <Package size={22} color={COLORS.primary} />
+              <Package size={22} color="#0B409C" />
             )}
+            <View style={[
+              styles.avatarBadge,
+              { backgroundColor: isActive ? '#10B981' : '#EF4444' }
+            ]} />
           </View>
+
+          {/* Center Details */}
           <View style={styles.titleContainer}>
-            <Text style={styles.productName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <View style={styles.row}>
-              <Text style={styles.subText}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <Text style={styles.productName} numberOfLines={1}>
+                {item.name}
+              </Text>
+            </View>
+            
+            <View style={styles.infoRow}>
+              {item.isReturnableContainer && (
+                <RefreshCcw size={12} color="#64748B" style={{ marginRight: 4 }} />
+              )}
+              <Text style={styles.subText} numberOfLines={1}>
                 {item.unit ? `Unit: ${item.unit}` : 'No Unit'}
               </Text>
             </View>
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} />
-        </View>
 
-        <View style={styles.divider} />
+          {/* Right Action & Status */}
+          <View style={styles.rightActionContainer}>
+            <View style={styles.statusCol}>
+              <Text style={styles.priceAmount}>{priceStr}</Text>
+              <Text style={styles.statusSubtext}>
+                {isActive ? 'Active' : 'Inactive'}
+              </Text>
+            </View>
 
-        <View style={styles.cardFooter}>
-          <View style={styles.metaContainer}>
-            {item.isReturnableContainer && (
-              <RefreshCcw size={13} color={COLORS.primary} style={{ marginRight: 4 }} />
-            )}
-            <Text style={styles.metaText} numberOfLines={1}>
-              {priceStr}{returnableStr}
-            </Text>
+            <ChevronRight size={18} color="#94A3B8" />
           </View>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: isActive ? '#16A34A' : '#94A3B8' }]} />
-            <Text style={[styles.statusText, { color: isActive ? '#15803D' : '#64748B' }]}>
-              {isActive ? 'ACTIVE' : 'INACTIVE'}
-            </Text>
-          </View>
-        </View>
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={
+          <View>
+            <Text style={{ color: '#FFFFFF', fontSize: 20, fontFamily: 'Rubik-Bold' }}>{t('products.title')}</Text>
+          </View>
+        }
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
+      
       <View style={styles.contentWrapper}>
-        
-        {/* Header */}
-        <View style={[styles.headerRow, { flexDirection: 'row', alignItems: 'center' }]}>
-          <TouchableOpacity 
-            style={{ marginRight: 12 }} 
-            onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
-          >
-            <ChevronRight size={24} color={COLORS.textPrimary} style={{ transform: [{ rotate: '180deg' }] }} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Product Catalog</Text>
-        </View>
-
         {/* Search Box */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
             <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search products..."
+              placeholder={t('products.searchPlaceholder')}
               placeholderTextColor={COLORS.textPlaceholder}
               value={searchQuery}
               onChangeText={handleSearchChange}
@@ -179,7 +214,7 @@ const ProductCatalogScreen = () => {
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading products...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : error ? (
           <View style={styles.centerContainer}>
@@ -187,7 +222,7 @@ const ProductCatalogScreen = () => {
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => fetchProducts()}>
               <RefreshCw size={16} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.retryText}>Retry</Text>
+              <Text style={styles.retryText}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -210,19 +245,19 @@ const ProductCatalogScreen = () => {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Package size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>No Products Found</Text>
+                <Text style={styles.emptyTitle}>{t('products.noProductsTitle')}</Text>
                 <Text style={styles.emptySubtitle}>
                   {searchQuery
-                    ? 'No products match your current search.'
-                    : 'Start by adding a new product to your catalog.'}
+                    ? t('customers.noCustomersSearch')
+                    : t('products.noProductsSub')}
                 </Text>
-                {!searchQuery && (
+                {!searchQuery && user?.role !== 'staff' && (
                   <TouchableOpacity
                     style={styles.emptyAddBtn}
                     onPress={() => navigation.navigate('AddProduct')}
                   >
                     <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.emptyAddBtnText}>Add Product</Text>
+                    <Text style={styles.emptyAddBtnText}>{t('products.addNew')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -231,7 +266,7 @@ const ProductCatalogScreen = () => {
         )}
       </View>
 
-      {!loading && !error && (
+      {!loading && !error && user?.role !== 'staff' && (
         <TouchableOpacity
           style={styles.fab}
           activeOpacity={0.85}
@@ -240,32 +275,22 @@ const ProductCatalogScreen = () => {
           <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   contentWrapper: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 24 : 16,
-  },
-  headerRow: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
   },
   searchContainer: {
     paddingHorizontal: 24,
     marginBottom: 16,
+    marginTop: 10,
   },
   searchBar: {
     flexDirection: 'row',
@@ -299,92 +324,97 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
   },
-  cardHeader: {
+  cardInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
   },
   iconBox: {
     width: 44,
     height: 44,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: '#E0E7FF',
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: 'hidden',
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   productImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+    borderRadius: 22,
+    backgroundColor: '#E2E8F0',
   },
   titleContainer: {
     flex: 1,
   },
   productName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  subText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 14,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
-  },
-  metaText: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.primary,
+    fontFamily: 'Rubik-Bold',
+    color: '#1E293B',
+    marginBottom: 6,
     flexShrink: 1,
   },
-  statusBadge: {
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    marginBottom: 4,
   },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  statusText: {
+  subText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    color: '#64748B',
+    fontFamily: 'Rubik-Medium',
+  },
+  rightActionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  statusCol: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginRight: 8,
+    minWidth: 50,
+  },
+  priceAmount: {
+    fontSize: 13,
+    fontFamily: 'Rubik-Bold',
+    color: '#0B409C',
+    marginBottom: 4,
+  },
+  statusSubtext: {
+    fontSize: 10,
+    fontFamily: 'Rubik-Medium',
+    color: '#64748B',
   },
   centerContainer: {
     flex: 1,
@@ -451,14 +481,19 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
 

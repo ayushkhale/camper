@@ -13,6 +13,7 @@ import {
   Alert,
   Modal,
   FlatList,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
@@ -26,23 +27,25 @@ import {
   Hash,
   Trash2,
   Plus,
-} from 'lucide-react-native';
+  ArrowLeft} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import AddCustomerModal from '../../components/modals/AddCustomerModal';
+import AddProductModal from '../../components/modals/AddProductModal';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const AddOneTimeOrderScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
 
   const [customerId, setCustomerId] = useState('');
   const [items, setItems] = useState([]); // Array of: { productId, quantity, unitPrice, Product }
   const [orderFrom, setOrderFrom] = useState(new Date().toISOString().split('T')[0]);
-  const [orderTo, setOrderTo] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
 
   const [customers, setCustomers] = useState([]);
@@ -55,6 +58,9 @@ const AddOneTimeOrderScreen = () => {
   // Modals / DatePickers state
   const [activeModal, setActiveModal] = useState(null); // 'customer' | 'product'
   const [activeDatePicker, setActiveDatePicker] = useState(null); // 'orderFrom' | 'orderTo' | null
+
+  const [addCustomerVisible, setAddCustomerVisible] = useState(false);
+  const [addProductVisible, setAddProductVisible] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -103,24 +109,14 @@ const AddOneTimeOrderScreen = () => {
       const formatted = formatDateString(selectedDate);
       if (pickerType === 'orderFrom') {
         setOrderFrom(formatted);
-        if (orderTo < formatted) {
-          setOrderTo(formatted);
-        }
-      }
-      if (pickerType === 'orderTo') {
-        if (formatted < orderFrom) {
-          showAlert('Validation Error', 'End Date cannot be before Start Date', 'warning');
-        } else {
-          setOrderTo(formatted);
-        }
       }
     }
   };
 
   const formatDisplayDate = (str) => {
-    if (!str) return '—';
+    if (!str) return 'â€”';
     const [y, m, d] = str.split('-');
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${d} ${months[parseInt(m) - 1]} ${y}`;
   };
 
@@ -137,7 +133,6 @@ const AddOneTimeOrderScreen = () => {
       }
     }
     if (!orderFrom || !/^\d{4}-\d{2}-\d{2}$/.test(orderFrom)) return 'Start Date must be in YYYY-MM-DD format';
-    if (orderTo && !/^\d{4}-\d{2}-\d{2}$/.test(orderTo)) return 'End Date must be in YYYY-MM-DD format';
     return null;
   };
 
@@ -161,7 +156,6 @@ const AddOneTimeOrderScreen = () => {
     const orderData = {
       customerId,
       orderFrom,
-      orderTo,
       notes: notes.trim() || undefined,
       items: formattedItems,
     };
@@ -189,7 +183,7 @@ const AddOneTimeOrderScreen = () => {
 
   const getCustomerName = (id) => {
     const c = customers.find((c) => c.id === id);
-    return c ? c.name : 'Select Customer';
+    return c ? c.name : t('common.selectCustomer');
   };
 
   const handleAddProductItem = (product) => {
@@ -240,12 +234,12 @@ const AddOneTimeOrderScreen = () => {
 
     let title = '';
     let data = [];
-    let onSelect = () => {};
-    let renderItemText = () => {};
+    let onSelect = () => { };
+    let renderItemText = () => { };
     let currentVal = null;
 
     if (activeModal === 'customer') {
-      title = 'Select Customer';
+      title = t('common.selectCustomer');
       data = customers;
       currentVal = customerId;
       renderItemText = (item) => `${item.name} ${item.phone ? `(${item.phone})` : ''}`;
@@ -254,9 +248,9 @@ const AddOneTimeOrderScreen = () => {
         setActiveModal(null);
       };
     } else if (activeModal === 'product') {
-      title = 'Select Product';
+      title = t('customers.selectProduct');
       data = products;
-      renderItemText = (item) => `${item.name} (₹${item.price || '0'})`;
+      renderItemText = (item) => `${item.name} (₹${Number(item.price || 0)})`;
       onSelect = (item) => {
         handleAddProductItem(item);
       };
@@ -269,12 +263,11 @@ const AddOneTimeOrderScreen = () => {
         animationType="slide"
         onRequestClose={() => setActiveModal(null)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setActiveModal(null)}
-        >
-          <View style={[styles.modalContent, { maxHeight: '70%' }]} onStartShouldSetResponder={() => true}>
+        <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+          <TouchableWithoutFeedback onPress={() => setActiveModal(null)}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+          </TouchableWithoutFeedback>
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{title}</Text>
               <TouchableOpacity onPress={() => setActiveModal(null)}>
@@ -282,9 +275,28 @@ const AddOneTimeOrderScreen = () => {
               </TouchableOpacity>
             </View>
 
+            {activeModal === 'customer' && (
+              <TouchableOpacity
+                style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
+                onPress={() => { setActiveModal(null); setAddCustomerVisible(true); }}
+              >
+                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewCustomer')}</Text>
+              </TouchableOpacity>
+            )}
+
+            {activeModal === 'product' && user?.role !== 'staff' && (
+              <TouchableOpacity
+                style={{ backgroundColor: COLORS.primaryLight, padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
+                onPress={() => { setActiveModal(null); setAddProductVisible(true); }}
+              >
+                <Text style={{ color: COLORS.primary, fontFamily: 'Rubik-Bold', fontSize: 14 }}>{t('common.addNewProduct')}</Text>
+              </TouchableOpacity>
+            )}
+
             <FlatList
               data={data}
-              keyExtractor={(item) => item.id}
+              keyboardShouldPersistTaps="handled"
+              keyExtractor={item => String(item.id)}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => {
                 const isSelected = item.id === currentVal;
@@ -301,14 +313,14 @@ const AddOneTimeOrderScreen = () => {
               }}
               ListEmptyComponent={
                 <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Geologica-Medium' }}>
-                    No items available
+                  <Text style={{ color: COLORS.textPlaceholder, fontFamily: 'Rubik-SemiBold' }}>
+                    {t('common.noItemsAvailable')}
                   </Text>
                 </View>
               }
             />
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     );
   };
@@ -317,22 +329,31 @@ const AddOneTimeOrderScreen = () => {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder, fontFamily: 'Geologica-Medium' }}>
-          Loading form data...
+        <Text style={{ marginTop: 10, color: COLORS.textPlaceholder, fontFamily: 'Rubik-SemiBold' }}>
+          {t('common.loading')}
         </Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header Row - Matches AddCustomer Header Row */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRightSpacing} />
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={
+          <View>
+            <Text style={{ color: '#FFFFFF', fontSize: 20, fontFamily: 'Rubik-Bold' }}>
+              {t('oneTimeOrders.newOrder', 'New Order')}
+            </Text>
+            {/* <Text style={{ color: '#E2E8F0', fontSize: 13, fontFamily: 'Rubik-Medium', marginTop: 2 }}>
+              Create a one-time product delivery
+            </Text> */}
+          </View>
+        }
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -350,54 +371,35 @@ const AddOneTimeOrderScreen = () => {
             </View>
           ) : null}
 
-          {/* Title Container */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>{t('oneTimeOrders.newOrder')}</Text>
-            <Text style={styles.pageSubtitle}>Create a one-time product delivery</Text>
-          </View>
-
-          {/* Form Direct Inputs */}
           <View style={styles.form}>
-            {/* Customer Dropdown */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Customer *</Text>
+              <Text style={styles.label}>{t('common.selectCustomer')} *</Text>
               <TouchableOpacity
                 style={styles.inputContainer}
                 onPress={() => setActiveModal('customer')}
                 activeOpacity={0.7}
               >
-                <User size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.iconBox, { backgroundColor: '#EEF2FF' }]}>
+                  <User size={18} color="#4F46E5" />
+                </View>
                 <Text style={[styles.inputText, !customerId && { color: COLORS.textPlaceholder }]}>
-                  {getCustomerName(customerId)}
+                  {customerId ? getCustomerName(customerId) : t('common.selectCustomer')}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Date Pickers Row */}
-            <View style={styles.dateRow}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.label}>Start Date *</Text>
-                <TouchableOpacity
-                  style={styles.inputContainer}
-                  onPress={() => setActiveDatePicker('orderFrom')}
-                  activeOpacity={0.7}
-                >
-                  <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                  <Text style={styles.inputText}>{formatDisplayDate(orderFrom)}</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.label}>End Date *</Text>
-                <TouchableOpacity
-                  style={styles.inputContainer}
-                  onPress={() => setActiveDatePicker('orderTo')}
-                  activeOpacity={0.7}
-                >
-                  <Calendar size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-                  <Text style={styles.inputText}>{formatDisplayDate(orderTo)}</Text>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('oneTimeOrders.orderDate') || 'Order Date'} *</Text>
+              <TouchableOpacity
+                style={styles.inputContainer}
+                onPress={() => setActiveDatePicker('orderFrom')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.iconBox, { backgroundColor: COLORS.primaryLight }]}>
+                  <Calendar size={18} color={COLORS.primary} />
+                </View>
+                <Text style={styles.inputText}>{formatDisplayDate(orderFrom)}</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Products Selector */}
@@ -425,7 +427,7 @@ const AddOneTimeOrderScreen = () => {
                     <View key={item.productId} style={styles.productItemCard}>
                       <View style={styles.productItemHeader}>
                         <Text style={styles.productItemName} numberOfLines={1}>
-                          {item.Product?.name}
+                          {item.Product ? `${item.Product.name} (₹${Number(item.Product.price || 0)}${item.Product.unit ? ` • ${item.Product.unit}` : ''})` : 'Product'}
                         </Text>
                         <TouchableOpacity
                           style={styles.removeItemBtn}
@@ -453,7 +455,7 @@ const AddOneTimeOrderScreen = () => {
 
                         {/* Price field */}
                         <View style={[styles.itemInputCol, { marginLeft: 12 }]}>
-                          <Text style={styles.itemInputLabel}>Price Override</Text>
+                          <Text style={styles.itemInputLabel}>{t('oneTimeOrders.priceOverride')}</Text>
                           <View style={styles.itemInputWrap}>
                             <Text style={styles.currencySymbol}>₹</Text>
                             <TextInput
@@ -474,7 +476,7 @@ const AddOneTimeOrderScreen = () => {
 
             {/* Notes Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Notes</Text>
+              <Text style={styles.label}>{t('common.notes')}</Text>
               <View style={[styles.inputContainer, styles.textAreaContainer]}>
                 <TextInput
                   style={[styles.input, styles.textArea]}
@@ -511,15 +513,34 @@ const AddOneTimeOrderScreen = () => {
 
       {activeDatePicker && (
         <DateTimePicker
-          value={
-            activeDatePicker === 'orderFrom' ? parseDateString(orderFrom) : parseDateString(orderTo)
-          }
+          value={parseDateString(orderFrom)}
           mode="date"
           display="default"
           onChange={onDatePickerChange}
+          minimumDate={user?.role === 'staff' ? new Date() : undefined}
         />
       )}
-    </SafeAreaView>
+
+      <AddCustomerModal
+        visible={addCustomerVisible}
+        onClose={() => setAddCustomerVisible(false)}
+        onSuccess={(newCust) => {
+          setAddCustomerVisible(false);
+          setCustomers(prev => [...prev, newCust]);
+          setCustomerId(newCust.id);
+        }}
+      />
+
+      <AddProductModal
+        visible={addProductVisible}
+        onClose={() => setAddProductVisible(false)}
+        onSuccess={(newProd) => {
+          setAddProductVisible(false);
+          setProducts(prev => [...prev, newProd]);
+          handleAddProductItem(newProd);
+        }}
+      />
+    </View>
   );
 };
 
@@ -528,21 +549,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 10 : 14,
-    paddingBottom: 4,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerRightSpacing: {
-    width: 32,
-  },
   keyboardAvoid: {
     flex: 1,
   },
@@ -550,21 +556,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 10,
     paddingBottom: 40,
-  },
-  titleContainer: {
-    marginBottom: 32,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 6,
-  },
-  pageSubtitle: {
-    fontSize: 15,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textPlaceholder,
   },
   errorBanner: {
     flexDirection: 'row',
@@ -582,7 +573,7 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
   },
   form: {
@@ -596,7 +587,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -610,20 +601,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 52,
   },
-  inputIcon: {
-    marginRight: 8,
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   inputText: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   input: {
     flex: 1,
     height: '100%',
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -654,7 +650,7 @@ const styles = StyleSheet.create({
   },
   addProductBtnText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   emptyProductsCard: {
@@ -669,7 +665,7 @@ const styles = StyleSheet.create({
   },
   emptyProductsText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   itemsListContainer: {
@@ -691,7 +687,7 @@ const styles = StyleSheet.create({
   },
   productItemName: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     flex: 1,
     marginRight: 10,
@@ -707,7 +703,7 @@ const styles = StyleSheet.create({
   },
   itemInputLabel: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
@@ -725,23 +721,23 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     padding: 0,
   },
   currencySymbol: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginRight: 4,
   },
   bottomBar: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 60,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
   },
   btn: {
     height: 52,
@@ -758,7 +754,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -781,7 +777,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   modalItem: {
@@ -794,14 +790,15 @@ const styles = StyleSheet.create({
   },
   modalItemText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     flex: 1,
   },
   modalItemTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
 });
 
 export default AddOneTimeOrderScreen;
+

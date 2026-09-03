@@ -13,11 +13,13 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'react-native-linear-gradient';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
   ArrowLeft,
   Trash2,
   Edit,
+  User,
   UserPlus,
   Calendar,
   X,
@@ -25,17 +27,23 @@ import {
   History,
   Check,
   ChevronRight,
+  ListOrdered,
+  MapPin,
+  Map,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
+import { useTranslation } from 'react-i18next';
 
 const RouteDetailScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const routeParams = useRoute();
-  const { userToken } = useContext(AuthContext);
-  const routeId = routeParams.params?.routeId;
+  const { userToken, user } = useContext(AuthContext);
+  const routeId = routeParams?.params?.routeId || routeParams?.params?.route?.id || routeParams?.params?.id;
   const { showAlert } = useAlert();
 
   // State
@@ -136,19 +144,21 @@ const RouteDetailScreen = () => {
     React.useCallback(() => {
       if (routeId) {
         fetchRouteDetail();
-        fetchAllStaff();
+        if (user?.role !== 'staff') {
+          fetchAllStaff();
+        }
       }
-    }, [routeId])
+    }, [routeId, user])
   );
 
   const handleDeleteRoute = () => {
     showAlert(
-      'Delete Route',
-      'Are you sure you want to delete this route? Historical delivery records will be preserved.',
+      t('routes.deleteRoute'),
+      t('routes.deleteConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -170,12 +180,12 @@ const RouteDetailScreen = () => {
 
   const handleEndAssignment = (staffRouteId, staffName) => {
     showAlert(
-      'End Assignment',
-      `Are you sure you want to remove ${staffName} from this route?`,
+      t('routes.endAssignment'),
+      t('routes.endAssignmentConfirm', { name: staffName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: t('common.remove'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -251,7 +261,7 @@ const RouteDetailScreen = () => {
     return (
       <SafeAreaView style={styles.centerContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading route details...</Text>
+        <Text style={styles.loadingText}>{t('routeDetail.loadingRouteDetails')}</Text>
       </SafeAreaView>
     );
   }
@@ -259,9 +269,9 @@ const RouteDetailScreen = () => {
   if (error || !routeData) {
     return (
       <SafeAreaView style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error || 'Route not found'}</Text>
+        <Text style={styles.errorText}>{error || t('routes.noRoutesFound')}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.retryText}>Go Back</Text>
+          <Text style={styles.retryText}>{t('common.goBack')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -272,112 +282,158 @@ const RouteDetailScreen = () => {
   const pastAssignments = staffRoutes.filter((sr) => sr.effectiveTo !== null);
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ArrowLeft size={22} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Route Details</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => navigation.navigate('AddRoute', { route: routeData })}
-            activeOpacity={0.7}
-          >
-            <Edit size={18} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerActionBtn, { marginLeft: 8 }]}
-            onPress={handleDeleteRoute}
-            activeOpacity={0.7}
-          >
-            <Trash2 size={18} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Info card */}
-        <View style={styles.infoCard}>
-          <Text style={styles.routeNameText}>{routeData.name}</Text>
-          {routeData.areaCode ? (
-            <View style={styles.areaContainer}>
-              <Text style={styles.areaLabel}>Area Code:</Text>
-              <Text style={styles.areaValue}>{routeData.areaCode}</Text>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Action Button: Assign Staff */}
-        <TouchableOpacity
-          style={styles.assignBtn}
-          activeOpacity={0.8}
-          onPress={() => setAssignModalVisible(true)}
-        >
-          <UserPlus size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-          <Text style={styles.assignBtnText}>Assign Staff Member</Text>
-        </TouchableOpacity>
-
-        {/* Active Staff Assignments */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Currently Active Staff ({activeAssignments.length})</Text>
-        </View>
-
-        {activeAssignments.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyCardText}>No active staff assigned to this route.</Text>
-          </View>
-        ) : (
-          activeAssignments.map((assignment) => (
-            <View key={assignment.id} style={styles.staffCard}>
-              <View style={styles.staffInfo}>
-                <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
-                <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
-                <View style={styles.dateRow}>
-                  <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                  <Text style={styles.dateText}>From: {assignment.effectiveFrom}</Text>
-                </View>
-              </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={t('routes.routeDetails')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        rightIcon={
+          user?.role !== 'staff' ? (
+            <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity
-                style={styles.endAssignBtn}
-                onPress={() => handleEndAssignment(assignment.id, assignment.staffUser?.name)}
+                style={[styles.headerActionBtnDark, { backgroundColor: '#E0E7FF' }]}
+                onPress={() => navigation.navigate('AddRoute', { route: routeData })}
                 activeOpacity={0.7}
               >
-                <Text style={styles.endAssignText}>End</Text>
+                <Edit size={18} color="#0B409C" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.headerActionBtnDark, { backgroundColor: '#FEE2E2' }]}
+                onPress={handleDeleteRoute}
+                activeOpacity={0.7}
+              >
+                <Trash2 size={18} color="#DC2626" />
               </TouchableOpacity>
             </View>
-          ))
-        )}
+          ) : null
+        }
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
 
-        {/* Past Assignments History */}
-        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-          <Text style={styles.sectionTitle}>Assignment History ({pastAssignments.length})</Text>
-        </View>
-
-        {pastAssignments.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyCardText}>No past history logs.</Text>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]} showsVerticalScrollIndicator={false}>
+        {/* Route Info Card (Premium Gradient) */}
+        <LinearGradient
+          colors={['#F59E0B', '#D97706']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.premiumRouteCard}
+        >
+          {/* Decorative Background Icon */}
+          <View style={{ position: 'absolute', right: -15, bottom: -25, opacity: 0.15, transform: [{ rotate: '-15deg' }] }}>
+            <MapPin size={120} color="#FFFFFF" />
           </View>
-        ) : (
-          pastAssignments.map((assignment) => (
-            <View key={assignment.id} style={[styles.staffCard, styles.historyCard]}>
-              <View style={styles.staffInfo}>
-                <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
-                <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
-                <View style={styles.dateRow}>
-                  <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                  <Text style={styles.dateText}>
-                    {assignment.effectiveFrom} to {assignment.effectiveTo}
-                  </Text>
-                </View>
+          
+          <View style={styles.premiumRouteIconBox}>
+            <MapPin size={26} color="#FFFFFF" />
+          </View>
+          <View style={styles.premiumRouteInfo}>
+            <Text style={styles.premiumRouteName} numberOfLines={1}>{routeData.name}</Text>
+            {routeData.areaCode ? (
+              <View style={styles.premiumRouteBadge}>
+                <Text style={styles.premiumRouteBadgeText} numberOfLines={1}>{t('routes.areaCode')}: {routeData.areaCode}</Text>
               </View>
-              <View style={styles.historyBadge}>
-                <Text style={styles.historyBadgeText}>Ended</Text>
-              </View>
-            </View>
-          ))
+            ) : null}
+          </View>
+        </LinearGradient>
+
+        {/* Action Button: Assign Staff */}
+        {user?.role !== 'staff' && (
+          <TouchableOpacity
+            style={styles.assignBtn}
+            activeOpacity={0.8}
+            onPress={() => setAssignModalVisible(true)}
+          >
+            <UserPlus size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={styles.assignBtnText}>{t('routes.assignStaff')}</Text>
+          </TouchableOpacity>
         )}
+
+        {user?.role !== 'staff' && (
+          <>
+            {/* Active Staff Assignments */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Currently Active Staff ({activeAssignments.length})</Text>
+            </View>
+
+            {activeAssignments.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyCardText}>No active staff assigned to this route.</Text>
+              </View>
+            ) : (
+              activeAssignments.map((assignment) => (
+                <View key={assignment.id} style={styles.staffCard}>
+                  <View style={[styles.staffIconBox, { backgroundColor: '#E0E7FF' }]}>
+                    <User size={20} color="#4F46E5" />
+                  </View>
+                  <View style={styles.staffInfo}>
+                    <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
+                    <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
+                    <View style={styles.dateRow}>
+                      <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+                      <Text style={styles.dateText}>From: {assignment.effectiveFrom}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.endAssignBtn}
+                    onPress={() => handleEndAssignment(assignment.id, assignment.staffUser?.name)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.endAssignText}>End</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+
+            {/* Past Assignments History */}
+            <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+              <Text style={styles.sectionTitle}>Assignment History ({pastAssignments.length})</Text>
+            </View>
+
+            {pastAssignments.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyCardText}>No past history logs.</Text>
+              </View>
+            ) : (
+              pastAssignments.map((assignment) => (
+                <View key={assignment.id} style={[styles.staffCard, styles.historyCard]}>
+                  <View style={[styles.staffIconBox, { backgroundColor: '#F1F5F9' }]}>
+                    <History size={20} color="#64748B" />
+                  </View>
+                  <View style={styles.staffInfo}>
+                    <Text style={styles.staffName}>{assignment.staffUser?.name}</Text>
+                    <Text style={styles.staffPhone}>{assignment.staffUser?.phone}</Text>
+                    <View style={styles.dateRow}>
+                      <Calendar size={12} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+                      <Text style={styles.dateText}>
+                        {assignment.effectiveFrom} to {assignment.effectiveTo}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.historyBadge}>
+                    <Text style={styles.historyBadgeText}>Ended</Text>
+                  </View>
+                </View>
+              ))
+            )}
+          </>
+        )}
+        
+        {/* Metadata Section */}
+        <View style={styles.metadataSection}>
+          <Text style={styles.metadataLabel}>Last Modified By</Text>
+          <View style={styles.metadataUserRow}>
+            <User size={14} color="#64748B" />
+            <Text style={styles.metadataValue}>
+              {routeData.updatedBy?.name || 'System'} ({routeData.updatedBy?.role || 'admin'})
+            </Text>
+          </View>
+          {routeData.updatedAt && (
+            <Text style={styles.metadataTime}>
+              {new Date(routeData.updatedAt).toLocaleString()}
+            </Text>
+          )}
+        </View>
       </ScrollView>
 
       {/* Assign Staff Modal Dialog */}
@@ -395,10 +451,10 @@ const RouteDetailScreen = () => {
             setAssignModalVisible(false);
           }}
         >
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+        <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Assign Staff Member</Text>
+              <Text style={styles.modalTitle}>{t('routes.assignStaff')}</Text>
               <TouchableOpacity onPress={() => setAssignModalVisible(false)}>
                 <X size={20} color={COLORS.textSecondary} />
               </TouchableOpacity>
@@ -406,14 +462,14 @@ const RouteDetailScreen = () => {
 
             {/* Modal Body */}
             <View style={{ zIndex: 10 }}>
-              <Text style={styles.inputLabel}>Select Staff Member *</Text>
+              <Text style={styles.inputLabel}>{t('routes.selectStaffMember')}</Text>
               <TouchableOpacity
                 style={styles.dropdownTrigger}
                 activeOpacity={0.8}
                 onPress={() => setStaffDropdownVisible(!staffDropdownVisible)}
               >
                 <Text style={selectedStaff ? styles.selectedStaffText : styles.placeholderText}>
-                  {selectedStaff ? `${selectedStaff.name} (${selectedStaff.phone})` : 'Choose staff member...'}
+                  {selectedStaff ? `${selectedStaff.name} (${selectedStaff.phone})` : t('routes.chooseStaffMember')}
                 </Text>
                 <ChevronRight size={16} color={COLORS.textPlaceholder} style={{ transform: [{ rotate: staffDropdownVisible ? '270deg' : '90deg' }] }} />
               </TouchableOpacity>
@@ -424,7 +480,7 @@ const RouteDetailScreen = () => {
                   <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 180 }}>
                     {allStaff.length === 0 ? (
                       <View style={styles.dropdownEmpty}>
-                        <Text style={styles.dropdownEmptyText}>No active staff members found</Text>
+                        <Text style={styles.dropdownEmptyText}>{t('routes.noActiveStaffMembers')}</Text>
                       </View>
                     ) : (
                       allStaff.map((staff) => (
@@ -451,12 +507,12 @@ const RouteDetailScreen = () => {
 
             {/* Date Inputs */}
             <View style={{ marginTop: 16 }}>
-              <Text style={styles.inputLabel}>Effective From *</Text>
+              <Text style={styles.inputLabel}>{t('routes.effectiveFrom')}</Text>
               <TouchableOpacity
                 style={styles.inputBox}
                 onPress={() => setActiveDatePicker('effectiveFrom')}
               >
-                <Text style={{ color: COLORS.textPrimary, fontFamily: 'Geologica-Medium', fontSize: 14 }}>
+                <Text style={{ color: COLORS.textPrimary, fontFamily: 'Rubik-SemiBold', fontSize: 14 }}>
                   {effectiveFrom}
                 </Text>
               </TouchableOpacity>
@@ -464,13 +520,13 @@ const RouteDetailScreen = () => {
 
             {/* Toggle permanent */}
             <View style={styles.toggleRow}>
-              <Text style={styles.toggleLabel}>Permanent Assignment</Text>
+              <Text style={styles.toggleLabel}>{t('routes.permanentAssignment')}</Text>
               <View style={styles.checkboxRow}>
                 <TouchableOpacity
                   style={styles.checkboxOption}
                   onPress={() => setIsPermanent(true)}
                 >
-                  <Text style={styles.checkboxLabel}>Yes</Text>
+                  <Text style={styles.checkboxLabel}>{t('common.yes')}</Text>
                   <View style={[styles.checkboxSquare, isPermanent && styles.checkboxSquareChecked]}>
                     {isPermanent && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                   </View>
@@ -480,7 +536,7 @@ const RouteDetailScreen = () => {
                   style={[styles.checkboxOption, { marginLeft: 16 }]}
                   onPress={() => setIsPermanent(false)}
                 >
-                  <Text style={styles.checkboxLabel}>Temporary</Text>
+                  <Text style={styles.checkboxLabel}>{t('routes.temporary')}</Text>
                   <View style={[styles.checkboxSquare, !isPermanent && styles.checkboxSquareChecked]}>
                     {!isPermanent && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                   </View>
@@ -491,13 +547,13 @@ const RouteDetailScreen = () => {
             {/* Conditional effectiveTo Date */}
             {!isPermanent && (
               <View style={{ marginTop: 12 }}>
-                <Text style={styles.inputLabel}>Effective To</Text>
+                <Text style={styles.inputLabel}>{t('routes.effectiveTo')}</Text>
                 <TouchableOpacity
                   style={styles.inputBox}
                   onPress={() => setActiveDatePicker('effectiveTo')}
                 >
-                  <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Geologica-Medium', fontSize: 14 }}>
-                    {effectiveTo || 'YYYY-MM-DD (Optional)'}
+                  <Text style={{ color: effectiveTo ? COLORS.textPrimary : COLORS.textPlaceholder, fontFamily: 'Rubik-SemiBold', fontSize: 14 }}>
+                    {effectiveTo || t('common.dateOptional')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -512,10 +568,10 @@ const RouteDetailScreen = () => {
               {assignLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.modalSaveText}>Assign Staff</Text>
+                <Text style={styles.modalSaveText}>{t('routes.assignStaffBtn')}</Text>
               )}
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
 
@@ -532,7 +588,7 @@ const RouteDetailScreen = () => {
           onChange={onDatePickerChange}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -559,7 +615,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -575,48 +631,65 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerActionBtnDark: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
-  infoCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 18,
+  premiumRouteCard: {
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  routeNameText: {
-    fontSize: 20,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.textPrimary,
-  },
-  areaContainer: {
+    padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginBottom: 24,
+    overflow: 'hidden',
+    shadowColor: '#D97706',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  areaLabel: {
-    fontSize: 13,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
-    marginRight: 6,
+  premiumRouteIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  areaValue: {
-    fontSize: 13,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.primary,
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+  premiumRouteInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  premiumRouteName: {
+    fontSize: 22,
+    fontFamily: 'Rubik-Bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  premiumRouteBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  premiumRouteBadgeText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Medium',
+    color: '#FFFFFF',
   },
   assignBtn: {
     flexDirection: 'row',
@@ -630,7 +703,7 @@ const styles = StyleSheet.create({
   assignBtnText: {
     color: '#FFFFFF',
     fontSize: 14.5,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -640,7 +713,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
   },
   emptyCard: {
@@ -653,34 +726,49 @@ const styles = StyleSheet.create({
   },
   emptyCardText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   staffCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     borderRadius: 16,
     padding: 14,
-    marginBottom: 10,
+    marginBottom: 12,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   historyCard: {
     backgroundColor: '#F8FAFC',
     borderColor: '#E2E8F0',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  staffIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
   },
   staffInfo: {
     flex: 1,
   },
   staffName: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   staffPhone: {
     fontSize: 12.5,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginTop: 1,
   },
@@ -691,7 +779,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   endAssignBtn: {
@@ -705,7 +793,7 @@ const styles = StyleSheet.create({
   endAssignText: {
     color: '#EF4444',
     fontSize: 12,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
   },
   historyBadge: {
     paddingVertical: 4,
@@ -716,7 +804,7 @@ const styles = StyleSheet.create({
   historyBadgeText: {
     color: '#64748B',
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   centerContainer: {
     flex: 1,
@@ -728,12 +816,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   errorText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -746,7 +834,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -772,7 +860,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -780,7 +868,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     marginBottom: 6,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontWeight: '600',
   },
   dropdownTrigger: {
@@ -797,13 +885,13 @@ const styles = StyleSheet.create({
   selectedStaffText: {
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontWeight: '600',
   },
   placeholderText: {
     color: COLORS.textPlaceholder,
     fontSize: 14,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
   },
   dropdownContainer: {
     backgroundColor: '#FFFFFF',
@@ -823,7 +911,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 13.5,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginRight: 8,
@@ -831,7 +919,7 @@ const styles = StyleSheet.create({
   dropdownItemPhone: {
     fontSize: 12.5,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
   },
   dropdownEmpty: {
     padding: 16,
@@ -840,7 +928,7 @@ const styles = StyleSheet.create({
   dropdownEmptyText: {
     color: COLORS.textPlaceholder,
     fontSize: 13,
-    fontFamily: 'Geologica-Regular',
+    fontFamily: 'Rubik-Medium',
   },
   inputBox: {
     backgroundColor: '#F8FAFC',
@@ -854,7 +942,7 @@ const styles = StyleSheet.create({
   input: {
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     height: '100%',
   },
   toggleRow: {
@@ -865,7 +953,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: 13,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -881,7 +969,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: COLORS.textSecondary,
     marginRight: 6,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontWeight: '500',
   },
   checkboxSquare: {
@@ -912,8 +1000,38 @@ const styles = StyleSheet.create({
   modalSaveText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: '700',
+    fontFamily: 'Rubik-Bold',
+    fontWeight: '600',
+  },
+  metadataSection: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  metadataLabel: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Bold',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  metadataUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  metadataValue: {
+    fontSize: 13,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#334155',
+    marginLeft: 6,
+  },
+  metadataTime: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Medium',
+    color: '#94A3B8',
   },
   // Toast
   toast: {
@@ -933,7 +1051,7 @@ const styles = StyleSheet.create({
   toastText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontWeight: '700',
     textAlign: 'center',
   },

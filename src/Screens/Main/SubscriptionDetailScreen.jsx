@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
-  ArrowLeft,
+  ChevronLeft,
   Trash2,
   Edit,
   User,
@@ -31,18 +31,19 @@ import {
   Play,
   Pause,
   SkipForward,
-} from 'lucide-react-native';
+  ArrowLeft} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const SubscriptionDetailScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
 
   const subscriptionId = route.params?.subscriptionId;
@@ -91,7 +92,7 @@ const SubscriptionDetailScreen = () => {
   };
 
   const formatDisplayDate = (str) => {
-    if (!str) return '—';
+    if (!str) return 'â€”';
     const [y, m, d] = str.split('-');
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${d} ${months[parseInt(m) - 1]} ${y}`;
@@ -113,15 +114,11 @@ const SubscriptionDetailScreen = () => {
     if (showLoading) setLoading(true);
     setError('');
     try {
-      let subData = subscription;
-      if (!subData || !subData.Customer) {
-        const subRes = await api.getSubscription(userToken, subscriptionId);
-        if (subRes.success) {
-          subData = subRes.data;
-          setSubscription(subData);
-        } else {
-          throw new Error(subRes.message || 'Failed to load subscription');
-        }
+      const subRes = await api.getSubscription(userToken, subscriptionId);
+      if (subRes.success) {
+        setSubscription(subRes.data);
+      } else {
+        throw new Error(subRes.message || 'Failed to load subscription');
       }
 
       const [pausesRes, overridesRes] = await Promise.all([
@@ -231,12 +228,12 @@ const SubscriptionDetailScreen = () => {
     const isFuture = item.to >= todayStr;
     if (!isFuture) { showAlert('Cannot Delete', 'Past entries cannot be removed.', 'warning'); return; }
     showAlert(
-      'Remove Entry',
-      `Remove this ${item.type === 'pause' ? 'pause' : 'exception'}?`,
+      t('subscriptions.removeEntry'),
+      t(item.type === 'pause' ? 'subscriptions.removePauseConfirm' : 'subscriptions.removeExceptionConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Remove', style: 'destructive',
+          text: t('common.remove'), style: 'destructive',
           onPress: async () => {
             try {
               const res = item.type === 'pause'
@@ -259,12 +256,12 @@ const SubscriptionDetailScreen = () => {
 
   const handleDeleteSubscription = () => {
     showAlert(
-      'Delete Subscription',
-      'Are you sure you want to delete this subscription?',
+      t('subscriptions.deleteSubscription'),
+      t('subscriptions.deleteConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -289,7 +286,7 @@ const SubscriptionDetailScreen = () => {
       case 'daily': return 'Daily';
       case 'weekly': return 'Weekly';
       case 'alternate': case 'alternate_days': return 'Alternate Days';
-      default: return pattern || '—';
+      default: return pattern || 'â€”';
     }
   };
 
@@ -317,79 +314,91 @@ const SubscriptionDetailScreen = () => {
   const isPaused = subscription.status === 'paused';
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* ── Header Actions (Identical to Customer Detail Screen) ── */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => navigation.navigate('AddSubscription', { subscription })}
-          >
-            <Edit size={18} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerActionBtn, { borderColor: '#E2E8F0', backgroundColor: '#FFF5F5' }]}
-            onPress={handleDeleteSubscription}
-          >
-            <Trash2 size={18} color="#E53E3E" />
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={t('subscriptions.details', 'Subscription Details')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        rightIcon={user?.role !== 'staff' ? (
+          <View style={{ flexDirection: 'row', gap: 12, marginRight: 16 }}>
+            <TouchableOpacity
+              style={[styles.headerActionBtnDark, { backgroundColor: '#E0E7FF' }]}
+              onPress={() => navigation.navigate('AddSubscription', { subscription })}
+            >
+              <Edit size={18} color="#0B409C" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerActionBtnDark, { backgroundColor: '#FEE2E2' }]}
+              onPress={handleDeleteSubscription}
+            >
+              <Trash2 size={18} color="#DC2626" />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+        height={130}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* ── Profile Hero Section (Identical to Customer Detail Screen) ── */}
-        <View style={styles.profileHero}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatarFallback}>
-              <Package size={38} color={COLORS.primary} />
+        {/* â”€â”€ Profile Hero Section â”€â”€ */}
+        <View style={styles.profileHeroCard}>
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatarFallback}>
+                <Package size={38} color="#FFFFFF" />
+              </View>
             </View>
+            <View style={[styles.avatarStatusDot, { backgroundColor: isActive ? '#16A34A' : isPaused ? '#D97706' : '#94A3B8' }]} />
           </View>
-          <Text style={styles.productName}>{subscription.Product?.name || 'Subscription'}</Text>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: isActive ? '#16A34A' : isPaused ? '#D97706' : '#94A3B8' }]} />
-            <Text style={[styles.statusText, { color: isActive ? '#15803D' : isPaused ? '#B45309' : '#64748B' }]}>
-              {(subscription.status || 'ACTIVE').toUpperCase()}
+
+          <View style={styles.heroRight}>
+            <Text style={styles.productNameHero}>
+              {subscription.Product ? `${subscription.Product.name} (₹${Number(subscription.Product.price || 0)}${subscription.Product.unit ? ` • ${subscription.Product.unit}` : ''})` : 'Subscription'}
             </Text>
+            
+            <View style={[styles.heroStatusPill, { backgroundColor: isActive ? '#DCFCE7' : isPaused ? '#FEF3C7' : '#F1F5F9' }]}>
+              <View style={[styles.heroStatusDot, { backgroundColor: isActive ? '#16A34A' : isPaused ? '#D97706' : '#94A3B8' }]} />
+              <Text style={[styles.heroStatusText, { color: isActive ? '#16A34A' : isPaused ? '#B45309' : '#64748B' }]}>
+                {(subscription.status || 'ACTIVE').toUpperCase()}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* ── Subscription Details Card ── */}
-        <Text style={styles.sectionTitle}>Subscription Info</Text>
+        {/* -- Subscription Details Card -- */}
+        <Text style={styles.sectionTitle}>{t('subscriptions.edit')}</Text>
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <User size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#E0E7FF', borderColor: '#C7D2FE' }]}>
+              <User size={18} color="#4F46E5" />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Customer</Text>
-              <Text style={styles.detailValue}>{subscription.Customer?.name || '—'}</Text>
+              <Text style={styles.detailLabel}>{t('customers.name')}</Text>
+              <Text style={styles.detailValue}>{subscription.Customer?.name || 'N/A'}</Text>
             </View>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Phone size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#DCFCE7', borderColor: '#BBF7D0' }]}>
+              <Phone size={18} color="#16A34A" />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Phone Number</Text>
-              <Text style={styles.detailValue}>{subscription.Customer?.phone || '—'}</Text>
+              <Text style={styles.detailLabel}>{t('customers.phone_label')}</Text>
+              <Text style={styles.detailValue}>{subscription.Customer?.phone || 'N/A'}</Text>
             </View>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Info size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+              <Info size={18} color="#D97706" />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Quantity per Delivery</Text>
+              <Text style={styles.detailLabel}>{t('subscriptions.quantityPerDelivery')}</Text>
               <Text style={styles.detailValue}>
                 {subscription.baseQuantity} {subscription.baseQuantity === 1 ? 'unit' : 'units'}
               </Text>
@@ -399,11 +408,11 @@ const SubscriptionDetailScreen = () => {
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Repeat size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#FFE4E6', borderColor: '#FECDD3' }]}>
+              <Repeat size={18} color="#E11D48" />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Frequency</Text>
+              <Text style={styles.detailLabel}>{t('subscriptions.frequency')}</Text>
               <Text style={styles.detailValue}>{getRecurrenceLabel(subscription.recurrencePattern)}</Text>
             </View>
           </View>
@@ -415,21 +424,21 @@ const SubscriptionDetailScreen = () => {
               <Calendar size={18} color={COLORS.primary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Start Date</Text>
+              <Text style={styles.detailLabel}>{t('subscriptions.startDate')}</Text>
               <Text style={styles.detailValue}>
-                {subscription.startDate ? formatDisplayDate(subscription.startDate.split('T')[0]) : '—'}
+                {subscription.startDate ? formatDisplayDate(subscription.startDate.split('T')[0]) : 'N/A'}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* ── Schedule Exceptions Log ── */}
-        <Text style={styles.sectionTitle}>Schedule Log</Text>
+        {/* -- Schedule Exceptions Log -- */}
+        <Text style={styles.sectionTitle}>{t('subscriptions.scheduleLog')}</Text>
         <View style={styles.detailsCard}>
           {timeline.length === 0 ? (
             <View style={styles.emptyHistory}>
               <Clock size={20} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
-              <Text style={styles.emptyHistoryText}>No exceptions logged yet</Text>
+              <Text style={styles.emptyHistoryText}>{t('subscriptions.noExceptionsLogged')}</Text>
             </View>
           ) : (
             timeline.map((item, index) => {
@@ -442,7 +451,7 @@ const SubscriptionDetailScreen = () => {
               const label = isPauseType ? 'Pause' : isSkipType ? 'Skip' : `Extra (+${item.quantity})`;
               const dateRange = item.from === item.to
                 ? formatDisplayDate(item.from)
-                : `${formatDisplayDate(item.from)} → ${formatDisplayDate(item.to)}`;
+                : `${formatDisplayDate(item.from)} â†’ ${formatDisplayDate(item.to)}`;
 
               return (
                 <View key={`${item.type}-${item.id}`}>
@@ -452,7 +461,7 @@ const SubscriptionDetailScreen = () => {
                       <Text style={[styles.logBadgeText, { color: badgeText }]}>{label}</Text>
                     </View>
                     <Text style={styles.logDates}>{dateRange}</Text>
-                    {isFuture && (
+                    {isFuture && user?.role !== 'staff' && (
                       <TouchableOpacity
                         onPress={() => handleDeleteException(item)}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -467,13 +476,31 @@ const SubscriptionDetailScreen = () => {
             })
           )}
         </View>
+
+        {/* Metadata Section */}
+        <View style={styles.metadataSection}>
+          <Text style={styles.metadataLabel}>Last Modified By</Text>
+          <View style={styles.metadataUserRow}>
+            <User size={14} color="#64748B" />
+            <Text style={styles.metadataValue}>
+              {subscription.updatedBy?.name || 'System'} ({subscription.updatedBy?.role || 'admin'})
+            </Text>
+          </View>
+          {subscription.updatedAt && (
+            <Text style={styles.metadataTime}>
+              {new Date(subscription.updatedAt).toLocaleString()}
+            </Text>
+          )}
+        </View>
+        <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* ── Simple Pill Bottom Action Buttons ── */}
+      {/* â”€â”€ Simple Pill Bottom Action Buttons â”€â”€ */}
       <View style={styles.floatingBar}>
         <TouchableOpacity
-          style={styles.pausePillBtn}
+          style={[styles.pausePillBtn, !isActive && { opacity: 0.5 }]}
           activeOpacity={0.8}
+          disabled={!isActive}
           onPress={() => { setPauseFrom(todayStr); setPauseTo(todayStr); setPauseModalVisible(true); }}
         >
           <Pause size={16} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
@@ -493,29 +520,29 @@ const SubscriptionDetailScreen = () => {
       {/* Pause Modal */}
       <Modal visible={pauseModalVisible} transparent animationType="fade" onRequestClose={() => setPauseModalVisible(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPauseModalVisible(false)}>
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pause Subscription</Text>
+              <Text style={styles.modalTitle}>{t('subscriptions.pauseSubscription')}</Text>
               <TouchableOpacity style={styles.modalClose} onPress={() => setPauseModalVisible(false)}>
                 <X size={20} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalLabel}>Pause From</Text>
+            <Text style={styles.modalLabel}>{t('subscriptions.pauseFrom')}</Text>
             <TouchableOpacity style={styles.dateSelector} onPress={() => setActiveDatePicker('pauseFrom')}>
               <Calendar size={16} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={styles.dateSelectorText}>{pauseFrom ? formatDisplayDate(pauseFrom) : 'Select Date'}</Text>
+              <Text style={styles.dateSelectorText}>{pauseFrom ? formatDisplayDate(pauseFrom) : t('common.selectDate')}</Text>
             </TouchableOpacity>
 
-            <Text style={[styles.modalLabel, { marginTop: 12 }]}>Pause To</Text>
+            <Text style={[styles.modalLabel, { marginTop: 12 }]}>{t('subscriptions.pauseTo')}</Text>
             <TouchableOpacity style={styles.dateSelector} onPress={() => setActiveDatePicker('pauseTo')}>
               <Calendar size={16} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={styles.dateSelectorText}>{pauseTo ? formatDisplayDate(pauseTo) : 'Select End Date (optional)'}</Text>
+              <Text style={styles.dateSelectorText}>{pauseTo ? formatDisplayDate(pauseTo) : t('common.selectEndDateOptional')}</Text>
             </TouchableOpacity>
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.modalBtn, styles.cancelBtn]} onPress={() => setPauseModalVisible(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.confirmPauseBtn]}
@@ -525,20 +552,20 @@ const SubscriptionDetailScreen = () => {
                 {submittingPause ? (
                   <ActivityIndicator size="small" color={COLORS.background} />
                 ) : (
-                  <Text style={styles.confirmPauseBtnText}>Confirm Pause</Text>
+                  <Text style={styles.confirmPauseBtnText}>{t('subscriptions.confirmPause')}</Text>
                 )}
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
 
       {/* Skip / Change Qty Modal */}
       <Modal visible={skipModalVisible} transparent animationType="fade" onRequestClose={() => setSkipModalVisible(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSkipModalVisible(false)}>
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+          <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Log Exception</Text>
+              <Text style={styles.modalTitle}>{t('subscriptions.logException')}</Text>
               <TouchableOpacity style={styles.modalClose} onPress={() => setSkipModalVisible(false)}>
                 <X size={20} color={COLORS.textSecondary} />
               </TouchableOpacity>
@@ -549,32 +576,32 @@ const SubscriptionDetailScreen = () => {
                 style={[styles.typeOption, overrideType === 'skip' && styles.typeOptionActive]}
                 onPress={() => setOverrideType('skip')}
               >
-                <Text style={[styles.typeOptionText, overrideType === 'skip' && styles.typeOptionTextActive]}>Skip Delivery</Text>
+                <Text style={[styles.typeOptionText, overrideType === 'skip' && styles.typeOptionTextActive]}>{t('subscriptions.skipDelivery')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.typeOption, overrideType === 'extra' && styles.typeOptionActive]}
                 onPress={() => setOverrideType('extra')}
               >
-                <Text style={[styles.typeOptionText, overrideType === 'extra' && styles.typeOptionTextActive]}>Change Qty</Text>
+                <Text style={[styles.typeOptionText, overrideType === 'extra' && styles.typeOptionTextActive]}>{t('subscriptions.changeQty')}</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={[styles.modalLabel, { marginTop: 12 }]}>From Date</Text>
+            <Text style={[styles.modalLabel, { marginTop: 12 }]}>{t('subscriptions.fromDate')}</Text>
             <TouchableOpacity style={styles.dateSelector} onPress={() => setActiveDatePicker('overrideFrom')}>
               <Calendar size={16} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={styles.dateSelectorText}>{overrideFrom ? formatDisplayDate(overrideFrom) : 'Select Date'}</Text>
+              <Text style={styles.dateSelectorText}>{overrideFrom ? formatDisplayDate(overrideFrom) : t('common.selectDate')}</Text>
             </TouchableOpacity>
 
-            <Text style={[styles.modalLabel, { marginTop: 12 }]}>To Date</Text>
+            <Text style={[styles.modalLabel, { marginTop: 12 }]}>{t('subscriptions.toDate')}</Text>
             <TouchableOpacity style={styles.dateSelector} onPress={() => setActiveDatePicker('overrideTo')}>
               <Calendar size={16} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={styles.dateSelectorText}>{overrideTo ? formatDisplayDate(overrideTo) : 'Select End Date (optional)'}</Text>
+              <Text style={styles.dateSelectorText}>{overrideTo ? formatDisplayDate(overrideTo) : t('common.selectEndDateOptional')}</Text>
             </TouchableOpacity>
 
             {overrideType === 'extra' && (
               <>
                 <Text style={[styles.modalLabel, { marginTop: 12 }]}>
-                  New Quantity (Base: {subscription?.baseQuantity || 0})
+                  {t('subscriptions.newQuantityBase', { quantity: subscription?.baseQuantity || 0 })}
                 </Text>
                 <TextInput
                   style={styles.reasonInput}
@@ -589,7 +616,7 @@ const SubscriptionDetailScreen = () => {
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.modalBtn, styles.cancelBtn]} onPress={() => setSkipModalVisible(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.confirmBtn]}
@@ -599,11 +626,11 @@ const SubscriptionDetailScreen = () => {
                 {submittingException ? (
                   <ActivityIndicator size="small" color={COLORS.background} />
                 ) : (
-                  <Text style={styles.confirmBtnText}>Confirm</Text>
+                  <Text style={styles.confirmBtnText}>{t('common.confirm')}</Text>
                 )}
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
 
@@ -618,9 +645,10 @@ const SubscriptionDetailScreen = () => {
           mode="date"
           display="default"
           onChange={onDatePickerChange}
+          minimumDate={user?.role === 'staff' ? new Date() : undefined}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -628,6 +656,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  headerActionBtnDark: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   centerContainer: {
     flex: 1,
@@ -640,14 +676,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   errorText: {
     fontSize: 14,
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   retryButton: {
     backgroundColor: COLORS.primary,
@@ -688,70 +724,102 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 120, // space for floating bottom bar
+    paddingTop: 24,
+    paddingBottom: 160, // extra space for floating bottom bar
   },
 
-  // Profile Hero (matches Customer Detail layout exactly)
-  profileHero: {
-    alignItems: 'center',
-    marginTop: 12,
+  // Profile Hero Card
+  profileHeroCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 36,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0B409C',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 4,
+    alignItems: 'center',
+  },
+  avatarWrapper: {
+    position: 'relative',
+    marginRight: 20,
   },
   avatarContainer: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: COLORS.primaryLight,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#0B409C',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: COLORS.border,
+    borderWidth: 3,
+    borderColor: '#F8FAFC',
     overflow: 'hidden',
   },
   avatarFallback: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  productName: {
-    fontSize: 20,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.textPrimary,
+  avatarStatusDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  heroRight: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  productNameHero: {
+    fontSize: 22,
+    fontFamily: 'Rubik-Bold',
+    color: '#0F172A',
     marginBottom: 8,
   },
-  statusBadge: {
+  heroStatusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+  heroStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
   },
-  statusText: {
+  heroStatusText: {
     fontSize: 11,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
   },
 
   // Section details card
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 12,
   },
   detailsCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: 16,
+    padding: 20,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 3,
   },
   detailRow: {
     flexDirection: 'row',
@@ -773,13 +841,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   divider: {
@@ -796,7 +864,7 @@ const styles = StyleSheet.create({
   emptyHistoryText: {
     fontSize: 13,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   logRow: {
     flexDirection: 'row',
@@ -812,12 +880,12 @@ const styles = StyleSheet.create({
   },
   logBadgeText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   logDates: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
 
@@ -830,7 +898,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 16,
+    paddingBottom: Platform.OS === 'ios' ? 80 : 85,
     backgroundColor: COLORS.surface,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
@@ -849,7 +917,7 @@ const styles = StyleSheet.create({
   },
   pausePillText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   editQtyPillBtn: {
@@ -863,7 +931,7 @@ const styles = StyleSheet.create({
   },
   editQtyPillText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
 
@@ -890,7 +958,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   modalClose: {
@@ -898,7 +966,7 @@ const styles = StyleSheet.create({
   },
   modalLabel: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -914,7 +982,7 @@ const styles = StyleSheet.create({
   },
   dateSelectorText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
   },
   reasonInput: {
@@ -946,7 +1014,7 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
   },
   confirmBtn: {
@@ -954,7 +1022,7 @@ const styles = StyleSheet.create({
   },
   confirmBtnText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.background,
   },
   confirmPauseBtn: {
@@ -962,11 +1030,10 @@ const styles = StyleSheet.create({
   },
   confirmPauseBtnText: {
     fontSize: 14,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.background,
   },
-
-  typeSelectorRow: {
+  typeSelectorRow: {
     flexDirection: 'row',
     gap: 10,
     marginBottom: 16,
@@ -986,13 +1053,44 @@ const styles = StyleSheet.create({
   },
   typeOptionText: {
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
   },
   typeOptionTextActive: {
     color: COLORS.primary,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
+  },
+  metadataSection: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  metadataLabel: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Bold',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  metadataUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  metadataValue: {
+    fontSize: 13,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#334155',
+    marginLeft: 6,
+  },
+  metadataTime: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Medium',
+    color: '#94A3B8',
   },
 });
 
 export default SubscriptionDetailScreen;
+

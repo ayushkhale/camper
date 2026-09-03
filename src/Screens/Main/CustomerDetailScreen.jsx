@@ -13,15 +13,17 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
   ArrowLeft,
-  Trash2,
   Edit,
+  Trash2,
   User,
   Phone,
   MapPin,
+  Route,
   IndianRupee,
   Clock,
   Package,
@@ -33,17 +35,19 @@ import {
   FileText,
   ShieldCheck,
   X,
+  Droplet,
 } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const CustomerDetailScreen = () => {
   const navigation = useNavigation();
   const routeParams = useRoute();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, user } = useContext(AuthContext);
   const customerId = routeParams.params?.customerId;
   const { t } = useTranslation();
   const { showAlert } = useAlert();
@@ -161,12 +165,12 @@ const CustomerDetailScreen = () => {
 
   const handleDeleteSubscription = (sub) => {
     showAlert(
-      'Delete Subscription',
-      'Are you sure you want to delete this subscription?',
+      t('subscriptions.deleteSubscription'),
+      t('subscriptions.deleteConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -185,11 +189,11 @@ const CustomerDetailScreen = () => {
   };
 
   const formatRecurrence = (pattern) => {
-    switch(pattern) {
-      case 'daily': return 'Daily';
-      case 'alternate_days': return 'Alternate Days';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
+    switch (pattern) {
+      case 'daily': return t('subscriptions.daily');
+      case 'alternate_days': return t('subscriptions.alternateDays');
+      case 'weekly': return t('subscriptions.weekly');
+      case 'monthly': return t('subscriptions.monthly');
       default: return pattern;
     }
   };
@@ -198,7 +202,7 @@ const CustomerDetailScreen = () => {
     return (
       <SafeAreaView style={styles.centerContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading customer details...</Text>
+        <Text style={styles.loadingText}>{t('customerDetail.loadingCustomerDetails')}</Text>
       </SafeAreaView>
     );
   }
@@ -206,9 +210,9 @@ const CustomerDetailScreen = () => {
   if (error || !customerData) {
     return (
       <SafeAreaView style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error || 'Customer not found'}</Text>
+        <Text style={styles.errorText}>{error || t('customers.noCustomersTitle')}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.retryText}>Go Back</Text>
+          <Text style={styles.retryText}>{t('common.goBack')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -221,46 +225,73 @@ const CustomerDetailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      
-      {/* Header Actions */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => navigation.navigate('AddCustomer', { customer: customerData })}
-          >
-            <Edit size={18} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerActionBtn, { borderColor: '#E2E8F0', backgroundColor: '#FFF5F5' }]}
-            onPress={handleDeleteCustomer}
-          >
-            <Trash2 size={18} color="#E53E3E" />
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={t('customerDetail.customerDetail')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        rightIcon={
+          user?.role !== 'staff' ? (
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                style={[styles.headerActionBtnDark, { backgroundColor: '#E0E7FF' }]}
+                onPress={() => navigation.navigate('AddCustomer', { customer: customerData })}
+              >
+                <Edit size={18} color="#0B409C" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.headerActionBtnDark, { backgroundColor: '#FEE2E2' }]}
+                onPress={handleDeleteCustomer}
+              >
+                <Trash2 size={18} color="#DC2626" />
+              </TouchableOpacity>
+            </View>
+          ) : null
+        }
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]} showsVerticalScrollIndicator={false}>
+
         {/* Profile Hero Section */}
-        <View style={styles.profileHero}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={require('../../../assets/customerfallback.png')}
-              style={styles.avatarImage}
-              resizeMode="cover"
-            />
+        <View style={styles.profileHeroCard}>
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarContainer}>
+              <FastImage
+                source={require('../../../assets/customerfallback.png')}
+                style={styles.avatarImage}
+                resizeMode="cover"
+              />
+            </View>
+            <View style={[styles.avatarStatusDot, { backgroundColor: customerData.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
           </View>
-          <Text style={styles.customerName}>{customerData.name}</Text>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: customerData.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
-            <Text style={[styles.statusText, { color: customerData.status === 'active' ? '#15803D' : '#64748B' }]}>
-              {customerData.status.toUpperCase()}
-            </Text>
+
+          <View style={styles.heroRight}>
+            <Text style={styles.customerNameHero}>{customerData.name}</Text>
+            
+            <View style={[styles.heroStatusPill, { backgroundColor: customerData.status === 'active' ? '#DCFCE7' : '#F1F5F9' }]}>
+              <View style={[styles.heroStatusDot, { backgroundColor: customerData.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
+              <Text style={[styles.heroStatusText, { color: customerData.status === 'active' ? '#16A34A' : '#64748B' }]}>
+                {customerData.status.toUpperCase()}
+              </Text>
+            </View>
+
+            {subscriptions.length > 0 && (
+              <View style={styles.planPill}>
+                <Droplet size={14} color="#0B409C" style={{ marginRight: 6 }} />
+                <Text style={styles.planPillText}>Plan: {subscriptions[0].Product?.name || 'Standard'}</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.historyBtn}
+              onPress={() => navigation.navigate('CustomerHistory', { customerId: customerData.id })}
+              activeOpacity={0.7}
+            >
+              <Clock size={14} color="#3B82F6" style={{ marginRight: 6 }} />
+              <Text style={styles.historyBtnText}>{t('customerDetail.viewHistory')}</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -290,11 +321,11 @@ const CustomerDetailScreen = () => {
           </TouchableOpacity>
         ) : (
           subscriptions.map((sub) => {
-            const statusColor = sub.status === 'active' 
-              ? { dot: '#16A34A', text: '#15803D' } 
-              : sub.status === 'paused' 
-              ? { dot: '#D97706', text: '#B45309' } 
-              : { dot: '#94A3B8', text: '#64748B' };
+            const statusColor = sub.status === 'active'
+              ? { dot: '#16A34A', text: '#15803D' }
+              : sub.status === 'paused'
+                ? { dot: '#D97706', text: '#B45309' }
+                : { dot: '#94A3B8', text: '#64748B' };
 
             return (
               <TouchableOpacity
@@ -316,7 +347,7 @@ const CustomerDetailScreen = () => {
                     </Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.statusBadge}>
                   <View style={[styles.statusDot, { backgroundColor: statusColor.dot }]} />
                   <Text style={[styles.statusText, { color: statusColor.text }]}>
@@ -331,35 +362,35 @@ const CustomerDetailScreen = () => {
 
         {/* Contact Details */}
         <Text style={styles.sectionTitle}>{t('customers.contactAndLocation')}</Text>
-        
+
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Phone size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#DCFCE7', borderColor: '#BBF7D0' }]}>
+              <Phone size={18} color="#16A34A" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.phone_label')}</Text>
-              <Text style={styles.detailValue}>{customerData.phone || 'Not Provided'}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.divider} />
-          
-          <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <MapPin size={18} color={COLORS.textSecondary} />
-            </View>
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>{t('customers.address_label')}</Text>
-              <Text style={styles.detailValue}>{customerData.address || 'Not Provided'}</Text>
+              <Text style={styles.detailValue}>{customerData.phone || t('customerDetail.notProvided')}</Text>
             </View>
           </View>
 
           <View style={styles.divider} />
-          
+
           <View style={styles.detailRow}>
-            <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
-              <MapPin size={18} color={COLORS.primary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#E0E7FF', borderColor: '#C7D2FE' }]}>
+              <MapPin size={18} color="#4F46E5" />
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>{t('customers.address_label')}</Text>
+              <Text style={styles.detailValue}>{customerData.address || t('customerDetail.notProvided')}</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.detailRow}>
+            <View style={[styles.detailIconBox, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+              <Route size={18} color="#D97706" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.assignedRoute')}</Text>
@@ -370,23 +401,23 @@ const CustomerDetailScreen = () => {
 
         {/* Account Details */}
         <Text style={[styles.sectionTitle, { marginTop: 8 }]}>{t('customers.accountOverview')}</Text>
-        
+
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <IndianRupee size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#FFE4E6', borderColor: '#FECDD3' }]}>
+              <IndianRupee size={18} color="#E11D48" />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>{t('customers.creditLimit_label')}</Text>
-              <Text style={styles.detailValue}>{customerData.creditLimit ? `₹${customerData.creditLimit}` : 'None'}</Text>
+              <Text style={styles.detailLabel}>Opening Balance</Text>
+              <Text style={styles.detailValue}>{customerData.openingBalance || customerData.creditLimit ? `₹${customerData.openingBalance || customerData.creditLimit}` : '₹0'}</Text>
             </View>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.detailRow}>
-            <View style={styles.detailIconBox}>
-              <Clock size={18} color={COLORS.textSecondary} />
+            <View style={[styles.detailIconBox, { backgroundColor: '#CFFAFE', borderColor: '#A5F3FC' }]}>
+              <Clock size={18} color="#0891B2" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>{t('customers.customerSince')}</Text>
@@ -398,7 +429,7 @@ const CustomerDetailScreen = () => {
         </View>
 
         {/* Security Deposit Section */}
-        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Security Deposit</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>{t('customerDetail.securityDeposit')}</Text>
 
         {loadingDeposit ? (
           <View style={[styles.detailsCard, { padding: 20, alignItems: 'center' }]}>
@@ -415,8 +446,8 @@ const CustomerDetailScreen = () => {
                 <Plus size={18} color={COLORS.primary} />
               </View>
               <View>
-                <Text style={styles.subToggleTitle}>Add Security Deposit</Text>
-                <Text style={styles.subToggleSubtitle}>Collect container/jar deposit for this customer</Text>
+                <Text style={styles.subToggleTitle}>{t('customerDetail.addSecurityDeposit')}</Text>
+                <Text style={styles.subToggleSubtitle}>{t('customerDetail.collectDepositDesc')}</Text>
               </View>
             </View>
             <ChevronRight size={20} color={COLORS.textSecondary} />
@@ -428,29 +459,29 @@ const CustomerDetailScreen = () => {
                 <ShieldCheck size={18} color="#16A34A" />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Deposit Balance</Text>
-                <Text style={[styles.detailValue, { color: '#16A34A', fontFamily: 'Geologica-Bold' }]}>
+                <Text style={styles.detailLabel}>{t('customerDetail.depositBalance')}</Text>
+                <Text style={[styles.detailValue, { color: '#16A34A', fontFamily: 'Rubik-Bold' }]}>
                   ₹{depositData.depositBalance || 0}
                 </Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.addMoreDepositBtn}
                 onPress={() => setDepositModalVisible(true)}
                 activeOpacity={0.7}
               >
                 <Plus size={14} color={COLORS.primary} style={{ marginRight: 4 }} />
-                <Text style={styles.addMoreDepositText}>Add More</Text>
+                <Text style={styles.addMoreDepositText}>{t('customerDetail.addMore')}</Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.divider} />
 
             <View style={styles.detailRow}>
-              <View style={styles.detailIconBox}>
-                <Package size={18} color={COLORS.textSecondary} />
+              <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
+                <Package size={18} color={COLORS.primary} />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Containers/Jars Held</Text>
+                <Text style={styles.detailLabel}>{t('customerDetail.containersHeld')}</Text>
                 <Text style={styles.detailValue}>{depositData.containersHeld || 0} Jar(s)</Text>
               </View>
             </View>
@@ -459,6 +490,22 @@ const CustomerDetailScreen = () => {
 
 
 
+            {/* Metadata Section */}
+            <View style={styles.metadataSection}>
+              <Text style={styles.metadataLabel}>Last Modified By</Text>
+              <View style={styles.metadataUserRow}>
+                <User size={14} color="#64748B" />
+                <Text style={styles.metadataValue}>
+                  {customerData.updatedBy?.name || 'System'} ({customerData.updatedBy?.role || 'admin'})
+                </Text>
+              </View>
+              {customerData.updatedAt && (
+                <Text style={styles.metadataTime}>
+                  {new Date(customerData.updatedAt).toLocaleString()}
+                </Text>
+              )}
+            </View>
+
       </ScrollView>
 
       {/* Floating Action Buttons */}
@@ -466,17 +513,17 @@ const CustomerDetailScreen = () => {
         <TouchableOpacity
           style={styles.fabSecondary}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('MainDrawer', { 
-            screen: 'MainTabs', 
-            params: { 
-              screen: 'Payments', 
-              params: { preselectedCustomer: customerData } 
-            } 
+          onPress={() => navigation.navigate('MainDrawer', {
+            screen: 'MainTabs',
+            params: {
+              screen: 'Payments',
+              params: { preselectedCustomer: customerData }
+            }
           })}
         >
-          <IndianRupee size={24} color="#FFF" />
+          <IndianRupee size={26} color="#FFF" />
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={styles.fabPrimary}
           activeOpacity={0.85}
@@ -499,19 +546,19 @@ const CustomerDetailScreen = () => {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Collect Security Deposit</Text>
+              <Text style={styles.modalTitle}>{t('customerDetail.collectSecurityDeposit')}</Text>
               <TouchableOpacity onPress={() => setDepositModalVisible(false)}>
                 <X size={22} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalInputGroup}>
-              <Text style={styles.modalLabel}>Deposit Amount (₹) *</Text>
+              <Text style={styles.modalLabel}>{t('products.depositAmountLabel')} *</Text>
               <View style={styles.modalInputContainer}>
                 <IndianRupee size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
                 <TextInput
                   style={styles.modalInput}
-                  placeholder="e.g. 300"
+                  placeholder={t('products.depositPlaceholder')}
                   value={collectAmount}
                   onChangeText={(val) => setCollectAmount(val.replace(/[^0-9.]/g, ''))}
                   keyboardType="decimal-pad"
@@ -521,7 +568,7 @@ const CustomerDetailScreen = () => {
             </View>
 
             <View style={styles.modalInputGroup}>
-              <Text style={styles.modalLabel}>Containers/Jars Deposited</Text>
+              <Text style={styles.modalLabel}>{t('customerDetail.containersDeposited')}</Text>
               <View style={styles.modalInputContainer}>
                 <Package size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
                 <TextInput
@@ -536,12 +583,12 @@ const CustomerDetailScreen = () => {
             </View>
 
             <View style={styles.modalInputGroup}>
-              <Text style={styles.modalLabel}>Notes (Optional)</Text>
+              <Text style={styles.modalLabel}>{t('customerDetail.notesOptional')}</Text>
               <View style={styles.modalInputContainer}>
                 <FileText size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
                 <TextInput
                   style={styles.modalInput}
-                  placeholder="e.g. Deposit collected at customer detail"
+                  placeholder={t('common.notes')}
                   value={collectNotes}
                   onChangeText={setCollectNotes}
                   placeholderTextColor={COLORS.textPlaceholder}
@@ -586,13 +633,13 @@ const CustomerDetailScreen = () => {
               {submittingDeposit ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.modalSubmitBtnText}>Collect Deposit</Text>
+                <Text style={styles.modalSubmitBtnText}>{t('customerDetail.collectDeposit')}</Text>
               )}
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -617,45 +664,114 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  headerActionBtn: {
-    marginLeft: 12,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  headerActionBtnDark: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
     padding: 10,
     borderRadius: 14,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
-  profileHero: {
-    alignItems: 'center',
-    marginTop: 12,
+  profileHeroCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 36,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0B409C',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 4,
+    alignItems: 'center',
+  },
+  avatarWrapper: {
+    position: 'relative',
+    marginRight: 20,
   },
   avatarContainer: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: COLORS.primaryLight,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#0B409C',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: COLORS.border,
+    borderWidth: 3,
+    borderColor: '#F8FAFC',
     overflow: 'hidden',
   },
   avatarImage: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
-  customerName: {
-    fontSize: 20,
-    fontFamily: 'Geologica-SemiBold',
-    color: COLORS.textPrimary,
+  avatarStatusDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  heroRight: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  customerNameHero: {
+    fontSize: 22,
+    fontFamily: 'Rubik-Bold',
+    color: '#0F172A',
     marginBottom: 8,
+  },
+  heroStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  heroStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  heroStatusText: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Bold',
+  },
+  planPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  planPillText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Medium',
+    color: '#0B409C',
+  },
+  historyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  historyBtnText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#1D4ED8',
   },
   statusBadge: {
     flexDirection: 'row',
@@ -669,11 +785,11 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
   },
   sectionTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     marginBottom: 12,
   },
@@ -686,7 +802,7 @@ const styles = StyleSheet.create({
   },
   sectionTitleFlex: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textSecondary,
     flex: 1,
     marginRight: 8,
@@ -701,12 +817,17 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   detailsCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: 16,
+    padding: 20,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 3,
   },
   detailRow: {
     flexDirection: 'row',
@@ -728,13 +849,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   divider: {
@@ -771,7 +892,7 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     marginBottom: 2,
   },
@@ -781,8 +902,38 @@ const styles = StyleSheet.create({
   },
   subMetaText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
+  },
+  metadataSection: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  metadataLabel: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Bold',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  metadataUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  metadataValue: {
+    fontSize: 13,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#334155',
+    marginLeft: 6,
+  },
+  metadataTime: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Medium',
+    color: '#94A3B8',
   },
   dot: {
     width: 4,
@@ -835,7 +986,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
   },
   subscriptionToggle: {
@@ -866,47 +1017,47 @@ const styles = StyleSheet.create({
   },
   subToggleTitle: {
     fontSize: 14,
-    fontFamily: 'Geologica-SemiBold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
     marginBottom: 2,
   },
   subToggleSubtitle: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   fabContainer: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    alignItems: 'center',
+    alignItems: 'flex-end',
     gap: 12,
   },
   fabPrimary: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
   fabSecondary: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: COLORS.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 10,
+    elevation: 6,
   },
   addMoreDepositBtn: {
     flexDirection: 'row',
@@ -920,7 +1071,7 @@ const styles = StyleSheet.create({
   },
   addMoreDepositText: {
     fontSize: 12,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
 
@@ -935,6 +1086,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 110,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -944,7 +1096,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
   },
   modalInputGroup: {
@@ -952,7 +1104,7 @@ const styles = StyleSheet.create({
   },
   modalLabel: {
     fontSize: 12,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
@@ -970,7 +1122,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 14,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     padding: 0,
   },
@@ -985,7 +1137,7 @@ const styles = StyleSheet.create({
   },
   modalSubmitBtnText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: '#FFFFFF',
   },
 });

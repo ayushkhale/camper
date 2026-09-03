@@ -10,13 +10,15 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Search, Package, ChevronRight, AlertCircle, RefreshCw, Repeat, User, Calendar } from 'lucide-react-native';
+import { Plus, Search, AlertCircle, RefreshCw, Package, MapPin, Calendar, Clock, ChevronLeft, ChevronRight, Repeat, User , ArrowLeft } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import CurvedHeader from '../../components/CurvedHeader';
 
 const SubscriptionListScreen = () => {
   const navigation = useNavigation();
@@ -62,19 +64,19 @@ const SubscriptionListScreen = () => {
 
   const getStatusColors = (status) => {
     switch (status) {
-      case 'active': return { dot: '#16A34A', text: '#15803D' };
-      case 'paused': return { dot: '#D97706', text: '#B45309' };
-      case 'ended': return { dot: '#94A3B8', text: '#64748B' };
-      default: return { dot: '#94A3B8', text: '#64748B' };
+      case 'active': return { border: '#10B981', badgeBg: '#D1FAE5', badgeText: '#10B981' };
+      case 'paused': return { border: '#F59E0B', badgeBg: '#FEF3C7', badgeText: '#D97706' };
+      case 'ended': return { border: '#94A3B8', badgeBg: '#F1F5F9', badgeText: '#64748B' };
+      default: return { border: '#94A3B8', badgeBg: '#F1F5F9', badgeText: '#64748B' };
     }
   };
 
   const formatRecurrence = (pattern) => {
     switch (pattern) {
-      case 'daily': return 'Daily';
-      case 'alternate': case 'alternate_days': return 'Alternate Days';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
+      case 'daily': return t('subscriptions.daily');
+      case 'alternate': case 'alternate_days': return t('subscriptions.alternateDays');
+      case 'weekly': return t('subscriptions.weekly');
+      case 'monthly': return t('subscriptions.monthly');
       default: return pattern || '';
     }
   };
@@ -96,52 +98,122 @@ const SubscriptionListScreen = () => {
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[
+          styles.card, 
+          { borderLeftWidth: 4, borderLeftColor: statusColors.border }
+        ]}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('SubscriptionDetail', { subscriptionId: item.id, subscription: item })}
       >
-        <View style={styles.cardHeader}>
+        <LinearGradient
+          colors={['#FFFFFF', '#F8FAFC']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardInner}
+        >
+          {/* Decorative Background Circles */}
+          <View style={StyleSheet.absoluteFillObject}>
+            <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+              <Circle cx="-5%" cy="-20%" r="55" fill="#F1F5F9" />
+              <Circle cx="105%" cy="120%" r="65" fill="#E2E8F0" opacity="0.5" />
+            </Svg>
+          </View>
+
+          {/* Icon Left */}
           <View style={styles.iconBox}>
-            <Package size={22} color={COLORS.primary} />
+            <Package size={24} color={COLORS.primary} />
+            <View style={[
+              styles.avatarBadge,
+              { backgroundColor: statusColors.border }
+            ]} />
           </View>
+
+          {/* Center Details */}
           <View style={styles.titleContainer}>
-            <Text style={styles.customerName} numberOfLines={1}>
-              {item.Customer?.name || 'Unknown Customer'}
-            </Text>
-            <Text style={styles.subText} numberOfLines={1}>
-              {item.Product?.name || 'Product'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <Text style={[styles.customerName, { marginBottom: 0 }]} numberOfLines={1}>
+                {item.Customer?.name || 'Unknown Customer'}
+              </Text>
+            </View>
+            
+            <View style={styles.infoRow}>
+              <Repeat size={12} color="#64748B" style={{ marginRight: 4 }} />
+              <Text style={styles.subText} numberOfLines={1}>
+                {item.Product?.name || 'Product'} • {t('subscriptions.qty')}: {item.baseQuantity} • {formatRecurrence(item.recurrencePattern)}
+              </Text>
+            </View>
           </View>
-          <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
-            <Text style={[styles.statusText, { color: statusColors.text }]}>
-              {(item.status || 'active').toUpperCase()}
-            </Text>
-          </View>
-        </View>
 
-        <View style={styles.divider} />
+          {/* Right Action & Status */}
+          <View style={styles.rightActionContainer}>
+            <View style={styles.statusCol}>
+              <View style={[styles.statusBadge, { backgroundColor: statusColors.badgeBg }]}>
+                <Text style={[styles.statusBadgeText, { color: statusColors.badgeText }]}>
+                  {item.status === 'active' ? t('subscriptions.active') 
+                   : item.status === 'paused' ? t('subscriptions.paused') 
+                   : item.status === 'ended' ? t('subscriptions.ended') 
+                   : (item.status || 'active')}
+                </Text>
+              </View>
+            </View>
 
-        <View style={styles.cardFooter}>
-          <View style={styles.metaContainer}>
-            <Repeat size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-            <Text style={styles.metaText} numberOfLines={1}>
-              Qty: {item.baseQuantity} • {formatRecurrence(item.recurrencePattern)}
-            </Text>
+            <ChevronRight size={18} color="#94A3B8" />
           </View>
-          <ChevronRight size={18} color={COLORS.textPlaceholder} />
-        </View>
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={t('subscriptions.title', 'Subscriptions')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={140}
+        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 35 }}
+      />
+
       <View style={styles.contentWrapper}>
 
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>Subscriptions</Text>
+        {/* Modern Tabs */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tabBtn, filterStatus === 'all' && styles.tabBtnActive]}
+            onPress={() => setFilterStatus('all')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, filterStatus === 'all' && styles.tabTextActive]}>
+              {t('common.all')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabBtn, filterStatus === 'active' && styles.tabBtnActive]}
+            onPress={() => setFilterStatus('active')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, filterStatus === 'active' && styles.tabTextActive]}>
+              {t('subscriptions.active')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabBtn, filterStatus === 'paused' && styles.tabBtnActive]}
+            onPress={() => setFilterStatus('paused')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, filterStatus === 'paused' && styles.tabTextActive]}>
+              {t('subscriptions.paused')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabBtn, filterStatus === 'ended' && styles.tabBtnActive]}
+            onPress={() => setFilterStatus('ended')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, filterStatus === 'ended' && styles.tabTextActive]}>
+              {t('subscriptions.ended')}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Search Box */}
@@ -150,7 +222,7 @@ const SubscriptionListScreen = () => {
             <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by customer or product..."
+              placeholder={t('subscriptions.searchPlaceholder')}
               placeholderTextColor={COLORS.textPlaceholder}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -158,26 +230,10 @@ const SubscriptionListScreen = () => {
           </View>
         </View>
 
-        {/* Status Filter Chips */}
-        <View style={styles.filterContainer}>
-          {['all', 'active', 'paused', 'ended'].map(status => (
-            <TouchableOpacity
-              key={status}
-              style={[styles.filterTab, filterStatus === status && styles.filterTabActive]}
-              onPress={() => setFilterStatus(status)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.filterTabText, filterStatus === status && styles.filterTabTextActive]}>
-                {status.toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading subscriptions...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : error ? (
           <View style={styles.centerContainer}>
@@ -185,7 +241,7 @@ const SubscriptionListScreen = () => {
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => fetchSubscriptions(true)}>
               <RefreshCw size={16} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.retryText}>Retry</Text>
+              <Text style={styles.retryText}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -208,11 +264,11 @@ const SubscriptionListScreen = () => {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Package size={48} color={COLORS.textPlaceholder} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>No Subscriptions Found</Text>
+                <Text style={styles.emptyTitle}>{t('customers.noActiveSubscriptions')}</Text>
                 <Text style={styles.emptySubtitle}>
                   {searchQuery || filterStatus !== 'all'
-                    ? 'No subscriptions match your current filter or search.'
-                    : 'Start by creating a recurring subscription.'}
+                    ? t('customers.noCustomersSearch')
+                    : t('customers.addSubDesc')}
                 </Text>
                 {!searchQuery && filterStatus === 'all' && (
                   <TouchableOpacity
@@ -220,7 +276,7 @@ const SubscriptionListScreen = () => {
                     onPress={() => navigation.navigate('AddSubscription')}
                   >
                     <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.emptyAddBtnText}>Add Subscription</Text>
+                    <Text style={styles.emptyAddBtnText}>{t('customers.addSubscription')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -238,7 +294,7 @@ const SubscriptionListScreen = () => {
           <Plus size={26} color="#FFF" />
         </TouchableOpacity>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -251,18 +307,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: Platform.OS === 'ios' ? 24 : 16,
   },
-  headerRow: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textPrimary,
-  },
   searchContainer: {
     paddingHorizontal: 24,
+    paddingTop: 8,
     marginBottom: 12,
   },
   searchBar: {
@@ -281,42 +328,51 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     fontSize: 15,
     paddingVertical: 0,
   },
-  filterContainer: {
+  tabContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 24,
-    marginBottom: 16,
-  },
-  filterTab: {
-    flex: 1,
-    paddingVertical: 8,
+    marginHorizontal: 16,
+    backgroundColor: '#F1F5F9',
     borderRadius: 12,
-    marginRight: 6,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    justifyContent: 'center',
+    padding: 4,
+    marginTop: 10,
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  tabBtn: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
   },
-  filterTabActive: {
-    backgroundColor: COLORS.primaryLight,
-    borderColor: COLORS.border,
+  tabBtnActive: {
+    backgroundColor: '#FFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  filterTabText: {
-    fontSize: 11,
-    fontFamily: 'Geologica-Bold',
+  tabText: {
+    fontSize: 14,
+    fontFamily: 'Rubik-SemiBold',
     color: '#64748B',
-    letterSpacing: 0.5,
   },
-  filterTabTextActive: {
+  tabTextActive: {
+    fontFamily: 'Rubik-Bold',
     color: COLORS.primary,
   },
   listContent: {
     paddingHorizontal: 24,
-    paddingBottom: 90,
+    paddingBottom: 120,
   },
   emptyListContent: {
     flexGrow: 1,
@@ -325,86 +381,85 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
     marginBottom: 12,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    borderColor: '#F1F5F9',
+    overflow: 'hidden',
   },
-  cardHeader: {
+  cardInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
   },
   iconBox: {
-    width: 44,
-    height: 44,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
+  },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   titleContainer: {
     flex: 1,
   },
   customerName: {
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  subText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 14,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
-  },
-  metaText: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Medium',
-    color: COLORS.textSecondary,
+    fontFamily: 'Rubik-Bold',
+    color: '#1E293B',
+    marginBottom: 6,
     flexShrink: 1,
   },
-  statusBadge: {
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    marginBottom: 4,
   },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  statusText: {
+  subText: {
     fontSize: 11,
-    fontFamily: 'Geologica-Bold',
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    color: '#64748B',
+    fontFamily: 'Rubik-Medium',
+  },
+  rightActionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  statusCol: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginRight: 8,
+    minWidth: 50,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Rubik-Bold',
+    textTransform: 'capitalize',
   },
   centerContainer: {
     flex: 1,
@@ -415,12 +470,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   errorText: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.danger,
     textAlign: 'center',
     marginBottom: 16,
@@ -435,7 +490,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 15,
   },
   emptyContainer: {
@@ -444,7 +499,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: 6,
@@ -454,7 +509,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPlaceholder,
     textAlign: 'center',
     marginBottom: 24,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
   },
   emptyAddBtn: {
     flexDirection: 'row',
@@ -466,20 +521,26 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontSize: 15,
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 40 : 50,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
 
 export default SubscriptionListScreen;
+

@@ -13,13 +13,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, MapPin, Hash } from 'lucide-react-native';
+import { ChevronLeft, MapPin, Hash , ArrowLeft} from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import CurvedHeader from '../../components/CurvedHeader';
+import { useTranslation } from 'react-i18next';
 
 const AddRouteScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { userToken } = useContext(AuthContext);
@@ -76,45 +79,36 @@ const AddRouteScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-
-      {/* Header Row - Matches AddCustomer Header Row */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={28} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.headerRightSpacing} />
-      </View>
+    <View style={styles.container}>
+      <CurvedHeader
+        title={isEditing ? t('routes.editRoute') : t('routes.createRoute')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Title Container (Matches AddCustomerScreen) */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>
-              {isEditing ? 'Edit Route' : 'Create Route'}
-            </Text>
-            <Text style={styles.pageSubtitle}>
-              {isEditing ? 'Update route distribution area' : 'Set up a new delivery route'}
-            </Text>
-          </View>
-
-          {/* Form Area - flat direct inputs */}
+          {/* Form Area - Premium Inputs */}
           <View style={styles.form}>
             {/* Route Name Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Route Name *</Text>
+              <Text style={styles.label}>{t('routes.routeName')} *</Text>
               <View style={styles.inputContainer}>
-                <MapPin size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.inputIconBox, { backgroundColor: '#E0E7FF' }]}>
+                  <MapPin size={18} color="#4F46E5" />
+                </View>
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Satellite Area Route"
+                  placeholder={t('routes.namePlaceholder')}
                   placeholderTextColor={COLORS.textPlaceholder}
                   value={name}
                   onChangeText={setName}
@@ -124,12 +118,14 @@ const AddRouteScreen = () => {
 
             {/* Area Code Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Area Code (Optional)</Text>
+              <Text style={styles.label}>{t('routes.areaCode')}</Text>
               <View style={styles.inputContainer}>
-                <Hash size={20} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+                <View style={[styles.inputIconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <Hash size={18} color="#D97706" />
+                </View>
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. SAT-01"
+                  placeholder={t('routes.areaCodePlaceholder')}
                   placeholderTextColor={COLORS.textPlaceholder}
                   value={areaCode}
                   onChangeText={setAreaCode}
@@ -152,20 +148,20 @@ const AddRouteScreen = () => {
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.btnTextPrimary}>
-                {isEditing ? 'Save Changes' : 'Create Route'}
+                {isEditing ? t('common.saveChanges') : t('routes.createRoute')}
               </Text>
             )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   keyboardView: {
     flex: 1,
@@ -188,21 +184,21 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 10,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   titleContainer: {
     marginBottom: 32,
   },
   pageTitle: {
     fontSize: 28,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 6,
   },
   pageSubtitle: {
     fontSize: 15,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPlaceholder,
   },
   form: {
@@ -212,48 +208,63 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 12,
-    fontFamily: 'Geologica-Bold',
-    color: COLORS.textSecondary,
-    marginBottom: 6,
+    fontSize: 13,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#475569',
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderRadius: 16,
-    paddingHorizontal: 14,
-    height: 52,
+    paddingHorizontal: 16,
+    height: 54,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  inputIcon: {
-    marginRight: 8,
+  inputIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   input: {
     flex: 1,
     height: '100%',
-    color: COLORS.textPrimary,
-    fontFamily: 'Geologica-Medium',
     fontSize: 15,
+    fontFamily: 'Rubik-Medium',
+    color: '#1E293B',
     padding: 0,
   },
   bottomBar: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 60,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
   },
   btn: {
-    height: 52,
+    height: 56,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   btnPrimary: {
     backgroundColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
   },
   btnDisabled: {
     opacity: 0.7,
@@ -261,7 +272,7 @@ const styles = StyleSheet.create({
   btnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Geologica-Bold',
+    fontFamily: 'Rubik-Bold',
   },
   // Custom Toast Styles
   toast: {
@@ -281,9 +292,10 @@ const styles = StyleSheet.create({
   toastText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontFamily: 'Geologica-Medium',
+    fontFamily: 'Rubik-SemiBold',
     textAlign: 'center',
   },
 });
 
 export default AddRouteScreen;
+

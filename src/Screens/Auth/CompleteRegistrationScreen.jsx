@@ -13,7 +13,8 @@ import {
   FlatList,
   ActivityIndicator
 } from 'react-native';
-import { ChevronDown } from 'lucide-react-native';
+import FastImage from 'react-native-fast-image';
+import { ChevronDown, LogOut } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -21,7 +22,7 @@ import { api } from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 
 const CompleteRegistrationScreen = () => {
-  const { userToken, login } = useContext(AuthContext);
+  const { userToken, login, logout } = useContext(AuthContext);
   const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
@@ -35,11 +36,7 @@ const CompleteRegistrationScreen = () => {
   const [loading, setLoading] = useState(false);
   const { t, i18n } = useTranslation();
 
-  // Pincode Dropdown States
-  const [availableCities, setAvailableCities] = useState([]);
-  const [availableStates, setAvailableStates] = useState([]);
-  const [isCityModalVisible, setCityModalVisible] = useState(false);
-  const [isStateModalVisible, setStateModalVisible] = useState(false);
+  // We no longer need Modals for City and State, but we can track if we are fetching.
   const [fetchingPincode, setFetchingPincode] = useState(false);
 
   // Custom Toast state
@@ -83,7 +80,7 @@ const CompleteRegistrationScreen = () => {
 
   // Fetch pincode details
   useEffect(() => {
-    if (pincode.length === 6) {
+    if (pincode.length === 6 && pincode !== '000000') {
       setFetchingPincode(true);
       fetch(`https://api.postalpincode.in/pincode/${pincode}`)
         .then(res => res.json())
@@ -92,14 +89,12 @@ const CompleteRegistrationScreen = () => {
             const postOffices = data[0].PostOffice;
             const uniqueCities = [...new Set(postOffices.map(po => po.District))];
             const uniqueStates = [...new Set(postOffices.map(po => po.State))];
-            setAvailableCities(uniqueCities);
-            setAvailableStates(uniqueStates);
+            
+            // Auto-fill the first result, but user can still edit it manually
             if (uniqueCities.length > 0) setCity(uniqueCities[0]);
             if (uniqueStates.length > 0) setStateName(uniqueStates[0]);
           } else {
             triggerToast('Invalid Pincode', 'error');
-            setAvailableCities([]);
-            setAvailableStates([]);
           }
         })
         .catch(err => {
@@ -107,14 +102,15 @@ const CompleteRegistrationScreen = () => {
           triggerToast('Failed to fetch pincode details', 'error');
         })
         .finally(() => setFetchingPincode(false));
-    } else {
-      setAvailableCities([]);
-      setAvailableStates([]);
     }
   }, [pincode]);
 
   const handleSubmit = async () => {
-    if (!ownerName || !businessName || !address || !pincode || !city || !stateName || !country) {
+    await executeSubmit(address, pincode, city, stateName, country);
+  };
+
+  const executeSubmit = async (submitAddress, submitPincode, submitCity, submitState, submitCountry) => {
+    if (!ownerName || !businessName || !submitAddress || !submitPincode || !submitCity || !submitState || !submitCountry) {
       triggerToast('Please fill all required fields.', 'error');
       return;
     }
@@ -132,17 +128,17 @@ const CompleteRegistrationScreen = () => {
         businessName,
         selectedCategoryId,
         email || null,
-        address,
-        pincode,
-        city,
-        stateName,
-        country
+        submitAddress,
+        submitPincode,
+        submitCity,
+        submitState,
+        submitCountry
       );
 
       if (response.success) {
         triggerToast(t('completeReg.success'), 'success');
         setTimeout(async () => {
-          await login(response.token, response.user);
+          await login(response.token, response.refreshToken, response.user);
         }, 1000);
       }
     } catch (error) {
@@ -161,6 +157,14 @@ const CompleteRegistrationScreen = () => {
         </View>
       )}
 
+      {/* Header with Logout */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <LogOut size={20} color={COLORS.danger} />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -168,7 +172,7 @@ const CompleteRegistrationScreen = () => {
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
           {/* Logo Branding */}
           <View style={styles.logoContainer}>
-            <Image
+            <FastImage
               source={i18n.language === 'hi' ? require('../../../assets/hindilogo.png') : require('../../../assets/englishlogo.png')}
               style={styles.logo}
               resizeMode="contain"
@@ -221,7 +225,7 @@ const CompleteRegistrationScreen = () => {
               />
             </View>
 
-            {/* Address Input */}
+            {/* Address Input Header */}
             <Text style={styles.inputLabel}>Address Line 1 *</Text>
             <View style={styles.inputContainer}>
               <TextInput
@@ -252,33 +256,33 @@ const CompleteRegistrationScreen = () => {
               )}
             </View>
 
-            {/* City Dropdown */}
+            {/* City Input */}
             <Text style={styles.inputLabel}>City *</Text>
-            <TouchableOpacity 
-              style={[styles.inputContainer, styles.dropdownContainer]} 
-              onPress={() => setCityModalVisible(true)}
-              disabled={loading || availableCities.length === 0}
-            >
-              <Text style={city ? styles.dropdownText : styles.dropdownPlaceholderText}>
-                {city || (availableCities.length === 0 ? "Enter valid pincode" : "Select City")}
-              </Text>
-              <ChevronDown size={20} color={COLORS.textPlaceholder} />
-            </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter city"
+                placeholderTextColor={COLORS.textPlaceholder}
+                value={city}
+                onChangeText={setCity}
+                editable={!loading}
+              />
+            </View>
 
-            {/* State Dropdown */}
+            {/* State Input */}
             <Text style={styles.inputLabel}>State *</Text>
-            <TouchableOpacity 
-              style={[styles.inputContainer, styles.dropdownContainer]} 
-              onPress={() => setStateModalVisible(true)}
-              disabled={loading || availableStates.length === 0}
-            >
-              <Text style={stateName ? styles.dropdownText : styles.dropdownPlaceholderText}>
-                {stateName || (availableStates.length === 0 ? "Enter valid pincode" : "Select State")}
-              </Text>
-              <ChevronDown size={20} color={COLORS.textPlaceholder} />
-            </TouchableOpacity>
-
-            {/* Submit Button */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter state"
+                placeholderTextColor={COLORS.textPlaceholder}
+                value={stateName}
+                onChangeText={setStateName}
+                editable={!loading}
+              />
+            </View>
+            
+            {/* Complete Registration Button */}
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleSubmit}
@@ -292,53 +296,7 @@ const CompleteRegistrationScreen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* City Modal */}
-      <Modal visible={isCityModalVisible} transparent={true} animationType="fade">
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setCityModalVisible(false)}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select City</Text>
-            <FlatList
-              data={availableCities}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setCity(item);
-                    setCityModalVisible(false);
-                  }}
-                >
-                  <Text style={[styles.modalItemText, city === item && styles.modalItemTextSelected]}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
-      {/* State Modal */}
-      <Modal visible={isStateModalVisible} transparent={true} animationType="fade">
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setStateModalVisible(false)}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select State</Text>
-            <FlatList
-              data={availableStates}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setStateName(item);
-                    setStateModalVisible(false);
-                  }}
-                >
-                  <Text style={[styles.modalItemText, stateName === item && styles.modalItemTextSelected]}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -347,6 +305,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'ios' ? 8 : 16,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  logoutText: {
+    color: COLORS.danger,
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginLeft: 6,
   },
   keyboardView: {
     flex: 1,
