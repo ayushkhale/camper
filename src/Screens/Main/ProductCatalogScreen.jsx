@@ -25,6 +25,7 @@ import {
   RefreshCw,
   RefreshCcw,
   ArrowLeft,
+  Lock,
 } from 'lucide-react-native';
 import { LinearGradient } from 'react-native-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
@@ -32,11 +33,15 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import CurvedHeader from '../../components/CurvedHeader';
+import { useEntitlements } from '../../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../../constants/subscriptionEntitlements';
 
 const ProductCatalogScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
+  const addProductLocked = isEntitlementLocked(ENTITLEMENT_KEYS.PRODUCT_LIMIT);
 
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -254,9 +259,14 @@ const ProductCatalogScreen = () => {
                 {!searchQuery && user?.role !== 'staff' && (
                   <TouchableOpacity
                     style={styles.emptyAddBtn}
-                    onPress={() => navigation.navigate('AddProduct')}
+                    onPress={() => guardEntitlement(
+                      ENTITLEMENT_KEYS.PRODUCT_LIMIT,
+                      () => navigation.navigate('AddProduct'),
+                    )}
                   >
-                    <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
+                    {addProductLocked
+                      ? <Lock size={18} color="#FFF" style={{ marginRight: 6 }} />
+                      : <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />}
                     <Text style={styles.emptyAddBtnText}>{t('products.addNew')}</Text>
                   </TouchableOpacity>
                 )}
@@ -268,11 +278,14 @@ const ProductCatalogScreen = () => {
 
       {!loading && !error && user?.role !== 'staff' && (
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, addProductLocked && { backgroundColor: '#D97706' }]}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('AddProduct')}
+          onPress={() => guardEntitlement(
+            ENTITLEMENT_KEYS.PRODUCT_LIMIT,
+            () => navigation.navigate('AddProduct'),
+          )}
         >
-          <Plus size={26} color="#FFF" />
+          {addProductLocked ? <Lock size={23} color="#FFF" /> : <Plus size={26} color="#FFF" />}
         </TouchableOpacity>
       )}
     </View>

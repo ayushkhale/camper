@@ -12,18 +12,22 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
-import { Plus, Search, FileText, ChevronRight, AlertCircle, RefreshCw, Calendar, DollarSign, ChevronLeft, ArrowLeft, IndianRupee } from 'lucide-react-native';
+import { Plus, Search, FileText, ChevronRight, AlertCircle, RefreshCw, Calendar, DollarSign, ChevronLeft, ArrowLeft, IndianRupee, Lock } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import CurvedHeader from '../../components/CurvedHeader';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useEntitlements } from '../../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../../constants/subscriptionEntitlements';
 
 const InvoiceListScreen = () => {
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
   const { t } = useTranslation();
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
+  const invoicingLocked = isEntitlementLocked(ENTITLEMENT_KEYS.INVOICING);
 
   const [invoices, setInvoices] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -266,9 +270,14 @@ const InvoiceListScreen = () => {
                 {!searchQuery && filterStatus === 'all' && user?.role !== 'staff' && (
                   <TouchableOpacity
                     style={styles.emptyAddBtn}
-                    onPress={() => navigation.navigate('GenerateInvoice')}
+                    onPress={() => guardEntitlement(
+                      ENTITLEMENT_KEYS.INVOICING,
+                      () => navigation.navigate('GenerateInvoice'),
+                    )}
                   >
-                    <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
+                    {invoicingLocked
+                      ? <Lock size={18} color="#FFF" style={{ marginRight: 6 }} />
+                      : <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />}
                     <Text style={styles.emptyAddBtnText}>{t('invoices.generateInvoices')}</Text>
                   </TouchableOpacity>
                 )}
@@ -280,11 +289,14 @@ const InvoiceListScreen = () => {
 
       {!loading && !error && user?.role !== 'staff' && (
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, invoicingLocked && { backgroundColor: '#D97706' }]}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('GenerateInvoice')}
+          onPress={() => guardEntitlement(
+            ENTITLEMENT_KEYS.INVOICING,
+            () => navigation.navigate('GenerateInvoice'),
+          )}
         >
-          <Plus size={26} color="#FFF" />
+          {invoicingLocked ? <Lock size={23} color="#FFF" /> : <Plus size={26} color="#FFF" />}
         </TouchableOpacity>
       )}
     </SafeAreaView>

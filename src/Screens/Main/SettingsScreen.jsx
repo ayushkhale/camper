@@ -6,7 +6,6 @@ import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -14,9 +13,10 @@ import { useAlert } from '../../context/AlertContext';
 import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink, Briefcase, Mail, MapPin, Map, Hash, Grid, Edit2, ArrowLeft } from 'lucide-react-native';
 import { seedDatabase } from '../../utils/seedDatabase';
 import CurvedHeader from '../../components/CurvedHeader';
+import LanguageSelector from '../../components/LanguageSelector';
 
 const SettingsScreen = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { logout, userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
   const navigation = useNavigation();
@@ -120,11 +120,6 @@ const SettingsScreen = () => {
     setPincode('000000');
     setCity('N/A');
     setCountry('India');
-  };
-
-  const changeLanguage = async (lng) => {
-    i18n.changeLanguage(lng);
-    await AsyncStorage.setItem('app_language', lng);
   };
 
   const handleSeed = async () => {
@@ -334,20 +329,7 @@ const SettingsScreen = () => {
                 <Globe size={20} color={COLORS.textSecondary} style={{ marginRight: 10 }} />
                 <Text style={styles.prefLabel}>{t('settings.language')}</Text>
               </View>
-              <View style={styles.languageRow}>
-                <TouchableOpacity
-                  style={[styles.langChip, i18n.language === 'en' && styles.activeLangChip]}
-                  onPress={() => changeLanguage('en')}
-                >
-                  <Text style={[styles.langChipText, i18n.language === 'en' && styles.activeLangChipText]}>EN</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.langChip, i18n.language === 'hi' && styles.activeLangChip]}
-                  onPress={() => changeLanguage('hi')}
-                >
-                  <Text style={[styles.langChipText, i18n.language === 'hi' && styles.activeLangChipText]}>HI</Text>
-                </TouchableOpacity>
-              </View>
+              <LanguageSelector />
             </View>
 
             <TouchableOpacity
@@ -631,27 +613,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: COLORS.textPrimary,
-  },
-  languageRow: {
-    flexDirection: 'row',
-  },
-  langChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    backgroundColor: '#F8FAFC',
-    marginLeft: 10,
-  },
-  activeLangChip: {
-    backgroundColor: COLORS.primary,
-  },
-  langChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.textPlaceholder,
-  },
-  activeLangChipText: {
-    color: '#FFFFFF',
   },
   logoutText: {
     fontSize: 15,

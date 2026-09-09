@@ -209,463 +209,533 @@
 - **User Request**: Keep the Generate Delivery / Refresh button on the staff side so they can manually generate deliveries.
 - **Root Cause / Task**: The button was previously hidden from the 'staff' role as part of the RBAC restrictions.
 - **Changes Made**: Removed the `user?.role !== 'staff'` condition wrapping the Generate/Refresh button on the OrdersScreen.
--   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   P r o d u c t D e t a i l S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   c h e c k   d e t a i l   m o d e l   o f   t h e   c u s t o m e r   a n d   a s   p e r   t h a t   r e m o d i f y   f o r   t h e   p r o d u c t   d e t a i l   a l s o   a l s o   m a k e   e d i t   d e l e t e   v i s i b l e   a s   d o n e   f o r   o t h e r   i n   h e a d e r 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   P r o d u c t   D e t a i l   S c r e e n   h a d   a n   o u t d a t e d   l a y o u t   a n d   m i s s i n g   e d i t / d e l e t e   b u t t o n s   i n   t h e   h e a d e r   c o m p a r e d   t o   C u s t o m e r   D e t a i l   S c r e e n . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   C u r v e d H e a d e r   t o   1 2 0   h e i g h t   w i t h   p r o p e r   p a d d i n g   a n d   b a c k g r o u n d   c o l o r s   f o r   E d i t / D e l e t e   b u t t o n s . 
-     2 .   R e p l a c e d   t h e   P r o d u c t   P r o f i l e   H e r o   w i t h   t h e   P r o f i l e H e r o C a r d   l a y o u t ,   m o v i n g   t h e   i c o n / i m a g e   i n s i d e   a   s h a d o w - b o r d e r e d   c a r d . 
-     3 .   S y n c e d   b u t t o n   a n d   c a r d   s t y l i n g   w i t h   C u s t o m e r D e t a i l S c r e e n   d e s i g n   s y s t e m . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   S t a f f M a n a g e m e n t S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   m o d i f y   t h e   s t a f f   m a n a g e m e n t   m a k e   s o m e   g r a d i e n t   o r   l i k e   t h a t   b u t   i   w a n t   t h a t   n o t   v e r y   d r a k   g r a d i e n t   k e e p   m i n i m a l   t h a t   c o n n e c t e s   w i t h   s t a f f 
- -   * * R o o t   C a u s e   /   T a s k * * :   I m p l e m e n t   a   c l e a n ,   m i n i m a l   g r a d i e n t   a e s t h e t i c   f o r   t h e   s t a f f   c a r d s   t o   l o o k   p r e m i u m   a n d   d e n o t e    
- s t a f f   ( p r o f e s s i o n a l   b l u e ) . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e p l a c e d   t h e   g e n e r i c   f l a t   a v a t a r   w i t h   a   c r i s p   b l u e - t o - i n d i g o   L i n e a r G r a d i e n t   f o r   a c t i v e   s t a f f . 
-     2 .   W r a p p e d   t h e   e n t i r e   S t a f f   C a r d   i n   a   v e r y   s u b t l e   w h i t e - t o - s l a t e   L i n e a r G r a d i e n t   b a c k g r o u n d . 
-     3 .   M a d e   t h e   c a r d   f o o t e r   t r a n s p a r e n t   s o   t h e   g r a d i e n t   f l o w s   b e a u t i f u l l y   u n d e r n e a t h   t h e   a c t i o n   b u t t o n s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   A d d S t a f f S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   m o d i f y   e d i t   s t a f f   d e t a i l s   a n d   a d d   n e w   s t a f f   m u l t i   i c o n s   l i k e   t h a t 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   A d d / E d i t   S t a f f   S c r e e n   n e e d e d   t h e   s a m e   p r e m i u m   m u l t i - i c o n   l a y o u t   a s   t h e   C u s t o m e r   a n d   P r o d u c t   f o r m s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   t h e   C u r v e d H e a d e r   t o   b e   c o m p a c t   ( 1 2 0   h e i g h t )   a n d   c l e a n l y   h a n d l e   E d i t / A d d   s t r i n g . 
-     2 .   W r a p p e d   e a c h   i n p u t   i n   a   s t y l e d   \ i c o n B o x \ . 
-     3 .   C o l o r - c o d e d   t h e   i c o n s :   I n d i g o / B l u e   f o r   N a m e ,   G r e e n   f o r   P h o n e ,   A m b e r   f o r   E m a i l . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   R e p o r t s   O v e r v i e w   ( O u t s t a n d i n g ,   O p e r a t i o n s ,   I n v e n t o r y ,   F i n a n c i a l s ) 
- -   * * U s e r   R e q u e s t * * :   m o d i f y   t h e   r e p o r t s   s e c t i o n   t o   l o o k   b e u t i f y   c a t c h y   a n d   a s   a   r e p o r t   o v e r v i e w   d o n t   k e e p   p l a n e   k e e p   b a r   l i k e   p i e   l i k e   a n d   a l l   i n   d e t a i l e d   f o r m   s o   p r o v i d e   a n d   m a k e   i t   d o n e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   r e p o r t s   s e c t i o n   w a s   p r e d o m i n a n t l y   p l a i n   F l a t L i s t s .   I t   n e e d e d   a   p r e m i u m   d a s h b o a r d   f e e l   w i t h   c h a r t s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   I n t e g r a t e d   r e a c t - n a t i v e - g i f t e d - c h a r t s   a c r o s s   r e p o r t s . 
-     2 .   A d d e d   T o p   D e b t o r s   B a r C h a r t   t o   O u t s t a n d i n g R e p o r t . 
-     3 .   A d d e d   T o p   M o v e r s   D e l i v e r e d / R e t u r n e d   B a r C h a r t   t o   I n v e n t o r y R e p o r t . 
-     4 .   A d d e d   R o u t e   a n d   S t a f f   S u c c e s s   R a t e   B a r C h a r t s   t o   O p e r a t i o n s R e p o r t . 
-     5 .   E n h a n c e d   F i n a n c i a l R e p o r t   P i e C h a r t   w i t h   g r a d i e n t s ,   f o c u s ,   a n d   s h a d o w s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   R e p o r t s   O v e r v i e w   ( O u t s t a n d i n g ,   O p e r a t i o n s ,   I n v e n t o r y ) 
- -   * * U s e r   R e q u e s t * * :   i t   i s   n o t   e x p e c t e d   a l s o   n a m e s   a r e   n o t   f u l l y   v i s i b l e   i n   b a r s   a n d   a l l   k e e p   p r o e f s i o n a l   b a r s   l i k e   s q u a r e   a n d   a l l   w h e r e   i n s i d e   t h e m   n a m e   t h e r e   l i k e   t h a t   s o   a m k e   m o r e   p r o s f e s i o n a l   u s e   p r o e f s i o n a l   c o l o r s   w h a t   w e   s e e   i n   r e p o r t s 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   v e r t i c a l   B a r C h a r t s   f r o m   g i f t e d - c h a r t s   t r u n c a t e d   l o n g   n a m e s   a n d   d i d n ' t   f i t   t h e   d e s i r e d   p r o f e s s i o n a l   s q u a r e   a e s t h e t i c . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e p l a c e d   g i f t e d - c h a r t s   B a r C h a r t s   w i t h   c u s t o m   V i e w - b a s e d   h o r i z o n t a l   p r o g r e s s   b a r s . 
-     2 .   F o r   O u t s t a n d i n g ,   a d d e d   a   r e d - t h e m e d   b a r   w i t h   t h e   d e b t o r ' s   n a m e   f u l l y   v i s i b l e   i n s i d e   t h e   b a r   o v e r l a y . 
-     3 .   F o r   I n v e n t o r y ,   a d d e d   a   d u a l - m e t r i c   h o r i z o n t a l   s t a c k e d   r a t i o   b a r   s h o w i n g   D e l i v e r e d   ( R e d )   v s   R e t u r n e d   ( G r e e n )   s e a m l e s s l y . 
-     4 .   F o r   O p e r a t i o n s ,   a d d e d   h o r i z o n t a l   b a r s   w i t h   d y n a m i c   c o l o r s   ( G r e e n / A m b e r / R e d )   b a s e d   o n   t h e   r o u t e / s t a f f   s u c c e s s   r a t e ,   k e e p i n g   t h e   l a b e l   c l e a n l y   i n s i d e . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   R e p o r t s   O v e r v i e w   ( C o l o r   P a l e t t e ) 
- -   * * U s e r   R e q u e s t * * :   c a n   c o o r   c o m b i n a t i o n   b e   m o r e   g o o d   f o r   r e p p s r t s   s e c t i o n   i f   y e s   s o   d o   t h i s 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   a   m o r e   s o p h i s t i c a t e d ,   p r e m i u m   c o l o r   c o m b i n a t i o n   i n s t e a d   o f   s t a n d a r d   T a i l w i n d   r e d / g r e e n / b l u e s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   O u t s t a n d i n g R e p o r t :   U p g r a d e d   d e b t   b a r s   a n d   c a r d s   t o   a   p r e m i u m   R o s e / C r i m s o n   p a l e t t e   ( # E 1 1 D 4 8 ,   # B E 1 2 3 C ,   # F F F 1 F 2 ) . 
-     2 .   I n v e n t o r y R e p o r t :   S w a p p e d   g e n e r i c   c o l o r s   f o r   t h e m a t i c   S k y   B l u e   ( # 0 2 8 4 C 7 )   f o r   D e l i v e r e d   a n d   E m e r a l d   ( # 0 5 9 6 6 9 )   f o r   R e t u r n e d . 
-     3 .   O p e r a t i o n s R e p o r t :   A p p l i e d   t h e   s a m e   R o s e / A m b e r / E m e r a l d   s c h e m e   f o r   S u c c e s s   R a t e   g a u g e   a n d   c u s t o m   h o r i z o n t a l   b a r s . 
-     4 .   F i n a n c i a l R e p o r t :   U p d a t e d   K P I   c a r d s   t o   u s e   B r a n d   B l u e   ( # 0 B 4 0 9 C )   f o r   B i l l e d   R e v e n u e   a n d   E m e r a l d   ( # 0 5 9 6 6 9 )   f o r   C o l l e c t e d ,   s y n c i n g   P i e C h a r t   c o l o r s   a c c o r d i n g l y . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   R e p o r t s   O v e r v i e w   ( O u t s t a n d i n g ,   I n v e n t o r y ) 
- -   * * U s e r   R e q u e s t * * :   p r o v i d e   s e a r c h   a l s o   i n   i t   s o   t h a t   i f   w e   w n t   s o m e t h i n g 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   d e t a i l e d   c u s t o m e r   l i s t s   i n   O u t s t a n d i n g   a n d   I n v e n t o r y   r e p o r t s   c a n   g e t   v e r y   l o n g ,   m a k i n g   i t   h a r d   t o   f i n d   a   s p e c i f i c   c u s t o m e r . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   A d d e d   a   r e a l - t i m e   T e x t I n p u t   s e a r c h   b a r   a b o v e   t h e   d e t a i l e d   l i s t s   i n   b o t h   O u t s t a n d i n g R e p o r t . j s x   a n d   I n v e n t o r y R e p o r t . j s x . 
-     2 .   T h e   s e a r c h   a c t i v e l y   f i l t e r s   t h e   F l a t L i s t   b a s e d   o n   t h e   c u s t o m e r   n a m e . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   N a v i g a t i o n   /   C u s t o m D r a w e r C o n t e n t . j s x 
- -   * * U s e r   R e q u e s t * * :   d o   o n e   t h i n g   f o r   c u s t o m   t a b s   i   w a n t   d o n t   u s e   i m a g e   a t   t o p   u s e   s o m e   c o n n e c t i n g   c o l o r s   t h e r e   d o n t   u s e   i m a g e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   s i d e b a r   d r a w e r   w a s   u s i n g   a n   i m a g e   b a c k g r o u n d   w h i c h   t h e   u s e r   w a n t e d   r e p l a c e d   w i t h   a   c l e a n   c o l o r   b l o c k . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e m o v e d   \ I m a g e B a c k g r o u n d \   f r o m   \ C u s t o m D r a w e r C o n t e n t . j s x \ . 
-     2 .   R e p l a c e d   i t   w i t h   a   c l e a n   \ V i e w \   u s i n g   t h e   b r a n d ' s   p r i m a r y   c o n n e c t i n g   c o l o r   ( \ # 0 B 4 0 9 C \ ) . 
-     3 .   A d j u s t e d   t e x t   c o l o r s   ( b u s i n e s s   n a m e ,   o w n e r   n a m e )   t o   w h i t e / l i g h t   g r a y   s o   t h e y   p o p   b e a u t i f u l l y   a g a i n s t   t h e   d a r k   b a c k g r o u n d . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   N a v i g a t i o n   /   C u s t o m D r a w e r C o n t e n t . j s x 
- -   * * U s e r   R e q u e s t * * :   u s e   s k y   l i k e   c o l o r   t h e r e   d o n t   u s e   b l u e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   d a r k   p r i m a r y   b l u e   w a s   t o o   h e a v y .   T h e   u s e r   r e q u e s t e d   a   l i g h t e r ,   s k y - l i k e   c o l o r   f o r   t h e   d r a w e r   h e a d e r . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   t h e   C u s t o m D r a w e r C o n t e n t   h e a d e r   b a c k g r o u n d   t o   a   v i b r a n t   S k y   B l u e   ( \ # 0 E A 5 E 9 \ ) . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   N a v i g a t i o n   /   C u s t o m D r a w e r C o n t e n t . j s x 
- -   * * U s e r   R e q u e s t * * :   f o r   c u s t o m   d r a w e r   i   w a n t   t h a t   u s e   s a m e   s t a t u s   b a r   g e a d i e n t   b g   j h e r e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   t h e   S k y   B l u e   h e a d e r   t o   h a v e   a   g r a d i e n t   e f f e c t ,   m a t c h i n g   t h e   p r e m i u m   v i s u a l   s t y l e   o f   t h e   a p p ' s   s t a n d a r d   s t a t u s   b a r / h e a d e r s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e p l a c e d   t h e   s t a n d a r d   \ V i e w \   w i t h   a   \ L i n e a r G r a d i e n t \   f r o m   \  e a c t - n a t i v e - l i n e a r - g r a d i e n t \ . 
-     2 .   A p p l i e d   a   S k y   B l u e   g r a d i e n t   ( f r o m   b r i g h t   # 3 8 B D F 8   t o   d e e p   # 0 2 8 4 C 7 )   t o   g i v e   i t   a   p o l i s h e d ,   p r e m i u m   l o o k . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   n a v i g a t i o n / C u s t o m D r a w e r C o n t e n t . j s x 
- -   * * U s e r   R e q u e s t * * :   u s e   f o r   c u s t o m   d r a w e r   e x a c t r a c t   t h e   g r a d e i n t   f r o m   t h i s   a n d   u s e   i n   t h e   t o p   o f   c u s t o m   d r a w e r   k e e p   t h i s 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   t o   r e p l a c e   t h e   t e m p o r a r y   I m a g e B a c k g r o u n d   h e a d e r   w i t h   t h e   b e a u t i f u l   S V G   L i n e a r G r a d i e n t   b a c k g r o u n d   f r o m   A p p . j s x   t o   m a i n t a i n   t h e   t h e m e   w i t h o u t   c r a s h i n g   ( s i n c e   e x p o - l i n e a r - g r a d i e n t   i s   m i s s i n g ) . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   E x t r a c t e d   t h e   r e a c t - n a t i v e - s v g   \ L i n e a r G r a d i e n t \   f r o m   \ A p p . j s x \ . 
-     2 .   A p p l i e d   i t   a s   a n   a b s o l u t e - f i l l   b a c k g r o u n d   l a y e r   t o   t h e   d r a w e r   h e a d e r   i n   \ C u s t o m D r a w e r C o n t e n t . j s x \ . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   S e t t i n g s S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   n o w   b e u t i f y   t h e   s e t i n g s   s c r e e n   t o   b e   g o o d   
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   S e t t i n g s   S c r e e n   w a s   u s i n g   b a s i c   T e x t I n p u t   c o m p o n e n t s   a n d   a   p l a i n   l a y o u t . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e p l a c e d   t h e   g e n e r i c   S a f e A r e a V i e w   h e a d e r   w i t h   t h e   p r e m i u m   \ C u r v e d H e a d e r \   c o m p o n e n t . 
-     2 .   S t y l e d   t h e   p r o f i l e   h e r o   s e c t i o n   a s   a   f l o a t i n g   c a r d   t h a t   e l e g a n t l y   o v e r l a p s   t h e   c u r v e d   h e a d e r . 
-     3 .   U p g r a d e d   a l l   t e x t   i n p u t s   w i t h   l e f t - a l i g n e d   L u c i d e   i c o n s   ( U s e r ,   B r i e f c a s e ,   M a i l ,   M a p P i n ,   H a s h ,   G l o b e ,   G r i d )   a n d   a p p l i e d   s o f t   s h a d o w   s t y l e s   m a t c h i n g   t h e   r e s t   o f   t h e   p r e m i u m   U I . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   S e t t i n g s S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   k e e p   b a c k   b u t t o n   t h e r e   a n d   h e a i n g   o f   s e t t i n g   a l s o 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   a   s t a n d a r d   h e a d e r   ( w i t h   a   b a c k   b u t t o n   a n d   a   t i t l e )   r a t h e r   t h a n   r e l y i n g   o n   t h e   d r a w e r   m e n u   h e a d e r ,   k e e p i n g   t h e   f l a t   U I   s t y l e . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   A d d e d   a   f l a t   t o p   h e a d e r   t o   t h e   S e t t i n g s   s c r e e n   c o n t a i n i n g   a n   \ A r r o w L e f t \   b a c k   b u t t o n   a n d   a   b o l d    
- S e t t i n g s   t i t l e . 
-     2 .   T h e   h e a d e r   m a t c h e s   t h e   b a c k g r o u n d   c l e a n l y   a n d   h a n d l e s   t h e   S a f e A r e a   t o p   i n s e t   p e r f e c t l y . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   S e t t i n g s S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   b u s i n e s s   i n f o r m a t i o n   w r i t t e n   t w o   t i m e s   a l s o   m a k e   m o r e   b e u t i f u l   f o r m   v i e w   f o r   s e t t i n g s 
- -   * * R o o t   C a u s e   /   T a s k * * :   D u p l i c a t e   s e c t i o n   t i t l e   r e n d e r i n g   i n s i d e   t h e   n e w   c a r d   c o n t a i n e r ;   f o r m   i n p u t s   f e l t   s l i g h t l y   r i g i d   w i t h   f u l l   b o r d e r s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e m o v e d   t h e   d u p l i c a t e d   ' B u s i n e s s   I n f o r m a t i o n '   t i t l e . 
-     2 .   O v e r h a u l e d   t h e   f o r m   f i e l d s :   c h a n g e d   i n p u t   l a b e l s   t o   s m a l l ,   u p p e r c a s e ,   w i d e l y   s p a c e d   s t y l i n g   f o r   a   p r e m i u m   f e e l . 
-     3 .   R e m o v e d   t h e   b o r d e r s   f r o m   t h e   i n p u t s   e n t i r e l y ,   r e p l a c i n g   t h e m   w i t h   a   s o f t ,   b o r d e r l e s s   p i l l - s h a p e   d e s i g n   t h a t   f i t s   p e r f e c t l y   i n s i d e   t h e   w h i t e   c a r d   c o n t a i n e r . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   O r d e r s S c r e e n . j s x ,   C u r v e d H e a d e r . j s x ,   i 1 8 n / i n d e x . j s 
- -   * * U s e r   R e q u e s t * * :   n o w   l e t s   f i x   f o r   i 8 n   o n e   b y   o n e   s c r e e n   b y   s c r e e n   r e f r e s h   b u t t o n   i n   t h e   o r d e r s c r e e n   t o d a y   d e l i v e r i e s   n a m e   a t   c u r e v e d   e h a d r   f i x   t h i s   f o r   o r d e r   s c r e e n   p r o v i d e   h i n d i   e n g l i s h   p r o e p l y   t r a n s a l t i o n   t h e r e   a l s o   f o r   a l l   s c r e e n s   h e a d e r   f i x   k e e p   h i n d i   e n g l i s h   b o t h   t h e r e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   O r d e r s   S c r e e n   h a d   h a r d c o d e d   s t r i n g s ,   m i s s i n g   t r a n s l a t i o n   k e y s ,   a n d   t h e   a p p   l a c k e d   a   g l o b a l   l a n g u a g e   t o g g l e   i n   t h e   C u r v e d   H e a d e r . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   \ O r d e r s S c r e e n . j s x \   t o   u s e   \ 	 ( ' h o m e . t o d a y s D e l i v e r i e s ' ) \   a n d   \ 	 ( ' c o m m o n . r e f r e s h ' ) \   i n s t e a d   o f   h a r d c o d e d   s t r i n g s . 
-     2 .   A d d e d   m i s s i n g   \ d e l i v e r i e s \   a n d   \  e f r e s h \   n a m e s p a c e s   i n   b o t h   E n g l i s h   a n d   H i n d i   i n s i d e   \ i 1 8 n / i n d e x . j s \ . 
-     3 .   P l a c e d   a   g l o b a l   ' H I / E N '   l a n g u a g e   t o g g l e   b u t t o n   d i r e c t l y   i n s i d e   \ C u r v e d H e a d e r . j s x \   s o   t h a t   * e v e r y *   s c r e e n   u s i n g   t h i s   h e a d e r   h a s   b u i l t - i n   t r a n s l a t i o n   s w i t c h i n g   c a p a b i l i t i e s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   O r d e r s S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   l e t s   c h a n g e   f o r   t h e   h e a d e r a   n d   h i n d i   e n g l i s h   i 8 n   i s s u e s   b u t   d o   n o t   b r e a k   a n y   f u n c t i o n l i t y   a n y   w h e r e   l e t s   s t a r t   w i t h   o r d e r   s c r e e n   m a k e   h i n d i   e n g l i s h   f o r   r e f r e s h   b u t t o n   l s o   f o r   t h e   t o d a y   d e l i v e r i e s   t i t l e   a t   t o p   c u r e v e d   h e a d e r   m a k e   f i x   f o r   t h i s   s c r e e n 
- -   * * R o o t   C a u s e   /   T a s k * * :   S o m e   U I   t e x t   e l e m e n t s   o n   t h e   O r d e r s   s c r e e n   ( l i k e   t h e   t o p   c u r v e d   h e a d e r   t i t l e   a n d   t h e   R e f r e s h   b u t t o n )   w e r e   h a r d c o d e d   i n   E n g l i s h ,   i g n o r i n g   t h e   a c t i v e   i 1 8 n   l a n g u a g e   p r e f e r e n c e . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   t h e   \ C u r v e d H e a d e r \   t i t l e   t o   u s e   \ 	 ( ' h o m e . t o d a y s D e l i v e r i e s ' ) \   s o   i t   s u c c e s s f u l l y   t o g g l e s   b e t w e e n   H i n d i   a n d   E n g l i s h . 
-     2 .   W r a p p e d   t h e   ' R e f r e s h '   t e x t   i n   t h e   b u t t o n   w i t h   \ 	 ( ' c o m m o n . r e f r e s h ' ) \   t o   s u p p o r t   l i v e   l a n g u a g e   s w i t c h i n g . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   H o m e S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   i n   h o m e   s c r e e n   i n   d a i l y   d e l i v e r y   p r o g r e s s   i t   i s   c o m i n g   t o d a y   d e l i v e r y   m a k e   h i n d i   e n g l i s h   f i x 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   D a i l y   D e l i v e r y   P r o g r e s s   c a r d   o n   t h e   H o m e   S c r e e n   h a d   h a r d c o d e d   E n g l i s h   t e x t   ( ' P e n d i n g ' ,   ' S k i p p e d ' ,   ' T o d a y ' s   D e l i v e r i e s ' ,   a n d   ' S t a y   o n   t r a c k ,   y o u ' v e   g o t   t h i s ! ' ) . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   t h e   ' T o d a y ' s   D e l i v e r i e s '   b u t t o n   t e x t   t o   u s e   t h e   \ 	 ( ' h o m e . t o d a y s D e l i v e r i e s ' ) \   t r a n s l a t i o n . 
-     2 .   A p p l i e d   t r a n s l a t i o n s   t o   t h e   ' P e n d i n g '   a n d   ' S k i p p e d '   l e g e n d   l a b e l s   u s i n g   t h e   \ d e l i v e r i e s . p e n d i n g \   a n d   \ d e l i v e r i e s . s k i p p e d \   i 1 8 n   k e y s . 
-     3 .   L i n k e d   t h e   m o t i v a t i o n a l   s u b t e x t   t o   \ 	 ( ' h o m e . s t a y O n T r a c k ' ) \   s o   i t   f u l l y   t r a n s l a t e s   a l o n g s i d e   t h e   r e s t   o f   t h e   d a s h b o a r d . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   C u s t o m D r a w e r C o n t e n t . j s x 
- -   * * U s e r   R e q u e s t * * :   i n   c u s t o m   d r a w e r   r e p o r t s   a n d   a n y t i c s   i n   n o t   m a g e d   b y   i 8 n   f i x 
- -   * * R o o t   C a u s e   /   T a s k * * :   ' R e p o r t s   &   A n a l y t i c s '   m e n u   i t e m   i n   t h e   c u s t o m   d r a w e r   n a v i g a t i o n   w a s   h a r d c o d e d   a s   a   l i t e r a l   s t r i n g . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   A d d e d   a   n e w   \ 	 a b s . r e p o r t s \   t r a n s l a t i o n   k e y   f o r   b o t h   E n g l i s h   ( ' R e p o r t s   &   A n a l y t i c s ' )   a n d   H i n d i   ( ' 0	?	*	K	0	M		M	8	  	0	  	(	>	2	?		?		M	8	' )   i n   \ i 1 8 n / i n d e x . j s \ . 
-     2 .   U p d a t e d   \ C u s t o m D r a w e r C o n t e n t . j s x \   t o   u s e   \ 	 ( ' t a b s . r e p o r t s ' ) \   i n s t e a d   o f   t h e   h a r d c o d e d   l i t e r a l . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   S t a f f M a n a g e m e n t S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   e d i t   d e l e t e   f i x   i n   s t a f f   m a n a g e m n t   l i s t   f i x 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   ' E d i t '   a n d   ' D e l e t e '   b u t t o n   l a b e l s   o n   i n d i v i d u a l   s t a f f   m e m b e r   c a r d s   w e r e   h a r d c o d e d   l i t e r a l   s t r i n g s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   t h e   ' E d i t '   b u t t o n   t e x t   t o   u s e   \ 	 ( ' c o m m o n . e d i t ' ) \ . 
-     2 .   U p d a t e d   t h e   ' D e l e t e '   b u t t o n   t e x t   t o   u s e   \ 	 ( ' c o m m o n . d e l e t e ' ) \ . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   R e p o r t s S c r e e n . j s x ,   i 1 8 n / i n d e x . j s 
- -   * * U s e r   R e q u e s t * * :   n o w   f o r   r e p o r t   s c r e e n   a s   t h e r e   i s   n o   i 8 n   i m p l k e m n t a t i o n   s o   m a k e   i t   d o n e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   R e p o r t s   s c r e e n   w a s   c o m p l e t e l y   m i s s i n g   i 1 8 n   i m p l e m e n t a t i o n ;   a l l   t a b s ,   d r o p d o w n s ,   a n d   t e x t   w e r e   h a r d c o d e d   s t r i n g s   i n   E n g l i s h . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   C r e a t e d   a   c o m p r e h e n s i v e   \  e p o r t s \   t r a n s l a t i o n   n a m e s p a c e   i n   \ i 1 8 n / i n d e x . j s \   f o r   b o t h   E n g l i s h   a n d   H i n d i . 
-     2 .   M o v e d   t h e   \ P R E S E T S \   a n d   \ T A B S \   a r r a y s   i n s i d e   t h e   \ R e p o r t s S c r e e n \   c o m p o n e n t   s o   t h e y   c o u l d   a c c e s s   t h e   \ 	 ( ) \   h o o k   d y n a m i c a l l y . 
-     3 .   R e p l a c e d   a l l   h a r d c o d e d   a l e r t s ,   m o d a l   h e a d e r s ,   f i l t e r   p i l l s   ( ' F r : ' ,   ' T o : ' ) ,   a n d   t h e   m a i n   s c r e e n   h e a d e r   w i t h   t r a n s l a t i o n   h o o k s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   c o m p o n e n t s / r e p o r t s / * . j s x ,   i 1 8 n / i n d e x . j s 
- -   * * U s e r   R e q u e s t * * :   n o   l i k e   d e t a i l e d   l i s t   a n d   a l l   n o   h i n d i   t r a n s l a t e   f o u n d   f i x   t h i s   a l s o   a l s o   c h e c k   f u l l y   w h e r e   e l s e   m i s s i g n g   f o r   t h e   h i n d i   i n   r e p o r t   s c r e e n 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   f o u r   s u b - c o m p o n e n t s   r e n d e r e d   i n s i d e   R e p o r t s S c r e e n   ( F i n a n c i a l R e p o r t ,   I n v e n t o r y R e p o r t ,   O p e r a t i o n s R e p o r t ,   O u t s t a n d i n g R e p o r t )   s t i l l   c o n t a i n e d   h a r d c o d e d   E n g l i s h   t e x t   f o r   c h a r t s ,   t a b l e s ,   a n d   l i s t s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   A d d e d   a n   e x t e n s i v e   s e t   o f   t r a n s l a t i o n   k e y s   t o   t h e   \  e p o r t s \   n a m e s p a c e   i n   \ i 1 8 n / i n d e x . j s \   c o v e r i n g   a l l   i n t e r n a l   l a b e l s   ( e . g .   ' D e t a i l e d   L i s t ' ,   ' B i l l e d   R e v e n u e ' ,   ' S u c c e s s   R a t e ' ,   e t c . ) . 
-     2 .   I n j e c t e d   \ u s e T r a n s l a t i o n \   i n t o   \ F i n a n c i a l R e p o r t . j s x \ ,   \ I n v e n t o r y R e p o r t . j s x \ ,   \ O p e r a t i o n s R e p o r t . j s x \ ,   a n d   \ O u t s t a n d i n g R e p o r t . j s x \ . 
-     3 .   R e p l a c e d   a l l   h a r d c o d e d   s t r i n g s   i n s i d e   t h e s e   c o m p o n e n t s   w i t h   d y n a m i c   \ 	 ( ) \   c a l l s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / P a s t D e l i v e r i e s S c r e e n . j s x ,   s r c / S c r e e n s / M a i n / O r d e r s S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   f o r   d a i l y   d e l i v e r y   s c r e e n   m a k e   u i   u x   l i k e   o r d e r   s c r e e n   t o   l o o k   g o o d   a n d   a t t r c a t i v e   s a m e   l i k e   l e f t   s i d e   b o r d e r   a n d   a l l   a l s o   d o   f o r   h i n d i   e n g l i s h   a l s o   n o w   i   w a n t   t h a t   a l l   d e l i v e r i e s   t e x t   s h o u l d   b e   a l s o   f o r   h i n d i   
- -   * * R o o t   C a u s e   /   T a s k * * :   ' A l l   D e l i v e r i e s '   ( P a s t D e l i v e r i e s S c r e e n )   l a c k e d   t h e   d y n a m i c   l e f t   s t a t u s   b o r d e r   p r e s e n t   i n   o t h e r   v i e w s ,   a n d   ' A l l   D e l i v e r i e s '   t i t l e   l a c k e d   i 1 8 n   s u p p o r t .   D e l i v e r y   c a r d s   i n   O r d e r s S c r e e n   w e r e   a l s o   h a r d c o d e d   t o   a   b l u e   l e f t   b o r d e r . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   \ D e l i v e r y C a r d \   i n   b o t h   \ P a s t D e l i v e r i e s S c r e e n . j s x \   a n d   \ O r d e r s S c r e e n . j s x \   t o   a p p l y   \  o r d e r L e f t C o l o r :   g e t S t a t u s C o l o r ( d e l i v e r y . s t a t u s ) \   f o r   a   d y n a m i c   l e f t   b o r d e r . 
-     2 .   A p p l i e d   \ 	 ( ' d e l i v e r i e s . a l l D e l i v e r i e s ' ) \   t o   t h e   h e a d e r   t i t l e   i n   \ P a s t D e l i v e r i e s S c r e e n . j s x \   a n d   a d d e d   t h e   t r a n s l a t i o n   t o   \ s r c / i 1 8 n / i n d e x . j s \ . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / P a s t D e l i v e r i e s S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   t h e   b a c k   b u t t o n   i s   d i f r r e n t   f i x   u s e   a r r o w l e f t   a s   w e   u s e d   [ p r e v i o u s   a l ; s o   c o l o r   f i x 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   b a c k   b u t t o n   o n   t h e   A l l   D e l i v e r i e s   s c r e e n   w a s   s e t   t o   C h e v r o n L e f t   a n d   w a s   u s i n g   a n   i n c o r r e c t   c o l o r . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   \ C u r v e d H e a d e r \   t o   u s e   \ A r r o w L e f t \   a n d   s e t   i t s   c o l o r   t o   \ # F F F \   f o r   v i s i b i l i t y   a g a i n s t   t h e   b l u e   g r a d i e n t . 
-     2 .   I m p o r t e d   \ A r r o w L e f t \   f r o m   \ l u c i d e - r e a c t - n a t i v e \ . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 2 
- -   * * D a y * * :   S a t u r d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / i 1 8 n / i n d e x . j s 
- -   * * U s e r   R e q u e s t * * :   d o   o n e   t h i n g   f i x   p a y m e n t s . T o t a l A m o u n t D u e   f i x   f o r   t h e   i 8 n   l a n g u a g e   f i x   s o   p l e a s e   m a k e   i t   d o n e   o n   p y m n e t   s c r e e n 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   t r a n s l a t i o n s   f o r   ' T o t a l   A m o u n t   D u e '   a n d   ' A v a i l a b l e   B a l a n c e '   w e r e   m i s s i n g   f r o m   t h e   p a y m e n t s   n a m e s p a c e   i n   t h e   i 1 8 n   c o n f i g u r a t i o n ,   c a u s i n g   t r a n s l a t i o n   f a l l b a c k s   o n   t h e   P a y m e n t s   s c r e e n . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   A d d e d   \ 	 o t a l A m o u n t D u e \   a n d   \  v a i l a b l e B a l a n c e \   t o   b o t h   E n g l i s h   a n d   H i n d i   c o n f i g u r a t i o n s   u n d e r   t h e   \ p a y m e n t s \   n a m e s p a c e   i n   \ s r c / i 1 8 n / i n d e x . j s \ . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / O r d e r s S c r e e n . j s x ,   s r c / S c r e e n s / M a i n / P a s t D e l i v e r i e s S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   f i x   o r d e r   s c r e e n   l e f t   b o r d e r   n o t   v i s i b l e   n o   c o l o r   v i s i b l e ,   u s e   s o m e   b l u e   l i k e   b o r d e r   l e f t   i n   o r d e r   s c r e e n 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   l e f t   b o r d e r   w i d t h / c o l o r   w a s   c o l l i d i n g   w i t h   t h e   b a s e   b o r d e r C o l o r   a n d   i s E x p a n d e d   s t y l e s   i n   R e a c t   N a t i v e ,   r e n d e r i n g   i t   i n v i s i b l e   i n   s o m e   v i e w s .   F u r t h e r m o r e ,   t h e   u s e r   w a n t e d   a   s t r i c t   b l u e   b o r d e r   o n   t h e   m a i n   O r d e r s S c r e e n   i n s t e a d   o f   d y n a m i c   s t a t u s   c o l o r s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   \ O r d e r s S c r e e n . j s x \   D e l i v e r y C a r d   t o   u s e   a   s t a t i c   B l u e   l e f t   b o r d e r   ( \ # 3 B 8 2 F 6 \ ) . 
-     2 .   M o v e d   t h e   i n l i n e   b o r d e r   s t y l e s   t o   t h e   v e r y   e n d   o f   t h e   a r r a y   i n   b o t h   \ O r d e r s S c r e e n . j s x \   a n d   \ P a s t D e l i v e r i e s S c r e e n . j s x \   t o   e n s u r e   t h e y   c o r r e c t l y   o v e r r i d e   t h e   g e n e r i c   \  o r d e r C o l o r \   f r o m   \ i s E x p a n d e d \ . 
-     3 .   A d d e d   \  o r d e r S t y l e :   ' s o l i d ' \   t o   g u a r a n t e e   r e n d e r i n g   a c r o s s   d i f f e r e n t   d e v i c e   O S   v e r s i o n s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / O r d e r s S c r e e n . j s x ,   s r c / S c r e e n s / M a i n / P a s t D e l i v e r i e s S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   d o   o n e   t h i n g   m a k e   y e l l o w   b o r d e r   c o l o r   f o r   p e n d i n g   l i k e   i n   o r d e r   s c r e e n   a n d   d e l i e v r y   s c r e e n   b o t h 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   p e n d i n g   s t a t u s   w a s   p r e v i o u s l y   m a p p e d   t o   a   b l u e   c o l o r   f o r   t h e   l e f t   b o r d e r ,   w h i c h   c a u s e d   c o n f u s i o n   a n d   d i d n ' t   l o o k   r i g h t . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   \ g e t S t a t u s C o l o r \   i n   b o t h   \ O r d e r s S c r e e n . j s x \   a n d   \ P a s t D e l i v e r i e s S c r e e n . j s x \   t o   m a p   t h e   \ p e n d i n g \   s t a t u s   t o   Y e l l o w   ( \ # E A B 3 0 8 \ ) . 
-     2 .   F i x e d   a   b u g   i n   t h e   i n l i n e   s t y l i n g   w h e r e   t h e   o b j e c t   s t r u c t u r e   r e t u r n e d   b y   \ O r d e r s S c r e e n \ ' s   \ g e t S t a t u s C o l o r \   w a s   n o t   b e i n g   p r o p e r l y   e x t r a c t e d   f o r   t h e   b o r d e r   c o l o r   b y   u s i n g   \ ( g e t S t a t u s C o l o r ( d e l i v e r y . s t a t u s ) ? . d o t   | |   g e t S t a t u s C o l o r ( d e l i v e r y . s t a t u s ) ) \ . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   A p p . j s x 
- -   * * U s e r   R e q u e s t * * :   n o w   m o d i f y   t h e   a p p . j s x   i f   t h e   r o u t e   i s   o n b o a r d i g n   t h e n   k e e p   s t a t u s   b a r   c o l o r   t o   b l u e   t h a t   w e   h a v e   p r e v i o u s l y   i s   t h i s   p o s s i b l e   i f   y e s   s o   s a y   y e s   a n d   p r o c c e d 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   t h e   O n b o a r d i n g   ( C o m p l e t e R e g i s t r a t i o n )   s c r e e n   t o   r e t a i n   t h e   c l a s s i c   s o l i d   b l u e   s t a t u s   b a r   i n s t e a d   o f   t h e   n e w   l i g h t - b l u e   g r a d i e n t   a p p l i e d   g l o b a l l y   a c r o s s   t h e   A p p . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   A d d e d   \ i s O n b o a r d i n g S c r e e n \   s t a t e   t o   \ A p p . j s x \   t r a c k i n g   t h e   \ C o m p l e t e R e g i s t r a t i o n \   r o u t e . 
-     2 .   D y n a m i c a l l y   u p d a t e d   t h e   \ S t a t u s B a r \   \  a c k g r o u n d C o l o r \   t o   \ # 0 B 4 0 9 C \   a n d   \  a r S t y l e \   t o   \ l i g h t - c o n t e n t \   w h e n   o n   t h e   o n b o a r d i n g   s c r e e n . 
-     3 .   D y n a m i c a l l y   s e t   t h e   t o p   \ S a f e A r e a V i e w \   b a c k g r o u n d   c o l o r   t o   m a t c h   t h e   s t a t u s   b a r   t o   e n s u r e   a   s e a m l e s s   c o l o r   f i l l   a t   t h e   t o p   n o t c h . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   A p p . j s x 
- -   * * U s e r   R e q u e s t * * :   n o   i t s   n o t   d o n e   i   w a n t   t h a t   o n b o a r d i n g   s c r e e n   j s x   1   a n d   2   b o t h   s h o u l d   h a v e   s t a t u s   b a r   b l u e   l i k e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   d y n a m i c   s t a t u s   b a r   c h e c k   o n l y   i n c l u d e d   \ C o m p l e t e R e g i s t r a t i o n \ ,   n o t   t h e   \ O n b o a r d i n g 1 \   a n d   \ O n b o a r d i n g 2 \   r o u t e s   f r o m   \ A u t h S t a c k \ . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   t h e   \ i s O n b o a r d i n g S c r e e n \   s t a t e   i n   \ A p p . j s x \   t o   e x p l i c i t l y   c h e c k   f o r   \ [ ' O n b o a r d i n g 1 ' ,   ' O n b o a r d i n g 2 ' ,   ' C o m p l e t e R e g i s t r a t i o n ' ] . i n c l u d e s ( r o u t e . n a m e ) \ . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   A p p . j s x 
- -   * * U s e r   R e q u e s t * * :   n o   i t s   n o t   d o n e   
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   d y n a m i c   \ < S t a t u s B a r > \   c o m p o n e n t   w a s   f a i l i n g   t o   u p d a t e   i t s   b a c k g r o u n d   c o l o r   n a t i v e l y   o n   A n d r o i d   d e v i c e s   w h e n   t r a n s i t i o n i n g   t o   t h e   o n b o a r d i n g   s c r e e n s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   I n j e c t e d   a n   i m p e r a t i v e   n a t i v e   O S   c o m m a n d   ( \ S t a t u s B a r . s e t B a c k g r o u n d C o l o r \ )   d i r e c t l y   i n t o   t h e   \ u s e E f f e c t \   h o o k   i n   \ A p p . j s x \   t o   f o r c e   A n d r o i d   t o   p h y s i c a l l y   r e d r a w   t h e   s t a t u s   b a r   b a c k g r o u n d   c o l o r   t o   \ # 0 B 4 0 9 C \   e x a c t l y   w h e n   t h e   r o u t e   c h a n g e s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   A p p . j s x 
- -   * * U s e r   R e q u e s t * * :   n o t   d o n e   a g a i n   i s   t h i s   p o s s i b l e   o r   n o t 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   \ N a v i g a t i o n C o n t a i n e r \ ' s   \ o n S t a t e C h a n g e \   a n d   \ o n R o u t e R e a d y \   p r o p s   o c c a s i o n a l l y   f a i l   t o   f i r e   r e l i a b l y   o n   t h e   i n i t i a l   m o u n t i n g   o f   t h e   A u t h S t a c k   d u e   t o   a   k n o w n   R e a c t   N a v i g a t i o n   l i f e c y c l e   r a c e   c o n d i t i o n ,   m e a n i n g   \ i s O n b o a r d i n g S c r e e n \   w a s   s t a y i n g   \  a l s e \   o n   i n i t i a l   l o a d . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   B o u n d   a   m a n u a l   \ 
- a v i g a t i o n R e f . a d d L i s t e n e r ( ' s t a t e ' ,   u p d a t e R o u t e ) \   l i s t e n e r   i n s i d e   a   \ u s e E f f e c t \   b l o c k   t o   p e r f e c t l y   i n t e r c e p t   a l l   n e s t e d   s t a c k   t r a n s i t i o n s . 
-     2 .   I m p l e m e n t e d   a   1 0 0 m s   \ s e t T i m e o u t \   c h e c k   t o   e n s u r e   t h e   i n i t i a l   r o u t e   s t a t e   i s   c a p t u r e d   e v e n   i f   t h e   U I   r e n d e r s   f a s t e r   t h a n   t h e   n a v i g a t i o n   s t a c k   r e s o l v e s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   A p p . j s x 
- -   * * U s e r   R e q u e s t * * :   n o w   m o d i f y   t h e   a p p . j s x   i f   t h e   r o u t e   i s   o n b o a r d i g n   t h e n   k e e p   s t a t u s   b a r   c o l o r   t o   b l u e   t h a t   w e   h a v e   p r e v i o u s l y 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   n e w l y   a d d e d   L i n e a r G r a d i e n t   b a c k g r o u n d   i n   A p p . j s x   w a s   i n d i s c r i m i n a t e l y   o v e r r i d i n g   a l l   s c r e e n s ,   d i s r u p t i n g   t h e   c a r e f u l l y   c r a f t e d   t o p - n o t c h   c o l o r   m a t c h i n g   f o r   t h e   o n b o a r d i n g / a u t h   s c r e e n s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   \ u p d a t e R o u t e \   l o g i c   t o   e x p l i c i t l y   i n c l u d e   \ ' S p l a s h ' \   i n   t h e   \ i s A u t h S c r e e n \   c h e c k . 
-     2 .   W r a p p e d   t h e   n e w   \ L i n e a r G r a d i e n t \   i n s i d e   a   c o n d i t i o n a l   b l o c k   ( \ { ! i s A u t h S c r e e n   & &   . . . } \ )   s o   i t   O N L Y   r e n d e r s   o n   t h e   m a i n   i n n e r   a p p   s c r e e n s . 
-     3 .   R e s t o r e d   t h e   d y n a m i c   \ S a f e A r e a V i e w \   s t y l i n g   ( \  a c k g r o u n d C o l o r :   i s A u t h S c r e e n   ?   ' # 9 5 C F F E '   :   ' t r a n s p a r e n t ' \ )   a n d   t o p   e d g e s   l o g i c   t o   e n s u r e   t h e   o n b o a r d i n g   s c r e e n s   p e r f e c t l y   r e t a i n   t h e i r   p r e v i o u s   b l u e   s t a t u s   b a r   m a t c h i n g . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / n a v i g a t i o n / M a i n T a b s . j s x 
- -   * * U s e r   R e q u e s t * * :   n o w   o n   c u r v e d   h e a d e r   i   w a n t   t h a t   r e m o v e   t h e   c a m p e r   t e x t   a n d   d r o p l e t   s u c h   t h a t   u s e   l o g o 1 . p n g   i m a g e   m a k e   i t   s u c h   t h a t   i t   l o o k s   p e r f e c t l y   t h e r e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   t o   r e p l a c e   t h e   t e x t - b a s e d   C a m p e r   l o g o   a n d   D r o p l e t   i c o n   w i t h   a   c u s t o m   p r o v i d e d   i m a g e   ( l o g o 1 . p n g )   o n   t h e   H o m e   S c r e e n   h e a d e r . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e m o v e d   t h e   \ C u s t o m D r o p l e t I c o n \   a n d   \ < T e x t > C a m p e r < / T e x t > \   f r o m   t h e   \ 	 i t l e \   p r o p   o f   t h e   \ C u r v e d H e a d e r \   i n   \ M a i n T a b s . j s x \ . 
-     2 .   I n s e r t e d   a   r e s p o n s i v e   \ < I m a g e > \   c o m p o n e n t   p o i n t i n g   t o   \ . . / . . / a s s e t s / l o g o 1 . p n g \   w i t h   \  e s i z e M o d e = \  
- c o n t a i n \ \   a n d   o p t i m a l   d i m e n s i o n s   t o   e n s u r e   i t   l o o k s   p e r f e c t   i n s i d e   t h e   c u r v e d   h e a d e r   l a y o u t . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / S p l a s h S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   u s e   s p l a s h . p n g   a s   i m a g e   o n   t h e   s p l a s h   s c r e e n   s o   r e p l a c e   s p l a s h   s c r e e n   w i t h   t h i s 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   t o   r e p l a c e   t h e   c o m p l e x   t y p o g r a p h i c   a n i m a t i o n   s p l a s h   s c r e e n   w i t h   t h e   n e w l y   p r o v i d e d   s t a t i c   i m a g e   ( \ s p l a s h . p n g \ ) . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   C o m p l e t e l y   r e w r o t e   \ S p l a s h S c r e e n . j s x \   t o   r e n d e r   a n   \ I m a g e B a c k g r o u n d \   u s i n g   \ s p l a s h . p n g \ . 
-     2 .   M a i n t a i n e d   t h e   s m o o t h   5 0 0 m s   f a d e - o u t   t r a n s i t i o n   b y   w r a p p i n g   t h e   i m a g e   i n   a n   \ A n i m a t e d . V i e w \ . 
-     3 .   S e t   a   s t r i c t   2 . 5 - s e c o n d   d i s p l a y   t i m e r   b e f o r e   a u t o m a t i c a l l y   c a l l i n g   t h e   \ o n F i n i s h \   p r o p   t o   s e a m l e s s l y   t r a n s i t i o n   t h e   u s e r   i n t o   t h e   m a i n   a p p   /   A u t h   s t a c k . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   A p p . j s x 
- -   * * U s e r   R e q u e s t * * :   h e r e   i s   s o m e   f i x   a s   a f t e r   i m a g e   d i s s p e r   i n   s p l a s h   s c r e e n   s k y   b l u e   b a c k g r o u n d   i s   p e r s i s t i n g   f i x   t h a t 
- -   * * R o o t   C a u s e   /   T a s k * * :   A n   o l d   g l o b a l   s k y - b l u e   \ L i n e a r G r a d i e n t \   w a s   l e f t   i n s i d e   \ A p p . j s x \   b e h i n d   t h e   \ R o o t N a v i g a t o r \ .   B e c a u s e   t h e   n e w   \ S p l a s h S c r e e n \   f a d e s   o u t   i t s   o p a c i t y   t o   0 ,   i t   w a s   e x p o s i n g   t h i s   s k y - b l u e   g r a d i e n t   b e f o r e   t h e   n a v i g a t o r   f u l l y   u n m o u n t e d   t h e   s p l a s h   s c r e e n . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e m o v e d   t h e   l e g a c y   a b s o l u t e   \ L i n e a r G r a d i e n t \   \ < S v g > \   l a y e r   f r o m   \ A p p . j s x \   s o   t h e   a p p   f a l l s   b a c k   t o   s t a n d a r d   b a c k g r o u n d   c o l o r s   w i t h o u t   a n y   b l u e   f l a s h i n g . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / S p l a s h S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   h e r e   i s   s o m e   f i x   a s   a f t e r   i m a g e   d i s s p e r   i n   s p l a s h   s c r e e n   s k y   b l u e   b a c k g r o u n d   i s   p e r s i s t i n g   f i x   t h a t   d   n p t   c h a n g e   s t a t u s   b a r   o r   c o l o r   a n y t h i n g   j s u t   f i x   t h a t   w h y   a f t e r   i m a g e   d i s s a p e r   c o l o r   c o m e s 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   s p l a s h   s c r e e n   w a s   f a d i n g   i t s   o p a c i t y   t o   0   o v e r   5 0 0 m s   b e f o r e   c a l l i n g   \ o n F i n i s h \ .   T h i s   c a u s e d   t h e   s p l a s h   s c r e e n   t o   b e c o m e   t r a n s p a r e n t   w h i l e   t h e   m a i n   a p p   n a v i g a t i o n   s t a c k   h a d   n o t   y e t   m o u n t e d ,   e x p o s i n g   t h e   u n d e r l y i n g   \ A p p . j s x \   b l u e   b a c k g r o u n d   g r a d i e n t   t o   t h e   u s e r . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e m o v e d   t h e   \ A n i m a t e d . t i m i n g \   f a d e - o u t   l o g i c   f r o m   \ S p l a s h S c r e e n . j s x \ . 
-     2 .   C h a n g e d   i t   t o   s i m p l y   h o l d   t h e   i m a g e   f o r   3   s e c o n d s   a n d   t h e n   i m m e d i a t e l y   c a l l   \ o n F i n i s h ( ) \ ,   a l l o w i n g   a   s e a m l e s s   s n a p   t o   t h e   L o g i n   o r   D a s h b o a r d   s c r e e n   w i t h o u t   e x p o s i n g   t h e   a p p ' s   r o o t   b a c k g r o u n d . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / o n b o a r d i n g s / O n b o a r d i n g S c r e e n 1 . j s x ,   s r c / S c r e e n s / o n b o a r d i n g s / O n b o a r d i n g S c r e e n 2 . j s x 
- -   * * U s e r   R e q u e s t * * :   n o w   o n   o n b o r d i n g   s c r e e n s   1   a n d   2   c h a n g e   l o g o   w i t h   t h e   n e w   l o g o   w e   h a v e   l o g o 1 . p n g 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   o n b o a r d i n g   s c r e e n s   w e r e   p r e v i o u s l y   u s i n g   s e p a r a t e   e n g l i s h   a n d   h i n d i   l o g o   a s s e t s   d y n a m i c a l l y .   T h e   u s e r   r e q u e s t e d   t o   u n i v e r s a l l y   u s e   t h e   n e w   \ l o g o 1 . p n g \ . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   t h e   \ < I m a g e > \   s o u r c e   p r o p   i n   t h e   h e a d e r   o f   b o t h   \ O n b o a r d i n g S c r e e n 1 . j s x \   a n d   \ O n b o a r d i n g S c r e e n 2 . j s x \   t o   s t r i c t l y   p o i n t   t o   \ . . / . . / . . / a s s e t s / l o g o 1 . p n g \ . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / C u s t o m e r D e t a i l S c r e e n . j s x ,   s r c / S c r e e n s / M a i n / C u s t o m e r D e l i v e r y H i s t o r y S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   n o w   m o d i f y   t h e   v i e w   h i s t o r y   p a g e s   w i t h   n e w   u i   a n d   m o r e   g o o d   u i   l o o k   l e f t   s i d e   b o r d e r s   a n d   a l l   m a k e   i t   s o m e   g r a d i e n t   a s   p e r   s t t u s   a n d   a l l   a n d   m o d i f y   a n d   m a k e   f o r   v i e w   h i s t o r y   c h a n g e   i n   c u s t o m e r   d e t a i l 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   t o   u p g r a d e   t h e   V i e w   H i s t o r y   e x p e r i e n c e   i n   C u s t o m e r   D e t a i l s   t o   a   p r e m i u m   l a y o u t ,   f e a t u r i n g   b e a u t i f u l   g r a d i e n t   c a r d s   a n d   t h i c k   s t a t u s - b a s e d   l e f t   b o r d e r s . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   t h e   \ V i e w   H i s t o r y \   b u t t o n   i n   \ C u s t o m e r D e t a i l S c r e e n . j s x \   t o   n a v i g a t e   t o   t h e   a d v a n c e d   \ C u s t o m e r D e l i v e r y H i s t o r y S c r e e n \   i n s t e a d   o f   t h e   o l d e r   b a s i c   h i s t o r y   p a g e . 
-     2 .   O v e r h a u l e d   \ C u s t o m e r D e l i v e r y H i s t o r y S c r e e n . j s x \   t o   u s e   \ L i n e a r G r a d i e n t \   f r o m   \  e a c t - n a t i v e - l i n e a r - g r a d i e n t \   f o r   t h e   a c t i v i t y   c a r d s .   
-     3 .   A d d e d   d y n a m i c   l e f t - b o r d e r   s t y l i n g   w i t h   a   t h i c k   \  o r d e r L e f t W i d t h :   6 \   a n d   s o l i d   d a r k   s t a t u s   c o l o r s ,   a l o n g s i d e   a   b e a u t i f u l l y   s o f t   g r a d i e n t   f a d e   t o   w h i t e   ( \ # F F F F F F \ )   f o r   t h e   c a r d   b a c k g r o u n d s   d e p e n d i n g   o n   t h e   a c t i v i t y   t y p e   ( D e l i v e r y ,   S u b s c r i p t i o n ,   I n v o i c e ,   e t c ) . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / C u s t o m e r H i s t o r y S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   t h i s   i s   d a t a t   a n d   a p i   i   w a n t   t h a t   m o d i f y   t h e   u i   s u c h   t h a t   m o d i f y   t h e   c u s t o m e r   h i s t o r y   m a k e   i t   b e u t i f y   m o r e   c l e a r   a n d   m o r e   g o o d   a t t r a c t o i v e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   c u s t o m e r   h i s t o r y   s c r e e n   u s e d   b a s i c   w h i t e   c a r d s   a n d   s i m p l e   l i s t   i t e m s   w h i c h   d i d   n o t   a l i g n   w i t h   t h e   n e w   p r e m i u m   d e s i g n   s y s t e m . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e p l a c e d   t h e   f l a t   s u m m a r y   b o x   w i t h   a   d e e p   b l u e   \ L i n e a r G r a d i e n t \   c a r d ,   f e a t u r i n g   c l e a r l y   s p a c e d   g r i d s   a n d   g l o w i n g   \ l u c i d e - r e a c t - n a t i v e \   i c o n s   ( \ D r o p l e t s \ ,   \ I n d i a n R u p e e \ ) . 
-     2 .   R e d e s i g n e d   h i s t o r y   i t e m   c a r d s   t o   u t i l i z e   t h i c k   s o l i d   l e f t   b o r d e r s   m a p p e d   t o   t h e   d e l i v e r y   s t a t u s   ( B l u e   f o r   d e l i v e r e d ,   Y e l l o w   f o r   p e n d i n g ) . 
-     3 .   A d d e d   c u s t o m   b a d g e s   a n d   r e d e s i g n e d   t h e   l a y o u t   g r i d   f o r   t r a c k i n g   F u l l   J a r s   D e l i v e r e d   v s   E m p t y   J a r s   R e t r i e v e d . 
-     4 .   R e d e s i g n e d   t h e   T a b   S e l e c t o r   i n t o   a   s l e e k ,   o v e r l a p p i n g   i O S - s t y l e   s e g m e n t e d   c o n t r o l . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / C u s t o m e r H i s t o r y S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   f r o m   t o p   b r i n g   s o m e   d o w n   a s   g o i n g   i n s i d e   t h e   c u r v e d   h e a d e r   f i x   t h a t   i n   h o s t o r y   a n d   j u s t   a n s   i n   e m p t y   j a r s   t a b   w h a t   w e   s h o w   a n d   w h y   n o   d e l i v e r i e s   f o u n d   c o m n g 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   n o t i c e d   t h e   t a b   s e l e c t o r   o v e r l a p p i n g   w i t h   t h e   c u r v e d   h e a d e r   t e x t   a n d   w a n t e d   t o   k n o w   w h y   t h e   E m p t y   J a r s   t a b   w a s   d i s p l a y i n g   ' N o   d e l i v e r i e s   f o u n d ' .   T h e   o v e r l a p   w a s   c a u s e d   b y   a   n e g a t i v e   m a r g i n ,   a n d   t h e   t e x t   w a s   a n   i n c o r r e c t   r e u s e d   t r a n s l a t i o n   k e y . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   R e m o v e d   \ m a r g i n T o p :   - 2 0 \   a n d   r e p l a c e d   i t   w i t h   \ m a r g i n T o p :   1 6 \   t o   p e r f e c t l y   s p a c e   t h e   T a b s   c o n t a i n e r   b e l o w   t h e   h e a d e r . 
-     2 .   C h a n g e d   t h e   h a r d c o d e d   E m p t y   C o m p o n e n t   t e x t   i n   t h e   J a r s   t a b   f r o m   \ 	 ( ' d e l i v e r i e s . n o D e l i v e r i e s F o u n d ' ) \   t o   \ N o   j a r   h i s t o r y   f o u n d \ . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / C u s t o m e r H i s t o r y S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   '  [ A P I   R e s p o n s e ]   2 0 0   f r o m   h t t p : / / 1 9 2 . 1 6 8 . 1 . 5 : 3 0 0 7 / a p i / v e n d o r / c u s t o m e r s / 3 a 6 5 6 e d f - c d 9 b - 4 7 3 9 - 8 7 6 e - b a a 1 f c b 7 6 8 b 6 / j a r - c o l l e c t i o n s   . . .   h e r e   i s   d a t a   n o w   a s   p e r   t h a t   f i x 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   f r o n t e n d   w a s   e x p e c t i n g   a n   a r r a y   c a l l e d   \ c o l l e c t i o n s \   a n d   a   f i e l d   c a l l e d   \ d a t e \   a n d   \  u n n i n g J a r s O u t \ ,   b u t   t h e   A P I   r e s p o n d s   w i t h   a n   a r r a y   c a l l e d   \ h i s t o r y \   a n d   f i e l d s   \ d e l i v e r y D a t e \ ,   \  u l l U n i t s D e l i v e r e d \ ,   \ e m p t y U n i t s C o l l e c t e d \ . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   t h e   J S O N   m a p p i n g   i n   \  e t c h H i s t o r y D a t a \   f r o m   \  e s . d a t a . c o l l e c t i o n s \   t o   \  e s . d a t a . h i s t o r y \ . 
-     2 .   O v e r h a u l e d   \  e n d e r J a r I t e m \   t o   u s e   \ d e l i v e r y D a t e \   f o r   f o r m a t t i n g . 
-     3 .   R e p l a c e d   t h e   m i s s i n g   \  u n n i n g J a r s O u t \   f i e l d   w i t h   a   d y n a m i c   c a l c u l a t i o n   s h o w i n g   t h e   ' N e t   C h a n g e '   i n   j a r s   f o r   t h a t   s p e c i f i c   e v e n t   ( e . g . ,   ' + 1   J a r s   O u t ' ,   ' B a l a n c e d   ( 0 ) ' ) . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / C u s t o m e r H i s t o r y S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   n o w   d o   o n e   t h i n g   a d d   a   c o n s o l e   a n d   p r i n t   t h e   t o c k e n 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   t o   d e b u g   a n d   i n s p e c t   t h e   \ u s e r T o k e n \   i n   t h e i r   l o c a l   t e r m i n a l   c o n s o l e . 
- -   * * C h a n g e s   M a d e * * :   A d d e d   a   \ c o n s o l e . l o g ( ' - - -   U S E R   T O K E N   - - - ' ,   u s e r T o k e n ) \   t o   t h e   \  e t c h H i s t o r y D a t a \   f u n c t i o n . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / G e n e r a t e I n v o i c e S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   m o d i f y   t h e   c a r d   i n   t h e   g e n e r a t e   i n v o i c e   n m a k e   i t   l i k e   w h a t   w e   h a v e   i n   p a y m n e t   s t a t e m n t   c a r d   a l k s o   f i x   f o r   i 8 n   l a n g u a g e   t h e r e   a s   c o m i n g   d e l i v e r i e s . p e n d i n g t o I n v o i c e   f i x   h i n d i   e n g l i s h   o f   t h i s   d o n t   c h a n g e   a n y t h i n g   e l s e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   ' P e n d i n g   t o   b e   I n v o i c e d '   s u m m a r y   c a r d   w a s   a   b a s i c   f l a t   b o x ,   a n d   t h e   t r a n s l a t i o n   k e y   w a s   r e f e r e n c i n g   \ d e l i v e r i e s . p e n d i n g T o I n v o i c e \   w h i c h   d i d n ' t   e x i s t   i n   t h e   i 1 8 n   f i l e   ( i t   w a s   u n d e r   \ i n v o i c e . p e n d i n g T o I n v o i c e \ ) . 
- -   * * C h a n g e s   M a d e * * : 
-     1 .   U p d a t e d   \ G e n e r a t e I n v o i c e S c r e e n . j s x \   t o   u s e   t h e   \  e a c t - n a t i v e - s v g \   \ L i n e a r G r a d i e n t \   t o   e x a c t l y   m a t c h   t h e   p r e m i u m   P a y m e n t   S t a t e m e n t   c a r d   d e s i g n . 
-     2 .   F i x e d   t h e   t r a n s l a t i o n   k e y   b y   c h a n g i n g   i t   t o   \ 	 ( ' i n v o i c e . p e n d i n g T o I n v o i c e ' ) \   w h i c h   i n s t a n t l y   r e s o l v e d   t h e   E n g l i s h / H i n d i   m i s s i n g   t r a n s l a t i o n   i s s u e . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / G e n e r a t e I n v o i c e S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   a g a i n   l a n g u a g e   f i x   i s   n o t   d o n e   a s   c o m i n g   i n   i n v o i c e . p e n d i n g t o   i n v p o i c e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   t r a n s l a t i o n   k e y   w a s   i n c o r r e c t l y   t y p e d   a s   \ i n v o i c e . p e n d i n g T o I n v o i c e \ ,   b u t   t h e   p a r e n t   o b j e c t   i n   t h e   \ i 1 8 n / i n d e x . j s \   f i l e   i s   a c t u a l l y   n a m e d   \ i n v o i c e s \ . 
- -   * * C h a n g e s   M a d e * * :   U p d a t e d   t h e   k e y   t o   \ i n v o i c e s . p e n d i n g T o I n v o i c e \   w h i c h   i m m e d i a t e l y   r e s o l v e d   t h e   i s s u e . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / n a v i g a t i o n / M a i n T a b s . j s x 
- -   * * U s e r   R e q u e s t * * :   f o r   h o m e   s c r e e n   t h e   l o g o   s h o u l d   s t a r t   o n   t h e   p o i n t   r e s t   a r e   t h e r e   i t   i s   r i g h t   s i d e   i   w a n t   l i k e   o n   o t h e r   s c r e e n   w e   h a v e   s a m e   s p a c e   c o n s i t n e c y   c o m e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   l o g o   i m a g e   i n s i d e   t h e   H o m e   h e a d e r   h a d   e x c e s s   p o s i t i v e   m a r g i n s ,   m a k i n g   i t   s i t   t o o   f a r   t o   t h e   r i g h t   c o m p a r e d   t o   s t a n d a r d   t e x t   t i t l e s . 
- -   * * C h a n g e s   M a d e * * :   A p p l i e d   a   \ m a r g i n L e f t :   - 8 \   t o   t h e   l o g o   c o n t a i n e r   t o   p u l l   i t   f l u s h   t o   t h e   l e f t ,   m a t c h i n g   t h e   e x a c t   s p a c i n g   o f   t h e   t e x t   t i t l e s   o n   a l l   o t h e r   s c r e e n s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / S c r e e n s / M a i n / U n b i l l e d D e l i v e r i e s S c r e e n . j s x 
- -   * * U s e r   R e q u e s t * * :   m o d i f y   t h e   u n b i l l e d   d e l i v e r i e s   t o   l o o k   g o o d   a n d   m o r e   a t t r c a t i v e   a d d   l e f t   s i d e   b o r d e r   a n d   a l l   j u s t   m a k e   i t   p r e m i u m   l o o k   a n d   a t t a r t i v e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   t h e   \  
- P e n d i n g  
- t o  
- b e  
- I n v o i c e d \   c a r d s   t o   f o l l o w   t h e   p r e m i u m   d e s i g n   s t y l e   ( w h i t e   b a c k g r o u n d ,   d e e p   s h a d o w s ,   t h i c k   l e f t   b o r d e r ) . 
- -   * * C h a n g e s   M a d e * * :   R e w r o t e   t h e   \ s t y l e s . c a r d \   t o   u s e   a   f l a t   w h i t e   b a c k g r o u n d ,   e n h a n c e d   s h a d o w   e l e v a t i o n ,   a n d   a   t h i c k   \ C O L O R S . p r i m a r y \   l e f t   b o r d e r .   S o f t e n e d   t h e   i n t e r n a l   s t a t s   c a r d   b a c k g r o u n d   ( \ # F 8 F A F C \ ) ,   m a d e   t h e   c u s t o m e r   a v a t a r   f u l l y   c i r c u l a r ,   a n d   m o d e r n i z e d   t h e   \ E s t i m a t e d  
- T o t a l \   b a d g e   f o r   a   p r e m i u m ,   c l e a n   l a y o u t . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / c o m p o n e n t s / r e p o r t s / I n v e n t o r y R e p o r t . j s x ,   s r c / c o m p o n e n t s / r e p o r t s / O u t s t a n d i n g R e p o r t . j s x 
- -   * * U s e r   R e q u e s t * * :   f o r   i n v e n t o r y   i n   r o u t e s   f o r   l i s t   d o   t h e   s a m e   a l s o   f o r   o u t s t a b d i n g   a m o u n t   s o   m a k e   i t   l o o k   g o o d 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   l i s t   c a r d s   i n s i d e   t h e   I n v e n t o r y   a n d   O u t s t a n d i n g   D e b t   r e p o r t s   n e e d e d   t o   m a t c h   t h e   n e w   p r e m i u m   d e s i g n   c o n s i s t e n c y . 
- -   * * C h a n g e s   M a d e * * :   U p d a t e d   t h e   \ c a r d \   a n d   \ c u s t o m e r C a r d \   s t y l e s   i n   b o t h   c o m p o n e n t s   t o   f e a t u r e   a   f l a t   w h i t e   b a c k g r o u n d ,   d e e p e r   s h a d o w   e l e v a t i o n ,   a n d   t h e   s i g n a t u r e   t h i c k   \ C O L O R S . p r i m a r y \   l e f t   b o r d e r . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / c o m p o n e n t s / r e p o r t s / I n v e n t o r y R e p o r t . j s x ,   s r c / c o m p o n e n t s / r e p o r t s / O u t s t a n d i n g R e p o r t . j s x 
- -   * * U s e r   R e q u e s t * * :   f o r   o u t s a b d i n g   a d d   p i n k   o r   r e d   l i k e   l e f t   b o r d e r   a l s o   i n   i n v e t r y   m a k e   c l e a r   i n   l i s t   l i k e   r o u t e   a n d   s t a f f   u n a s i g n e d   s o   t h a t   i f   a s s i g n e d   a s   c u r r e n t l y   n o   h e a d   i s   t h e r e 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   o u t s t a n d i n g   r e p o r t   l e f t   b o r d e r   w a s   b l u e   ( d e f a u l t   p r i m a r y )   w h i c h   d i d n ' t   f i t   t h e   n e g a t i v e   d e b t   c o n t e x t ,   a n d   t h e   i n v e n t o r y   r e p o r t   s h o w e d   b l a n k   s p o t s   w h e n   r o u t e   o r   s t a f f   w e r e   u n a s s i g n e d . 
- -   * * C h a n g e s   M a d e * * :   C h a n g e d   t h e   l e f t   b o r d e r   o n   O u t s t a n d i n g R e p o r t   c a r d s   t o   a   d e e p   r o s e / r e d   ( \ # E 1 1 D 4 8 \ ) .   U p d a t e d   I n v e n t o r y R e p o r t   t o   e x p l i c i t l y   r e n d e r   \  
- U n a s s i g n e d  
- R o u t e  
- "  
- U n a s s i g n e d  
- S t a f f \   i f   d a t a   i s   m i s s i n g ,   r a t h e r   t h a n   l e a v i n g   e m p t y   g a p s . 
-  
- -   * * D a t e * * :   2 0 2 6 - 0 8 - 2 4 
- -   * * D a y * * :   M o n d a y 
- -   * * C o m p o n e n t   /   F i l e * * :   s r c / c o m p o n e n t s / r e p o r t s / I n v e n t o r y R e p o r t . j s x 
- -   * * U s e r   R e q u e s t * * :   n o   m a k e   l i k e   s t a f f   t h e n   i t s   s t a t u s   a n d   r o u t e   t h e n   w h a t   s t a t u s   l i k e   t h i s   i   w a n t   s o   k e e p   l i k e   t h a t   a n d   m o d i f y   t h e   i n v e n t o r y   d e t a i l e d   l i s t   a g a i n 
- -   * * R o o t   C a u s e   /   T a s k * * :   T h e   u s e r   w a n t e d   r o u t e   a n d   s t a f f   a s s i g n m e n t s   i n   t h e   I n v e n t o r y   R e p o r t   t o   b e   e x p l i c i t l y   l a b e l e d   r a t h e r   t h a n   a   s i n g l e   s t r i n g ,   s o   i t ' s   c l e a r e r   w h e n   s o m e o n e   i s   u n a s s i g n e d . 
- -   * * C h a n g e s   M a d e * * :   S p l i t   t h e   r o u t e   a n d   s t a f f   t e x t   i n t o   t w o   s t a c k e d   l a b e l   b a d g e s   ( e . g .   \  
- R o u t e :  
- R o u t e  
- A \ ,   \ S t a f f :  
- S t a f f  
- B \ ) .   S t y l e d   t h e   s t a f f   b a d g e   w i t h   a   s u b t l e   s l a t e   c o l o r   t o   d i s t i n g u i s h   i t   f r o m   t h e   p r i m a r y   r o u t e   b a d g e . 
-  
- 
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: ProductDetailScreen.jsx
+- **User Request**: check detail model of the customer and as per that remodify for the product detail also also make edit delete visible as done for other in header
+- **Root Cause / Task**: The Product Detail Screen had an outdated layout and missing edit/delete buttons in the header compared to Customer Detail Screen.
+- **Changes Made**:
+  1. Updated CurvedHeader to 120 height with proper padding and background colors for Edit/Delete buttons.
+  2. Replaced the Product Profile Hero with the ProfileHeroCard layout, moving the icon/image inside a shadow-bordered card.
+  3. Synced button and card styling with CustomerDetailScreen design system.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: StaffManagementScreen.jsx
+- **User Request**: modify the staff management make some gradient or like that but i want that not very drak gradient keep minimal that connectes with staff
+- **Root Cause / Task**: Implement a clean, minimal gradient aesthetic for the staff cards to look premium and denote  staff (professional blue).
+- **Changes Made**:
+  1. Replaced the generic flat avatar with a crisp blue-to-indigo LinearGradient for active staff.
+  2. Wrapped the entire Staff Card in a very subtle white-to-slate LinearGradient background.
+  3. Made the card footer transparent so the gradient flows beautifully underneath the action buttons.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: AddStaffScreen.jsx
+- **User Request**: modify edit staff details and add new staff multi icons like that
+- **Root Cause / Task**: The Add/Edit Staff Screen needed the same premium multi-icon layout as the Customer and Product forms.
+- **Changes Made**:
+  1. Updated the CurvedHeader to be compact (120 height) and cleanly handle Edit/Add string.
+  2. Wrapped each input in a styled `iconBox`.
+  3. Color-coded the icons: Indigo/Blue for Name, Green for Phone, Amber for Email.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: Reports Overview (Outstanding, Operations, Inventory, Financials)
+- **User Request**: modify the reports section to look beutify catchy and as a report overview dont keep plane keep bar like pie like and all in detailed form so provide and make it done
+- **Root Cause / Task**: The reports section was predominantly plain FlatLists. It needed a premium dashboard feel with charts.
+- **Changes Made**:
+  1. Integrated react-native-gifted-charts across reports.
+  2. Added Top Debtors BarChart to OutstandingReport.
+  3. Added Top Movers Delivered/Returned BarChart to InventoryReport.
+  4. Added Route and Staff Success Rate BarCharts to OperationsReport.
+  5. Enhanced FinancialReport PieChart with gradients, focus, and shadows.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: Reports Overview (Outstanding, Operations, Inventory)
+- **User Request**: it is not expected also names are not fully visible in bars and all keep proefsional bars like square and all where inside them name there like that so amke more prosfesional use proefsional colors what we see in reports
+- **Root Cause / Task**: The vertical BarCharts from gifted-charts truncated long names and didn't fit the desired professional square aesthetic.
+- **Changes Made**:
+  1. Replaced gifted-charts BarCharts with custom View-based horizontal progress bars.
+  2. For Outstanding, added a red-themed bar with the debtor's name fully visible inside the bar overlay.
+  3. For Inventory, added a dual-metric horizontal stacked ratio bar showing Delivered (Red) vs Returned (Green) seamlessly.
+  4. For Operations, added horizontal bars with dynamic colors (Green/Amber/Red) based on the route/staff success rate, keeping the label cleanly inside.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: Reports Overview (Color Palette)
+- **User Request**: can coor combination be more good for reppsrts section if yes so do this
+- **Root Cause / Task**: The user wanted a more sophisticated, premium color combination instead of standard Tailwind red/green/blues.
+- **Changes Made**:
+  1. OutstandingReport: Upgraded debt bars and cards to a premium Rose/Crimson palette (#E11D48, #BE123C, #FFF1F2).
+  2. InventoryReport: Swapped generic colors for thematic Sky Blue (#0284C7) for Delivered and Emerald (#059669) for Returned.
+  3. OperationsReport: Applied the same Rose/Amber/Emerald scheme for Success Rate gauge and custom horizontal bars.
+  4. FinancialReport: Updated KPI cards to use Brand Blue (#0B409C) for Billed Revenue and Emerald (#059669) for Collected, syncing PieChart colors accordingly.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: Reports Overview (Outstanding, Inventory)
+- **User Request**: provide search also in it so that if we wnt something
+- **Root Cause / Task**: The detailed customer lists in Outstanding and Inventory reports can get very long, making it hard to find a specific customer.
+- **Changes Made**:
+  1. Added a real-time TextInput search bar above the detailed lists in both OutstandingReport.jsx and InventoryReport.jsx.
+  2. The search actively filters the FlatList based on the customer name.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: Navigation / CustomDrawerContent.jsx
+- **User Request**: do one thing for custom tabs i want dont use image at top use some connecting colors there dont use image
+- **Root Cause / Task**: The sidebar drawer was using an image background which the user wanted replaced with a clean color block.
+- **Changes Made**:
+  1. Removed `ImageBackground` from `CustomDrawerContent.jsx`.
+  2. Replaced it with a clean `View` using the brand's primary connecting color (`#0B409C`).
+  3. Adjusted text colors (business name, owner name) to white/light gray so they pop beautifully against the dark background.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: Navigation / CustomDrawerContent.jsx
+- **User Request**: use sky like color there dont use blue
+- **Root Cause / Task**: The dark primary blue was too heavy. The user requested a lighter, sky-like color for the drawer header.
+- **Changes Made**:
+  1. Updated the CustomDrawerContent header background to a vibrant Sky Blue (`#0EA5E9`).
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: Navigation / CustomDrawerContent.jsx
+- **User Request**: for custom drawer i want that use same status bar geadient bg jhere
+- **Root Cause / Task**: The user wanted the Sky Blue header to have a gradient effect, matching the premium visual style of the app's standard status bar/headers.
+- **Changes Made**:
+  1. Replaced the standard `View` with a `LinearGradient` from `
+eact-native-linear-gradient`.
+  2. Applied a Sky Blue gradient (from bright #38BDF8 to deep #0284C7) to give it a polished, premium look.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: navigation/CustomDrawerContent.jsx
+- **User Request**: use for custom drawer exactract the gradeint from this and use in the top of custom drawer keep this
+- **Root Cause / Task**: The user wanted to replace the temporary ImageBackground header with the beautiful SVG LinearGradient background from App.jsx to maintain the theme without crashing (since expo-linear-gradient is missing).
+- **Changes Made**:
+  1. Extracted the react-native-svg `LinearGradient` from `App.jsx`.
+  2. Applied it as an absolute-fill background layer to the drawer header in `CustomDrawerContent.jsx`.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: SettingsScreen.jsx
+- **User Request**: now beutify the setings screen to be good 
+- **Root Cause / Task**: The Settings Screen was using basic TextInput components and a plain layout.
+- **Changes Made**:
+  1. Replaced the generic SafeAreaView header with the premium `CurvedHeader` component.
+  2. Styled the profile hero section as a floating card that elegantly overlaps the curved header.
+  3. Upgraded all text inputs with left-aligned Lucide icons (User, Briefcase, Mail, MapPin, Hash, Globe, Grid) and applied soft shadow styles matching the rest of the premium UI.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: SettingsScreen.jsx
+- **User Request**: keep back button there and heaing of setting also
+- **Root Cause / Task**: The user wanted a standard header (with a back button and a title) rather than relying on the drawer menu header, keeping the flat UI style.
+- **Changes Made**:
+  1. Added a flat top header to the Settings screen containing an `ArrowLeft` back button and a bold 
+
+Settings title.
+  2. The header matches the background cleanly and handles the SafeArea top inset perfectly.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: SettingsScreen.jsx
+- **User Request**: business information written two times also make more beutiful form view for settings
+- **Root Cause / Task**: Duplicate section title rendering inside the new card container; form inputs felt slightly rigid with full borders.
+- **Changes Made**:
+  1. Removed the duplicated 'Business Information' title.
+  2. Overhauled the form fields: changed input labels to small, uppercase, widely spaced styling for a premium feel.
+  3. Removed the borders from the inputs entirely, replacing them with a soft, borderless pill-shape design that fits perfectly inside the white card container.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: OrdersScreen.jsx, CurvedHeader.jsx, i18n/index.js
+- **User Request**: now lets fix for i8n one by one screen by screen refresh button in the orderscreen today deliveries name at cureved ehadr fix this for order screen provide hindi english proeply transaltion there also for all screens header fix keep hindi english both there
+- **Root Cause / Task**: The Orders Screen had hardcoded strings, missing translation keys, and the app lacked a global language toggle in the Curved Header.
+- **Changes Made**:
+  1. Updated `OrdersScreen.jsx` to use `	('home.todaysDeliveries')` and `	('common.refresh')` instead of hardcoded strings.
+  2. Added missing `deliveries` and `
+efresh` namespaces in both English and Hindi inside `i18n/index.js`.
+  3. Placed a global 'HI/EN' language toggle button directly inside `CurvedHeader.jsx` so that *every* screen using this header has built-in translation switching capabilities.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: OrdersScreen.jsx
+- **User Request**: lets change for the headera nd hindi english i8n issues but do not break any functionlity any where lets start with order screen make hindi english for refresh button lso for the today deliveries title at top cureved header make fix for this screen
+- **Root Cause / Task**: Some UI text elements on the Orders screen (like the top curved header title and the Refresh button) were hardcoded in English, ignoring the active i18n language preference.
+- **Changes Made**:
+  1. Updated the `CurvedHeader` title to use `	('home.todaysDeliveries')` so it successfully toggles between Hindi and English.
+  2. Wrapped the 'Refresh' text in the button with `	('common.refresh')` to support live language switching.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: HomeScreen.jsx
+- **User Request**: in home screen in daily delivery progress it is coming today delivery make hindi english fix
+- **Root Cause / Task**: The Daily Delivery Progress card on the Home Screen had hardcoded English text ('Pending', 'Skipped', 'Today's Deliveries', and 'Stay on track, you've got this!').
+- **Changes Made**:
+  1. Updated the 'Today's Deliveries' button text to use the `	('home.todaysDeliveries')` translation.
+  2. Applied translations to the 'Pending' and 'Skipped' legend labels using the `deliveries.pending` and `deliveries.skipped` i18n keys.
+  3. Linked the motivational subtext to `	('home.stayOnTrack')` so it fully translates alongside the rest of the dashboard.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: CustomDrawerContent.jsx
+- **User Request**: in custom drawer reports and anytics in not maged by i8n fix
+- **Root Cause / Task**: 'Reports & Analytics' menu item in the custom drawer navigation was hardcoded as a literal string.
+- **Changes Made**:
+  1. Added a new `	abs.reports` translation key for both English ('Reports & Analytics') and Hindi ('0	?	*	K	0	M		M	8	 	0	 	(	>	2	?		?		M	8	') in `i18n/index.js`.
+  2. Updated `CustomDrawerContent.jsx` to use `	('tabs.reports')` instead of the hardcoded literal.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: StaffManagementScreen.jsx
+- **User Request**: edit delete fix in staff managemnt list fix
+- **Root Cause / Task**: The 'Edit' and 'Delete' button labels on individual staff member cards were hardcoded literal strings.
+- **Changes Made**:
+  1. Updated the 'Edit' button text to use `	('common.edit')`.
+  2. Updated the 'Delete' button text to use `	('common.delete')`.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: ReportsScreen.jsx, i18n/index.js
+- **User Request**: now for report screen as there is no i8n implkemntation so make it done
+- **Root Cause / Task**: The Reports screen was completely missing i18n implementation; all tabs, dropdowns, and text were hardcoded strings in English.
+- **Changes Made**:
+  1. Created a comprehensive `
+eports` translation namespace in `i18n/index.js` for both English and Hindi.
+  2. Moved the `PRESETS` and `TABS` arrays inside the `ReportsScreen` component so they could access the `	()` hook dynamically.
+  3. Replaced all hardcoded alerts, modal headers, filter pills ('Fr:', 'To:'), and the main screen header with translation hooks.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: components/reports/*.jsx, i18n/index.js
+- **User Request**: no like detailed list and all no hindi translate found fix this also also check fully where else missigng for the hindi in report screen
+- **Root Cause / Task**: The four sub-components rendered inside ReportsScreen (FinancialReport, InventoryReport, OperationsReport, OutstandingReport) still contained hardcoded English text for charts, tables, and lists.
+- **Changes Made**:
+  1. Added an extensive set of translation keys to the `
+eports` namespace in `i18n/index.js` covering all internal labels (e.g. 'Detailed List', 'Billed Revenue', 'Success Rate', etc.).
+  2. Injected `useTranslation` into `FinancialReport.jsx`, `InventoryReport.jsx`, `OperationsReport.jsx`, and `OutstandingReport.jsx`.
+  3. Replaced all hardcoded strings inside these components with dynamic `	()` calls.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: src/Screens/Main/PastDeliveriesScreen.jsx, src/Screens/Main/OrdersScreen.jsx
+- **User Request**: for daily delivery screen make ui ux like order screen to look good and attrcative same like left side border and all also do for hindi english also now i want that all deliveries text should be also for hindi 
+- **Root Cause / Task**: 'All Deliveries' (PastDeliveriesScreen) lacked the dynamic left status border present in other views, and 'All Deliveries' title lacked i18n support. Delivery cards in OrdersScreen were also hardcoded to a blue left border.
+- **Changes Made**:
+  1. Updated `DeliveryCard` in both `PastDeliveriesScreen.jsx` and `OrdersScreen.jsx` to apply `orderLeftColor: getStatusColor(delivery.status)` for a dynamic left border.
+  2. Applied `	('deliveries.allDeliveries')` to the header title in `PastDeliveriesScreen.jsx` and added the translation to `src/i18n/index.js`.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: src/Screens/Main/PastDeliveriesScreen.jsx
+- **User Request**: the back button is difrrent fix use arrowleft as we used [previous al;so color fix
+- **Root Cause / Task**: The back button on the All Deliveries screen was set to ChevronLeft and was using an incorrect color.
+- **Changes Made**:
+  1. Updated `CurvedHeader` to use `ArrowLeft` and set its color to `#FFF` for visibility against the blue gradient.
+  2. Imported `ArrowLeft` from `lucide-react-native`.
+
+
+- **Date**: 2026-08-22
+- **Day**: Saturday
+- **Component / File**: src/i18n/index.js
+- **User Request**: do one thing fix payments.TotalAmountDue fix for the i8n language fix so please make it done on pymnet screen
+- **Root Cause / Task**: The translations for 'Total Amount Due' and 'Available Balance' were missing from the payments namespace in the i18n configuration, causing translation fallbacks on the Payments screen.
+- **Changes Made**:
+  1. Added `	otalAmountDue` and `vailableBalance` to both English and Hindi configurations under the `payments` namespace in `src/i18n/index.js`.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/OrdersScreen.jsx, src/Screens/Main/PastDeliveriesScreen.jsx
+- **User Request**: fix order screen left border not visible no color visible, use some blue like border left in order screen
+- **Root Cause / Task**: The left border width/color was colliding with the base borderColor and isExpanded styles in React Native, rendering it invisible in some views. Furthermore, the user wanted a strict blue border on the main OrdersScreen instead of dynamic status colors.
+- **Changes Made**:
+  1. Updated `OrdersScreen.jsx` DeliveryCard to use a static Blue left border (`#3B82F6`).
+  2. Moved the inline border styles to the very end of the array in both `OrdersScreen.jsx` and `PastDeliveriesScreen.jsx` to ensure they correctly override the generic `orderColor` from `isExpanded`.
+  3. Added `orderStyle: 'solid'` to guarantee rendering across different device OS versions.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/OrdersScreen.jsx, src/Screens/Main/PastDeliveriesScreen.jsx
+- **User Request**: do one thing make yellow border color for pending like in order screen and delievry screen both
+- **Root Cause / Task**: The pending status was previously mapped to a blue color for the left border, which caused confusion and didn't look right.
+- **Changes Made**:
+  1. Updated `getStatusColor` in both `OrdersScreen.jsx` and `PastDeliveriesScreen.jsx` to map the `pending` status to Yellow (`#EAB308`).
+  2. Fixed a bug in the inline styling where the object structure returned by `OrdersScreen`'s `getStatusColor` was not being properly extracted for the border color by using `(getStatusColor(delivery.status)?.dot || getStatusColor(delivery.status))`.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: App.jsx
+- **User Request**: now modify the app.jsx if the route is onboardign then keep status bar color to blue that we have previously is this possible if yes so say yes and procced
+- **Root Cause / Task**: The user wanted the Onboarding (CompleteRegistration) screen to retain the classic solid blue status bar instead of the new light-blue gradient applied globally across the App.
+- **Changes Made**:
+  1. Added `isOnboardingScreen` state to `App.jsx` tracking the `CompleteRegistration` route.
+  2. Dynamically updated the `StatusBar` `ackgroundColor` to `#0B409C` and `arStyle` to `light-content` when on the onboarding screen.
+  3. Dynamically set the top `SafeAreaView` background color to match the status bar to ensure a seamless color fill at the top notch.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: App.jsx
+- **User Request**: no its not done i want that onboarding screen jsx 1 and 2 both should have status bar blue like
+- **Root Cause / Task**: The dynamic status bar check only included `CompleteRegistration`, not the `Onboarding1` and `Onboarding2` routes from `AuthStack`.
+- **Changes Made**:
+  1. Updated the `isOnboardingScreen` state in `App.jsx` to explicitly check for `['Onboarding1', 'Onboarding2', 'CompleteRegistration'].includes(route.name)`.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: App.jsx
+- **User Request**: no its not done 
+- **Root Cause / Task**: The dynamic `<StatusBar>` component was failing to update its background color natively on Android devices when transitioning to the onboarding screens.
+- **Changes Made**:
+  1. Injected an imperative native OS command (`StatusBar.setBackgroundColor`) directly into the `useEffect` hook in `App.jsx` to force Android to physically redraw the status bar background color to `#0B409C` exactly when the route changes.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: App.jsx
+- **User Request**: not done again is this possible or not
+- **Root Cause / Task**: The `NavigationContainer`'s `onStateChange` and `onRouteReady` props occasionally fail to fire reliably on the initial mounting of the AuthStack due to a known React Navigation lifecycle race condition, meaning `isOnboardingScreen` was staying `alse` on initial load.
+- **Changes Made**:
+  1. Bound a manual `
+avigationRef.addListener('state', updateRoute)` listener inside a `useEffect` block to perfectly intercept all nested stack transitions.
+  2. Implemented a 100ms `setTimeout` check to ensure the initial route state is captured even if the UI renders faster than the navigation stack resolves.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: App.jsx
+- **User Request**: now modify the app.jsx if the route is onboardign then keep status bar color to blue that we have previously
+- **Root Cause / Task**: The newly added LinearGradient background in App.jsx was indiscriminately overriding all screens, disrupting the carefully crafted top-notch color matching for the onboarding/auth screens.
+- **Changes Made**:
+  1. Updated `updateRoute` logic to explicitly include `'Splash'` in the `isAuthScreen` check.
+  2. Wrapped the new `LinearGradient` inside a conditional block (`{!isAuthScreen && ...}`) so it ONLY renders on the main inner app screens.
+  3. Restored the dynamic `SafeAreaView` styling (`ackgroundColor: isAuthScreen ? '#95CFFE' : 'transparent'`) and top edges logic to ensure the onboarding screens perfectly retain their previous blue status bar matching.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/navigation/MainTabs.jsx
+- **User Request**: now on curved header i want that remove the camper text and droplet such that use logo1.png image make it such that it looks perfectly there
+- **Root Cause / Task**: The user wanted to replace the text-based Camper logo and Droplet icon with a custom provided image (logo1.png) on the Home Screen header.
+- **Changes Made**:
+  1. Removed the `CustomDropletIcon` and `<Text>Camper</Text>` from the `	itle` prop of the `CurvedHeader` in `MainTabs.jsx`.
+  2. Inserted a responsive `<Image>` component pointing to `../../assets/logo1.png` with `
+esizeMode=` ontain`` and optimal dimensions to ensure it looks perfect inside the curved header layout.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/SplashScreen.jsx
+- **User Request**: use splash.png as image on the splash screen so replace splash screen with this
+- **Root Cause / Task**: The user wanted to replace the complex typographic animation splash screen with the newly provided static image (`splash.png`).
+- **Changes Made**:
+  1. Completely rewrote `SplashScreen.jsx` to render an `ImageBackground` using `splash.png`.
+  2. Maintained the smooth 500ms fade-out transition by wrapping the image in an `Animated.View`.
+  3. Set a strict 2.5-second display timer before automatically calling the `onFinish` prop to seamlessly transition the user into the main app / Auth stack.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: App.jsx
+- **User Request**: here is some fix as after image dissper in splash screen sky blue background is persisting fix that
+- **Root Cause / Task**: An old global sky-blue `LinearGradient` was left inside `App.jsx` behind the `RootNavigator`. Because the new `SplashScreen` fades out its opacity to 0, it was exposing this sky-blue gradient before the navigator fully unmounted the splash screen.
+- **Changes Made**:
+  1. Removed the legacy absolute `LinearGradient` `<Svg>` layer from `App.jsx` so the app falls back to standard background colors without any blue flashing.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/SplashScreen.jsx
+- **User Request**: here is some fix as after image dissper in splash screen sky blue background is persisting fix that d npt change status bar or color anything jsut fix that why after image dissaper color comes
+- **Root Cause / Task**: The splash screen was fading its opacity to 0 over 500ms before calling `onFinish`. This caused the splash screen to become transparent while the main app navigation stack had not yet mounted, exposing the underlying `App.jsx` blue background gradient to the user.
+- **Changes Made**:
+  1. Removed the `Animated.timing` fade-out logic from `SplashScreen.jsx`.
+  2. Changed it to simply hold the image for 3 seconds and then immediately call `onFinish()`, allowing a seamless snap to the Login or Dashboard screen without exposing the app's root background.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/onboardings/OnboardingScreen1.jsx, src/Screens/onboardings/OnboardingScreen2.jsx
+- **User Request**: now on onbording screens 1 and 2 change logo with the new logo we have logo1.png
+- **Root Cause / Task**: The onboarding screens were previously using separate english and hindi logo assets dynamically. The user requested to universally use the new `logo1.png`.
+- **Changes Made**:
+  1. Updated the `<Image>` source prop in the header of both `OnboardingScreen1.jsx` and `OnboardingScreen2.jsx` to strictly point to `../../../assets/logo1.png`.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/CustomerDetailScreen.jsx, src/Screens/Main/CustomerDeliveryHistoryScreen.jsx
+- **User Request**: now modify the view history pages with new ui and more good ui look left side borders and all make it some gradient as per sttus and all and modify and make for view history change in customer detail
+- **Root Cause / Task**: The user wanted to upgrade the View History experience in Customer Details to a premium layout, featuring beautiful gradient cards and thick status-based left borders.
+- **Changes Made**:
+  1. Updated the `View History` button in `CustomerDetailScreen.jsx` to navigate to the advanced `CustomerDeliveryHistoryScreen` instead of the older basic history page.
+  2. Overhauled `CustomerDeliveryHistoryScreen.jsx` to use `LinearGradient` from `
+eact-native-linear-gradient` for the activity cards. 
+  3. Added dynamic left-border styling with a thick `orderLeftWidth: 6` and solid dark status colors, alongside a beautifully soft gradient fade to white (`#FFFFFF`) for the card backgrounds depending on the activity type (Delivery, Subscription, Invoice, etc).
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/CustomerHistoryScreen.jsx
+- **User Request**: this is datat and api i want that modify the ui such that modify the customer history make it beutify more clear and more good attractoive
+- **Root Cause / Task**: The customer history screen used basic white cards and simple list items which did not align with the new premium design system.
+- **Changes Made**:
+  1. Replaced the flat summary box with a deep blue `LinearGradient` card, featuring clearly spaced grids and glowing `lucide-react-native` icons (`Droplets`, `IndianRupee`).
+  2. Redesigned history item cards to utilize thick solid left borders mapped to the delivery status (Blue for delivered, Yellow for pending).
+  3. Added custom badges and redesigned the layout grid for tracking Full Jars Delivered vs Empty Jars Retrieved.
+  4. Redesigned the Tab Selector into a sleek, overlapping iOS-style segmented control.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/CustomerHistoryScreen.jsx
+- **User Request**: from top bring some down as going inside the curved header fix that in hostory and just ans in empty jars tab what we show and why no deliveries found comng
+- **Root Cause / Task**: The user noticed the tab selector overlapping with the curved header text and wanted to know why the Empty Jars tab was displaying 'No deliveries found'. The overlap was caused by a negative margin, and the text was an incorrect reused translation key.
+- **Changes Made**:
+  1. Removed `marginTop: -20` and replaced it with `marginTop: 16` to perfectly space the Tabs container below the header.
+  2. Changed the hardcoded Empty Component text in the Jars tab from `	('deliveries.noDeliveriesFound')` to `No jar history found`.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/CustomerHistoryScreen.jsx
+- **User Request**: ' [API Response] 200 from http://192.168.1.5:3007/api/vendor/customers/3a656edf-cd9b-4739-876e-baa1fcb768b6/jar-collections ... here is data now as per that fix
+- **Root Cause / Task**: The frontend was expecting an array called `collections` and a field called `date` and `
+unningJarsOut`, but the API responds with an array called `history` and fields `deliveryDate`, `fullUnitsDelivered`, `emptyUnitsCollected`.
+- **Changes Made**:
+  1. Updated the JSON mapping in `fetchHistoryData` from `
+es.data.collections` to `
+es.data.history`.
+  2. Overhauled `
+enderJarItem` to use `deliveryDate` for formatting.
+  3. Replaced the missing `
+unningJarsOut` field with a dynamic calculation showing the 'Net Change' in jars for that specific event (e.g., '+1 Jars Out', 'Balanced (0)').
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/CustomerHistoryScreen.jsx
+- **User Request**: now do one thing add a console and print the tocken
+- **Root Cause / Task**: The user wanted to debug and inspect the `userToken` in their local terminal console.
+- **Changes Made**: Added a `console.log('--- USER TOKEN ---', userToken)` to the `fetchHistoryData` function.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/GenerateInvoiceScreen.jsx
+- **User Request**: modify the card in the generate invoice nmake it like what we have in paymnet statemnt card alkso fix for i8n language there as coming deliveries.pendingtoInvoice fix hindi english of this dont change anything else
+- **Root Cause / Task**: The 'Pending to be Invoiced' summary card was a basic flat box, and the translation key was referencing `deliveries.pendingToInvoice` which didn't exist in the i18n file (it was under `invoice.pendingToInvoice`).
+- **Changes Made**:
+  1. Updated `GenerateInvoiceScreen.jsx` to use the `
+eact-native-svg` `LinearGradient` to exactly match the premium Payment Statement card design.
+  2. Fixed the translation key by changing it to `	('invoice.pendingToInvoice')` which instantly resolved the English/Hindi missing translation issue.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/GenerateInvoiceScreen.jsx
+- **User Request**: again language fix is not done as coming in invoice.pendingto invpoice
+- **Root Cause / Task**: The translation key was incorrectly typed as `invoice.pendingToInvoice`, but the parent object in the `i18n/index.js` file is actually named `invoices`.
+- **Changes Made**: Updated the key to `invoices.pendingToInvoice` which immediately resolved the issue.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/navigation/MainTabs.jsx
+- **User Request**: for home screen the logo should start on the point rest are there it is right side i want like on other screen we have same space consitnecy come
+- **Root Cause / Task**: The logo image inside the Home header had excess positive margins, making it sit too far to the right compared to standard text titles.
+- **Changes Made**: Applied a `marginLeft: -8` to the logo container to pull it flush to the left, matching the exact spacing of the text titles on all other screens.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/Screens/Main/UnbilledDeliveriesScreen.jsx
+- **User Request**: modify the unbilled deliveries to look good and more attrcative add left side border and all just make it premium look and attartive
+- **Root Cause / Task**: The user wanted the `
+
+Pending o e
+
+Invoiced` cards to follow the premium design style (white background, deep shadows, thick left border).
+- **Changes Made**: Rewrote the `styles.card` to use a flat white background, enhanced shadow elevation, and a thick `COLORS.primary` left border. Softened the internal stats card background (`#F8FAFC`), made the customer avatar fully circular, and modernized the `Estimated
+
+Total` badge for a premium, clean layout.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/components/reports/InventoryReport.jsx, src/components/reports/OutstandingReport.jsx
+- **User Request**: for inventory in routes for list do the same also for outstabding amount so make it look good
+- **Root Cause / Task**: The list cards inside the Inventory and Outstanding Debt reports needed to match the new premium design consistency.
+- **Changes Made**: Updated the `card` and `customerCard` styles in both components to feature a flat white background, deeper shadow elevation, and the signature thick `COLORS.primary` left border.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/components/reports/InventoryReport.jsx, src/components/reports/OutstandingReport.jsx
+- **User Request**: for outsabding add pink or red like left border also in invetry make clear in list like route and staff unasigned so that if assigned as currently no head is there
+- **Root Cause / Task**: The outstanding report left border was blue (default primary) which didn't fit the negative debt context, and the inventory report showed blank spots when route or staff were unassigned.
+- **Changes Made**: Changed the left border on OutstandingReport cards to a deep rose/red (`#E11D48`). Updated InventoryReport to explicitly render `
+
+Unassigned
+
+Route
+
+" 
+
+Unassigned
+
+Staff` if data is missing, rather than leaving empty gaps.
+
+
+- **Date**: 2026-08-24
+- **Day**: Monday
+- **Component / File**: src/components/reports/InventoryReport.jsx
+- **User Request**: no make like staff then its status and route then what status like this i want so keep like that and modify the inventory detailed list again
+- **Root Cause / Task**: The user wanted route and staff assignments in the Inventory Report to be explicitly labeled rather than a single string, so it's clearer when someone is unassigned.
+- **Changes Made**: Split the route and staff text into two stacked label badges (e.g. `
+
+Route:
+
+Route
+
+A`, `Staff:
+
+Staff
+
+B`). Styled the staff badge with a subtle slate color to distinguish it from the primary route badge.
+
+
+
 - **Date**: 2026-08-24
 - **Day**: Monday
 - **Component / File**: src/services/api.js, src/context/AuthContext.js, src/Screens/Auth/OtpVerificationScreen.jsx, src/Screens/Auth/CompleteRegistrationScreen.jsx
@@ -712,3 +782,394 @@
   4. The language switcher is a compact pill with EN and HI tabs. The active tab uses the deep brand blue (`#043994`) background with white text; inactive tabs use slate gray text on a light gray background (`#F1F5F9`).
   5. No existing functionality, images, or form behavior was changed.
 - **Status**: Implemented.
+
+### Date: 2026-09-05 (Saturday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Make UPI and Netbanking available in the native Razorpay subscription checkout.
+- **Root Cause / Task**: Checkout did not provide a payment-method display configuration, leaving the presentation order entirely to Razorpay's account-level recurring-payment configuration.
+- **Changes Made**:
+  1. Added a Razorpay Checkout display block requesting UPI, Netbanking, and card methods for subscription authorization.
+  2. Kept Razorpay's default blocks enabled so any other account-supported recurring methods remain available.
+  3. Added a safe diagnostic listing the requested method names without logging payment credentials.
+- **External Requirement**: Razorpay only displays recurring methods enabled for the same account and mode as the supplied key. UPI Autopay and eMandate/Netbanking must be enabled under Razorpay Subscriptions settings or by Razorpay Support for the test-key account.
+- **Status**: App-side checkout configuration implemented.
+
+### Date: 2026-09-05 (Saturday)
+- **Component / File**: `api.js`, `ReportsScreen.jsx`, `AlertContext.jsx`
+- **User Request**: Stop the financial-report API from calling continuously when a plan-limit error occurs, show the subscription modal for the backend's feature-lock response, and enlarge the modal.
+- **Root Cause / Task**: The reports screen recreated its filters object during global alert state updates, retriggering the report effect and forming an API/modal render loop. The global plan-limit interceptor also recognized only HTTP 409 even though feature entitlement locks are returned as HTTP 403.
+- **Changes Made**:
+  1. Memoized report filters so report APIs run only when a filter value actually changes.
+  2. Added narrowly scoped HTTP 403 feature-lock detection while preserving HTTP 409 plan-limit handling; ordinary permission-related 403 responses remain normal errors.
+  3. Preserved the backend plan-limit message and attached the response status to the generated plan-limit error.
+  4. Increased the global popup width, minimum height, spacing, typography, corner radius, and button height for better readability.
+- **Status**: Implemented and verified with focused lint checks.
+
+### Date: 2026-09-05 (Saturday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Make the subscription screen back button consistent with other curved-header screens.
+- **Root Cause / Task**: The subscription header used the `ChevronLeft` icon while the shared screen pattern uses `ArrowLeft`.
+- **Changes Made**: Replaced the subscription header's chevron with the standard white 24px `ArrowLeft` icon while preserving the existing `navigation.goBack()` behavior.
+- **Status**: Implemented.
+
+- **Component / File**: `api.js`, `SubscriptionDashboardScreen.jsx`
+- **User Request**: Add console logging throughout all subscription API operations.
+- **Root Cause / Task**: Generic API logs did not clearly group subscription operations or identify which subscription action produced each response during integration debugging.
+- **Changes Made**:
+  1. Added a centralized subscription request wrapper that logs the operation name and safe request metadata without logging the bearer token.
+  2. Added response and error logs for active plans, subscription status, checkout, plan changes, cancellation, payment history, and usage tracking.
+  3. Retained the dedicated active-plan response log on the Subscription Dashboard.
+  4. Preserved all existing endpoints, return values, errors, UI behavior, and authentication handling.
+- **Status**: Implemented.
+
+- **Component / File**: `api.js`, `SubscriptionDashboardScreen.jsx`
+- **User Request**: Align the subscription integration with the supplied backend guide and runtime responses while keeping subscription-limit errors on HTTP 409 only.
+- **Root Cause / Task**: Checkout had been corrected, but status polling still expected only a wrapped response, plan changes used PATCH instead of PUT, and cancellation could not send the required `cancelAtPeriodEnd` body.
+- **Changes Made**:
+  1. Kept global subscription-limit interception restricted to HTTP 409 as explicitly requested; improved its backend-message diagnostics without enabling HTTP 403 interception.
+  2. Normalized initial subscription status and payment polling to support both direct and `{ data: ... }` response shapes.
+  3. Added terminal polling handling for `past_due`, `cancelled`, and `canceled` statuses.
+  4. Added PUT request support and updated plan changes to use the documented PUT endpoint contract.
+  5. Added optional DELETE request bodies and made cancellation send `{ cancelAtPeriodEnd: true }` by default.
+  6. Added logged API helpers for single-plan details and feature-entitlement checks.
+- **Status**: Implemented; subscription-limit handling remains 409-only.
+
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Fix the “Failed to initialize checkout” toast after a successful subscription checkout.
+- **Root Cause / Task**: The backend returned HTTP 201 with the Razorpay URL nested at `rzpSubscription.short_url`, while the screen only checked top-level and `data.short_url` fields.
+- **Changes Made**: Updated checkout URL extraction to support `rzpSubscription.short_url` and `data.rzpSubscription.short_url`, while retaining the existing top-level response fallbacks. Checkout, polling, navigation, and 409-only subscription-limit behavior remain unchanged.
+- **Status**: Implemented.
+
+- **Component / File**: `SubscriptionDashboardScreen.jsx`, `AndroidManifest.xml`
+- **User Request**: Show the purchased plan name correctly and return/update the app after completing payment in the browser.
+- **Root Cause / Task**: Subscription status returns `planVersion.planId` without a `planName`, causing the UI fallback to show Free Trial. External-browser polling may pause while the app is backgrounded, and no Android payment-return deep link was registered.
+- **Changes Made**:
+  1. Matched the subscription's plan/version IDs against the available-plans response and enriched the active subscription with the correct plan name.
+  2. Corrected Current Plan detection to compare `planVersionId` with the displayed version ID.
+  3. Automatically resumed pending-payment polling on screen load and ran an immediate status check when the app returns to the foreground.
+  4. Added handling for `camper://subscription/payment-complete` deep-link events and registered the `camper://subscription` scheme in AndroidManifest.xml.
+  5. Preserved the known plan name when polling returns an active subscription without its parent plan name.
+- **Status**: Implemented. Automatic browser-to-app launch requires the backend/Razorpay success flow to redirect to `camper://subscription/payment-complete`; manual return now refreshes immediately.
+
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Prevent subscription-status polling from running before the user starts a payment.
+- **Root Cause / Task**: Loading an existing `pending_payment` subscription automatically set the local waiting state, which started the 3-second polling loop even when no checkout was initiated in the current app session.
+- **Changes Made**: Removed status-driven polling activation during the initial dashboard fetch. The screen still performs its normal one-time status request, but repeated polling now begins only after checkout succeeds and a Razorpay URL is received. Foreground and deep-link status checks remain active for that checkout session.
+- **Status**: Implemented.
+
+- **Component / File**: `SubscriptionDashboardScreen.jsx`, `package.json`, `package-lock.json`
+- **User Request**: Keep Razorpay checkout inside the app so users do not depend on an external browser returning to Camper.
+- **Root Cause / Task**: The backend provides only a hosted Razorpay `short_url` and no callback URL or native-checkout verification contract, so an external browser cannot reliably return automatically.
+- **Changes Made**:
+  1. Added `react-native-webview` and replaced the normal external-browser checkout launch with a full-screen in-app secure checkout modal.
+  2. Kept subscription-status polling restricted to successful checkout initiation and automatically closes the modal when the backend reports `active`, `past_due`, or cancelled status.
+  3. Added external-app handling for non-web payment schemes such as UPI and retained an Open in Browser fallback if WebView loading fails.
+  4. Added a clear close action that stops the current checkout polling session without changing subscription data.
+- **Status**: Implemented and verified with a successful Android debug build. The rebuilt APK was reinstalled on the connected emulator with app data preserved, and the app launched without the `RNCWebViewModule` crash.
+
+- **Component / File**: `SubscriptionDashboardScreen.jsx`, `package.json`, `package-lock.json`
+- **User Request**: Revert subscription checkout from the in-app WebView back to browser-only checkout.
+- **Changes Made**: Restored `Linking.openURL` for the Razorpay hosted payment URL, removed the checkout WebView modal and related UI/state handling, and retained checkout-triggered polling, active-plan mapping, corrected response handling, and browser-open error feedback.
+- **Status**: Implemented; the WebView dependency was removed from the project.
+
+- **Component / File**: `SubscriptionDashboardScreen.jsx`, `AndroidManifest.xml`, `package.json`, `package-lock.json`
+- **User Request**: Replace browser-based subscription payment with the Razorpay SDK and add diagnostics throughout the native checkout flow.
+- **Root Cause / Task**: The hosted `short_url` leaves the app and cannot reliably return without backend redirect support. The updated backend guide recommends in-app checkout using the created Razorpay subscription ID.
+- **Changes Made**:
+  1. Installed the official `react-native-razorpay` SDK and replaced `Linking.openURL(short_url)` with `RazorpayCheckout.open()`.
+  2. Configured native subscription checkout using `subscription_id`, business/customer prefill details, plan currency, and app theme without passing a client-controlled amount.
+  3. Added structured console diagnostics for checkout creation, configuration extraction, native SDK opening, authorization success/failure, and subscription activation polling. Secrets and full key values are never logged.
+  4. Changed polling to start only after the native SDK reports successful payment authorization.
+  5. Removed the browser-return Android deep-link intent filter because native checkout returns directly to the app.
+  6. Added guarded support for `razorpayKeyId`, `keyId`, or `key_id` in the checkout response and a precise configuration error when no public key ID is supplied.
+- **Backend Modification Required**: Include the public Razorpay key ID in the checkout response as `razorpayKeyId`. Keep the Razorpay key secret exclusively on the backend and ensure webhooks update the subscription from `pending_payment` to `active`.
+- **Status**: Frontend native SDK integration implemented and verified with a successful Android debug build. The rebuilt APK was installed on the emulator and launched with `RazorpayPackage` registered; backend public-key response support is still required before checkout can open.
+
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Configure the supplied Razorpay test key ID for native checkout.
+- **Changes Made**: Added `rzp_test_SbMjn5LrmOZKI7` as the hardcoded public test-key fallback. A key returned by the backend still takes precedence, full key values remain excluded from console logs, and no Razorpay secret is stored in the app.
+- **Status**: Implemented for Razorpay test mode; replace the test key with the live public key before production release.
+
+## Section 11: Excel Generation Tracking
+
+This section tracks the dates for which daily Excel reports have been generated and exported. 
+
+### Completed Excel Exports
+- **2026-09-03** (Today) - *Completed*
+
+### Carry-Forward / Pending Excel Exports
+- *(Add any skipped dates here to track them for the future)*
+- *(Add any upcoming dates here if they need to be generated ahead of time)*
+
+### Date: 2026-09-05 (Saturday)
+- **Component / File**: api.js, AlertContext.jsx, RootNavigator.jsx, MainDrawer.jsx, SubscriptionDashboardScreen.jsx
+- **User Request**: Implement the Subscription Limits (409) flow and Razorpay Integration
+- **Root Cause / Task**: Needed a secure subscription system.
+- **Changes Made**:
+  1. Updated api.js to intercept 409 responses and trigger a global onPlanLimitCallback.
+  2. Filtered 'PLAN_LIMIT_REACHED' in AlertContext so it doesn't show standard duplicate toasts.
+  3. Added a global Alert listener in RootNavigator that shows a beautiful blocking modal to restrict access when limits hit.
+  4. Created SubscriptionDashboardScreen.jsx with a premium UI to handle viewing the active plan and purchasing upgrades.
+  5. Implemented Razorpay using Linking.openURL(short_url) to securely open the payment gateway in the system browser without WebView 3D-Secure issues.
+  6. Implemented a 3-second background polling mechanism that automatically updates the UI once payment is successful.
+
+- **Component / File**: CustomDrawerContent.jsx, api.js, SubscriptionDashboardScreen.jsx
+- **User Request**: Fetch active plans dynamically from the backend and ensure the dedicated tab is visible in the Hamburger menu.
+- **Root Cause / Task**: The "Subscription & Billing" drawer tab was missing from the static navigation list, and plans were hardcoded.
+- **Changes Made**:
+  1. Added { title: 'Subscription & Billing', screen: 'SubscriptionDashboard', ownerOnly: true } to the allMenuItems array in CustomDrawerContent.jsx.
+  2. Added getActivePlans endpoint to api.js pointing to /api/subscription_module/admin/plans.
+  3. Replaced HARDCODED_PLANS in SubscriptionDashboardScreen.jsx with dynamic data fetched from getActivePlans.
+  4. Mapped the backend plan payload (including activePlanVersionId, pricing, and JSON parsed features) seamlessly into the UI card schema.
+
+- **Component / File**: api.js
+- **User Request**: Gracefully handle 404 No subscription found errors without logging scary red console errors.
+- **Root Cause / Task**: The API returns `{"error": "No subscription found..."}` for new users without a plan, but our fetch client was defaulting to "Something went wrong" and logging it as a hard failure.
+- **Changes Made**:
+  1. Updated all request methods (GET, POST, PATCH, etc.) in `api.js` to correctly extract `data.error` if `data.message` is undefined.
+  2. Updated the `logError` function to intercept the "No subscription found for this customer" error and log it as a quiet `ℹ️ [API Info]` rather than a red `❌ [API Error]`. This prevents the developer console from flooding while safely continuing the frontend flow.
+
+- **Component / File**: SubscriptionDashboardScreen.jsx
+- **User Request**: Map the actual API payload structure for available plans into the frontend cards.
+- **Root Cause / Task**: The backend returns plans with nested `versions` arrays containing `monthlyPrice` and `features` JSON objects, which didn't match the initial flat mapping structure.
+- **Changes Made**:
+  1. Updated `fetchData` to correctly parse the backend array response.
+  2. Extracted the latest plan version from the `versions` array using `reduce` to find the highest `versionNumber`.
+  3. Mapped `monthlyPrice` to the UI price string.
+  4. Parsed the `features` JSON object and dynamically mapped limits (`customer.limit`, `staff.limit`, `product.limit`, etc.) into beautiful, human-readable feature list arrays.
+  5. Correctly bound the checkout `planVersionId` to the latest version's ID.
+
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Fix the subscription checkout validation error stating that `planVersionId` is required.
+- **Root Cause / Task**: The selected version UUID was incorrectly sent as `planId`, and the request included a client-calculated `amount` instead of the backend-required `billingCycle`.
+- **Changes Made**:
+  1. Updated the checkout payload to send `customerId`, `planVersionId`, and `billingCycle: 'monthly'` according to the subscription API contract.
+  2. Removed `planId` and `amount` from the checkout request so pricing remains controlled by the selected backend plan version.
+  3. Made checkout URL handling compatible with both direct and data-wrapped `short_url` responses without changing the existing browser-based Razorpay flow.
+- **Status**: Implemented; the edited checkout block passes parsing, while pre-existing screen-wide hook dependency lint errors remain outside this fix.
+
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Add a console log for the active subscription plan.
+- **Root Cause / Task**: The active-plan API response needed to be visible during local debugging and backend integration verification.
+- **Changes Made**: Added a focused `[Subscription] Active plan response:` console log immediately after the subscription status request completes. No UI, checkout, polling, or navigation behavior was changed.
+- **Status**: Implemented.
+
+### Date: 2026-09-05 (Saturday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Synchronize the subscription UI with the current API payload and ensure polling runs only after a successful Razorpay payment.
+- **Root Cause / Task**: A `pending_payment` subscription was incorrectly labelled as active, plan actions did not reflect pending/current states, and verification polling had no maximum duration once started.
+- **Changes Made**:
+  1. Added backend-status-driven subscription presentation for active, trial, pending/activating, past-due, and other states with matching labels and colors.
+  2. Corrected plan feature mapping for `reports.analytics`, route limits, one-time orders, and WhatsApp reminders; also synchronized plan descriptions and the rupee symbol.
+  3. Updated plan actions to show Current Plan, Retry Payment, Choose Free Plan, or Buy Now as appropriate and prevent repurchasing an already active plan.
+  4. Replaced generic waiting state with a payment-success verification object that is created only after Razorpay returns valid payment and subscription IDs.
+  5. Added guarded 3-second verification checks capped at 12 attempts, with cleanup on activation, terminal failure, timeout, navigation/unmount, or checkout failure.
+  6. Updated the verification banner to describe in-app plan activation instead of the obsolete browser flow.
+  7. Matched verification responses against the Razorpay subscription ID returned by the successful checkout so an older active subscription cannot produce a false success state.
+- **Status**: Implemented and statically verified.
+
+### Date: 2026-09-05 (Saturday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Fix UPI and Netbanking not appearing in Razorpay Subscription Checkout even though payment methods are enabled.
+- **Root Cause / Task**: The app supplied a custom Checkout display block containing normal UPI/Netbanking instruments. Subscription authorisation uses the `subscription_id` to resolve eligible recurring instruments such as UPI Autopay and eMandate, so client-side display filtering can prevent Razorpay from presenting the correct account-enabled methods.
+- **Changes Made**:
+  1. Removed the custom payment-method display block from native Checkout.
+  2. Kept the official Subscription Checkout inputs (`key` and `subscription_id`) so Razorpay can automatically render every eligible recurring method configured for the account.
+  3. Updated diagnostics to show that checkout is in subscription mode and payment methods are controlled by Razorpay account defaults.
+- **External Note**: Standard Payment Gateway method enablement and Subscription recurring-method enablement are separate. If a method remains absent, UPI Autopay/eMandate access must be enabled for this exact test-mode account by Razorpay.
+- **Status**: Client-side filtering removed and statically verified.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: After Razorpay payment succeeds and closes, show an attractive animated activation modal while subscription polling runs, then return to the updated plan screen.
+- **Root Cause / Task**: Payment activation was represented by a small card inside the plan list, which did not clearly separate successful payment authorization from backend plan activation.
+- **Changes Made**:
+  1. Replaced the in-page verification banner with a centered blocking modal that appears only after Razorpay returns valid payment and subscription IDs.
+  2. Added a pulsing activation core, rotating status orbit, branded secure-payment label, and the message “Sit back & relax” while polling continues.
+  3. Added a dedicated animated success state with “You're all set!” once the expected subscription becomes active.
+  4. Automatically closes the success modal after 1.8 seconds, revealing the refreshed active-plan screen.
+  5. Kept existing bounded polling behavior and closes the modal correctly on terminal failure, timeout, checkout error, or component unmount.
+- **Status**: Initial animated-modal implementation was superseded by the Fabric crash-safety fix below.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Fix the app closing when the post-payment activation modal opens.
+- **Root Cause / Task**: Android's stored crash report showed a React Native Fabric `SurfaceMountingManager.overridePropsReadableMap` assertion while custom native-driven animated props were updating in a newly opened native `Modal` immediately after the Razorpay Activity closed.
+- **Changes Made**:
+  1. Replaced the separate native `Modal` surface with a full-screen, high-elevation overlay rendered safely inside the subscription screen.
+  2. Removed custom continuously updated `Animated.View` transform/opacity props from the payment-return transition.
+  3. Preserved an attractive animated experience with the platform-native loading indicator, decorative secure-payment card, activation copy, and success state.
+  4. Preserved payment-success-only polling, bounded retries, failure handling, automatic success dismissal, and refreshed plan data.
+- **Status**: Crash path removed and the updated screen passes ESLint.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Fix post-checkout activation polling so the newly purchased plan replaces the previously active plan after Razorpay closes.
+- **Root Cause / Task**: Checkout returned the new local subscription UUID, but the screen discarded it and polled only the customer-level status endpoint. That endpoint can continue returning the previous active subscription while the replacement is pending, leaving the UI on stale plan data.
+- **Changes Made**:
+  1. Preserved the checkout-created local subscription UUID and plan-version ID in the payment-verification state.
+  2. Made each post-payment check query both the customer status and the exact purchased subscription's payment/details endpoint.
+  3. Added strict local/Razorpay subscription-ID matching so an older active plan is never accepted as the completed purchase.
+  4. Immediately shows the newly purchased plan as payment pending after Razorpay succeeds, then replaces it with the exact backend record when activation completes.
+  5. Replaced overlapping interval polling with serial timeout-based checks, retaining the existing bounded retry, success, failure, and cleanup behavior.
+- **Status**: Implemented and verified with ESLint.
+### Date: 2026-09-08 (Tuesday)
+- **Component / File**: `Screens/Main/SubscriptionDashboardScreen.jsx`, `i18n/index.js`
+- **User Request**: Replace the raw Razorpay payment-error toast with an attractive, interactive modal that offers support contact details and a direct retry action.
+- **Root Cause**: Checkout failures were passed directly to the global error toast, exposing technical Razorpay error metadata to users and providing no recovery action.
+- **Changes Made**:
+  1. Replaced checkout-failure toasts with a dedicated payment-help modal and kept technical error details only in console logs.
+  2. Added a direct Retry Again action that reopens checkout for the selected plan.
+  3. Added the Compunic support number (`+91 90097 90111`) with a tap-to-call action.
+  4. Added complete English and Hindi translations for all new modal content.
+- **Status**: Implemented.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `android/app/src/main/AndroidManifest.xml`, `android/app/src/main/res/values/styles.xml`
+- **User Request**: Remove the visible bottom gap when the native Razorpay checkout opens.
+- **Root Cause / Task**: Razorpay's translucent checkout activity did not provide an opaque navigation-bar surface, allowing a gap to remain visible below the checkout on Android.
+- **Changes Made**: Added a Razorpay-checkout-only Android theme that paints the bottom system navigation area white, uses matching dark navigation icons, and disables the translucent/contrast scrim for that area; assigned it only to `CheckoutActivity`.
+- **Status**: Implemented without changing checkout logic or any other screen; Android debug manifest and resource processing passed.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `RootNavigator.jsx`, `SubscriptionDashboardScreen.jsx`
+- **User Request**: Reload the correct current-plan data after an expired-plan alert sends the user to View Plans.
+- **Root Cause / Task**: The subscription dashboard fetched its APIs only on first mount, so navigating back to an already-mounted billing route could retain stale plan information.
+- **Changes Made**: The global View Plans action now sends a refresh signal, and the subscription dashboard reloads both subscription status and available plans whenever it receives focus or a new refresh signal.
+- **Status**: Implemented without changing checkout or subscription business logic; both edited source files pass ESLint with no errors.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `android/app/src/main/res/values/styles.xml`
+- **User Request**: Fully remove the bottom strip still visible beneath the rounded Razorpay checkout.
+- **Root Cause / Task**: Razorpay's checkout activity remained a translucent window, so the underlying app was visible outside the SDK's rounded checkout surface even after styling the navigation bar.
+- **Changes Made**: Made only the Razorpay checkout activity theme non-floating and opaque with a white full-window background, while retaining its matching navigation-bar treatment.
+- **Status**: Implemented without changing Razorpay checkout behavior or any React Native screen; Android debug resource processing passed.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `EntitlementContext.jsx`, `subscriptionEntitlements.js`, `api.js`, `RootNavigator.jsx`, `CustomDrawerContent.jsx`, `MainTabs.jsx`, `HomeScreen.jsx`, customer/product/route/subscription/staff/invoice/one-time-order list screens, `SubscriptionDashboardScreen.jsx`
+- **User Request**: Add proactive subscription entitlement checks with visible locks, and add relevant icons to every hamburger drawer tab.
+- **Root Cause / Task**: Feature access was checked only after protected APIs failed, entitlement results were not cached or reflected in navigation UI, and drawer rows had text without identifying icons.
+- **Changes Made**:
+  1. Added a centralized entitlement-key catalog and provider with five-minute caching, in-flight request deduplication, login/app-resume refresh, manual invalidation, and fail-open handling for ordinary network failures.
+  2. Preloads supported feature entitlements without opening background popups; an explicit denied result now shows the existing localized upgrade modal only when the user presses the locked feature.
+  3. Connected entitlement guards and amber lock indicators to protected drawer destinations, bottom tabs, Home quick actions/stat cards, and primary Add/Generate actions in the relevant list screens.
+  4. Refreshes cached entitlements after plan activation/cancellation and invalidates them when the backend reports a plan limit or expired subscription.
+  5. Added a relevant Lucide icon and styled icon container to every hamburger-menu entry, including Home, deliveries, routes, customers, invoices, subscriptions, products, staff, reports, billing, settings, and logout.
+- **Status**: Implemented; allowed actions keep their existing navigation/functionality, denied actions stop before the protected flow, and all edited files pass the targeted ESLint validation with no new errors.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `api.js`, `EntitlementContext.jsx`, `RootNavigator.jsx`, `CustomDrawerContent.jsx`
+- **User Request**: Fix missing entitlement lock indicators when the backend rejects protected access with HTTP 409.
+- **Root Cause / Task**: The global 409 handler invalidated and removed entitlement state, and entity drawer rows observed only management keys rather than their related numeric-limit keys.
+- **Changes Made**:
+  1. Added 409 metadata to the global subscription-limit notification.
+  2. A feature-specific 409 now records that exact entitlement as denied instead of clearing it.
+  3. An expired subscription/trial or keyless subscription 409 marks all protected entitlements as denied so locks appear immediately.
+  4. Customer, product, staff, and route drawer rows now display a lock when either their management entitlement or corresponding plan-limit entitlement is denied.
+- **Status**: Implemented while keeping list access available when only an Add limit has been reached; the 409/lock-state integration passes targeted ESLint validation.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `RootNavigator.jsx`
+- **User Request**: Remove Cancel from the subscription-limit modal and keep only View Plans.
+- **Changes Made**: Removed only the Cancel action from the global subscription warning dialog; View Plans remains the sole action and all other alert variants are unchanged.
+- **Status**: Implemented.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `i18n/index.js`
+- **User Request**: Change the subscription modal button text from View Plans to Update Plan.
+- **Changes Made**: Updated the existing localized action label to “Update Plan” in English and “प्लान अपडेट करें” in Hindi; navigation behavior remains unchanged.
+- **Status**: Implemented.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`, `i18n/index.js`
+- **User Request**: Add subscription cancellation, payment history/summary, monthly/annual billing selection, and a View Summary action on the active subscription card.
+- **Root Cause / Task**: The billing screen supported plan checkout and activation only; management helpers existed but cancellation and payment history had no user-facing controls, and checkout was fixed to monthly billing.
+- **Changes Made**:
+  1. Added a Monthly/Annual segmented selector that updates displayed plan pricing and sends the selected `billingCycle` to checkout.
+  2. Added a right-aligned View Summary action to the active subscription card.
+  3. Added a localized payment summary overlay with total paid, successful-payment count, payment status/date/ID rows, loading, empty, retry, close, and Android back-button handling.
+  4. Added a cancel-subscription action with confirmation, loading protection, `cancelAtPeriodEnd: true`, success/failure feedback, data refresh, and a cancellation-scheduled indicator.
+  5. Added matching English and Hindi strings for all new billing, payment-history, and cancellation UI.
+- **Status**: Implemented and verified with ESLint; all subscription dashboard translation keys exist in both English and Hindi.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Keep the Current Plan card above all other cards on the Subscription & Billing screen.
+- **Changes Made**: Reordered the rendered plan list so the matched current plan is always first while preserving backend order for all remaining plans; fallback current-plan behavior and checkout functionality remain unchanged.
+- **Status**: Implemented and verified with ESLint.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Increase the active-plan polling modal duration to 21 attempts.
+- **Changes Made**: Increased post-payment activation polling from 12 to 21 attempts while retaining the existing 3-second interval, success handling, timeout handling, and cleanup behavior. The maximum polling window is now approximately 63 seconds.
+- **Status**: Implemented and verified with ESLint.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`, `RootNavigator.jsx`, `CustomDrawerContent.jsx`, `MainDrawer.jsx`, `i18n/index.js`
+- **User Request**: Add complete Hindi i18n support for the subscription activation modal and related subscription/billing UI.
+- **Root Cause / Task**: Subscription billing, payment verification, plan-limit alerts, plan actions, feature labels, and navigation entries used hardcoded English strings and did not react consistently to the selected app language.
+- **Changes Made**:
+  1. Added matching English and Hindi `subscriptionBilling` translation resources for subscription statuses, actions, feature limits, payment messages, activation states, and plan-limit prompts.
+  2. Connected the subscription dashboard header, cards, status details, action buttons, localized dates, checkout messages, and activation overlay to `react-i18next`.
+  3. Localized built-in Free, Free Trial, Basic, and fallback plan names while preserving custom backend-defined plan names.
+  4. Localized the global subscription-limit popup, including Hindi-friendly feature-lock/limit messages and translated actions.
+  5. Localized the subscription/billing entry in both the custom drawer and drawer navigator configuration.
+- **Status**: Implemented and verified with ESLint (no errors; existing unrelated warnings remain).
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `RootNavigator.jsx`, `AlertContext.jsx`, `i18n/index.js`
+- **User Request**: Make subscription-limit errors readable across every screen and redesign the global subscription popup as an attractive warning modal.
+- **Root Cause / Task**: The global alert displayed raw backend entitlement keys such as `route.management` and used the same plain white dialog as ordinary confirmations, including verbose backend trial text.
+- **Changes Made**:
+  1. Added centralized mappings for all supported subscription feature and limit keys, converting technical API keys into readable English and Hindi feature names.
+  2. Rebuilt limit/locked messages from i18n templates so raw keys and malformed backend trial-expiry text are no longer shown to users.
+  3. Added a subscription-only warning variant to the global popup with an amber warning accent, icon, access-required badge, explanatory upgrade panel, larger rounded layout, and prominent View Plans action.
+  4. Kept the styling and behavior of all non-subscription confirmation dialogs unchanged.
+- **Status**: Implemented and verified with ESLint (no errors; one pre-existing RootNavigator inline-style warning remains).
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `AlertContext.jsx`
+- **User Request**: Prevent the subscription upgrade information text from overlapping the Cancel and View Plans buttons.
+- **Root Cause / Task**: The subscription dialog content inherited a flexible layout from the generic popup, allowing longer localized information text to consume space reserved for the fixed-height action row.
+- **Changes Made**: Made the subscription content section size to its actual text, added bottom separation, and gave the action row its own larger minimum height and vertical padding so English and Hindi copy remain fully above the buttons.
+- **Status**: Implemented and verified with ESLint.
+
+### Date: 2026-09-07 (Monday)
+- **Component / File**: `SubscriptionDashboardScreen.jsx`
+- **User Request**: Keep the activated plan and Current Plan action synchronized when the available-plans API fails or returns a different plan-version shape.
+- **Root Cause / Task**: Current-plan detection compared only the subscription's top-level `planVersionId` with the displayed version ID. Nested version IDs, base plan IDs, configured active versions, and temporary plan-catalog failures were not handled, so the purchased plan could be active without its card showing Current Plan.
+- **Changes Made**:
+  1. Normalized plan-list responses and subscription plan/version IDs across supported direct and nested response shapes.
+  2. Made catalog mapping prefer the backend's configured active plan version before falling back to the newest version.
+  3. Matched Current Plan by either exact plan-version ID or base plan ID.
+  4. Preserved existing plan cards if the catalog refresh fails and added a fallback current-plan card from subscription details when the active plan is missing from the catalog.
+  5. Refreshes the plan catalog after successful activation without allowing a stale customer-status response to overwrite the newly activated subscription.
+- **Status**: Implemented and verified with ESLint.
+
+### Date: 2026-09-08 (Tuesday)
+- **Component / File**: `i18n/index.js`, `i18n/locales/en.js`, `i18n/locales/hi.js`
+- **User Request**: Separate the English and Hindi i18n content into individual files without changing application behavior.
+- **Root Cause / Task**: Both language dictionaries and the i18next initialization were maintained in one large file, making translation updates difficult to navigate and review.
+- **Changes Made**:
+  1. Moved the complete English dictionary into `i18n/locales/en.js`.
+  2. Moved the complete Hindi dictionary into `i18n/locales/hi.js`.
+  3. Reduced `i18n/index.js` to language-module registration, saved-language loading, and i18next initialization.
+  4. Preserved all translation keys, values, language persistence, fallback language, and interpolation behavior.
+- **Status**: Implemented and verified with ESLint, matching 663 English/Hindi leaf keys, and UTF-8 Hindi validation.
+
+### Date: 2026-09-08 (Tuesday)
+- **Component / File**: `i18n/index.js`
+- **User Request**: Fix locale imports failing to resolve after separating the language files.
+- **Root Cause**: Metro retained a stale file-map snapshot after the new locale directory was created and continued reporting the Hindi module as missing. Extensionless paths made the stale resolution error less explicit.
+- **Changes Made**: Added explicit `.js` extensions to both locale imports and updated both new locale files so Metro receives direct watcher events, without changing translations or i18n behavior.
+- **Status**: Implemented and verified.
+
+### Date: 2026-09-09 (Wednesday)
+- **Component / File**: `AddSubscriptionScreen.jsx`
+- **User Request**: Allow the product to be changed while editing a customer subscription.
+- **Root Cause / Task**: The edit form already loaded products through the product-list API and submitted `productId` through the subscription PATCH API, but the product selector was explicitly disabled in edit mode.
+- **Changes Made**:
+  1. Enabled the product selector in both create and edit modes.
+  2. Reused the existing searchable product-list modal and product API data.
+  3. Preserved the fixed customer behavior and existing subscription update flow; the selected product ID is sent through `PATCH /subscriptions/{id}`.
+- **Status**: Implemented; no unrelated functionality changed.

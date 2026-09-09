@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { 
   View, 
   Text, 
@@ -75,6 +75,15 @@ const ReportsScreen = () => {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [activeSelect, setActiveSelect] = useState(null); // 'preset', 'route', 'staff'
 
+  const reportFilters = useMemo(() => {
+    const filters = { rangePreset, routeId, staffId };
+    if (rangePreset === 'custom') {
+      filters.from = customFrom;
+      filters.to = customTo;
+    }
+    return filters;
+  }, [rangePreset, routeId, staffId, customFrom, customTo]);
+
   useEffect(() => {
     fetchFilters();
   }, []);
@@ -113,16 +122,11 @@ const ReportsScreen = () => {
   };
 
   const renderActiveTab = () => {
-    const filters = { rangePreset, routeId, staffId };
-    if (rangePreset === 'custom') {
-      filters.from = customFrom;
-      filters.to = customTo;
-    }
     switch (activeTab) {
-      case 'financials': return <FinancialReport filters={filters} />;
-      case 'outstanding': return <OutstandingReport filters={filters} />;
-      case 'operations': return <OperationsReport filters={filters} />;
-      case 'inventory': return <InventoryReport filters={filters} />;
+      case 'financials': return <FinancialReport filters={reportFilters} />;
+      case 'outstanding': return <OutstandingReport filters={reportFilters} />;
+      case 'operations': return <OperationsReport filters={reportFilters} />;
+      case 'inventory': return <InventoryReport filters={reportFilters} />;
       default: return null;
     }
   };

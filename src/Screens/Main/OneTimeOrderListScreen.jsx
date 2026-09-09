@@ -30,7 +30,9 @@ import {
   Edit2,
   Save,
   CheckSquare,
-  ArrowLeft} from 'lucide-react-native';
+  ArrowLeft,
+  Lock,
+} from 'lucide-react-native';
 import DeliveryStatusSlider from '../../components/DeliveryStatusSlider';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
@@ -38,6 +40,8 @@ import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
 import CurvedHeader from '../../components/CurvedHeader';
+import { useEntitlements } from '../../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../../constants/subscriptionEntitlements';
 
 
 const OneTimeOrderCard = ({ item, index, onUpdateStatus, getStatusColors, formatDisplayDate, onCancelOrder }) => {
@@ -338,6 +342,8 @@ const OneTimeOrderListScreen = () => {
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
+  const oneTimeOrdersLocked = isEntitlementLocked(ENTITLEMENT_KEYS.ONE_TIME_ORDERS);
 
   const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -533,11 +539,14 @@ const OneTimeOrderListScreen = () => {
 
       {!loading && !error && (
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, oneTimeOrdersLocked && { backgroundColor: '#D97706' }]}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('AddOneTimeOrder')}
+          onPress={() => guardEntitlement(
+            ENTITLEMENT_KEYS.ONE_TIME_ORDERS,
+            () => navigation.navigate('AddOneTimeOrder'),
+          )}
         >
-          <Plus size={26} color="#FFF" />
+          {oneTimeOrdersLocked ? <Lock size={23} color="#FFF" /> : <Plus size={26} color="#FFF" />}
         </TouchableOpacity>
       )}
 

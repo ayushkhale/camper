@@ -36,7 +36,7 @@ const CurvedHeader = ({
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
       {isHome ? (
         <FastImage
-          source={require('../../assets/header_bg1.png')}
+          source={require('../../assets/header_bg5.png')}
           style={StyleSheet.absoluteFill}
           resizeMode="stretch"
         />

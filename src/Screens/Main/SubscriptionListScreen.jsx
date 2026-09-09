@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Search, AlertCircle, RefreshCw, Package, MapPin, Calendar, Clock, ChevronLeft, ChevronRight, Repeat, User , ArrowLeft } from 'lucide-react-native';
+import { Plus, Search, AlertCircle, RefreshCw, Package, MapPin, Calendar, Clock, ChevronLeft, ChevronRight, Repeat, User, ArrowLeft, Lock } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
@@ -19,11 +19,15 @@ import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import CurvedHeader from '../../components/CurvedHeader';
+import { useEntitlements } from '../../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../../constants/subscriptionEntitlements';
 
 const SubscriptionListScreen = () => {
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
   const { t } = useTranslation();
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
+  const addSubscriptionLocked = isEntitlementLocked(ENTITLEMENT_KEYS.SUBSCRIPTION_MANAGEMENT);
 
   const [subscriptions, setSubscriptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -273,9 +277,14 @@ const SubscriptionListScreen = () => {
                 {!searchQuery && filterStatus === 'all' && (
                   <TouchableOpacity
                     style={styles.emptyAddBtn}
-                    onPress={() => navigation.navigate('AddSubscription')}
+                    onPress={() => guardEntitlement(
+                      ENTITLEMENT_KEYS.SUBSCRIPTION_MANAGEMENT,
+                      () => navigation.navigate('AddSubscription'),
+                    )}
                   >
-                    <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
+                    {addSubscriptionLocked
+                      ? <Lock size={18} color="#FFF" style={{ marginRight: 6 }} />
+                      : <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />}
                     <Text style={styles.emptyAddBtnText}>{t('customers.addSubscription')}</Text>
                   </TouchableOpacity>
                 )}
@@ -287,11 +296,14 @@ const SubscriptionListScreen = () => {
 
       {!loading && !error && (
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, addSubscriptionLocked && { backgroundColor: '#D97706' }]}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('AddSubscription')}
+          onPress={() => guardEntitlement(
+            ENTITLEMENT_KEYS.SUBSCRIPTION_MANAGEMENT,
+            () => navigation.navigate('AddSubscription'),
+          )}
         >
-          <Plus size={26} color="#FFF" />
+          {addSubscriptionLocked ? <Lock size={23} color="#FFF" /> : <Plus size={26} color="#FFF" />}
         </TouchableOpacity>
       )}
     </View>

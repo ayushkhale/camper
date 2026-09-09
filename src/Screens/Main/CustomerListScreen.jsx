@@ -16,17 +16,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'react-native-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { useNavigation, useFocusEffect, DrawerActions } from '@react-navigation/native';
-import { Plus, Search, User, ChevronRight, AlertCircle, RefreshCw, MapPin, Phone, Menu, Droplet } from 'lucide-react-native';
+import { Plus, Search, User, ChevronRight, AlertCircle, RefreshCw, MapPin, Phone, Menu, Droplet, Lock } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import CurvedHeader from '../../components/CurvedHeader';
+import { useEntitlements } from '../../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../../constants/subscriptionEntitlements';
 
 const CustomerListScreen = () => {
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
   const { t } = useTranslation();
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
+  const addCustomerLocked = isEntitlementLocked(ENTITLEMENT_KEYS.CUSTOMER_LIMIT);
 
   const [customers, setCustomers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -272,9 +276,14 @@ const CustomerListScreen = () => {
                 {!searchQuery && (
                   <TouchableOpacity
                     style={styles.emptyAddBtn}
-                    onPress={() => navigation.navigate('AddCustomer')}
+                    onPress={() => guardEntitlement(
+                      ENTITLEMENT_KEYS.CUSTOMER_LIMIT,
+                      () => navigation.navigate('AddCustomer'),
+                    )}
                   >
-                    <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />
+                    {addCustomerLocked
+                      ? <Lock size={18} color="#FFF" style={{ marginRight: 6 }} />
+                      : <Plus size={18} color="#FFF" style={{ marginRight: 6 }} />}
                     <Text style={styles.emptyAddBtnText}>{t('customers.addNew')}</Text>
                   </TouchableOpacity>
                 )}
@@ -286,11 +295,14 @@ const CustomerListScreen = () => {
 
       {!loading && !error && (
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, addCustomerLocked && { backgroundColor: '#D97706' }]}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('AddCustomer')}
+          onPress={() => guardEntitlement(
+            ENTITLEMENT_KEYS.CUSTOMER_LIMIT,
+            () => navigation.navigate('AddCustomer'),
+          )}
         >
-          <Plus size={26} color="#FFF" />
+          {addCustomerLocked ? <Lock size={23} color="#FFF" /> : <Plus size={26} color="#FFF" />}
         </TouchableOpacity>
       )}
     </View>

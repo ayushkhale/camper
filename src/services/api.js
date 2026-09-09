@@ -10,6 +10,12 @@ export const setLogoutCallback = (cb) => { onLogoutCallback = cb; };
 let onTokenRefreshedCallback = null;
 export const setTokenRefreshedCallback = (cb) => { onTokenRefreshedCallback = cb; };
 
+let onPlanLimitCallback = null;
+export const setPlanLimitCallback = (cb) => { onPlanLimitCallback = cb; };
+export const notifyPlanLimit = (message, details = {}) => {
+  if (onPlanLimitCallback) onPlanLimitCallback(message, details);
+};
+
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -90,14 +96,45 @@ const fetchWithAuth = async (url, options, token = null) => {
         isRefreshing = false;
       }
     }
+
+    if (response.status === 409 || response.status === 403) {
+      const errorData = await response.clone().json().catch(() => ({}));
+      const message = errorData.message || errorData.error || 'Subscription limit reached.';
+      const errorCode = errorData.code || errorData.errorCode || errorData.error;
+      const isFeatureLocked = response.status === 403 && (
+        errorCode === 'PLAN_LIMIT_REACHED' ||
+        /feature.*locked|purchase a plan|trial expired|not included in current plan/i.test(message)
+      );
+
+      // A plain 403 can also mean a normal permission failure. Only subscription
+      // feature-lock responses should open the upgrade modal.
+      if (response.status !== 409 && !isFeatureLocked) {
+        return response;
+      }
+
+      // Entitlement probes run proactively in the background. They cache a locked
+      // result and show the upgrade modal only when the user presses that feature.
+      if (!url.includes('/entitlement/')) {
+        notifyPlanLimit(message, {
+          status: response.status,
+          errorCode,
+        });
+      }
+      const error = new Error('PLAN_LIMIT_REACHED');
+      error.isPlanLimit = true;
+      error.status = response.status;
+      error.backendMessage = message;
+      throw error;
+    }
+
     return response;
   } catch (error) {
     throw error;
   }
 };
 
-// const API_BASE_URL = 'http://192.168.1.8:3007';
-const API_BASE_URL = 'https://api-camper.compunic.co.in';
+const API_BASE_URL = 'http://192.168.1.6:3007';
+// const API_BASE_URL = 'https://api-camper.compunic.co.in';
 
 
 let apiPrefix = '/api/vendor';
@@ -122,6 +159,10 @@ const logResponse = (url, status, data) => {
 };
 
 const logError = (url, error) => {
+  if (error.message === 'No subscription found for this customer') {
+    console.log(`ℹ️ [API Info] ${url}: ${error.message} (Expected for new users)`);
+    return;
+  }
   console.error(`❌ [API Error] ${url} failed:`, error.message || error);
 };
 
@@ -138,7 +179,7 @@ const getRequest = async (endpoint, token = null) => {
     logResponse(url, response.status, data);
 
     if (!response.ok) {
-      const error = new Error(data.message || 'Something went wrong');
+      const error = new Error(data.message || data.error || 'Something went wrong');
       logError(url, error);
       throw error;
     }
@@ -171,7 +212,7 @@ const postRequest = async (endpoint, body, token = null) => {
     logResponse(url, response.status, data);
 
     if (!response.ok) {
-      const error = new Error(data.message || 'Something went wrong');
+      const error = new Error(data.message || data.error || 'Something went wrong');
       logError(url, error);
       throw error;
     }
@@ -200,7 +241,37 @@ const patchRequest = async (endpoint, body, token = null) => {
     logResponse(url, response.status, data);
 
     if (!response.ok) {
-      const error = new Error(data.message || 'Something went wrong');
+      const error = new Error(data.message || data.error || 'Something went wrong');
+      logError(url, error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    logError(url, error);
+    throw error;
+  }
+};
+
+const putRequest = async (endpoint, body, token = null) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  console.log(`[API Request] PUT ${url}`);
+  if (body) {
+    console.log('[API Payload]', JSON.stringify(body, null, 2));
+  }
+
+  try {
+    const response = await fetchWithAuth(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }, token);
+
+    const data = await response.json();
+    logResponse(url, response.status, data);
+
+    if (!response.ok) {
+      const error = new Error(data.message || data.error || 'Something went wrong');
       logError(url, error);
       throw error;
     }
@@ -233,7 +304,7 @@ const postMultipartRequest = async (endpoint, formData, token = null) => {
     logResponse(url, response.status, data);
 
     if (!response.ok) {
-      const error = new Error(data.message || 'Something went wrong');
+      const error = new Error(data.message || data.error || 'Something went wrong');
       logError(url, error);
       throw error;
     }
@@ -274,13 +345,17 @@ const patchMultipartRequest = async (endpoint, formData, token = null) => {
   }
 };
 
-const deleteRequest = async (endpoint, token = null) => {
+const deleteRequest = async (endpoint, token = null, body = null) => {
   const url = `${API_BASE_URL}${endpoint}`;
   console.log(`🚀 [API Request] DELETE ${url}`);
+  if (body) {
+    console.log('[API Payload]', JSON.stringify(body, null, 2));
+  }
   try {
     const response = await fetchWithAuth(url, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      ...(body ? { body: JSON.stringify(body) } : {}),
     }, token);
 
     const data = await response.json();
@@ -295,6 +370,23 @@ const deleteRequest = async (endpoint, token = null) => {
     return data;
   } catch (error) {
     logError(url, error);
+    throw error;
+  }
+};
+
+const runSubscriptionRequest = async (operation, requestDetails, request) => {
+  console.log(`[Subscription API] ${operation} request:`, requestDetails);
+
+  try {
+    const response = await request();
+    console.log(`[Subscription API] ${operation} response:`, response);
+    return response;
+  } catch (error) {
+    console.error(`[Subscription API] ${operation} error:`, {
+      message: error?.message || String(error),
+      backendMessage: error?.backendMessage,
+      isPlanLimit: Boolean(error?.isPlanLimit),
+    });
     throw error;
   }
 };
@@ -675,5 +767,92 @@ export const api = {
     if (params.staffId) queryParams.push(`staffId=${encodeURIComponent(params.staffId)}`);
     const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
     return getRequest(`${apiPrefix}/reports/inventory${queryString}`, token);
+  },
+
+  // ── SUBSCRIPTIONS & CHECKOUT ─────────────────────────────────
+  getActivePlans: (token) => {
+    const endpoint = '/api/subscription_module/customer/plans';
+    return runSubscriptionRequest(
+      'getActivePlans',
+      { method: 'GET', endpoint },
+      () => getRequest(endpoint, token),
+    );
+  },
+
+  getSubscriptionPlan: (token, planId) => {
+    const endpoint = `/api/subscription_module/admin/plans/${planId}`;
+    return runSubscriptionRequest(
+      'getSubscriptionPlan',
+      { method: 'GET', endpoint, planId },
+      () => getRequest(endpoint, token),
+    );
+  },
+
+  getSubscriptionStatus: (token, customerId) => {
+    const endpoint = `/api/subscription_module/customer/subscription/${customerId}`;
+    return runSubscriptionRequest(
+      'getSubscriptionStatus',
+      { method: 'GET', endpoint, customerId },
+      () => getRequest(endpoint, token),
+    );
+  },
+
+  getSubscriptionEntitlement: (token, customerId, featureKey) => {
+    const encodedFeatureKey = encodeURIComponent(featureKey);
+    const endpoint = `/api/subscription_module/customer/subscription/${customerId}/entitlement/${encodedFeatureKey}`;
+    return runSubscriptionRequest(
+      'getSubscriptionEntitlement',
+      { method: 'GET', endpoint, customerId, featureKey },
+      () => getRequest(endpoint, token),
+    );
+  },
+
+  checkoutSubscription: (token, data) => {
+    const endpoint = '/api/subscription_module/customer/checkout';
+    return runSubscriptionRequest(
+      'checkoutSubscription',
+      { method: 'POST', endpoint, payload: data },
+      () => postRequest(endpoint, data, token),
+    );
+  },
+
+  changeSubscriptionPlan: (token, subscriptionId, data) => {
+    const endpoint = `/api/subscription_module/customer/subscription/${subscriptionId}/plan`;
+    return runSubscriptionRequest(
+      'changeSubscriptionPlan',
+      { method: 'PUT', endpoint, subscriptionId, payload: data },
+      () => putRequest(endpoint, data, token),
+    );
+  },
+
+  cancelSubscriptionPlan: (token, subscriptionId, data = { cancelAtPeriodEnd: true }) => {
+    const endpoint = `/api/subscription_module/customer/subscription/${subscriptionId}`;
+    return runSubscriptionRequest(
+      'cancelSubscriptionPlan',
+      { method: 'DELETE', endpoint, subscriptionId, payload: data },
+      () => deleteRequest(endpoint, token, data),
+    );
+  },
+
+  getSubscriptionPayments: (token, subscriptionId) => {
+    const endpoint = `/api/subscription_module/customer/subscription/${subscriptionId}/payments`;
+    return runSubscriptionRequest(
+      'getSubscriptionPayments',
+      { method: 'GET', endpoint, subscriptionId },
+      () => getRequest(endpoint, token),
+    );
+  },
+
+  getSubscriptionUsage: (token, customerId, params = {}) => {
+    let queryParams = [];
+    if (params.startDate) queryParams.push(`startDate=${encodeURIComponent(params.startDate)}`);
+    if (params.endDate) queryParams.push(`endDate=${encodeURIComponent(params.endDate)}`);
+    const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    const endpoint = `/api/subscription_module/customer/subscription/${customerId}/usage${queryString}`;
+    return runSubscriptionRequest(
+      'getSubscriptionUsage',
+      { method: 'GET', endpoint, customerId, filters: params },
+      () => getRequest(endpoint, token),
+    );
   },
 };

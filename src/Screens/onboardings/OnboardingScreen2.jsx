@@ -45,7 +45,7 @@ const OnboardingScreen2 = ({ navigation }) => {
       {/* Content Card */}
       <View style={styles.contentContainer}>
         <Text style={styles.title}>{t('onboarding.title2')}</Text>
-        
+
         <Text style={styles.subtitle}>
           {t('onboarding.subtitle2')}
         </Text>

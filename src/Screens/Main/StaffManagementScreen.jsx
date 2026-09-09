@@ -14,13 +14,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Plus, Search, Trash2, Edit2, User, Phone, Mail, AlertCircle , ArrowLeft} from 'lucide-react-native';
+import { ChevronLeft, Plus, Search, Trash2, Edit2, User, Phone, Mail, AlertCircle, ArrowLeft, Lock } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
 import CurvedHeader from '../../components/CurvedHeader';
 import LinearGradient from 'react-native-linear-gradient';
+import { useEntitlements } from '../../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../../constants/subscriptionEntitlements';
 
 const getInitials = (name) => {
   if (!name) return '?';
@@ -34,6 +36,8 @@ const StaffManagementScreen = () => {
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
   const { showAlert } = useAlert();
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
+  const addStaffLocked = isEntitlementLocked(ENTITLEMENT_KEYS.STAFF_LIMIT);
 
   const [staffList, setStaffList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
@@ -277,10 +281,13 @@ const StaffManagementScreen = () => {
       {/* Floating Action Button */}
       {!loading && !error && (
         <TouchableOpacity 
-          style={styles.fab}
-          onPress={() => navigation.navigate('AddStaff')}
+          style={[styles.fab, addStaffLocked && { backgroundColor: '#D97706' }]}
+          onPress={() => guardEntitlement(
+            ENTITLEMENT_KEYS.STAFF_LIMIT,
+            () => navigation.navigate('AddStaff'),
+          )}
         >
-          <Plus size={26} color="#FFFFFF" />
+          {addStaffLocked ? <Lock size={23} color="#FFFFFF" /> : <Plus size={26} color="#FFFFFF" />}
         </TouchableOpacity>
       )}
     </View>

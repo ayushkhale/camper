@@ -10,17 +10,39 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Rect } from 'react-native-svg';
-import { ChevronRight, User } from 'lucide-react-native';
+import {
+  BarChart3,
+  Clock,
+  CreditCard,
+  FileText,
+  History,
+  Home,
+  ListOrdered,
+  Lock,
+  LogOut,
+  MapPin,
+  Package,
+  ReceiptText,
+  Repeat,
+  Settings,
+  ShoppingBag,
+  UserCog,
+  Users,
+  ChevronRight,
+} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
 import { AuthContext } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
 import { api } from '../services/api';
+import { useEntitlements } from '../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../constants/subscriptionEntitlements';
 
 const CustomDrawerContent = (props) => {
   const { t } = useTranslation();
   const { user, userToken, logout } = useContext(AuthContext);
   const { showAlert } = useAlert();
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
   const { navigation } = props;
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = React.useState(null);
@@ -43,28 +65,34 @@ const CustomDrawerContent = (props) => {
 
   // Only list screens that actually exist and are registered in navigation
   const allMenuItems = [
-    { title: t('tabs.home'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Home' } },
-    { title: t('deliveries.pastDeliveries') || 'Modify / Past Deliveries', type: 'navigate', screen: 'PastDeliveries' },
-    { title: t('deliveries.allRoutes'), type: 'navigate', screen: 'RouteList' },
-    { title: t('tabs.customers'), type: 'navigate', screen: 'MainTabs', params: { screen: 'Customers' } },
-    { title: t('deliveries.unbilledDeliveries'), type: 'navigate', screen: 'UnbilledDeliveries', ownerOnly: true },
-    { title: t('invoices.title'), type: 'navigate', screen: 'InvoiceList' },
-    { title: t('routes.customerSequence'), type: 'navigate', screen: 'RouteBuilder', ownerOnly: true },
-    { title: t('subscriptions.title'), type: 'navigate', screen: 'SubscriptionList' },
-    { title: t('oneTimeOrders.title'), type: 'navigate', screen: 'OneTimeOrderList' },
-    { title: t('products.title'), type: 'navigate', screen: 'ProductCatalog' },
-    { title: t('staff.title'), type: 'navigate', screen: 'StaffManagement', ownerOnly: true },
-    { title: t('tabs.reports') || 'Reports & Analytics', type: 'navigate', screen: 'Reports', ownerOnly: true },
-    { title: t('settings.title'), type: 'navigate', screen: 'Settings', ownerOnly: true },
-    { title: t('settings.logout'), type: 'logout' },
+    { title: t('tabs.home'), icon: Home, type: 'navigate', screen: 'MainTabs', params: { screen: 'Home' } },
+    { title: t('deliveries.pastDeliveries') || 'Modify / Past Deliveries', icon: History, type: 'navigate', screen: 'PastDeliveries', featureKey: ENTITLEMENT_KEYS.DELIVERY_TRACKING },
+    { title: t('deliveries.allRoutes'), icon: MapPin, type: 'navigate', screen: 'RouteList', featureKey: ENTITLEMENT_KEYS.ROUTE_MANAGEMENT, lockFeatureKeys: [ENTITLEMENT_KEYS.ROUTE_LIMIT] },
+    { title: t('tabs.customers'), icon: Users, type: 'navigate', screen: 'MainTabs', params: { screen: 'Customers' }, featureKey: ENTITLEMENT_KEYS.CUSTOMER_MANAGEMENT, lockFeatureKeys: [ENTITLEMENT_KEYS.CUSTOMER_LIMIT] },
+    { title: t('deliveries.unbilledDeliveries'), icon: Clock, type: 'navigate', screen: 'UnbilledDeliveries', ownerOnly: true, featureKey: ENTITLEMENT_KEYS.INVOICING },
+    { title: t('invoices.title'), icon: ReceiptText, type: 'navigate', screen: 'InvoiceList', featureKey: ENTITLEMENT_KEYS.INVOICING },
+    { title: t('routes.customerSequence'), icon: ListOrdered, type: 'navigate', screen: 'RouteBuilder', ownerOnly: true, featureKey: ENTITLEMENT_KEYS.ROUTE_MANAGEMENT },
+    { title: t('subscriptions.title'), icon: Repeat, type: 'navigate', screen: 'SubscriptionList', featureKey: ENTITLEMENT_KEYS.SUBSCRIPTION_MANAGEMENT },
+    { title: t('oneTimeOrders.title'), icon: ShoppingBag, type: 'navigate', screen: 'OneTimeOrderList', featureKey: ENTITLEMENT_KEYS.ONE_TIME_ORDERS },
+    { title: t('products.title'), icon: Package, type: 'navigate', screen: 'ProductCatalog', featureKey: ENTITLEMENT_KEYS.PRODUCT_MANAGEMENT, lockFeatureKeys: [ENTITLEMENT_KEYS.PRODUCT_LIMIT] },
+    { title: t('staff.title'), icon: UserCog, type: 'navigate', screen: 'StaffManagement', ownerOnly: true, featureKey: ENTITLEMENT_KEYS.STAFF_MANAGEMENT, lockFeatureKeys: [ENTITLEMENT_KEYS.STAFF_LIMIT] },
+    { title: t('tabs.reports') || 'Reports & Analytics', icon: BarChart3, type: 'navigate', screen: 'Reports', ownerOnly: true, featureKey: ENTITLEMENT_KEYS.REPORTS_ANALYTICS },
+    { title: t('subscriptionBilling.title'), icon: CreditCard, type: 'navigate', screen: 'SubscriptionDashboard', ownerOnly: true },
+    { title: t('settings.title'), icon: Settings, type: 'navigate', screen: 'Settings', ownerOnly: true },
+    { title: t('settings.logout'), icon: LogOut, type: 'logout' },
   ];
 
   const menuItems = allMenuItems.filter(item => !(user?.role === 'staff' && item.ownerOnly));
 
-  const handlePress = (item) => {
+  const handlePress = async (item) => {
     navigation.closeDrawer();
     if (item.type === 'navigate') {
-      navigation.navigate(item.screen, item.params);
+      const navigateToItem = () => navigation.navigate(item.screen, item.params);
+      if (item.featureKey) {
+        await guardEntitlement(item.featureKey, navigateToItem);
+      } else {
+        navigateToItem();
+      }
     } else if (item.type === 'logout') {
       showAlert(t('settings.logout'), t('settings.logoutConfirm'), [
         { text: t('staff.cancel'), style: 'cancel' },
@@ -121,6 +149,9 @@ const CustomDrawerContent = (props) => {
         contentContainerStyle={styles.menuContent}
       >
         {menuItems.map((item, index) => {
+          const ItemIcon = item.icon || FileText;
+          const visibleLockKeys = [item.featureKey, ...(item.lockFeatureKeys || [])].filter(Boolean);
+          const isLocked = visibleLockKeys.some(isEntitlementLocked);
           let isActive = false;
           if (props.state && item.type === 'navigate') {
             const currentRoute = props.state.routes[props.state.index];
@@ -145,16 +176,41 @@ const CustomDrawerContent = (props) => {
               activeOpacity={0.7}
               onPress={() => handlePress(item)}
             >
-              <Text style={[
-                styles.itemText,
-                isActive && styles.activeItemText,
-                item.type === 'logout' && { color: COLORS.danger }
-              ]}>
-                {item.title}
-              </Text>
-              {item.type !== 'logout' && (
+              <View style={styles.menuItemMain}>
+                <View style={[
+                  styles.menuIconWrap,
+                  isActive && styles.activeMenuIconWrap,
+                  item.type === 'logout' && styles.logoutMenuIconWrap,
+                  isLocked && styles.lockedMenuIconWrap,
+                ]}>
+                  <ItemIcon
+                    size={18}
+                    color={item.type === 'logout'
+                      ? COLORS.danger
+                      : isLocked
+                        ? '#B45309'
+                        : isActive
+                          ? '#04297A'
+                          : COLORS.textSecondary}
+                    strokeWidth={2.2}
+                  />
+                </View>
+                <Text style={[
+                  styles.itemText,
+                  isActive && styles.activeItemText,
+                  isLocked && styles.lockedItemText,
+                  item.type === 'logout' && styles.logoutItemText,
+                ]}>
+                  {item.title}
+                </Text>
+              </View>
+              {isLocked ? (
+                <View style={styles.lockBadge}>
+                  <Lock size={13} color="#B45309" strokeWidth={2.5} />
+                </View>
+              ) : item.type !== 'logout' ? (
                 <ChevronRight size={18} color={isActive ? '#04297A' : COLORS.textPlaceholder} strokeWidth={2.5} />
-              )}
+              ) : null}
             </TouchableOpacity>
           );
         })}
@@ -235,6 +291,30 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     borderRadius: 16,
   },
+  menuItemMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 10,
+  },
+  menuIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  activeMenuIconWrap: {
+    backgroundColor: 'rgba(4, 41, 122, 0.12)',
+  },
+  logoutMenuIconWrap: {
+    backgroundColor: '#FEF2F2',
+  },
+  lockedMenuIconWrap: {
+    backgroundColor: '#FFF7ED',
+  },
   activeMenuItem: {
     backgroundColor: 'rgba(4, 41, 122, 0.08)', // Very soft deep blue background
   },
@@ -243,6 +323,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Rubik-SemiBold',
     color: COLORS.textPrimary,
     fontWeight: '500',
+  },
+  lockedItemText: {
+    color: '#92400E',
+  },
+  logoutItemText: {
+    color: COLORS.danger,
+  },
+  lockBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   activeItemText: {
     color: '#04297A', // Deep premium blue text

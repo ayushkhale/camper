@@ -4,12 +4,16 @@ import MainTabs from './MainTabs';
 import SettingsScreen from '../Screens/Main/SettingsScreen';
 import UnbilledDeliveriesScreen from '../Screens/Main/UnbilledDeliveriesScreen';
 import CustomDrawerContent from './CustomDrawerContent';
+import SubscriptionDashboardScreen from '../Screens/Main/SubscriptionDashboardScreen.jsx';
 import { Home, Settings, FileText } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/colors';
 
 const Drawer = createDrawerNavigator();
 
 const MainDrawer = () => {
+  const { t } = useTranslation();
+
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -52,6 +56,15 @@ const MainDrawer = () => {
         component={UnbilledDeliveriesScreen} 
         options={{ 
           title: 'Unbilled Deliveries',
+          headerShown: false,
+          drawerIcon: ({ color }) => <FileText color={color} size={22} /> 
+        }} 
+      />
+      <Drawer.Screen 
+        name="SubscriptionDashboard" 
+        component={SubscriptionDashboardScreen} 
+        options={{ 
+          title: t('subscriptionBilling.title'),
           headerShown: false,
           drawerIcon: ({ color }) => <FileText color={color} size={22} /> 
         }} 

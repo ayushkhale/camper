@@ -34,7 +34,14 @@ import InvoiceDetailScreen from '../Screens/Main/InvoiceDetailScreen';
 import GenerateInvoiceScreen from '../Screens/Main/GenerateInvoiceScreen';
 import ReportsScreen from '../Screens/Main/ReportsScreen';
 import { AuthProvider, AuthContext } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { setPlanLimitCallback } from '../services/api';
+import SubscriptionDashboardScreen from '../Screens/Main/SubscriptionDashboardScreen.jsx';
 import { COLORS } from '../constants/colors';
+import { EntitlementProvider, useEntitlements } from '../context/EntitlementContext';
+import { ENTITLEMENT_TRANSLATION_KEYS } from '../constants/subscriptionEntitlements';
 
 const MyTheme = {
   ...DefaultTheme,
@@ -49,6 +56,65 @@ const Stack = createNativeStackNavigator();
 const RootNavigatorContent = () => {
   const { isLoading, userToken, user } = useContext(AuthContext);
   const [showSplash, setShowSplash] = useState(true);
+  const { showAlert } = useAlert();
+  const navigation = useNavigation();
+  const { t } = useTranslation();
+  const {
+    markAllEntitlementsLocked,
+    markEntitlementLocked,
+  } = useEntitlements();
+
+  React.useEffect(() => {
+    setPlanLimitCallback((message, details = {}) => {
+      const backendMessage = String(message || '');
+      const featureMatch = backendMessage.match(/(?:feature|limit reached for)\s+['"]([^'"]+)['"]/i);
+      const featureKey = details.featureKey || featureMatch?.[1]?.toLowerCase();
+      const featureTranslationKey = featureKey
+        ? ENTITLEMENT_TRANSLATION_KEYS[featureKey]
+        : null;
+
+      if (featureKey) {
+        markEntitlementLocked(featureKey, backendMessage);
+      } else if (
+        details.status === 409 ||
+        /subscription|trial.*expired|purchase a plan/i.test(backendMessage)
+      ) {
+        markAllEntitlementsLocked(backendMessage);
+      }
+      const featureName = featureTranslationKey ? t(featureTranslationKey) : null;
+      const isUsageLimit = /limit reached|maximum|current usage/i.test(backendMessage);
+      const localizedMessage = featureName
+        ? isUsageLimit
+          ? t('subscriptionBilling.limitReachedNamed', { feature: featureName })
+          : t('subscriptionBilling.featureLockedNamed', { feature: featureName })
+        : isUsageLimit
+          ? t('subscriptionBilling.limitReachedMessage')
+          : /feature.*locked|purchase a plan|trial expired|not included/i.test(backendMessage)
+            ? t('subscriptionBilling.featureLockedMessage')
+            : t('subscriptionBilling.limitDefaultMessage');
+
+      showAlert(
+        t('subscriptionBilling.limitTitle'),
+        localizedMessage,
+        [
+          { 
+            text: t('subscriptionBilling.viewPlans'),
+            style: 'default',
+            onPress: () => {
+              if (navigation.isReady()) {
+                navigation.navigate('SubscriptionDashboard', {
+                  refreshCurrentPlanAt: Date.now(),
+                });
+              }
+            }
+          }
+        ],
+        'subscription',
+      );
+    });
+
+    return () => setPlanLimitCallback(null);
+  }, [markAllEntitlementsLocked, markEntitlementLocked, navigation, showAlert, t]);
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
@@ -96,6 +162,7 @@ const RootNavigatorContent = () => {
           <Stack.Screen name="GenerateInvoice" component={GenerateInvoiceScreen} />
           <Stack.Screen name="PastDeliveries" component={PastDeliveriesScreen} />
           <Stack.Screen name="Reports" component={ReportsScreen} />
+          <Stack.Screen name="SubscriptionDashboard" component={SubscriptionDashboardScreen} />
         </>
       )}
     </Stack.Navigator>
@@ -105,9 +172,11 @@ const RootNavigatorContent = () => {
 const RootNavigator = ({ navRef, onRouteReady, onStateChange }) => {
   return (
     <AuthProvider>
-      <NavigationContainer theme={MyTheme} ref={navRef} onReady={onRouteReady} onStateChange={onStateChange}>
-        <RootNavigatorContent />
-      </NavigationContainer>
+      <EntitlementProvider>
+        <NavigationContainer theme={MyTheme} ref={navRef} onReady={onRouteReady} onStateChange={onStateChange}>
+          <RootNavigatorContent />
+        </NavigationContainer>
+      </EntitlementProvider>
     </AuthProvider>
   );
 };

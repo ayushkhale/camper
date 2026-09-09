@@ -352,9 +352,9 @@ const AddProductScreen = () => {
                     </View>
                   ) : (
                     <>
-                      <TouchableOpacity 
-                        style={styles.inputContainer} 
-                        activeOpacity={0.7} 
+                      <TouchableOpacity
+                        style={styles.inputContainer}
+                        activeOpacity={0.7}
                         onPress={() => setShowUnitDropdown(true)}
                       >
                         <Text style={[styles.input, { flex: 1, color: unit ? '#000' : COLORS.textPlaceholder, paddingVertical: 12 }]}>
@@ -397,7 +397,7 @@ const AddProductScreen = () => {
             </View>
 
             {/* Deposit Amount Input (Conditional) */}
-            {isReturnableContainer && (
+            {/* {isReturnableContainer && (
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{t('products.depositAmountLabel')}</Text>
                 <View style={styles.inputContainer}>
@@ -414,7 +414,7 @@ const AddProductScreen = () => {
                   />
                 </View>
               </View>
-            )}
+            )} */}
           </View>
         </ScrollView>
 
@@ -439,7 +439,7 @@ const AddProductScreen = () => {
 
       {/* Full-Screen Dropdown Overlay */}
       {showUnitDropdown && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999, elevation: 9999, justifyContent: 'center', alignItems: 'center' }}
           activeOpacity={1}
           onPress={() => setShowUnitDropdown(false)}
@@ -450,15 +450,15 @@ const AddProductScreen = () => {
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
               {predefinedUnits.map((opt) => (
-                <TouchableOpacity 
-                  key={opt} 
+                <TouchableOpacity
+                  key={opt}
                   style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}
                   onPress={() => { setUnit(opt); setShowUnitDropdown(false); }}
                 >
                   <Text style={{ fontSize: 15, color: '#334155', textAlign: 'center' }}>{opt}</Text>
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={{ padding: 16, backgroundColor: '#EFF6FF' }}
                 onPress={() => { setUnit(''); setIsCustomUnit(true); setShowUnitDropdown(false); }}
               >

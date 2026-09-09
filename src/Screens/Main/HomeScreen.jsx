@@ -14,7 +14,7 @@ import {
 import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  Package, MapPin, Repeat, ShoppingBag, FileText, Calendar, Truck, CheckCircle2, XCircle, AlertCircle, UserPlus, Plus, Clock, Globe
+  Package, MapPin, Repeat, ShoppingBag, FileText, Calendar, Truck, CheckCircle2, XCircle, AlertCircle, UserPlus, Plus, Clock, Globe, Lock
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -23,6 +23,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useEntitlements } from '../../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../../constants/subscriptionEntitlements';
 
 const { width } = Dimensions.get('window');
 
@@ -141,6 +143,7 @@ const HomeScreen = () => {
   const { t, i18n } = useTranslation();
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
 
   const [stats, setStats] = useState({ customers: 0, subscriptions: 0, routes: 0, oneTimeOrders: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
@@ -366,13 +369,13 @@ const HomeScreen = () => {
   };
 
   const features = [
-    { title: t('customers.addNew'), icon: Plus, screen: 'AddCustomer', color: '#3B82F6', iconBg: '#EFF6FF' },
-    { title: t('products.title'), icon: Package, screen: 'ProductCatalog', color: '#10B981', iconBg: '#ECFDF5' },
-    { title: t('subscriptions.title'), icon: Repeat, screen: 'SubscriptionList', color: '#F59E0B', iconBg: '#FFFBEB' },
-    { title: t('routes.title'), icon: MapPin, screen: 'RouteList', color: '#8B5CF6', iconBg: '#F5F3FF' },
-    { title: t('invoices.title'), icon: FileText, screen: 'InvoiceList', color: '#EF4444', iconBg: '#FEF2F2' },
-    { title: t('deliveries.title'), icon: Calendar, screen: 'PastDeliveries', color: '#6366F1', iconBg: '#EEF2FF' },
-    { title: t('deliveries.unbilledDeliveries'), icon: Clock, screen: 'UnbilledDeliveries', color: '#0EA5E9', iconBg: '#F0F9FF' },
+    { title: t('customers.addNew'), icon: Plus, screen: 'AddCustomer', featureKey: ENTITLEMENT_KEYS.CUSTOMER_LIMIT, color: '#3B82F6', iconBg: '#EFF6FF' },
+    { title: t('products.title'), icon: Package, screen: 'ProductCatalog', featureKey: ENTITLEMENT_KEYS.PRODUCT_MANAGEMENT, color: '#10B981', iconBg: '#ECFDF5' },
+    { title: t('subscriptions.title'), icon: Repeat, screen: 'SubscriptionList', featureKey: ENTITLEMENT_KEYS.SUBSCRIPTION_MANAGEMENT, color: '#F59E0B', iconBg: '#FFFBEB' },
+    { title: t('routes.title'), icon: MapPin, screen: 'RouteList', featureKey: ENTITLEMENT_KEYS.ROUTE_MANAGEMENT, color: '#8B5CF6', iconBg: '#F5F3FF' },
+    { title: t('invoices.title'), icon: FileText, screen: 'InvoiceList', featureKey: ENTITLEMENT_KEYS.INVOICING, color: '#EF4444', iconBg: '#FEF2F2' },
+    { title: t('deliveries.title'), icon: Calendar, screen: 'PastDeliveries', featureKey: ENTITLEMENT_KEYS.DELIVERY_TRACKING, color: '#6366F1', iconBg: '#EEF2FF' },
+    { title: t('deliveries.unbilledDeliveries'), icon: Clock, screen: 'UnbilledDeliveries', featureKey: ENTITLEMENT_KEYS.INVOICING, color: '#0EA5E9', iconBg: '#F0F9FF' },
   ];
 
   const totalDeliveries = Array.isArray(todaysDeliveries) ? todaysDeliveries.length : 0;
@@ -526,7 +529,10 @@ const HomeScreen = () => {
                   <TouchableOpacity
                     style={[styles.statCard, { borderBottomColor: '#1866E4' }]}
                     activeOpacity={0.7}
-                    onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Customers' } })}
+                    onPress={() => guardEntitlement(
+                      ENTITLEMENT_KEYS.CUSTOMER_MANAGEMENT,
+                      () => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Customers' } }),
+                    )}
                   >
                     <View style={{ position: 'absolute', bottom: -24, right: -24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#1866E4', opacity: 0.08 }} />
                     <View style={{ position: 'absolute', bottom: 8, right: 8 }}>
@@ -545,7 +551,10 @@ const HomeScreen = () => {
                   <TouchableOpacity
                     style={[styles.statCard, { borderBottomColor: '#059669' }]}
                     activeOpacity={0.7}
-                    onPress={() => navigation.navigate('SubscriptionList')}
+                    onPress={() => guardEntitlement(
+                      ENTITLEMENT_KEYS.SUBSCRIPTION_MANAGEMENT,
+                      () => navigation.navigate('SubscriptionList'),
+                    )}
                   >
                     <View style={{ position: 'absolute', bottom: -24, right: -24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#059669', opacity: 0.08 }} />
                     <View style={{ position: 'absolute', bottom: 8, right: 8 }}>
@@ -566,7 +575,10 @@ const HomeScreen = () => {
                   <TouchableOpacity
                     style={[styles.statCard, { borderBottomColor: '#6366F1' }]}
                     activeOpacity={0.7}
-                    onPress={() => navigation.navigate('RouteList')}
+                    onPress={() => guardEntitlement(
+                      ENTITLEMENT_KEYS.ROUTE_MANAGEMENT,
+                      () => navigation.navigate('RouteList'),
+                    )}
                   >
                     <View style={{ position: 'absolute', bottom: -24, right: -24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#6366F1', opacity: 0.08 }} />
                     <View style={{ position: 'absolute', bottom: 8, right: 8 }}>
@@ -585,7 +597,10 @@ const HomeScreen = () => {
                   <TouchableOpacity
                     style={[styles.statCard, { borderBottomColor: '#F59E0B' }]}
                     activeOpacity={0.7}
-                    onPress={() => navigation.navigate('OneTimeOrderList')}
+                    onPress={() => guardEntitlement(
+                      ENTITLEMENT_KEYS.ONE_TIME_ORDERS,
+                      () => navigation.navigate('OneTimeOrderList'),
+                    )}
                   >
                     <View style={{ position: 'absolute', bottom: -24, right: -24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#F59E0B', opacity: 0.08 }} />
                     <View style={{ position: 'absolute', bottom: 8, right: 8 }}>
@@ -617,21 +632,32 @@ const HomeScreen = () => {
               )}
               scrollEventThrottle={16}
             >
-              {features.map((feature, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={{ width: 90, marginRight: 12, alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#F1F5F9', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02 }}
-                  activeOpacity={0.65}
-                  onPress={() => navigation.navigate(feature.screen)}
-                >
-                  <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: feature.iconBg || '#F8FAFC', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                    <feature.icon size={18} color={feature.color} strokeWidth={2} />
-                  </View>
-                  <Text style={{ fontSize: 9.5, fontFamily: 'Rubik-Medium', color: '#334155', textAlign: 'center', paddingHorizontal: 4 }} numberOfLines={1}>
-                    {feature.title}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {features.map((feature, idx) => {
+                const isLocked = isEntitlementLocked(feature.featureKey);
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    style={{ width: 90, marginRight: 12, alignItems: 'center', backgroundColor: isLocked ? '#FFFBEB' : '#FFFFFF', borderRadius: 16, paddingVertical: 12, borderWidth: 1, borderColor: isLocked ? '#FDE68A' : '#F1F5F9', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02 }}
+                    activeOpacity={0.65}
+                    onPress={() => guardEntitlement(
+                      feature.featureKey,
+                      () => navigation.navigate(feature.screen),
+                    )}
+                  >
+                    {isLocked && (
+                      <View style={{ position: 'absolute', right: 7, top: 7, width: 20, height: 20, borderRadius: 10, backgroundColor: '#FEF3C7', justifyContent: 'center', alignItems: 'center' }}>
+                        <Lock size={11} color="#B45309" strokeWidth={2.5} />
+                      </View>
+                    )}
+                    <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: isLocked ? '#FEF3C7' : feature.iconBg || '#F8FAFC', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                      <feature.icon size={18} color={isLocked ? '#B45309' : feature.color} strokeWidth={2} />
+                    </View>
+                    <Text style={{ fontSize: 9.5, fontFamily: 'Rubik-Medium', color: isLocked ? '#92400E' : '#334155', textAlign: 'center', paddingHorizontal: 4 }} numberOfLines={1}>
+                      {feature.title}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
 
             {/* Custom Scroll Indicator */}

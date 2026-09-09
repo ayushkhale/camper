@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-na
 import FastImage from 'react-native-fast-image';
 import Svg, { Path } from 'react-native-svg';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Truck, Users, Bell, CreditCard, Menu, Droplet } from 'lucide-react-native';
+import { Home, Truck, Users, Bell, CreditCard, Menu, Droplet, Lock } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,8 @@ import OrdersScreen from '../Screens/Main/OrdersScreen';
 import PaymentsScreen from '../Screens/Main/PaymentsScreen';
 import CustomerListScreen from '../Screens/Main/CustomerListScreen';
 import CurvedHeader from '../components/CurvedHeader';
+import { useEntitlements } from '../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../constants/subscriptionEntitlements';
 
 const Tab = createBottomTabNavigator();
 
@@ -66,6 +68,13 @@ const HomeHeader = () => {
 const MainTabs = () => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
+
+  const tabEntitlements = {
+    Deliveries: ENTITLEMENT_KEYS.DELIVERY_TRACKING,
+    Payments: ENTITLEMENT_KEYS.LEDGER_MANAGEMENT,
+    Customers: ENTITLEMENT_KEYS.CUSTOMER_MANAGEMENT,
+  };
 
   return (
     <Tab.Navigator
@@ -113,8 +122,18 @@ const MainTabs = () => {
           const activeColor = '#04297A'; // Deep blue matching the image
           const inactiveColor = '#64748B'; // Slate gray
           const color = focused ? activeColor : inactiveColor;
+          const isLocked = isEntitlementLocked(tabEntitlements[route.name]);
 
-          return <IconComponent color={color} size={iconSize} strokeWidth={strokeWidth} />;
+          return (
+            <View>
+              <IconComponent color={isLocked ? '#B45309' : color} size={iconSize} strokeWidth={strokeWidth} />
+              {isLocked && (
+                <View style={styles.tabLockBadge}>
+                  <Lock size={8} color="#FFFFFF" strokeWidth={2.8} />
+                </View>
+              )}
+            </View>
+          );
         },
         tabBarLabel: ({ focused }) => {
           let label = t('tabs.home');
@@ -152,16 +171,43 @@ const MainTabs = () => {
         name="Deliveries"
         component={OrdersScreen}
         options={{ tabBarLabel: t('tabs.deliveries') }}
+        listeners={({ navigation }) => ({
+          tabPress: (event) => {
+            event.preventDefault();
+            guardEntitlement(
+              ENTITLEMENT_KEYS.DELIVERY_TRACKING,
+              () => navigation.navigate('Deliveries'),
+            );
+          },
+        })}
       />
       <Tab.Screen
         name="Payments"
         component={PaymentsScreen}
         options={{ tabBarLabel: t('tabs.payments') }}
+        listeners={({ navigation }) => ({
+          tabPress: (event) => {
+            event.preventDefault();
+            guardEntitlement(
+              ENTITLEMENT_KEYS.LEDGER_MANAGEMENT,
+              () => navigation.navigate('Payments'),
+            );
+          },
+        })}
       />
       <Tab.Screen
         name="Customers"
         component={CustomerListScreen}
         options={{ tabBarLabel: t('tabs.customers') }}
+        listeners={({ navigation }) => ({
+          tabPress: (event) => {
+            event.preventDefault();
+            guardEntitlement(
+              ENTITLEMENT_KEYS.CUSTOMER_MANAGEMENT,
+              () => navigation.navigate('Customers'),
+            );
+          },
+        })}
       />
     </Tab.Navigator>
   );
@@ -190,6 +236,19 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     borderWidth: 2,
     borderColor: '#0B409C',
+  },
+  tabLockBadge: {
+    position: 'absolute',
+    right: -7,
+    top: -5,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#D97706',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
 });
 

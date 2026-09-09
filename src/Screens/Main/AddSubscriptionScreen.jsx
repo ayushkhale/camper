@@ -396,9 +396,8 @@ const AddSubscriptionScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('oneTimeOrders.items')} *</Text>
               <TouchableOpacity
-                style={[styles.inputContainer, isEditMode && styles.inputDisabled]}
-                onPress={() => !isEditMode && setActiveModal('product')}
-                disabled={isEditMode}
+                style={styles.inputContainer}
+                onPress={() => setActiveModal('product')}
               >
                 <View style={[styles.iconBox, { backgroundColor: '#FEF3C7' }]}>
                   <Package size={18} color="#D97706" />

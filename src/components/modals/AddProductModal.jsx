@@ -61,7 +61,7 @@ const AddProductModal = ({ visible, onClose, onSuccess }) => {
     if (!validateForm()) return;
 
     setLoading(true);
-    
+
     // Quick Add modal creates product using standard JSON (no image)
     const jsonBody = {
       name: name.trim(),
@@ -95,7 +95,7 @@ const AddProductModal = ({ visible, onClose, onSuccess }) => {
         setUnit('can');
         setIsReturnableContainer(false);
         setDepositAmount('');
-        
+
         onSuccess(res.data);
       } else {
         throw new Error(res.message || 'Failed to create product');
@@ -115,7 +115,7 @@ const AddProductModal = ({ visible, onClose, onSuccess }) => {
       animationType="slide"
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.modalOverlay}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
@@ -166,33 +166,33 @@ const AddProductModal = ({ visible, onClose, onSuccess }) => {
                   <View style={[styles.inputGroup, { zIndex: 10, position: 'relative' }]}>
                     <Text style={styles.label}>{t('products.unit')}</Text>
                     {isCustomUnit ? (
-                    <View style={styles.inputContainer}>
-                      <TextInput
-                        style={[styles.input, { flex: 1 }]}
-                        placeholder={t('common.customUnitPlaceholder')}
-                        placeholderTextColor={COLORS.textPlaceholder}
-                        value={unit}
-                        onChangeText={setUnit}
-                        autoFocus
-                      />
-                      <TouchableOpacity onPress={() => { setIsCustomUnit(false); setUnit('1 Ltr'); }} style={{ padding: 4 }}>
-                        <X size={20} color={COLORS.danger} />
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <>
-                      <TouchableOpacity 
-                        style={styles.inputContainer} 
-                        activeOpacity={0.7} 
-                        onPress={() => setShowUnitDropdown(true)}
-                      >
-                        <Text style={[styles.input, { flex: 1, color: unit ? '#000' : COLORS.textPlaceholder, paddingVertical: 12 }]}>
-                          {unit || t('common.selectUnit')}
-                        </Text>
-                        <ChevronDown size={20} color={COLORS.textPlaceholder} />
-                      </TouchableOpacity>
-                    </>
-                  )}
+                      <View style={styles.inputContainer}>
+                        <TextInput
+                          style={[styles.input, { flex: 1 }]}
+                          placeholder={t('common.customUnitPlaceholder')}
+                          placeholderTextColor={COLORS.textPlaceholder}
+                          value={unit}
+                          onChangeText={setUnit}
+                          autoFocus
+                        />
+                        <TouchableOpacity onPress={() => { setIsCustomUnit(false); setUnit('1 Ltr'); }} style={{ padding: 4 }}>
+                          <X size={20} color={COLORS.danger} />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <>
+                        <TouchableOpacity
+                          style={styles.inputContainer}
+                          activeOpacity={0.7}
+                          onPress={() => setShowUnitDropdown(true)}
+                        >
+                          <Text style={[styles.input, { flex: 1, color: unit ? '#000' : COLORS.textPlaceholder, paddingVertical: 12 }]}>
+                            {unit || t('common.selectUnit')}
+                          </Text>
+                          <ChevronDown size={20} color={COLORS.textPlaceholder} />
+                        </TouchableOpacity>
+                      </>
+                    )}
                   </View>
                 </View>
               </View>
@@ -224,7 +224,7 @@ const AddProductModal = ({ visible, onClose, onSuccess }) => {
                 </View>
               </View>
 
-              {isReturnableContainer && (
+              {/* {isReturnableContainer && (
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('products.depositAmountLabel')}</Text>
                   <View style={styles.inputContainer}>
@@ -239,7 +239,7 @@ const AddProductModal = ({ visible, onClose, onSuccess }) => {
                     />
                   </View>
                 </View>
-              )}
+              )} */}
             </View>
 
             <TouchableOpacity
@@ -254,42 +254,42 @@ const AddProductModal = ({ visible, onClose, onSuccess }) => {
                 <Text style={styles.btnTextPrimary}>{t('products.createProduct')}</Text>
               )}
             </TouchableOpacity>
-            </ScrollView>
-          </View>
+          </ScrollView>
+        </View>
 
-          {/* Overlay Dropdown for AddProductModal */}
-          {showUnitDropdown && (
-            <TouchableOpacity 
-              style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, elevation: 9999, justifyContent: 'center', alignItems: 'center' }}
-              activeOpacity={1}
-              onPress={() => setShowUnitDropdown(false)}
-            >
-              <View style={{ backgroundColor: '#FFF', borderRadius: 12, width: '80%', maxHeight: '70%', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, elevation: 5, overflow: 'hidden' }}>
-                <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F1F5F9', backgroundColor: '#F8FAFC' }}>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#334155', textAlign: 'center' }}>{t('common.selectUnit')}</Text>
-                </View>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {predefinedUnits.map((opt) => (
-                    <TouchableOpacity 
-                      key={opt} 
-                      style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}
-                      onPress={() => { setUnit(opt); setShowUnitDropdown(false); }}
-                    >
-                      <Text style={{ fontSize: 15, color: '#334155', textAlign: 'center' }}>{opt}</Text>
-                    </TouchableOpacity>
-                  ))}
-                  <TouchableOpacity 
-                    style={{ padding: 16, backgroundColor: '#EFF6FF' }}
-                    onPress={() => { setUnit(''); setIsCustomUnit(true); setShowUnitDropdown(false); }}
-                  >
-                    <Text style={{ fontSize: 15, color: COLORS.primary, fontWeight: 'bold', textAlign: 'center' }}>{t('common.customUnit')}</Text>
-                  </TouchableOpacity>
-                </ScrollView>
+        {/* Overlay Dropdown for AddProductModal */}
+        {showUnitDropdown && (
+          <TouchableOpacity
+            style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, elevation: 9999, justifyContent: 'center', alignItems: 'center' }}
+            activeOpacity={1}
+            onPress={() => setShowUnitDropdown(false)}
+          >
+            <View style={{ backgroundColor: '#FFF', borderRadius: 12, width: '80%', maxHeight: '70%', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, elevation: 5, overflow: 'hidden' }}>
+              <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F1F5F9', backgroundColor: '#F8FAFC' }}>
+                <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#334155', textAlign: 'center' }}>{t('common.selectUnit')}</Text>
               </View>
-            </TouchableOpacity>
-          )}
-        </KeyboardAvoidingView>
-      </Modal>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {predefinedUnits.map((opt) => (
+                  <TouchableOpacity
+                    key={opt}
+                    style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}
+                    onPress={() => { setUnit(opt); setShowUnitDropdown(false); }}
+                  >
+                    <Text style={{ fontSize: 15, color: '#334155', textAlign: 'center' }}>{opt}</Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                  style={{ padding: 16, backgroundColor: '#EFF6FF' }}
+                  onPress={() => { setUnit(''); setIsCustomUnit(true); setShowUnitDropdown(false); }}
+                >
+                  <Text style={{ fontSize: 15, color: COLORS.primary, fontWeight: 'bold', textAlign: 'center' }}>{t('common.customUnit')}</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </TouchableOpacity>
+        )}
+      </KeyboardAvoidingView>
+    </Modal>
   );
 };
 

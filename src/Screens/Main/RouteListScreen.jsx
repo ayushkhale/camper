@@ -15,16 +15,20 @@ import { LinearGradient } from 'react-native-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Plus, Search, ChevronRight, AlertCircle, RefreshCw, ChevronLeft , ArrowLeft} from 'lucide-react-native';
+import { MapPin, Plus, Search, ChevronRight, AlertCircle, RefreshCw, ChevronLeft, ArrowLeft, Lock } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import CurvedHeader from '../../components/CurvedHeader';
+import { useEntitlements } from '../../context/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../../constants/subscriptionEntitlements';
 
 const RouteListScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
+  const { guardEntitlement, isEntitlementLocked } = useEntitlements();
+  const addRouteLocked = isEntitlementLocked(ENTITLEMENT_KEYS.ROUTE_LIMIT);
 
   const [routes, setRoutes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -198,9 +202,14 @@ const RouteListScreen = () => {
               {!searchQuery && user?.role !== 'staff' && (
                 <TouchableOpacity
                   style={styles.emptyAddBtn}
-                  onPress={() => navigation.navigate('AddRoute')}
+                  onPress={() => guardEntitlement(
+                    ENTITLEMENT_KEYS.ROUTE_LIMIT,
+                    () => navigation.navigate('AddRoute'),
+                  )}
                 >
-                  <Plus size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  {addRouteLocked
+                    ? <Lock size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    : <Plus size={18} color="#FFFFFF" style={{ marginRight: 6 }} />}
                   <Text style={styles.emptyAddBtnText}>{t('common.addNewRoute')}</Text>
                 </TouchableOpacity>
               )}
@@ -212,11 +221,14 @@ const RouteListScreen = () => {
       {/* Floating Action Button */}
       {!loading && !error && user?.role !== 'staff' && (
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, addRouteLocked && { backgroundColor: '#D97706' }]}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('AddRoute')}
+          onPress={() => guardEntitlement(
+            ENTITLEMENT_KEYS.ROUTE_LIMIT,
+            () => navigation.navigate('AddRoute'),
+          )}
         >
-          <Plus size={24} color="#FFFFFF" />
+          {addRouteLocked ? <Lock size={22} color="#FFFFFF" /> : <Plus size={24} color="#FFFFFF" />}
         </TouchableOpacity>
       )}
     </View>

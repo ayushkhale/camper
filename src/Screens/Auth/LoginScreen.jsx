@@ -13,25 +13,20 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowRight } from 'lucide-react-native';
 import { COLORS } from '../../constants/colors';
 import { api } from '../../services/api';
 import { useAlert } from '../../context/AlertContext';
+import LanguageSelector from '../../components/LanguageSelector';
 
 const { height } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { showAlert } = useAlert();
   const insets = useSafeAreaInsets();
-
-  const changeLanguage = async (lng) => {
-    i18n.changeLanguage(lng);
-    await AsyncStorage.setItem('app_language', lng);
-  };
 
   const handleLoginRequest = async () => {
     if (!phone || phone.length !== 10) {
@@ -91,20 +86,7 @@ const LoginScreen = ({ navigation }) => {
                   <Text style={styles.headerTitle}>{t('login.title')}</Text>
                   <View style={styles.titleUnderline} />
                 </View>
-                <View style={styles.langSwitcher}>
-                  <TouchableOpacity
-                    style={[styles.langTab, i18n.language === 'en' && styles.langTabActive]}
-                    onPress={() => changeLanguage('en')}
-                  >
-                    <Text style={[styles.langTabText, i18n.language === 'en' && styles.langTabTextActive]}>EN</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.langTab, i18n.language === 'hi' && styles.langTabActive]}
-                    onPress={() => changeLanguage('hi')}
-                  >
-                    <Text style={[styles.langTabText, i18n.language === 'hi' && styles.langTabTextActive]}>HI</Text>
-                  </TouchableOpacity>
-                </View>
+                <LanguageSelector compact />
               </View>
 
               {/* Mobile Input */}
@@ -195,28 +177,6 @@ const styles = StyleSheet.create({
   },
   headerTitleContainer: {
     alignItems: 'flex-start',
-  },
-  langSwitcher: {
-    flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
-    padding: 3,
-  },
-  langTab: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  langTabActive: {
-    backgroundColor: '#043994',
-  },
-  langTabText: {
-    fontSize: 13,
-    fontFamily: 'Rubik-SemiBold',
-    color: '#64748B',
-  },
-  langTabTextActive: {
-    color: '#FFFFFF',
   },
   headerTitle: {
     fontSize: 26,

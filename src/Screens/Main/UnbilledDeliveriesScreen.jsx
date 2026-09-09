@@ -20,8 +20,44 @@ import { api } from '../../services/api';
 import { COLORS } from '../../constants/colors';
 
 const CustomerCard = ({ item, handleGenerateInvoice, user, generatingForId, t }) => {
+  const getInitialEndDate = () => {
+    const startStr = item.earliestDeliveryDate || new Date().toISOString().split('T')[0];
+    const parts = startStr.split('-');
+    if (parts.length === 3) {
+      const endOfMonth = new Date(parseInt(parts[0]), parseInt(parts[1]), 0);
+      const yyyy = endOfMonth.getFullYear();
+      const mm = String(endOfMonth.getMonth() + 1).padStart(2, '0');
+      const dd = String(endOfMonth.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
+  };
+
   const [periodStart, setPeriodStart] = useState(item.earliestDeliveryDate || new Date().toISOString().split('T')[0]);
-  const [periodEnd, setPeriodEnd] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  const [periodEnd, setPeriodEnd] = useState(getInitialEndDate());
+
+  const calculateDerivedStats = () => {
+    let total = 0;
+    let count = 0;
+    if (!item.deliveries || !Array.isArray(item.deliveries)) {
+      return { total: item.estimatedTotal || 0, count: item.uninvoicedDeliveries || 0 };
+    }
+    const pStart = new Date(periodStart);
+    const pEnd = new Date(periodEnd);
+    pStart.setHours(0, 0, 0, 0);
+    pEnd.setHours(23, 59, 59, 999);
+
+    item.deliveries.forEach(d => {
+      const dDate = new Date(d.deliveryDate);
+      if (dDate >= pStart && dDate <= pEnd) {
+        total += Number(d.estimatedAmount || 0);
+        count += 1;
+      }
+    });
+    return { total, count };
+  };
+
+  const { total: calcTotal, count: calcCount } = calculateDerivedStats();
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
@@ -59,7 +95,7 @@ const CustomerCard = ({ item, handleGenerateInvoice, user, generatingForId, t })
         <View style={styles.amountContainer}>
           <Text style={styles.amountLabel}>{t('invoices.estimatedTotal')}</Text>
           <View style={styles.amountRow}>
-            <Text style={styles.amountValue}>₹{Number(item.estimatedTotal).toFixed(2)}</Text>
+            <Text style={styles.amountValue}>₹{Number(calcTotal).toFixed(2)}</Text>
           </View>
         </View>
       </View>
@@ -69,7 +105,7 @@ const CustomerCard = ({ item, handleGenerateInvoice, user, generatingForId, t })
           <View style={styles.iconWrapperSmall}>
             <Package size={14} color={COLORS.primary} />
           </View>
-          <Text style={styles.statValueText}>{item.uninvoicedDeliveries} {t('deliveries.title') || 'Deliveries'}</Text>
+          <Text style={styles.statValueText}>{calcCount} {t('deliveries.title') || 'Deliveries'}</Text>
         </View>
         
         <View style={styles.statRow}>

@@ -23,6 +23,7 @@ export const AlertProvider = ({ children }) => {
     title: '',
     message: '',
     buttons: [{ text: t('common.okay') }],
+    variant: 'default',
   });
 
   const translateY = useRef(new Animated.Value(-120)).current;
@@ -41,7 +42,7 @@ export const AlertProvider = ({ children }) => {
       type = optionalType || 'warning';
 
       // Automatically show iOS minimal popup dialog if buttons array is passed!
-      showPopup(title, message, buttons);
+      showPopup(title, message, buttons, type);
       return;
     } else if (typeof messageOrType === 'string' && ['success', 'error', 'info', 'warning'].includes(typeOrButtons)) {
       title = titleOrMsg;
@@ -58,6 +59,11 @@ export const AlertProvider = ({ children }) => {
 
     if (message.toLowerCase().includes('token')) {
       type = 'info';
+    }
+
+    // Ignore plan limit errors here, as they are handled globally by a blocking modal
+    if (message === 'PLAN_LIMIT_REACHED' || title === 'PLAN_LIMIT_REACHED') {
+      return;
     }
 
     setAlertConfig({ visible: true, title, message, type, buttons: null });
@@ -87,18 +93,21 @@ export const AlertProvider = ({ children }) => {
     });
   };
 
-  const showPopup = (title, message, buttons = [{ text: t('common.okay') }]) => {
+  const showPopup = (title, message, buttons = [{ text: t('common.okay') }], variant = 'default') => {
     setModalConfig({
       visible: true,
       title: title || t('common.notice'),
       message: message || '',
       buttons: buttons && buttons.length > 0 ? buttons : [{ text: t('common.okay') }],
+      variant,
     });
   };
 
   const hidePopup = () => {
     setModalConfig(prev => ({ ...prev, visible: false }));
   };
+
+  const isSubscriptionPopup = modalConfig.variant === 'subscription';
 
   return (
     <AlertContext.Provider value={{ showAlert, hideAlert, showPopup, hidePopup }}>
@@ -141,24 +150,54 @@ export const AlertProvider = ({ children }) => {
         animationType="fade"
         onRequestClose={hidePopup}
       >
-        <View style={styles.iosOverlay}>
-          <View style={styles.iosDialog}>
-            <View style={styles.iosDialogContent}>
-              {!!modalConfig.title && (
-                <Text style={styles.iosTitle}>{modalConfig.title}</Text>
+        <View style={[styles.iosOverlay, isSubscriptionPopup && styles.subscriptionOverlay]}>
+          <View style={[styles.iosDialog, isSubscriptionPopup && styles.subscriptionDialog]}>
+            {isSubscriptionPopup && <View style={styles.subscriptionAccent} />}
+
+            <View style={[styles.iosDialogContent, isSubscriptionPopup && styles.subscriptionDialogContent]}>
+              {isSubscriptionPopup && (
+                <>
+                  <View style={styles.subscriptionIconWrap}>
+                    <AlertCircle size={34} color="#D97706" strokeWidth={2.4} />
+                  </View>
+                  <View style={styles.subscriptionBadge}>
+                    <Text style={styles.subscriptionBadgeText}>
+                      {t('subscriptionBilling.planAccessRequired')}
+                    </Text>
+                  </View>
+                </>
               )}
-              <Text style={styles.iosMessage}>{modalConfig.message}</Text>
+
+              {!!modalConfig.title && (
+                <Text style={[styles.iosTitle, isSubscriptionPopup && styles.subscriptionTitle]}>
+                  {modalConfig.title}
+                </Text>
+              )}
+              <Text style={[styles.iosMessage, isSubscriptionPopup && styles.subscriptionMessage]}>
+                {modalConfig.message}
+              </Text>
+
+              {isSubscriptionPopup && (
+                <View style={styles.subscriptionInfoBox}>
+                  <Info size={18} color={COLORS.primary} style={styles.subscriptionInfoIcon} />
+                  <Text style={styles.subscriptionInfoText}>
+                    {t('subscriptionBilling.upgradeInfo')}
+                  </Text>
+                </View>
+              )}
             </View>
 
-            <View style={styles.iosDivider} />
+            {!isSubscriptionPopup && <View style={styles.iosDivider} />}
 
-            <View style={styles.iosButtonsRow}>
+            <View style={[styles.iosButtonsRow, isSubscriptionPopup && styles.subscriptionButtonsRow]}>
               {modalConfig.buttons.map((btn, idx) => (
                 <TouchableOpacity
                   key={idx}
                   style={[
                     styles.iosBtn,
-                    idx > 0 && styles.iosBtnBorderLeft,
+                    !isSubscriptionPopup && idx > 0 && styles.iosBtnBorderLeft,
+                    isSubscriptionPopup && styles.subscriptionBtn,
+                    isSubscriptionPopup && btn.style !== 'cancel' && styles.subscriptionPrimaryBtn,
                   ]}
                   onPress={() => {
                     hidePopup();
@@ -171,6 +210,8 @@ export const AlertProvider = ({ children }) => {
                       styles.iosBtnText,
                       btn.style === 'destructive' && styles.iosDestructiveText,
                       btn.style === 'cancel' && styles.iosCancelText,
+                      isSubscriptionPopup && styles.subscriptionBtnText,
+                      isSubscriptionPopup && btn.style !== 'cancel' && styles.subscriptionPrimaryBtnText,
                     ]}
                   >
                     {btn.text || t('common.okay')}
@@ -253,13 +294,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: 20,
   },
   iosDialog: {
     width: '100%',
-    maxWidth: 290,
+    maxWidth: 360,
+    minHeight: 190,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -268,24 +310,26 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   iosDialogContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 18,
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 26,
+    paddingTop: 26,
+    paddingBottom: 24,
     alignItems: 'center',
   },
   iosTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Rubik-Bold',
     color: COLORS.textPrimary,
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 10,
   },
   iosMessage: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 21,
   },
   iosDivider: {
     height: 1,
@@ -294,7 +338,7 @@ const styles = StyleSheet.create({
   },
   iosButtonsRow: {
     flexDirection: 'row',
-    height: 46,
+    height: 54,
     width: '100%',
   },
   iosBtn: {
@@ -318,5 +362,119 @@ const styles = StyleSheet.create({
   iosCancelText: {
     fontFamily: 'Rubik-SemiBold',
     color: COLORS.textSecondary,
+  },
+  subscriptionOverlay: {
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    paddingHorizontal: 16,
+  },
+  subscriptionDialog: {
+    maxWidth: 390,
+    minHeight: 350,
+    borderRadius: 28,
+    backgroundColor: '#FFFCF7',
+    shadowColor: '#78350F',
+    shadowOpacity: 0.28,
+    shadowRadius: 24,
+    elevation: 16,
+  },
+  subscriptionAccent: {
+    width: '100%',
+    height: 7,
+    backgroundColor: '#F59E0B',
+  },
+  subscriptionDialogContent: {
+    flex: 0,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 24,
+    paddingTop: 22,
+    paddingBottom: 24,
+  },
+  subscriptionIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    marginBottom: 12,
+  },
+  subscriptionBadge: {
+    backgroundColor: '#FFEDD5',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginBottom: 10,
+  },
+  subscriptionBadgeText: {
+    color: '#C2410C',
+    fontSize: 10,
+    fontFamily: 'Rubik-Bold',
+    letterSpacing: 0.8,
+  },
+  subscriptionTitle: {
+    color: '#7C2D12',
+    fontSize: 21,
+    marginBottom: 8,
+  },
+  subscriptionMessage: {
+    color: '#475569',
+    fontFamily: 'Rubik-Medium',
+    lineHeight: 22,
+  },
+  subscriptionInfoBox: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+    marginTop: 17,
+  },
+  subscriptionInfoIcon: {
+    marginTop: 1,
+    marginRight: 9,
+  },
+  subscriptionInfoText: {
+    flex: 1,
+    color: '#1E3A8A',
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: 'Rubik-Medium',
+  },
+  subscriptionButtonsRow: {
+    height: 78,
+    minHeight: 78,
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+    paddingTop: 8,
+  },
+  subscriptionBtn: {
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginHorizontal: 5,
+  },
+  subscriptionPrimaryBtn: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 7,
+    elevation: 4,
+  },
+  subscriptionBtnText: {
+    color: '#64748B',
+  },
+  subscriptionPrimaryBtnText: {
+    color: '#FFFFFF',
   },
 });
