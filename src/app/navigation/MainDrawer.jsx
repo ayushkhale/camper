@@ -1,0 +1,76 @@
+import React from 'react';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import MainTabs from './MainTabs';
+import { SettingsScreen } from '../../features/settings';
+import { UnbilledDeliveriesScreen } from '../../features/deliveries';
+import CustomDrawerContent from './CustomDrawerContent';
+import { SubscriptionDashboardScreen } from '../../features/plan-billing';
+import { Home, Settings, FileText } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import { COLORS } from '../../shared/constants/colors';
+
+const Drawer = createDrawerNavigator();
+
+const MainDrawer = () => {
+  const { t } = useTranslation();
+
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        headerTintColor: COLORS.primary,
+        drawerActiveBackgroundColor: COLORS.primaryLight,
+        drawerActiveTintColor: COLORS.primary,
+        drawerInactiveTintColor: COLORS.textSecondary,
+        drawerLabelStyle: {
+          fontFamily: 'Rubik-SemiBold',
+          fontSize: 13.5,
+          marginLeft: -10,
+        },
+        drawerItemStyle: {
+          borderRadius: 20,
+          marginBottom: 5,
+        }
+      }}
+    >
+      <Drawer.Screen 
+        name="MainTabs" 
+        component={MainTabs} 
+        options={{ 
+          title: 'Home', 
+          headerShown: false,
+          drawerIcon: ({ color }) => <Home color={color} size={22} />
+        }} 
+      />
+      <Drawer.Screen 
+        name="Settings" 
+        component={SettingsScreen} 
+        options={{ 
+          title: 'Settings',
+          headerShown: false,
+          drawerIcon: ({ color }) => <Settings color={color} size={22} /> 
+        }} 
+      />
+      <Drawer.Screen 
+        name="UnbilledDeliveries" 
+        component={UnbilledDeliveriesScreen} 
+        options={{ 
+          title: 'Unbilled Deliveries',
+          headerShown: false,
+          drawerIcon: ({ color }) => <FileText color={color} size={22} /> 
+        }} 
+      />
+      <Drawer.Screen 
+        name="SubscriptionDashboard" 
+        component={SubscriptionDashboardScreen} 
+        options={{ 
+          title: t('subscriptionBilling.title'),
+          headerShown: false,
+          drawerIcon: ({ color }) => <FileText color={color} size={22} /> 
+        }} 
+      />
+    </Drawer.Navigator>
+  );
+};
+
+export default MainDrawer;

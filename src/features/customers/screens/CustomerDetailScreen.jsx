@@ -1,0 +1,1145 @@
+import React, { useState, useContext } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import FastImage from 'react-native-fast-image';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  User,
+  Phone,
+  MapPin,
+  Route,
+  IndianRupee,
+  Clock,
+  Package,
+  Repeat,
+  Play,
+  Pause,
+  Plus,
+  ChevronRight,
+  FileText,
+  ShieldCheck,
+  X,
+  Droplet,
+} from 'lucide-react-native';
+import { COLORS } from '../../../shared/constants/colors';
+import { AuthContext } from '../../../app/providers/AuthContext';
+import { api } from '../../../shared/services/api';
+import { useTranslation } from 'react-i18next';
+import { useAlert } from '../../../app/providers/AlertContext';
+import CurvedHeader from '../../../shared/components/CurvedHeader';
+
+const CustomerDetailScreen = () => {
+  const navigation = useNavigation();
+  const routeParams = useRoute();
+  const { userToken, user } = useContext(AuthContext);
+  const customerId = routeParams.params?.customerId;
+  const { t } = useTranslation();
+  const { showAlert } = useAlert();
+
+  const [customerData, setCustomerData] = useState(null);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingSubs, setLoadingSubs] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Deposit States
+  const [depositData, setDepositData] = useState(null);
+  const [loadingDeposit, setLoadingDeposit] = useState(true);
+  const [depositModalVisible, setDepositModalVisible] = useState(false);
+  const [collectAmount, setCollectAmount] = useState('');
+  const [collectContainers, setCollectContainers] = useState('1');
+  const [collectNotes, setCollectNotes] = useState('');
+  const [submittingDeposit, setSubmittingDeposit] = useState(false);
+
+  const fetchCustomerDetail = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.getCustomer(userToken, customerId);
+      if (res.success) {
+        setCustomerData(res.data);
+      } else {
+        throw new Error(res.message || 'Customer not found');
+      }
+    } catch (err) {
+      console.error('Error fetching customer details:', err);
+      setError(err.message || 'Failed to load customer details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSubscriptions = async () => {
+    setLoadingSubs(true);
+    try {
+      const res = await api.listSubscriptions(userToken, customerId);
+      if (res.success) {
+        setSubscriptions(res.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching customer subscriptions:', err);
+    } finally {
+      setLoadingSubs(false);
+    }
+  };
+
+  const fetchDepositData = async () => {
+    setLoadingDeposit(true);
+    try {
+      const res = await api.getDepositLedger(userToken, customerId);
+      if (res && res.success) {
+        setDepositData(res.data || null);
+      }
+    } catch (err) {
+      console.error('Error fetching customer deposit data:', err);
+    } finally {
+      setLoadingDeposit(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (customerId) {
+        fetchCustomerDetail();
+        fetchSubscriptions();
+        fetchDepositData();
+      }
+    }, [customerId])
+  );
+
+  const handleDeleteCustomer = () => {
+    showAlert(
+      t('customers.deleteCustomer'),
+      t('customers.deleteConfirm'),
+      [
+        { text: t('staff.cancel'), style: 'cancel' },
+        {
+          text: t('staff.deleteBtn'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await api.deleteCustomer(userToken, customerId);
+              if (res.success) {
+                showAlert('Success', t('customers.deleteSuccess'), 'success');
+                navigation.goBack();
+              } else {
+                throw new Error(res.message || 'Failed to delete customer');
+              }
+            } catch (err) {
+              showAlert('Error', err.message || t('customers.deleteError'), 'error');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const toggleSubscriptionStatus = async (sub) => {
+    const newStatus = sub.status === 'active' ? 'paused' : 'active';
+    try {
+      const res = await api.updateSubscription(userToken, sub.id, { status: newStatus });
+      if (res.success) {
+        showAlert('Success', `Subscription ${newStatus === 'active' ? 'activated' : 'paused'} successfully`, 'success');
+        fetchSubscriptions();
+      }
+    } catch (err) {
+      showAlert('Error', 'Failed to update subscription status', 'error');
+    }
+  };
+
+  const handleDeleteSubscription = (sub) => {
+    showAlert(
+      t('subscriptions.deleteSubscription'),
+      t('subscriptions.deleteConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await api.deleteSubscription(userToken, sub.id);
+              if (res.success) {
+                showAlert('Success', 'Subscription deleted successfully', 'success');
+                fetchSubscriptions();
+              }
+            } catch (err) {
+              showAlert('Error', 'Could not delete subscription', 'error');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const formatRecurrence = (pattern) => {
+    switch (pattern) {
+      case 'daily': return t('subscriptions.daily');
+      case 'alternate_days': return t('subscriptions.alternateDays');
+      case 'weekly': return t('subscriptions.weekly');
+      case 'monthly': return t('subscriptions.monthly');
+      default: return pattern;
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>{t('customerDetail.loadingCustomerDetails')}</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !customerData) {
+    return (
+      <SafeAreaView style={styles.centerContainer}>
+        <Text style={styles.errorText}>{error || t('customers.noCustomersTitle')}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.retryText}>{t('common.goBack')}</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  // Get Avatar Initials
+  const getInitials = (name) => {
+    if (!name) return 'C';
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  return (
+    <View style={styles.container}>
+      <CurvedHeader
+        title={t('customerDetail.customerDetail')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        rightIcon={
+          user?.role !== 'staff' ? (
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                style={[styles.headerActionBtnDark, { backgroundColor: '#E0E7FF' }]}
+                onPress={() => navigation.navigate('AddCustomer', { customer: customerData })}
+              >
+                <Edit size={18} color="#0B409C" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.headerActionBtnDark, { backgroundColor: '#FEE2E2' }]}
+                onPress={handleDeleteCustomer}
+              >
+                <Trash2 size={18} color="#DC2626" />
+              </TouchableOpacity>
+            </View>
+          ) : null
+        }
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
+
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]} showsVerticalScrollIndicator={false}>
+
+        {/* Profile Hero Section */}
+        <View style={styles.profileHeroCard}>
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarContainer}>
+              <FastImage
+                source={require('../../../../assets/customerfallback.png')}
+                style={styles.avatarImage}
+                resizeMode="cover"
+              />
+            </View>
+            <View style={[styles.avatarStatusDot, { backgroundColor: customerData.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
+          </View>
+
+          <View style={styles.heroRight}>
+            <Text style={styles.customerNameHero}>{customerData.name}</Text>
+            
+            <View style={[styles.heroStatusPill, { backgroundColor: customerData.status === 'active' ? '#DCFCE7' : '#F1F5F9' }]}>
+              <View style={[styles.heroStatusDot, { backgroundColor: customerData.status === 'active' ? '#16A34A' : '#94A3B8' }]} />
+              <Text style={[styles.heroStatusText, { color: customerData.status === 'active' ? '#16A34A' : '#64748B' }]}>
+                {customerData.status.toUpperCase()}
+              </Text>
+            </View>
+
+            {subscriptions.length > 0 && (
+              <View style={styles.planPill}>
+                <Droplet size={14} color="#0B409C" style={{ marginRight: 6 }} />
+                <Text style={styles.planPillText}>Plan: {subscriptions[0].Product?.name || 'Standard'}</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.historyBtn}
+              onPress={() => navigation.navigate('CustomerHistory', { customerId: customerData.id })}
+              activeOpacity={0.7}
+            >
+              <Clock size={14} color="#3B82F6" style={{ marginRight: 6 }} />
+              <Text style={styles.historyBtnText}>{t('customerDetail.viewHistory')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Subscriptions */}
+        <Text style={styles.sectionTitle}>{t('customers.activeSubscriptions')}</Text>
+
+        {loadingSubs ? (
+          <View style={[styles.detailsCard, { padding: 30, alignItems: 'center' }]}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
+          </View>
+        ) : subscriptions.length === 0 ? (
+          <TouchableOpacity
+            style={styles.subscriptionToggle}
+            onPress={() => navigation.navigate('AddSubscription', { customerId: customerData.id })}
+            activeOpacity={0.7}
+          >
+            <View style={styles.subscriptionToggleLeft}>
+              <View style={styles.subToggleIcon}>
+                <Plus size={18} color={COLORS.primary} />
+              </View>
+              <View>
+                <Text style={styles.subToggleTitle}>{t('customers.addSubscription')}</Text>
+                <Text style={styles.subToggleSubtitle}>{t('customers.addSubDesc')}</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+        ) : (
+          subscriptions.map((sub) => {
+            const statusColor = sub.status === 'active'
+              ? { dot: '#16A34A', text: '#15803D' }
+              : sub.status === 'paused'
+                ? { dot: '#D97706', text: '#B45309' }
+                : { dot: '#94A3B8', text: '#64748B' };
+
+            return (
+              <TouchableOpacity
+                key={sub.id}
+                style={styles.subscriptionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('SubscriptionDetail', { subscriptionId: sub.id, subscription: sub })}
+              >
+                <View style={styles.subLeft}>
+                  <View style={styles.subIconWrap}>
+                    <Package size={22} color={COLORS.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.subTitle} numberOfLines={1}>
+                      {sub.Product?.name || 'Unknown Product'}
+                    </Text>
+                    <Text style={styles.subMetaText} numberOfLines={1}>
+                      Qty: {sub.baseQuantity} • {formatRecurrence(sub.recurrencePattern)}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.statusBadge}>
+                  <View style={[styles.statusDot, { backgroundColor: statusColor.dot }]} />
+                  <Text style={[styles.statusText, { color: statusColor.text }]}>
+                    {sub.status.toUpperCase()}
+                  </Text>
+                </View>
+                <ChevronRight size={18} color={COLORS.textPlaceholder} style={{ marginLeft: 6 }} />
+              </TouchableOpacity>
+            );
+          })
+        )}
+
+        {/* Contact Details */}
+        <Text style={styles.sectionTitle}>{t('customers.contactAndLocation')}</Text>
+
+        <View style={styles.detailsCard}>
+          <View style={styles.detailRow}>
+            <View style={[styles.detailIconBox, { backgroundColor: '#DCFCE7', borderColor: '#BBF7D0' }]}>
+              <Phone size={18} color="#16A34A" />
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>{t('customers.phone_label')}</Text>
+              <Text style={styles.detailValue}>{customerData.phone || t('customerDetail.notProvided')}</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.detailRow}>
+            <View style={[styles.detailIconBox, { backgroundColor: '#E0E7FF', borderColor: '#C7D2FE' }]}>
+              <MapPin size={18} color="#4F46E5" />
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>{t('customers.address_label')}</Text>
+              <Text style={styles.detailValue}>{customerData.address || t('customerDetail.notProvided')}</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.detailRow}>
+            <View style={[styles.detailIconBox, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+              <Route size={18} color="#D97706" />
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>{t('customers.assignedRoute')}</Text>
+              <Text style={styles.detailValue}>{customerData.Route ? customerData.Route.name : t('customers.noRouteAssigned')}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Account Details */}
+        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>{t('customers.accountOverview')}</Text>
+
+        <View style={styles.detailsCard}>
+          <View style={styles.detailRow}>
+            <View style={[styles.detailIconBox, { backgroundColor: '#FFE4E6', borderColor: '#FECDD3' }]}>
+              <IndianRupee size={18} color="#E11D48" />
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>Opening Balance</Text>
+              <Text style={styles.detailValue}>{customerData.openingBalance || customerData.creditLimit ? `₹${customerData.openingBalance || customerData.creditLimit}` : '₹0'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.detailRow}>
+            <View style={[styles.detailIconBox, { backgroundColor: '#CFFAFE', borderColor: '#A5F3FC' }]}>
+              <Clock size={18} color="#0891B2" />
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>{t('customers.customerSince')}</Text>
+              <Text style={styles.detailValue}>
+                {new Date(customerData.created_at).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Security Deposit Section */}
+        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>{t('customerDetail.securityDeposit')}</Text>
+
+        {loadingDeposit ? (
+          <View style={[styles.detailsCard, { padding: 20, alignItems: 'center' }]}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
+          </View>
+        ) : !depositData || (parseFloat(depositData.depositBalance || 0) === 0 && parseInt(depositData.containersHeld || 0) === 0) ? (
+          <TouchableOpacity
+            style={styles.subscriptionToggle}
+            onPress={() => setDepositModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.subscriptionToggleLeft}>
+              <View style={styles.subToggleIcon}>
+                <Plus size={18} color={COLORS.primary} />
+              </View>
+              <View>
+                <Text style={styles.subToggleTitle}>{t('customerDetail.addSecurityDeposit')}</Text>
+                <Text style={styles.subToggleSubtitle}>{t('customerDetail.collectDepositDesc')}</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.detailsCard}>
+            <View style={styles.detailRow}>
+              <View style={[styles.detailIconBox, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
+                <ShieldCheck size={18} color="#16A34A" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>{t('customerDetail.depositBalance')}</Text>
+                <Text style={[styles.detailValue, { color: '#16A34A', fontFamily: 'Rubik-Bold' }]}>
+                  ₹{depositData.depositBalance || 0}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.addMoreDepositBtn}
+                onPress={() => setDepositModalVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Plus size={14} color={COLORS.primary} style={{ marginRight: 4 }} />
+                <Text style={styles.addMoreDepositText}>{t('customerDetail.addMore')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.detailRow}>
+              <View style={[styles.detailIconBox, { backgroundColor: COLORS.primaryLight, borderColor: COLORS.border }]}>
+                <Package size={18} color={COLORS.primary} />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>{t('customerDetail.containersHeld')}</Text>
+                <Text style={styles.detailValue}>{depositData.containersHeld || 0} Jar(s)</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+
+
+            {/* Metadata Section */}
+            <View style={styles.metadataSection}>
+              <Text style={styles.metadataLabel}>Last Modified By</Text>
+              <View style={styles.metadataUserRow}>
+                <User size={14} color="#64748B" />
+                <Text style={styles.metadataValue}>
+                  {customerData.updatedBy?.name || 'System'} ({customerData.updatedBy?.role || 'admin'})
+                </Text>
+              </View>
+              {customerData.updatedAt && (
+                <Text style={styles.metadataTime}>
+                  {new Date(customerData.updatedAt).toLocaleString()}
+                </Text>
+              )}
+            </View>
+
+      </ScrollView>
+
+      {/* Floating Action Buttons */}
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={styles.fabSecondary}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('MainDrawer', {
+            screen: 'MainTabs',
+            params: {
+              screen: 'Payments',
+              params: { preselectedCustomer: customerData }
+            }
+          })}
+        >
+          <IndianRupee size={26} color="#FFF" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.fabPrimary}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('GenerateInvoice', { customerId: customerData.id })}
+        >
+          <FileText size={26} color="#FFF" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Collect Deposit Modal */}
+      <Modal
+        visible={depositModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDepositModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('customerDetail.collectSecurityDeposit')}</Text>
+              <TouchableOpacity onPress={() => setDepositModalVisible(false)}>
+                <X size={22} color={COLORS.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalInputGroup}>
+              <Text style={styles.modalLabel}>{t('products.depositAmountLabel')} *</Text>
+              <View style={styles.modalInputContainer}>
+                <IndianRupee size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder={t('products.depositPlaceholder')}
+                  value={collectAmount}
+                  onChangeText={(val) => setCollectAmount(val.replace(/[^0-9.]/g, ''))}
+                  keyboardType="decimal-pad"
+                  placeholderTextColor={COLORS.textPlaceholder}
+                />
+              </View>
+            </View>
+
+            <View style={styles.modalInputGroup}>
+              <Text style={styles.modalLabel}>{t('customerDetail.containersDeposited')}</Text>
+              <View style={styles.modalInputContainer}>
+                <Package size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="e.g. 3"
+                  value={collectContainers}
+                  onChangeText={(val) => setCollectContainers(val.replace(/[^0-9]/g, ''))}
+                  keyboardType="number-pad"
+                  placeholderTextColor={COLORS.textPlaceholder}
+                />
+              </View>
+            </View>
+
+            <View style={styles.modalInputGroup}>
+              <Text style={styles.modalLabel}>{t('customerDetail.notesOptional')}</Text>
+              <View style={styles.modalInputContainer}>
+                <FileText size={18} color={COLORS.textPlaceholder} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder={t('common.notes')}
+                  value={collectNotes}
+                  onChangeText={setCollectNotes}
+                  placeholderTextColor={COLORS.textPlaceholder}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, submittingDeposit && { opacity: 0.7 }]}
+              onPress={async () => {
+                if (!collectAmount || parseFloat(collectAmount) <= 0) {
+                  showAlert('Invalid Amount', 'Please enter a valid deposit amount', 'warning');
+                  return;
+                }
+                setSubmittingDeposit(true);
+                try {
+                  const res = await api.collectDeposit(userToken, {
+                    customerId: customerData.id,
+                    amount: parseFloat(collectAmount),
+                    containerCount: parseInt(collectContainers) || 1,
+                    notes: collectNotes.trim() || 'Deposit collected from customer details screen',
+                  });
+                  if (res && res.success) {
+                    showAlert('Success', 'Security deposit collected successfully!', 'success');
+                    setDepositModalVisible(false);
+                    setCollectAmount('');
+                    setCollectContainers('1');
+                    setCollectNotes('');
+                    fetchDepositData();
+                  } else {
+                    showAlert('Error', res.message || 'Failed to collect deposit', 'error');
+                  }
+                } catch (err) {
+                  showAlert('Error', err.message || 'Something went wrong', 'error');
+                } finally {
+                  setSubmittingDeposit(false);
+                }
+              }}
+              disabled={submittingDeposit}
+              activeOpacity={0.8}
+            >
+              {submittingDeposit ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.modalSubmitBtnText}>{t('customerDetail.collectDeposit')}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: -8,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerActionBtnDark: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    padding: 10,
+    borderRadius: 14,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 120,
+  },
+  profileHeroCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 36,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0B409C',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 4,
+    alignItems: 'center',
+  },
+  avatarWrapper: {
+    position: 'relative',
+    marginRight: 20,
+  },
+  avatarContainer: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#0B409C',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#F8FAFC',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+  },
+  avatarStatusDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  heroRight: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  customerNameHero: {
+    fontSize: 22,
+    fontFamily: 'Rubik-Bold',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  heroStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  heroStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  heroStatusText: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Bold',
+  },
+  planPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  planPillText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Medium',
+    color: '#0B409C',
+  },
+  historyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  historyBtnText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#1D4ED8',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  statusText: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Bold',
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.textSecondary,
+    marginBottom: 12,
+  },
+  sectionHeaderFlex: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  sectionTitleFlex: {
+    fontSize: 14,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.textSecondary,
+    flex: 1,
+    marginRight: 8,
+  },
+  addBtnSmall: {
+    width: 32,
+    height: 32,
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  detailsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  detailValue: {
+    fontSize: 14,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.textPrimary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 12,
+  },
+  subscriptionCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+  },
+  subLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  subIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  subTitle: {
+    fontSize: 14,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.textPrimary,
+    marginBottom: 2,
+  },
+  subMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subMetaText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
+    color: COLORS.textSecondary,
+  },
+  metadataSection: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  metadataLabel: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Bold',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  metadataUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  metadataValue: {
+    fontSize: 13,
+    fontFamily: 'Rubik-SemiBold',
+    color: '#334155',
+    marginLeft: 6,
+  },
+  metadataTime: {
+    fontSize: 11,
+    fontFamily: 'Rubik-Medium',
+    color: '#94A3B8',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: COLORS.textPlaceholder,
+    marginHorizontal: 8,
+  },
+  subActions: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
+  },
+  subActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+  },
+  subActionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.textPlaceholder,
+  },
+  errorText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.danger,
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 16,
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontFamily: 'Rubik-Bold',
+    fontSize: 14,
+  },
+  subscriptionToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    marginTop: 0,
+  },
+  subscriptionToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  subToggleIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: COLORS.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  subToggleTitle: {
+    fontSize: 14,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.primary,
+    marginBottom: 2,
+  },
+  subToggleSubtitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontFamily: 'Rubik-SemiBold',
+  },
+  fabContainer: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 40 : 50,
+    right: 24,
+    alignItems: 'flex-end',
+    gap: 12,
+  },
+  fabPrimary: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  fabSecondary: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  addMoreDepositBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  addMoreDepositText: {
+    fontSize: 12,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.primary,
+  },
+
+  // Deposit Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 110,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: 'Rubik-Bold',
+    color: COLORS.textPrimary,
+  },
+  modalInputGroup: {
+    marginBottom: 16,
+  },
+  modalLabel: {
+    fontSize: 12,
+    fontFamily: 'Rubik-SemiBold',
+    color: COLORS.textSecondary,
+    marginBottom: 6,
+  },
+  modalInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  modalInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 14,
+    fontFamily: 'Rubik-SemiBold',
+    color: COLORS.textPrimary,
+    padding: 0,
+  },
+  modalSubmitBtn: {
+    backgroundColor: COLORS.primary,
+    height: 50,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  modalSubmitBtnText: {
+    fontSize: 15,
+    fontFamily: 'Rubik-Bold',
+    color: '#FFFFFF',
+  },
+});
+
+export default CustomerDetailScreen;

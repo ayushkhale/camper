@@ -8,10 +8,10 @@ import SpInAppUpdates, {
   IAUUpdateKind,
 } from 'sp-react-native-in-app-updates';
 import { createNavigationContainerRef } from '@react-navigation/native';
-import RootNavigator from './src/navigation/RootNavigator';
-import { AlertProvider } from './src/context/AlertContext';
+import RootNavigator from './src/app/navigation/RootNavigator';
+import { AlertProvider } from './src/app/providers/AlertContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import './src/i18n';
+import './src/shared/i18n';
 
 export const navigationRef = createNavigationContainerRef();
 
