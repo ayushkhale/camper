@@ -100,19 +100,42 @@ const InvoiceListScreen = () => {
     }
     // 2. Search Query Filter
     const query = searchQuery.toLowerCase();
-    const customerMatch = item.Customer?.name?.toLowerCase().includes(query);
-    const idMatch = item.id?.toLowerCase().includes(query);
+    const customerMatch = String(item.customerName || item.Customer?.name || '').toLowerCase().includes(query);
+    const idMatch = String(item.id || item.invoiceId || '').toLowerCase().includes(query);
     return customerMatch || idMatch;
   });
 
   const renderInvoiceCard = ({ item }) => {
     const statusColors = getStatusColors(item.status);
     const dateFormatted = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+    const readAmount = (...values) => {
+      for (const value of values) {
+        if (value === undefined || value === null || value === '') continue;
+        const parsed = Number.parseFloat(value);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+      return 0;
+    };
+    const previousDues = readAmount(item.previousDues, item.previousDuesFormatted);
+    const previousBalanceAmount = Math.abs(previousDues);
+    const currentCharges = readAmount(
+      item.currentCharges,
+      item.currentChargesFormatted,
+      item.totalAmount,
+      item.totalAmountFormatted
+    );
+    const grandTotal = readAmount(
+      item.displayGrandTotal,
+      item.totalAmount,
+      item.totalAmountFormatted,
+      currentCharges + previousDues
+    );
+    const amountPaid = readAmount(item.displayAmountPaid, item.amountPaid, item.amountPaidFormatted);
 
     return (
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={() => navigation.navigate('InvoiceDetail', { invoiceId: item.id, invoice: item })}
+        onPress={() => navigation.navigate('InvoiceDetail', { invoiceId: item.id || item.invoiceId, invoice: item })}
       >
         <LinearGradient
           colors={statusColors.grad}
@@ -126,7 +149,7 @@ const InvoiceListScreen = () => {
             </View>
             <View style={styles.titleContainer}>
               <Text style={styles.customerName} numberOfLines={1}>
-                {item.Customer?.name || 'Unknown Customer'}
+                {item.customerName || item.Customer?.name || t('common.unknownCustomer')}
               </Text>
               <Text style={styles.subText} numberOfLines={1}>
                 {item.periodStart} to {item.periodEnd}
@@ -150,18 +173,18 @@ const InvoiceListScreen = () => {
               </Text>
             </View>
             <View style={styles.amountContainer}>
-              {parseFloat(item.previousDues || 0) > 0 ? (
+              {previousDues !== 0 ? (
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={[styles.paidSubText, { color: '#64748B', marginBottom: 2 }]}>
-                    Prev. Due: ₹{parseFloat(item.previousDues).toFixed(2)}
+                  <Text style={[styles.paidSubText, { color: previousDues > 0 ? '#64748B' : '#059669', marginBottom: 2 }]}>
+                    {previousDues > 0 ? 'Prev. Due' : 'Advance Credit'}: ₹{previousBalanceAmount.toFixed(2)}
                   </Text>
                   <Text style={[styles.paidSubText, { color: '#64748B', marginBottom: 4 }]}>
-                    Current: ₹{parseFloat(item.totalAmount || 0).toFixed(2)}
+                    Current: ₹{currentCharges.toFixed(2)}
                   </Text>
                   <View style={styles.totalRow}>
                     <IndianRupee size={14} color={COLORS.primary} style={{ marginTop: 1 }} />
                     <Text style={[styles.amountText, { color: COLORS.primary }]}>
-                      {(parseFloat(item.previousDues || 0) + parseFloat(item.totalAmount || 0)).toFixed(2)}
+                      {grandTotal.toFixed(2)}
                     </Text>
                   </View>
                 </View>
@@ -169,13 +192,13 @@ const InvoiceListScreen = () => {
                 <View style={styles.totalRow}>
                   <IndianRupee size={15} color={COLORS.textPrimary} style={{ marginTop: 1 }} />
                   <Text style={styles.amountText}>
-                    {parseFloat(item.totalAmount || 0).toFixed(2)}
+                    {grandTotal.toFixed(2)}
                   </Text>
                 </View>
               )}
-              {item.status !== 'paid' && parseFloat(item.amountPaid || 0) > 0 && (
+              {item.status !== 'paid' && amountPaid > 0 && (
                 <Text style={[styles.paidSubText, { marginTop: 4 }]}>
-                  Paid: ₹{parseFloat(item.amountPaid).toFixed(2)}
+                  Paid: ₹{amountPaid.toFixed(2)}
                 </Text>
               )}
             </View>
@@ -244,7 +267,7 @@ const InvoiceListScreen = () => {
         ) : (
           <FlatList
             data={filteredInvoices}
-            keyExtractor={(item) => item.id || Math.random().toString()}
+            keyExtractor={(item) => item.id || item.invoiceId || Math.random().toString()}
             renderItem={renderInvoiceCard}
             contentContainerStyle={
               filteredInvoices.length === 0 ? styles.emptyListContent : styles.listContent

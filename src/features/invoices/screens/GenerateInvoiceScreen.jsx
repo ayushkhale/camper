@@ -187,7 +187,7 @@ const GenerateInvoiceScreen = () => {
       const navigateToInvoice = () => {
         if (response.data?.invoices && response.data.invoices.length === 1) {
           const inv = response.data.invoices[0];
-          navigation.replace('InvoiceDetail', { invoiceId: inv.id, invoice: inv });
+          navigation.replace('InvoiceDetail', { invoiceId: inv.id || inv.invoiceId, invoice: inv });
         } else {
           navigation.navigate('InvoiceList', { searchQuery });
         }

@@ -440,7 +440,7 @@ const HomeScreen = () => {
             </View>
 
             {/* Daily Delivery Progress Card */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.progressCard, { overflow: 'hidden', padding: 0, backgroundColor: '#FFFFFF' }]}
               activeOpacity={0.8}
               onPress={() => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Deliveries' } })}
@@ -511,10 +511,10 @@ const HomeScreen = () => {
                     </TouchableOpacity>
                   </View>
 
-                  {/* Rickshaw Image (Right) */}
+                  {/* Car Image (Right) */}
                   <FastImage
-                    source={require('../../../../assets/delivery_rickshaw.jpg')}
-                    style={{ width: 85, height: 85, marginLeft: 4 }}
+                    source={require('../../../../assets/goldCar.png')}
+                    style={{ position: 'absolute', right: 0, bottom: -16, width: 110, height: 110 }}
                     resizeMode={FastImage.resizeMode.contain}
                   />
                 </View>

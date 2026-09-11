@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Modal,
   ScrollView,
   StyleSheet,
@@ -28,6 +29,7 @@ const normalizeLanguageCode = language => String(language || 'en').split('-')[0]
 const LanguageSelector = ({ compact = false, style }) => {
   const { t, i18n } = useTranslation();
   const [visible, setVisible] = useState(false);
+  const [loadingLanguage, setLoadingLanguage] = useState(null);
   const selectedCode = normalizeLanguageCode(i18n.resolvedLanguage || i18n.language);
   const selectedLanguage = useMemo(
     () => SUPPORTED_LANGUAGES.find(language => language.code === selectedCode) || SUPPORTED_LANGUAGES[0],
@@ -35,13 +37,24 @@ const LanguageSelector = ({ compact = false, style }) => {
   );
 
   const selectLanguage = async (languageCode) => {
-    setVisible(false);
-    await i18n.changeLanguage(languageCode);
+    if (loadingLanguage) return;
+
+    setLoadingLanguage(languageCode);
     try {
-      await AsyncStorage.setItem('app_language', languageCode);
-    } catch (error) {
-      console.error('Failed to save language', error);
+      await i18n.changeLanguage(languageCode);
+      try {
+        await AsyncStorage.setItem('app_language', languageCode);
+      } catch (error) {
+        console.error('Failed to save language', error);
+      }
+    } finally {
+      setLoadingLanguage(null);
+      setVisible(false);
     }
+  };
+
+  const closeSelector = () => {
+    if (!loadingLanguage) setVisible(false);
   };
 
   return (
@@ -63,13 +76,13 @@ const LanguageSelector = ({ compact = false, style }) => {
         transparent
         animationType="fade"
         statusBarTranslucent
-        onRequestClose={() => setVisible(false)}
+        onRequestClose={closeSelector}
       >
         <View style={styles.overlay}>
           <TouchableOpacity
             style={StyleSheet.absoluteFill}
             activeOpacity={1}
-            onPress={() => setVisible(false)}
+            onPress={closeSelector}
           />
 
           <View style={styles.sheet}>
@@ -83,7 +96,8 @@ const LanguageSelector = ({ compact = false, style }) => {
               </View>
               <TouchableOpacity
                 style={styles.closeButton}
-                onPress={() => setVisible(false)}
+                onPress={closeSelector}
+                disabled={Boolean(loadingLanguage)}
                 activeOpacity={0.75}
               >
                 <X size={20} color={COLORS.textSecondary} />
@@ -96,28 +110,49 @@ const LanguageSelector = ({ compact = false, style }) => {
             >
               {SUPPORTED_LANGUAGES.map(language => {
                 const selected = language.code === selectedCode;
+                const loading = language.code === loadingLanguage;
                 return (
                   <TouchableOpacity
                     key={language.code}
-                    style={[styles.languageOption, selected && styles.languageOptionSelected]}
+                    style={[
+                      styles.languageOption,
+                      (selected || loading) && styles.languageOptionSelected,
+                      loading && styles.languageOptionLoading,
+                      loadingLanguage && !loading && styles.languageOptionDisabled,
+                    ]}
                     onPress={() => selectLanguage(language.code)}
+                    disabled={Boolean(loadingLanguage)}
                     activeOpacity={0.8}
+                    accessibilityState={{
+                      busy: loading,
+                      disabled: Boolean(loadingLanguage),
+                      selected,
+                    }}
                   >
-                    <View style={[styles.languageCode, selected && styles.languageCodeSelected]}>
-                      <Text style={[styles.languageCodeText, selected && styles.languageCodeTextSelected]}>
-                        {language.shortLabel}
-                      </Text>
-                    </View>
-                    <View style={styles.languageNames}>
-                      <Text style={[styles.nativeName, selected && styles.nativeNameSelected]}>
-                        {language.nativeName}
-                      </Text>
-                      <Text style={styles.englishName}>{language.name}</Text>
-                    </View>
-                    {selected && (
-                      <View style={styles.selectedCheck}>
-                        <Check size={15} color="#FFFFFF" strokeWidth={3} />
+                    {loading ? (
+                      <View style={styles.languageLoadingContent}>
+                        <ActivityIndicator size="small" color={COLORS.primary} />
+                        <Text style={styles.languageLoadingText}>{t('common.loading')}</Text>
                       </View>
+                    ) : (
+                      <>
+                        <View style={[styles.languageCode, selected && styles.languageCodeSelected]}>
+                          <Text style={[styles.languageCodeText, selected && styles.languageCodeTextSelected]}>
+                            {language.shortLabel}
+                          </Text>
+                        </View>
+                        <View style={styles.languageNames}>
+                          <Text style={[styles.nativeName, selected && styles.nativeNameSelected]}>
+                            {language.nativeName}
+                          </Text>
+                          <Text style={styles.englishName}>{language.name}</Text>
+                        </View>
+                        {selected && (
+                          <View style={styles.selectedCheck}>
+                            <Check size={15} color="#FFFFFF" strokeWidth={3} />
+                          </View>
+                        )}
+                      </>
                     )}
                   </TouchableOpacity>
                 );
@@ -237,6 +272,25 @@ const styles = StyleSheet.create({
   languageOptionSelected: {
     backgroundColor: '#EFF6FF',
     borderColor: COLORS.primary,
+  },
+  languageOptionLoading: {
+    backgroundColor: '#DBEAFE',
+    borderWidth: 2,
+  },
+  languageOptionDisabled: {
+    opacity: 0.55,
+  },
+  languageLoadingContent: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  languageLoadingText: {
+    color: COLORS.primary,
+    fontSize: 12,
+    fontFamily: 'Rubik-Medium',
+    marginLeft: 8,
   },
   languageCode: {
     width: 36,

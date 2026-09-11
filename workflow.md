@@ -1243,6 +1243,141 @@ This section tracks the dates for which daily Excel reports have been generated 
   4. Preserved all screen layout, data, navigation, modals, subscription actions, and API behavior.
 - **Status**: Implemented as a screen-scoped typography update.
 
+### Date: 2026-09-09 (Wednesday)
+- **Component / File**: `AddSubscriptionScreen.jsx` subscription edit-success navigation
+- **User Request**: After editing a subscription that the backend replaces with a new record, open the Subscription Detail screen using the new subscription ID.
+- **Root Cause**: The update API can return a replacement subscription with a new ID, while the frontend previously called `goBack()` and caused the existing detail screen to refetch the old, replaced ID.
+- **Changes Made**:
+  1. Read the updated subscription and its ID from the successful update response.
+  2. Used stack `popTo` to return to the existing `SubscriptionDetail` route while replacing its route parameters with the new ID and response data.
+  3. Retained a safe fallback to the original ID if an update response does not contain a replacement ID.
+  4. Preserved create-subscription navigation and all API payload behavior.
+- **Status**: Implemented; the detail screen now refreshes against the new subscription record after edit.
+
+### Date: 2026-09-09 (Wednesday)
+- **Component / File**: `src/shared/services/api.js`, `src/shared/services/api/*`, API surface tests, source documentation, and project-structure generator
+- **User Request**: Split the monolithic API service into professional domain modules without changing any API, endpoint, payload, response handling, screen import, or functionality.
+- **Root Cause / Task**: Authentication/refresh behavior, shared HTTP helpers, and 83 public domain methods were maintained in one service file, making API ownership and safe maintenance difficult.
+- **Changes Made**:
+  1. Preserved `src/shared/services/api.js` as the compatibility facade, so all existing screen and provider imports remain unchanged.
+  2. Extracted the base URL, vendor/staff role prefix, authenticated fetch, token-refresh queue, 403/409 entitlement handling, logging, and HTTP/multipart helpers into `api/client.js`.
+  3. Split the unchanged public methods into auth, profile, staff, products, routes, customers, delivery subscriptions, deliveries, one-time orders, dashboard, invoices, accounting, reports, and plan-billing modules.
+  4. Added `api/index.js` to compose the same 83 unique methods behind the original `api.someMethod()` interface.
+  5. Kept all URL templates, HTTP methods, function parameters, camelCase payloads/query fields, response/error behavior, subscription logs, invoice PDF handling, and callback exports unchanged.
+  6. Added an API-surface regression test covering every public method plus authentication/entitlement lifecycle exports.
+  7. Updated the generated workflow inventory to discover domain API operations and their owning source files.
+- **Validation**: Public method parity, relative imports, Jest tests, generator output, and Android Metro bundling checked.
+- **Status**: Implemented as an internal organization refactor with no API contract or application behavior change.
+
+### Date: 2026-09-09 (Wednesday)
+- **Component / File**: `LanguageSelector.jsx`
+- **User Request**: Show immediate loading feedback when a language option is pressed so users do not need to tap it repeatedly.
+- **Root Cause**: The selector modal closed before the asynchronous i18next and AsyncStorage operations completed, leaving no visible confirmation that the first tap was being processed.
+- **Changes Made**:
+  1. Kept the selector visible during language activation and displayed a spinner on the pressed language option.
+  2. Disabled every language option and modal dismissal while the switch is in progress, preventing duplicate taps and overlapping language changes.
+  3. Closed the selector only after language activation and persistence finish.
+  4. Added busy, disabled, and selected accessibility state without changing supported languages or persistence behavior.
+- **Status**: Implemented in the shared selector used by both Login and Settings screens.
+
+### Date: 2026-09-09 (Wednesday)
+- **Component / File**: `LanguageSelector.jsx` pressed-language feedback
+- **User Request**: Make the exact language card that was tapped visibly confirm the click and show that processing is underway.
+- **Changes Made**:
+  1. Replaced the tapped card's normal contents with a centered spinner and localized `common.loading` message during language activation.
+  2. Added a stronger highlighted background and border to the processing card while keeping other options faded and disabled.
+  3. Preserved the existing asynchronous language change, persistence, modal lifecycle, and duplicate-tap protection.
+- **Status**: Implemented as clearer in-place interaction feedback on Login and Settings language selectors.
+
+### Date: 2026-09-10 (Thursday)
+- **Component / File**: `CompleteRegistrationScreen.jsx` registration-completion state
+- **User Request**: Replace the completed registration form with a simple loader until login/navigation finishes, preventing another registration submission.
+- **Root Cause**: The previous success flow scheduled login after one second but immediately cleared `loading` in `finally`, re-enabling the Complete Registration button while the form was still visible.
+- **Changes Made**:
+  1. Added an immediate ref-based submission lock to reject rapid duplicate taps before React state updates.
+  2. Switched the entire form to a centered full-screen activity loader as soon as registration succeeds.
+  3. Kept the loader and submission lock active through the existing login/navigation delay.
+  4. Restored the form and unlocked submission only when registration fails; request fields, API payload, and successful login behavior remain unchanged.
+- **Status**: Implemented without changing the registration API contract.
+
+### Date: 2026-09-10 (Thursday)
+- **Component / File**: `UnbilledDeliveriesScreen.jsx` pending-to-be-invoiced customer list
+- **User Request**: Add search to the Pending to Be Invoiced page.
+- **Root Cause / Task**: The screen listed every customer with uninvoiced deliveries but offered no quick way to locate a specific customer.
+- **Changes Made**:
+  1. Added a localized search field above the pending-invoice cards.
+  2. Added immediate client-side filtering by customer name or phone number without changing the summary API request.
+  3. Added a localized empty-search result while preserving initial loading, true empty-state, pull-to-refresh, date selection, and invoice generation behavior.
+- **Status**: Implemented without changing invoice data or API behavior.
+
+### Date: 2026-09-10 (Thursday)
+- **Component / File**: `UnbilledDeliveriesScreen.jsx`, shared locale dictionaries
+- **User Request**: Make the upper customer/total area open Customer Details and show a coming-soon alert when the lower information area is tapped.
+- **Root Cause / Task**: Pending-invoice cards did not provide card-section navigation or feedback for the planned lower-section action.
+- **Changes Made**:
+  1. Made the card header independently tappable and routed it to `CustomerDetail` using the card's existing `customerId`.
+  2. Made the lower delivery/date information panel show the global modal with a localized Functionality Coming Soon message.
+  3. Preserved nested date-picker controls, invoice generation, search, and API behavior.
+  4. Added Coming Soon dialog translations for English, Hindi, Marathi, Bengali, Tamil, Telugu, Gujarati, and Punjabi.
+- **Status**: Implemented with no API changes.
+
+### Date: 2026-09-10 (Thursday)
+- **Component / File**: `InvoiceDetailScreen.jsx`, `InvoiceListScreen.jsx`, `GenerateInvoiceScreen.jsx`
+- **User Request**: Show the amount due in the invoice total area and correct the response-field mismatches identified in Invoice Details.
+- **Root Cause / Task**: Invoice Details treated `totalAmount` as current charges, recalculated authoritative backend totals, displayed grand total when balance due was zero, and depended on older uppercase/nested response fields.
+- **Changes Made**:
+  1. Mapped Current Charges, Grand Total, Amount Paid, and Balance Due to their dedicated backend fields with backward-compatible numeric fallbacks in both invoice details and invoice-list summaries.
+  2. Changed the highlighted final row in both the app preview and locally generated PDF to always display Balance Due, including zero for paid invoices.
+  3. Added support for `invoiceId`, lowercase `deliveries`/`lineItems`, and lowercase `customerId` across loading, invoice navigation, document actions, and payment navigation.
+  4. Made invoice-list and generated-invoice navigation accept either `id` or `invoiceId`, and made invoice-list customer rendering/search accept direct `customerName` responses.
+  5. Derived the actual product name from descriptions when the API supplies a generic `Delivery` name and normalized duplicated quantity text such as `1 1 Ltr(s)`.
+- **Status**: Implemented without modifying API endpoints or payloads.
+
+### Date: 2026-09-10 (Thursday)
+- **Component / File**: `InvoiceDetailScreen.jsx`, `InvoiceListScreen.jsx`
+- **User Request**: Present advance balances using a clear positive credit amount instead of a negative currency value.
+- **Root Cause / Task**: Advance credit is stored as a negative `previousDues` value for arithmetic, and the UI rendered that signed value directly as confusing negative currency.
+- **Changes Made**:
+  1. Preserved the signed backend value for invoice calculations while converting only the displayed advance amount to its absolute positive value.
+  2. Kept the explicit `Advance Credit` label and green credit styling in the invoice preview and totals summary.
+  3. Added the advance-credit row to the locally generated invoice PDF and applied the same positive display convention.
+  4. Updated invoice-list cards to show both previous dues and advance credits explicitly, with advance credit displayed positively in green.
+- **Status**: Implemented without changing financial calculations or API data.
+
+### Date: 2026-09-10 (Thursday)
+- **Component / File**: `InvoiceDetailScreen.jsx`, `InvoiceAdjustmentModal.jsx`, `invoicesApi.js`, invoice locale dictionaries, `apiSurface.test.js`
+- **User Request**: Add top-level Add Discount and Add Extra Charge buttons first, with a working adjustment-entry modal, before deciding how adjustments will be displayed in Invoice Details.
+- **Root Cause / Task**: The new backend adjustment endpoint had no frontend API helper or invoice-detail entry flow.
+- **Changes Made**:
+  1. Added two prominent actions at the top of Invoice Details for Add Discount and Add Extra Charge, hidden for paid invoices and staff users.
+  2. Created a reusable adjustment modal with preselected type, positive decimal amount input, required description, 255-character limit, inline validation, keyboard handling, and submission loading protection.
+  3. Added the token-aware `addInvoiceAdjustments` API operation using the documented adjustments-array payload.
+  4. Added entitlement guarding, backend error mapping, success feedback, and a silent invoice-detail refresh after a successful addition.
+  5. Localized the complete add-adjustment flow in English, Hindi, Marathi, Bengali, Tamil, Telugu, Gujarati, and Punjabi.
+  6. Extended the API-surface regression test for the new operation; adjustment-list rendering and deletion remain intentionally deferred.
+- **Status**: Implemented and verified without changing existing invoice endpoints or payment functionality.
+
+### Date: 2026-09-10 (Thursday)
+- **Component / File**: `InvoiceAdjustmentModal.jsx`
+- **User Request**: Replace the centered invoice-adjustment popup with the bottom-sheet presentation used by application dropdowns.
+- **Root Cause / Task**: The initial modal was centered while existing selector interactions consistently rise from the bottom of the screen.
+- **Changes Made**:
+  1. Changed the modal transition to slide upward from the bottom.
+  2. Converted the card into a full-width bottom sheet with rounded top corners, a drag handle, and bottom safe-area padding.
+  3. Added backdrop dismissal while retaining dismissal protection during API submission.
+  4. Preserved adjustment validation, localization, loading state, and API behavior.
+- **Status**: Implemented as a presentation-only update.
+
+### Date: 2026-09-10 (Thursday)
+- **Component / File**: `InvoiceAdjustmentModal.jsx` input focus handling
+- **User Request**: Stop the invoice-adjustment bottom sheet from flickering when an input receives focus.
+- **Root Cause / Task**: The sheet container claimed the touch responder from its child inputs while Android's `KeyboardAvoidingView` height behavior simultaneously resized the sliding modal.
+- **Changes Made**:
+  1. Removed the parent responder override so amount and description inputs retain focus normally.
+  2. Limited explicit keyboard-avoidance padding to iOS and restored Android's native keyboard/window resizing behavior.
+  3. Preserved bottom-sheet animation, backdrop dismissal, validation, and submission behavior.
+- **Status**: Fixed without changing adjustment functionality.
+
 <!-- PROJECT_STRUCTURE:START -->
 ## Section 12: Current Project Structure — Excel-Ready Source of Truth
 
@@ -1258,15 +1393,15 @@ This section tracks the dates for which daily Excel reports have been generated 
 | React | 19.2.3 | React runtime version |
 | Node engine | >= 22.11.0 | Required Node.js version |
 | Feature modules | 14 | Business-owned modules under src/features |
-| Maintained source files | 93 | Files under src excluding generated output |
+| Maintained source files | 111 | Files under src excluding generated output |
 | Screens | 36 | Application and feature screen components |
-| Component files | 11 | Shared and feature-owned components/modals |
+| Component files | 13 | Shared and feature-owned components/modals |
 | Registered navigation routes | 42 | Stack, drawer, and tab registrations |
 | API client operations | 84 | Methods exposed by the central api object |
 | Supported locales | 8 | Per-language translation dictionaries |
 | Runtime dependencies | 36 | Production npm packages |
 | Development dependencies | 14 | Build and test npm packages |
-| Maintained project files | 289 | All inventoried files excluding generated/vendor directories |
+| Maintained project files | 311 | All inventoried files excluding generated/vendor directories |
 
 ### 12.2 Excel Workbook Mapping
 
@@ -1303,7 +1438,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | dashboard | Vendor home dashboard, summaries, quick actions, and today-delivery overview. | 1 | HomeScreen | None | HomeScreen |
 | deliveries | Today, past, and unbilled delivery operations and status handling. | 3 | OrdersScreen, PastDeliveriesScreen, UnbilledDeliveriesScreen | None | OrdersScreen, PastDeliveriesScreen, UnbilledDeliveriesScreen |
 | delivery-subscriptions | Customer recurring-delivery subscription creation, editing, and detail management. | 3 | AddSubscriptionScreen, SubscriptionDetailScreen, SubscriptionListScreen | None | AddSubscriptionScreen, SubscriptionDetailScreen, SubscriptionListScreen |
-| invoices | Invoice generation, invoice listing, invoice detail, preview, and PDF workflows. | 3 | GenerateInvoiceScreen, InvoiceDetailScreen, InvoiceListScreen | None | GenerateInvoiceScreen, InvoiceDetailScreen, InvoiceListScreen |
+| invoices | Invoice generation, invoice listing, invoice detail, preview, and PDF workflows. | 3 | GenerateInvoiceScreen, InvoiceDetailScreen, InvoiceListScreen | InvoiceAdjustmentActionsSheet, InvoiceAdjustmentModal | GenerateInvoiceScreen, InvoiceDetailScreen, InvoiceListScreen |
 | one-time-orders | One-time order creation, listing, and fulfilment workflows. | 2 | AddOneTimeOrderScreen, OneTimeOrderListScreen | None | AddOneTimeOrderScreen, OneTimeOrderListScreen |
 | payments | Customer payment collection and ledger-facing payment UI. | 1 | PaymentsScreen | None | PaymentsScreen |
 | plan-billing | Vendor SaaS plan selection, Razorpay checkout, activation polling, billing history, and cancellation. | 1 | SubscriptionDashboardScreen | None | SubscriptionDashboardScreen |
@@ -1319,7 +1454,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | --- | --- | --- | --- |
 | `.agents` | 1 | 1 | Repository-specific agent maintenance instructions. |
 | `.bundle` | 1 | 1 | Ruby Bundler configuration used by native iOS tooling. |
-| `__tests__` | 1 | 1 | Automated application tests. |
+| `__tests__` | 2 | 2 | Automated application tests. |
 | `android` | 6 | 78 | Android Gradle project and native application configuration. |
 | `android/app` | 4 | 70 | Android application module. |
 | `android/app/src` | 0 | 66 | src project resources. |
@@ -1341,7 +1476,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | `android/app/src/main/res/values` | 2 | 2 | values project resources. |
 | `android/gradle` | 0 | 2 | gradle project resources. |
 | `android/gradle/wrapper` | 2 | 2 | wrapper project resources. |
-| `assets` | 46 | 80 | Root React Native images, branding files, and linked fonts. |
+| `assets` | 49 | 83 | Root React Native images, branding files, and linked fonts. |
 | `assets/fonts` | 34 | 34 | Source font files linked into native applications. |
 | `ios` | 3 | 11 | iOS CocoaPods/Xcode project and native application configuration. |
 | `ios/Compunic` | 4 | 6 | Compunic project resources. |
@@ -1351,12 +1486,12 @@ This section tracks the dates for which daily Excel reports have been generated 
 | `ios/Compunic/Images.xcassets` | 1 | 2 | Images.xcassets project resources. |
 | `ios/Compunic/Images.xcassets/AppIcon.appiconset` | 1 | 1 | App Icon.appiconset project resources. |
 | `scripts` | 2 | 2 | Repository validation and documentation automation. |
-| `src` | 1 | 93 | All JavaScript application source organized by ownership. |
+| `src` | 1 | 111 | All JavaScript application source organized by ownership. |
 | `src/app` | 0 | 9 | Application composition layer; startup, navigation, and global providers. |
 | `src/app/navigation` | 5 | 5 | Navigation containers, stacks, drawer, tabs, and drawer content. |
 | `src/app/providers` | 3 | 3 | Global authentication, alert, and subscription-entitlement state. |
 | `src/app/screens` | 1 | 1 | Screens owned by application startup rather than a business feature. |
-| `src/features` | 0 | 58 | Business modules with feature-owned screens, components, and public barrels. |
+| `src/features` | 0 | 60 | Business modules with feature-owned screens, components, and public barrels. |
 | `src/features/auth` | 1 | 7 | Authentication, onboarding, OTP verification, and vendor registration. |
 | `src/features/auth/screens` | 6 | 6 | screens owned by the auth feature. |
 | `src/features/customers` | 1 | 7 | Customer onboarding, listing, profiles, history, and delivery history. |
@@ -1368,7 +1503,8 @@ This section tracks the dates for which daily Excel reports have been generated 
 | `src/features/deliveries/screens` | 3 | 3 | screens owned by the deliveries feature. |
 | `src/features/delivery-subscriptions` | 1 | 4 | Customer recurring-delivery subscription creation, editing, and detail management. |
 | `src/features/delivery-subscriptions/screens` | 3 | 3 | screens owned by the delivery-subscriptions feature. |
-| `src/features/invoices` | 1 | 4 | Invoice generation, invoice listing, invoice detail, preview, and PDF workflows. |
+| `src/features/invoices` | 1 | 6 | Invoice generation, invoice listing, invoice detail, preview, and PDF workflows. |
+| `src/features/invoices/components` | 2 | 2 | components owned by the invoices feature. |
 | `src/features/invoices/screens` | 3 | 3 | screens owned by the invoices feature. |
 | `src/features/one-time-orders` | 1 | 3 | One-time order creation, listing, and fulfilment workflows. |
 | `src/features/one-time-orders/screens` | 2 | 2 | screens owned by the one-time-orders feature. |
@@ -1389,7 +1525,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | `src/features/settings/screens` | 2 | 2 | screens owned by the settings feature. |
 | `src/features/staff` | 1 | 3 | Staff creation, management, assignment visibility, and staff operations. |
 | `src/features/staff/screens` | 2 | 2 | screens owned by the staff feature. |
-| `src/shared` | 0 | 25 | Reusable code with no single-feature ownership. |
+| `src/shared` | 0 | 41 | Reusable code with no single-feature ownership. |
 | `src/shared/assets` | 0 | 8 | Assets imported directly by source modules. |
 | `src/shared/assets/3d` | 5 | 5 | 3d project resources. |
 | `src/shared/assets/images` | 3 | 3 | images project resources. |
@@ -1397,7 +1533,8 @@ This section tracks the dates for which daily Excel reports have been generated 
 | `src/shared/constants` | 2 | 2 | Shared design tokens and subscription-entitlement keys. |
 | `src/shared/i18n` | 1 | 9 | i18next initialization and language resources. |
 | `src/shared/i18n/locales` | 8 | 8 | Per-language translation dictionaries. |
-| `src/shared/services` | 1 | 1 | Central authenticated HTTP/API client. |
+| `src/shared/services` | 1 | 17 | Central authenticated HTTP/API client. |
+| `src/shared/services/api` | 16 | 16 | Domain API modules and shared authenticated request infrastructure. |
 | `src/shared/utils` | 1 | 1 | Cross-feature utility and seed helpers. |
 
 ### 12.6 Navigation Route Inventory
@@ -1449,94 +1586,94 @@ This section tracks the dates for which daily Excel reports have been generated 
 
 ### 12.7 API Client Operation Inventory
 
-> Endpoints are extracted from `src/shared/services/api.js`. `Computed at runtime` indicates a custom request or dynamically assembled URL.
+> Endpoints are extracted from the domain modules under `src/shared/services/api`. `Computed at runtime` indicates a custom request or dynamically assembled URL.
 
-| API Operation | Occurrence | HTTP Transport | Endpoint Template |
-| --- | --- | --- | --- |
-| logout | 1 | POST | `/api/auth/logout` |
-| signupRequestOtp | 1 | POST | `/api/auth/signup-request-otp` |
-| signupVerifyOtp | 1 | POST | `/api/auth/signup-verify-otp` |
-| completeRegistration | 1 | POST | `/api/auth/complete-registration` |
-| loginRequestOtp | 1 | POST | `/api/auth/request-otp` |
-| loginVerifyOtp | 1 | POST | `/api/auth/verify-otp` |
-| resendOtp | 1 | POST | `/api/auth/resend-otp` |
-| getVendorProfile | 1 | GET | `${apiPrefix}/profile` |
-| updateVendorProfile | 1 | PATCH | `${apiPrefix}/profile` |
-| getCategories | 1 | GET | `/api/public/categories` |
-| listStaff | 1 | GET | `${apiPrefix}/staff` |
-| addStaff | 1 | POST | `${apiPrefix}/staff` |
-| updateStaff | 1 | PATCH | `${apiPrefix}/staff/${id}` |
-| deleteStaff | 1 | DELETE | `${apiPrefix}/staff/${id}` |
-| listProducts | 1 | GET | `${apiPrefix}/products` |
-| getProduct | 1 | GET | `${apiPrefix}/products/${id}` |
-| createProduct | 1 | POST multipart | `${apiPrefix}/products` |
-| updateProduct | 1 | PATCH multipart | `${apiPrefix}/products/${id}` |
-| deleteProduct | 1 | DELETE | `${apiPrefix}/products/${id}` |
-| listRoutes | 1 | GET | `${apiPrefix}/routes` |
-| getRoutes | 1 | GET | `${apiPrefix}/routes` |
-| getRoute | 1 | GET | `${apiPrefix}/routes/${id}` |
-| createRoute | 1 | POST | `${apiPrefix}/routes` |
-| updateRoute | 1 | PATCH | `${apiPrefix}/routes/${id}` |
-| deleteRoute | 1 | DELETE | `${apiPrefix}/routes/${id}` |
-| assignStaff | 1 | POST | `${apiPrefix}/routes/${id}/assign-staff` |
-| endStaffAssignment | 1 | DELETE | `${apiPrefix}/routes/${routeId}/assign-staff/${staffRouteId}` |
-| listCustomers | 1 | GET | `${apiPrefix}/customers${queryString}` |
-| getCustomer | 1 | GET | `${apiPrefix}/customers/${id}` |
-| createCustomer | 1 | POST | `${apiPrefix}/customers` |
-| updateCustomer | 1 | PATCH | `${apiPrefix}/customers/${id}` |
-| deleteCustomer | 1 | DELETE | `${apiPrefix}/customers/${id}` |
-| updateCustomerSequence | 1 | PATCH | `${apiPrefix}/customers/sequence` |
-| getCustomerDeliveries | 1 | GET | `${apiPrefix}/customers/${customerId}/deliveries${queryString}` |
-| getCustomerJarCollections | 1 | GET | `${apiPrefix}/customers/${customerId}/jar-collections${queryString}` |
-| listSubscriptions | 1 | GET | `${apiPrefix}/subscriptions${queryString}` |
-| getSubscription | 1 | GET | `${apiPrefix}/subscriptions/${id}` |
-| createSubscription | 1 | POST | `${apiPrefix}/subscriptions` |
-| updateSubscription | 1 | PATCH | `${apiPrefix}/subscriptions/${id}` |
-| deleteSubscription | 1 | DELETE | `${apiPrefix}/subscriptions/${id}` |
-| generateDeliveries | 1 | POST | `${apiPrefix}/deliveries/generate` |
-| listDeliveries | 1 | GET | `${apiPrefix}/deliveries${queryString}` |
-| trackDeliveries | 1 | GET | `${apiPrefix}/deliveries/track${queryString}` |
-| updateDeliveryStatus | 1 | PATCH | `${apiPrefix}/deliveries/${id}/status` |
-| listPauses | 1 | GET | `${apiPrefix}/subscriptions/${subscriptionId}/pauses` |
-| addPause | 1 | POST | `${apiPrefix}/subscriptions/${subscriptionId}/pauses` |
-| deletePause | 1 | DELETE | `${apiPrefix}/subscriptions/${subscriptionId}/pauses/${pauseId}` |
-| listOverrides | 1 | GET | `${apiPrefix}/subscriptions/${subscriptionId}/overrides` |
-| addOverride | 1 | POST | `${apiPrefix}/subscriptions/${subscriptionId}/overrides` |
-| deleteOverride | 1 | DELETE | `${apiPrefix}/subscriptions/${subscriptionId}/overrides/${overrideId}` |
-| listOneTimeOrders | 1 | GET | `${apiPrefix}/one-time-orders` |
-| createOneTimeOrder | 1 | POST | `${apiPrefix}/one-time-orders` |
-| updateOneTimeOrderStatus | 1 | PATCH | `${apiPrefix}/one-time-orders/${id}/status` |
-| fulfillOneTimeOrder | 1 | POST | `${apiPrefix}/one-time-orders/${id}/fulfill` |
-| getDashboardStats | 1 | GET | `${apiPrefix}/dashboard` |
-| getUninvoicedPreSummary | 1 | GET | `${apiPrefix}/invoices/pre-summary${queryString}` |
-| generateInvoices | 1 | POST | `${apiPrefix}/invoices/generate` |
-| listInvoices | 1 | GET | `${apiPrefix}/invoices${queryString}` |
-| getInvoiceById | 1 | GET | `${apiPrefix}/invoices/${id}` |
-| downloadInvoicePDF | 1 | GET | `Computed at runtime` |
-| getUninvoicedSummary | 1 | GET | `${apiPrefix}/invoices/pre-summary${params}` |
-| getCustomerDeliveryHistory | 1 | GET | `${apiPrefix}/customers/${customerId}/deliveries${queryString}` |
-| getCustomerActivity | 1 | GET | `${apiPrefix}/customers/${customerId}/activity${queryString}` |
-| generateInvoices | 2 | POST | `${apiPrefix}/invoices/generate` |
-| recordPayment | 1 | POST | `${apiPrefix}/ledgers/payment` |
-| getAccountStatement | 1 | GET | `${apiPrefix}/ledgers/account/${customerId}` |
-| collectDeposit | 1 | POST | `${apiPrefix}/deposits/collect` |
-| settleDepositToBill | 1 | POST | `${apiPrefix}/deposits/settle-to-bill` |
-| deleteAccount | 1 | DELETE | `/api/auth/delete-account` |
-| refundDeposit | 1 | POST | `${apiPrefix}/deposits/refund` |
-| getDepositLedger | 1 | GET | `${apiPrefix}/deposits/${customerId}` |
-| getFinancialReports | 1 | GET | `${apiPrefix}/reports/financials${queryString}` |
-| getOutstandingReports | 1 | GET | `${apiPrefix}/reports/outstanding${queryString}` |
-| getOperationsReports | 1 | GET | `${apiPrefix}/reports/operations${queryString}` |
-| getInventoryReports | 1 | GET | `${apiPrefix}/reports/inventory${queryString}` |
-| getActivePlans | 1 | GET | `/api/subscription_module/customer/plans` |
-| getSubscriptionPlan | 1 | GET | `/api/subscription_module/admin/plans/${planId}` |
-| getSubscriptionStatus | 1 | GET | `/api/subscription_module/customer/subscription/${customerId}` |
-| getSubscriptionEntitlement | 1 | GET | `/api/subscription_module/customer/subscription/${customerId}/entitlement/${encodedFeatureKey}` |
-| checkoutSubscription | 1 | POST | `/api/subscription_module/customer/checkout` |
-| changeSubscriptionPlan | 1 | PUT | `/api/subscription_module/customer/subscription/${subscriptionId}/plan` |
-| cancelSubscriptionPlan | 1 | DELETE | `/api/subscription_module/customer/subscription/${subscriptionId}` |
-| getSubscriptionPayments | 1 | GET | `/api/subscription_module/customer/subscription/${subscriptionId}/payments` |
-| getSubscriptionUsage | 1 | GET | `/api/subscription_module/customer/subscription/${customerId}/usage${queryString}` |
+| API Operation | Occurrence | HTTP Transport | Endpoint Template | Domain Source |
+| --- | --- | --- | --- | --- |
+| addInvoiceAdjustments | 1 | POST | `${getApiPrefix()}/invoices/${encodeURIComponent(invoiceId)}/adjustments` | `src/shared/services/api/invoicesApi.js` |
+| addOverride | 1 | POST | `${getApiPrefix()}/subscriptions/${subscriptionId}/overrides` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| addPause | 1 | POST | `${getApiPrefix()}/subscriptions/${subscriptionId}/pauses` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| addStaff | 1 | POST | `${getApiPrefix()}/staff` | `src/shared/services/api/staffApi.js` |
+| assignStaff | 1 | POST | `${getApiPrefix()}/routes/${id}/assign-staff` | `src/shared/services/api/routesApi.js` |
+| cancelSubscriptionPlan | 1 | DELETE | `/api/subscription_module/customer/subscription/${subscriptionId}` | `src/shared/services/api/planBillingApi.js` |
+| changeSubscriptionPlan | 1 | PUT | `/api/subscription_module/customer/subscription/${subscriptionId}/plan` | `src/shared/services/api/planBillingApi.js` |
+| checkoutSubscription | 1 | POST | `/api/subscription_module/customer/checkout` | `src/shared/services/api/planBillingApi.js` |
+| collectDeposit | 1 | POST | `${getApiPrefix()}/deposits/collect` | `src/shared/services/api/accountingApi.js` |
+| completeRegistration | 1 | POST | `/api/auth/complete-registration` | `src/shared/services/api/authApi.js` |
+| createCustomer | 1 | POST | `${getApiPrefix()}/customers` | `src/shared/services/api/customersApi.js` |
+| createOneTimeOrder | 1 | POST | `${getApiPrefix()}/one-time-orders` | `src/shared/services/api/oneTimeOrdersApi.js` |
+| createProduct | 1 | POST multipart | `${getApiPrefix()}/products` | `src/shared/services/api/productsApi.js` |
+| createRoute | 1 | POST | `${getApiPrefix()}/routes` | `src/shared/services/api/routesApi.js` |
+| createSubscription | 1 | POST | `${getApiPrefix()}/subscriptions` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| deleteAccount | 1 | DELETE | `/api/auth/delete-account` | `src/shared/services/api/authApi.js` |
+| deleteCustomer | 1 | DELETE | `${getApiPrefix()}/customers/${id}` | `src/shared/services/api/customersApi.js` |
+| deleteOverride | 1 | DELETE | `${getApiPrefix()}/subscriptions/${subscriptionId}/overrides/${overrideId}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| deletePause | 1 | DELETE | `${getApiPrefix()}/subscriptions/${subscriptionId}/pauses/${pauseId}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| deleteProduct | 1 | DELETE | `${getApiPrefix()}/products/${id}` | `src/shared/services/api/productsApi.js` |
+| deleteRoute | 1 | DELETE | `${getApiPrefix()}/routes/${id}` | `src/shared/services/api/routesApi.js` |
+| deleteStaff | 1 | DELETE | `${getApiPrefix()}/staff/${id}` | `src/shared/services/api/staffApi.js` |
+| deleteSubscription | 1 | DELETE | `${getApiPrefix()}/subscriptions/${id}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| downloadInvoicePDF | 1 | GET | `Computed at runtime` | `src/shared/services/api/invoicesApi.js` |
+| endStaffAssignment | 1 | DELETE | `${getApiPrefix()}/routes/${routeId}/assign-staff/${staffRouteId}` | `src/shared/services/api/routesApi.js` |
+| fulfillOneTimeOrder | 1 | POST | `${getApiPrefix()}/one-time-orders/${id}/fulfill` | `src/shared/services/api/oneTimeOrdersApi.js` |
+| generateDeliveries | 1 | POST | `${getApiPrefix()}/deliveries/generate` | `src/shared/services/api/deliveriesApi.js` |
+| generateInvoices | 1 | POST | `${getApiPrefix()}/invoices/generate` | `src/shared/services/api/invoicesApi.js` |
+| getAccountStatement | 1 | GET | `${getApiPrefix()}/ledgers/account/${customerId}` | `src/shared/services/api/accountingApi.js` |
+| getActivePlans | 1 | GET | `/api/subscription_module/customer/plans` | `src/shared/services/api/planBillingApi.js` |
+| getCategories | 1 | GET | `/api/public/categories` | `src/shared/services/api/profileApi.js` |
+| getCustomer | 1 | GET | `${getApiPrefix()}/customers/${id}` | `src/shared/services/api/customersApi.js` |
+| getCustomerActivity | 1 | GET | `${getApiPrefix()}/customers/${customerId}/activity${queryString}` | `src/shared/services/api/customersApi.js` |
+| getCustomerDeliveries | 1 | GET | `${getApiPrefix()}/customers/${customerId}/deliveries${queryString}` | `src/shared/services/api/customersApi.js` |
+| getCustomerDeliveryHistory | 1 | GET | `${getApiPrefix()}/customers/${customerId}/deliveries${queryString}` | `src/shared/services/api/customersApi.js` |
+| getCustomerJarCollections | 1 | GET | `${getApiPrefix()}/customers/${customerId}/jar-collections${queryString}` | `src/shared/services/api/customersApi.js` |
+| getDashboardStats | 1 | GET | `${getApiPrefix()}/dashboard` | `src/shared/services/api/dashboardApi.js` |
+| getDepositLedger | 1 | GET | `${getApiPrefix()}/deposits/${customerId}` | `src/shared/services/api/accountingApi.js` |
+| getFinancialReports | 1 | GET | `${getApiPrefix()}/reports/financials${queryString}` | `src/shared/services/api/reportsApi.js` |
+| getInventoryReports | 1 | GET | `${getApiPrefix()}/reports/inventory${queryString}` | `src/shared/services/api/reportsApi.js` |
+| getInvoiceById | 1 | GET | `${getApiPrefix()}/invoices/${id}` | `src/shared/services/api/invoicesApi.js` |
+| getOperationsReports | 1 | GET | `${getApiPrefix()}/reports/operations${queryString}` | `src/shared/services/api/reportsApi.js` |
+| getOutstandingReports | 1 | GET | `${getApiPrefix()}/reports/outstanding${queryString}` | `src/shared/services/api/reportsApi.js` |
+| getProduct | 1 | GET | `${getApiPrefix()}/products/${id}` | `src/shared/services/api/productsApi.js` |
+| getRoute | 1 | GET | `${getApiPrefix()}/routes/${id}` | `src/shared/services/api/routesApi.js` |
+| getRoutes | 1 | GET | `${getApiPrefix()}/routes` | `src/shared/services/api/routesApi.js` |
+| getSubscription | 1 | GET | `${getApiPrefix()}/subscriptions/${id}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| getSubscriptionEntitlement | 1 | GET | `/api/subscription_module/customer/subscription/${customerId}/entitlement/${encodedFeatureKey}` | `src/shared/services/api/planBillingApi.js` |
+| getSubscriptionPayments | 1 | GET | `/api/subscription_module/customer/subscription/${subscriptionId}/payments` | `src/shared/services/api/planBillingApi.js` |
+| getSubscriptionPlan | 1 | GET | `/api/subscription_module/admin/plans/${planId}` | `src/shared/services/api/planBillingApi.js` |
+| getSubscriptionStatus | 1 | GET | `/api/subscription_module/customer/subscription/${customerId}` | `src/shared/services/api/planBillingApi.js` |
+| getSubscriptionUsage | 1 | GET | `/api/subscription_module/customer/subscription/${customerId}/usage${queryString}` | `src/shared/services/api/planBillingApi.js` |
+| getUninvoicedPreSummary | 1 | GET | `${getApiPrefix()}/invoices/pre-summary${queryString}` | `src/shared/services/api/invoicesApi.js` |
+| getUninvoicedSummary | 1 | GET | `${getApiPrefix()}/invoices/pre-summary${params}` | `src/shared/services/api/invoicesApi.js` |
+| getVendorProfile | 1 | GET | `${getApiPrefix()}/profile` | `src/shared/services/api/profileApi.js` |
+| listCustomers | 1 | GET | `${getApiPrefix()}/customers${queryString}` | `src/shared/services/api/customersApi.js` |
+| listDeliveries | 1 | GET | `${getApiPrefix()}/deliveries${queryString}` | `src/shared/services/api/deliveriesApi.js` |
+| listInvoices | 1 | GET | `${getApiPrefix()}/invoices${queryString}` | `src/shared/services/api/invoicesApi.js` |
+| listOneTimeOrders | 1 | GET | `${getApiPrefix()}/one-time-orders` | `src/shared/services/api/oneTimeOrdersApi.js` |
+| listOverrides | 1 | GET | `${getApiPrefix()}/subscriptions/${subscriptionId}/overrides` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| listPauses | 1 | GET | `${getApiPrefix()}/subscriptions/${subscriptionId}/pauses` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| listProducts | 1 | GET | `${getApiPrefix()}/products` | `src/shared/services/api/productsApi.js` |
+| listRoutes | 1 | GET | `${getApiPrefix()}/routes` | `src/shared/services/api/routesApi.js` |
+| listStaff | 1 | GET | `${getApiPrefix()}/staff` | `src/shared/services/api/staffApi.js` |
+| listSubscriptions | 1 | GET | `${getApiPrefix()}/subscriptions${queryString}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| loginRequestOtp | 1 | POST | `/api/auth/request-otp` | `src/shared/services/api/authApi.js` |
+| loginVerifyOtp | 1 | POST | `/api/auth/verify-otp` | `src/shared/services/api/authApi.js` |
+| logout | 1 | POST | `/api/auth/logout` | `src/shared/services/api/authApi.js` |
+| recordPayment | 1 | POST | `${getApiPrefix()}/ledgers/payment` | `src/shared/services/api/accountingApi.js` |
+| refundDeposit | 1 | POST | `${getApiPrefix()}/deposits/refund` | `src/shared/services/api/accountingApi.js` |
+| resendOtp | 1 | POST | `/api/auth/resend-otp` | `src/shared/services/api/authApi.js` |
+| settleDepositToBill | 1 | POST | `${getApiPrefix()}/deposits/settle-to-bill` | `src/shared/services/api/accountingApi.js` |
+| signupRequestOtp | 1 | POST | `/api/auth/signup-request-otp` | `src/shared/services/api/authApi.js` |
+| signupVerifyOtp | 1 | POST | `/api/auth/signup-verify-otp` | `src/shared/services/api/authApi.js` |
+| trackDeliveries | 1 | GET | `${getApiPrefix()}/deliveries/track${queryString}` | `src/shared/services/api/deliveriesApi.js` |
+| updateCustomer | 1 | PATCH | `${getApiPrefix()}/customers/${id}` | `src/shared/services/api/customersApi.js` |
+| updateCustomerSequence | 1 | PATCH | `${getApiPrefix()}/customers/sequence` | `src/shared/services/api/customersApi.js` |
+| updateDeliveryStatus | 1 | PATCH | `${getApiPrefix()}/deliveries/${id}/status` | `src/shared/services/api/deliveriesApi.js` |
+| updateOneTimeOrderStatus | 1 | PATCH | `${getApiPrefix()}/one-time-orders/${id}/status` | `src/shared/services/api/oneTimeOrdersApi.js` |
+| updateProduct | 1 | PATCH multipart | `${getApiPrefix()}/products/${id}` | `src/shared/services/api/productsApi.js` |
+| updateRoute | 1 | PATCH | `${getApiPrefix()}/routes/${id}` | `src/shared/services/api/routesApi.js` |
+| updateStaff | 1 | PATCH | `${getApiPrefix()}/staff/${id}` | `src/shared/services/api/staffApi.js` |
+| updateSubscription | 1 | PATCH | `${getApiPrefix()}/subscriptions/${id}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
+| updateVendorProfile | 1 | PATCH | `${getApiPrefix()}/profile` | `src/shared/services/api/profileApi.js` |
 
 ### 12.8 Localization Inventory
 
@@ -1612,295 +1749,317 @@ This section tracks the dates for which daily Excel reports have been generated 
 
 | File ID | Layer | Module/Area | Type | Relative Path | Responsibility | Public Symbols | Local Imports | External Packages |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| FILE-001 | Quality | tests | Automated test | `__tests__/App.test.tsx` | Application render smoke test. | — | 1 | react, react-native, react-test-renderer |
-| FILE-002 | Governance | agent-rules | Documentation | `.agents/AGENTS.md` | AGENTS project documentation. | — | 0 | — |
-| FILE-003 | Tooling | ruby | Project file | `.bundle/config` | config project file. | — | 0 | — |
-| FILE-004 | Project root | configuration | Project configuration/source | `.eslintrc.js` | .eslintrc configuration. | — | 0 | — |
-| FILE-005 | Project root | configuration | Project file | `.gitignore` | .gitignore project file. | — | 0 | — |
-| FILE-006 | Project root | configuration | Project configuration/source | `.prettierrc.js` | .prettierrc configuration. | — | 0 | — |
-| FILE-007 | Project root | configuration | Project file | `.watchmanconfig` | .watchmanconfig project file. | — | 0 | — |
-| FILE-008 | Documentation | project-docs | Documentation | `02_ARCHITECTURE_SOURCE.md` | 02 ARCHITECTURE SOURCE project documentation. | — | 0 | — |
-| FILE-009 | Documentation | project-docs | Documentation | `03_FUNCTIONAL_MODULES_SOURCE.md` | 03 FUNCTIONAL MODULES SOURCE project documentation. | — | 0 | — |
-| FILE-010 | Native | android | Native build configuration | `android/app/build.gradle` | build configuration. | — | 0 | — |
-| FILE-011 | Native | android | Project file | `android/app/camper-release-key.keystore` | camper release key project file. | — | 0 | — |
-| FILE-012 | Native | android | Project file | `android/app/debug.keystore` | debug project file. | — | 0 | — |
-| FILE-013 | Native | android | Project file | `android/app/proguard-rules.pro` | proguard rules project file. | — | 0 | — |
-| FILE-014 | Native | android | Native resource/config | `android/app/src/main/AndroidManifest.xml` | Android Manifest configuration. | — | 0 | — |
-| FILE-015 | Native | android | Binary/archive | `android/app/src/main/assets/custom/SUSE.zip` | SUSE binary/archive. | — | 0 | — |
-| FILE-016 | Native | android | Font asset | `android/app/src/main/assets/fonts/BricolageGrotesque-Bold.ttf` | Bricolage Grotesque Bold font resource. | — | 0 | — |
-| FILE-017 | Native | android | Font asset | `android/app/src/main/assets/fonts/BricolageGrotesque-Medium.ttf` | Bricolage Grotesque Medium font resource. | — | 0 | — |
-| FILE-018 | Native | android | Font asset | `android/app/src/main/assets/fonts/BricolageGrotesque-Regular.ttf` | Bricolage Grotesque Regular font resource. | — | 0 | — |
-| FILE-019 | Native | android | Font asset | `android/app/src/main/assets/fonts/BricolageGrotesque-SemiBold.ttf` | Bricolage Grotesque Semi Bold font resource. | — | 0 | — |
-| FILE-020 | Native | android | Font asset | `android/app/src/main/assets/fonts/Fredoka-Bold.ttf` | Fredoka Bold font resource. | — | 0 | — |
-| FILE-021 | Native | android | Font asset | `android/app/src/main/assets/fonts/Fredoka-Medium.ttf` | Fredoka Medium font resource. | — | 0 | — |
-| FILE-022 | Native | android | Font asset | `android/app/src/main/assets/fonts/Fredoka-Regular.ttf` | Fredoka Regular font resource. | — | 0 | — |
-| FILE-023 | Native | android | Font asset | `android/app/src/main/assets/fonts/Fredoka-SemiBold.ttf` | Fredoka Semi Bold font resource. | — | 0 | — |
-| FILE-024 | Native | android | Font asset | `android/app/src/main/assets/fonts/Geologica-Bold.ttf` | Geologica Bold font resource. | — | 0 | — |
-| FILE-025 | Native | android | Font asset | `android/app/src/main/assets/fonts/Geologica-Medium.ttf` | Geologica Medium font resource. | — | 0 | — |
-| FILE-026 | Native | android | Font asset | `android/app/src/main/assets/fonts/Geologica-Regular.ttf` | Geologica Regular font resource. | — | 0 | — |
-| FILE-027 | Native | android | Font asset | `android/app/src/main/assets/fonts/Geologica-SemiBold.ttf` | Geologica Semi Bold font resource. | — | 0 | — |
-| FILE-028 | Native | android | Font asset | `android/app/src/main/assets/fonts/Inter-Bold.ttf` | Inter Bold font resource. | — | 0 | — |
-| FILE-029 | Native | android | Font asset | `android/app/src/main/assets/fonts/Inter-Medium.ttf` | Inter Medium font resource. | — | 0 | — |
-| FILE-030 | Native | android | Font asset | `android/app/src/main/assets/fonts/Inter-Regular.ttf` | Inter Regular font resource. | — | 0 | — |
-| FILE-031 | Native | android | Font asset | `android/app/src/main/assets/fonts/Inter-SemiBold.ttf` | Inter Semi Bold font resource. | — | 0 | — |
-| FILE-032 | Native | android | Font asset | `android/app/src/main/assets/fonts/Poppins-Bold.ttf` | Poppins Bold font resource. | — | 0 | — |
-| FILE-033 | Native | android | Font asset | `android/app/src/main/assets/fonts/Poppins-Medium.ttf` | Poppins Medium font resource. | — | 0 | — |
-| FILE-034 | Native | android | Font asset | `android/app/src/main/assets/fonts/Poppins-Regular.ttf` | Poppins Regular font resource. | — | 0 | — |
-| FILE-035 | Native | android | Font asset | `android/app/src/main/assets/fonts/Poppins-SemiBold.ttf` | Poppins Semi Bold font resource. | — | 0 | — |
-| FILE-036 | Native | android | Font asset | `android/app/src/main/assets/fonts/Rubik-Bold.ttf` | Rubik Bold font resource. | — | 0 | — |
-| FILE-037 | Native | android | Font asset | `android/app/src/main/assets/fonts/Rubik-Medium.ttf` | Rubik Medium font resource. | — | 0 | — |
-| FILE-038 | Native | android | Font asset | `android/app/src/main/assets/fonts/Rubik-Regular.ttf` | Rubik Regular font resource. | — | 0 | — |
-| FILE-039 | Native | android | Font asset | `android/app/src/main/assets/fonts/Rubik-SemiBold.ttf` | Rubik Semi Bold font resource. | — | 0 | — |
-| FILE-040 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Black.ttf` | SUSE Black font resource. | — | 0 | — |
-| FILE-041 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Bold.ttf` | SUSE Bold font resource. | — | 0 | — |
-| FILE-042 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-ExtraBold.ttf` | SUSE Extra Bold font resource. | — | 0 | — |
-| FILE-043 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-ExtraLight.ttf` | SUSE Extra Light font resource. | — | 0 | — |
-| FILE-044 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Light.ttf` | SUSE Light font resource. | — | 0 | — |
-| FILE-045 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Medium.ttf` | SUSE Medium font resource. | — | 0 | — |
-| FILE-046 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Regular.ttf` | SUSE Regular font resource. | — | 0 | — |
-| FILE-047 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-SemiBold.ttf` | SUSE Semi Bold font resource. | — | 0 | — |
-| FILE-048 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Thin.ttf` | SUSE Thin font resource. | — | 0 | — |
-| FILE-049 | Native | android | Native source | `android/app/src/main/java/com/com.camper.dailybudgetapp/MainActivity.kt` | Main Activity native bootstrap/source file. | — | 0 | — |
-| FILE-050 | Native | android | Native source | `android/app/src/main/java/com/com.camper.dailybudgetapp/MainApplication.kt` | Main Application native bootstrap/source file. | — | 0 | — |
-| FILE-051 | Native | android | Native resource/config | `android/app/src/main/res/drawable/rn_edit_text_material.xml` | rn edit text material configuration. | — | 0 | — |
-| FILE-052 | Native | android | Native resource/config | `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml` | ic launcher configuration. | — | 0 | — |
-| FILE-053 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
-| FILE-054 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
-| FILE-055 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
-| FILE-056 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
-| FILE-057 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
-| FILE-058 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
-| FILE-059 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
-| FILE-060 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
-| FILE-061 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
-| FILE-062 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
-| FILE-063 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
-| FILE-064 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
-| FILE-065 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
-| FILE-066 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
-| FILE-067 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
-| FILE-068 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
-| FILE-069 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
-| FILE-070 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
-| FILE-071 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
-| FILE-072 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
-| FILE-073 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
-| FILE-074 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
-| FILE-075 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
-| FILE-076 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
-| FILE-077 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
-| FILE-078 | Native | android | Native resource/config | `android/app/src/main/res/values/strings.xml` | strings configuration. | — | 0 | — |
-| FILE-079 | Native | android | Native resource/config | `android/app/src/main/res/values/styles.xml` | styles configuration. | — | 0 | — |
-| FILE-080 | Native | android | Native build configuration | `android/build.gradle` | build configuration. | — | 0 | — |
-| FILE-081 | Native | android | Native build configuration | `android/gradle.properties` | gradle configuration. | — | 0 | — |
-| FILE-082 | Native | android | Binary/archive | `android/gradle/wrapper/gradle-wrapper.jar` | gradle wrapper binary/archive. | — | 0 | — |
-| FILE-083 | Native | android | Native build configuration | `android/gradle/wrapper/gradle-wrapper.properties` | gradle wrapper configuration. | — | 0 | — |
-| FILE-084 | Native | android | Native build configuration | `android/gradlew` | gradlew configuration. | — | 0 | — |
-| FILE-085 | Native | android | Native build configuration | `android/gradlew.bat` | gradlew configuration. | — | 0 | — |
-| FILE-086 | Native | android | Native resource/config | `android/link-assets-manifest.json` | link assets manifest configuration. | — | 0 | — |
-| FILE-087 | Native | android | Native build configuration | `android/settings.gradle` | settings configuration. | — | 0 | — |
-| FILE-088 | Project root | configuration | Project configuration/source | `app.json` | app configuration. | — | 0 | — |
-| FILE-089 | Project root | configuration | Project file | `App.jsx` | Root React Native component; providers, global visual shell, status bar, navigation, and in-app updates. | App, navigationRef | 2 | @react-navigation/native, react, react-native, react-native-gesture-handler, react-native-safe-area-context, react-native-svg, sp-react-native-in-app-updates |
-| FILE-090 | Assets | activesubstat.png | Image asset | `assets/activesubstat.png` | activesubstat image asset. | — | 0 | — |
-| FILE-091 | Assets | activesubstat2.png | Image asset | `assets/activesubstat2.png` | activesubstat2 image asset. | — | 0 | — |
-| FILE-092 | Assets | branded_water_jar.jpg | Image asset | `assets/branded_water_jar.jpg` | branded water jar image asset. | — | 0 | — |
-| FILE-093 | Assets | camper_truck.jpg | Image asset | `assets/camper_truck.jpg` | camper truck image asset. | — | 0 | — |
-| FILE-094 | Assets | campersplash.png | Image asset | `assets/campersplash.png` | campersplash image asset. | — | 0 | — |
-| FILE-095 | Assets | customerfallback - Copy.png | Image asset | `assets/customerfallback - Copy.png` | customerfallback Copy image asset. | — | 0 | — |
-| FILE-096 | Assets | customerfallback.png | Image asset | `assets/customerfallback.png` | customerfallback image asset. | — | 0 | — |
-| FILE-097 | Assets | customers3d.png | Image asset | `assets/customers3d.png` | customers3d image asset. | — | 0 | — |
-| FILE-098 | Assets | customerstats.png | Image asset | `assets/customerstats.png` | customerstats image asset. | — | 0 | — |
-| FILE-099 | Assets | customerstats2.png | Image asset | `assets/customerstats2.png` | customerstats2 image asset. | — | 0 | — |
-| FILE-100 | Assets | delivery_rickshaw.jpg | Image asset | `assets/delivery_rickshaw.jpg` | delivery rickshaw image asset. | — | 0 | — |
-| FILE-101 | Assets | delivery_rickshaw.png | Image asset | `assets/delivery_rickshaw.png` | delivery rickshaw image asset. | — | 0 | — |
-| FILE-102 | Assets | englishlogo.png | Image asset | `assets/englishlogo.png` | englishlogo image asset. | — | 0 | — |
-| FILE-103 | Assets | fallbackimage.png | Image asset | `assets/fallbackimage.png` | fallbackimage image asset. | — | 0 | — |
-| FILE-104 | Assets | fallbackimage1.png | Image asset | `assets/fallbackimage1.png` | fallbackimage1 image asset. | — | 0 | — |
-| FILE-105 | Assets | fonts | Font asset | `assets/fonts/BricolageGrotesque-Bold.ttf` | Bricolage Grotesque Bold font resource. | — | 0 | — |
-| FILE-106 | Assets | fonts | Font asset | `assets/fonts/BricolageGrotesque-Medium.ttf` | Bricolage Grotesque Medium font resource. | — | 0 | — |
-| FILE-107 | Assets | fonts | Font asset | `assets/fonts/BricolageGrotesque-Regular.ttf` | Bricolage Grotesque Regular font resource. | — | 0 | — |
-| FILE-108 | Assets | fonts | Font asset | `assets/fonts/BricolageGrotesque-SemiBold.ttf` | Bricolage Grotesque Semi Bold font resource. | — | 0 | — |
-| FILE-109 | Assets | fonts | Font asset | `assets/fonts/Fredoka-Bold.ttf` | Fredoka Bold font resource. | — | 0 | — |
-| FILE-110 | Assets | fonts | Font asset | `assets/fonts/Fredoka-Medium.ttf` | Fredoka Medium font resource. | — | 0 | — |
-| FILE-111 | Assets | fonts | Font asset | `assets/fonts/Fredoka-Regular.ttf` | Fredoka Regular font resource. | — | 0 | — |
-| FILE-112 | Assets | fonts | Font asset | `assets/fonts/Fredoka-SemiBold.ttf` | Fredoka Semi Bold font resource. | — | 0 | — |
-| FILE-113 | Assets | fonts | Font asset | `assets/fonts/Geologica-Bold.ttf` | Geologica Bold font resource. | — | 0 | — |
-| FILE-114 | Assets | fonts | Font asset | `assets/fonts/Geologica-Medium.ttf` | Geologica Medium font resource. | — | 0 | — |
-| FILE-115 | Assets | fonts | Font asset | `assets/fonts/Geologica-Regular.ttf` | Geologica Regular font resource. | — | 0 | — |
-| FILE-116 | Assets | fonts | Font asset | `assets/fonts/Geologica-SemiBold.ttf` | Geologica Semi Bold font resource. | — | 0 | — |
-| FILE-117 | Assets | fonts | Font asset | `assets/fonts/Inter-Bold.ttf` | Inter Bold font resource. | — | 0 | — |
-| FILE-118 | Assets | fonts | Font asset | `assets/fonts/Inter-Medium.ttf` | Inter Medium font resource. | — | 0 | — |
-| FILE-119 | Assets | fonts | Font asset | `assets/fonts/Inter-Regular.ttf` | Inter Regular font resource. | — | 0 | — |
-| FILE-120 | Assets | fonts | Font asset | `assets/fonts/Inter-SemiBold.ttf` | Inter Semi Bold font resource. | — | 0 | — |
-| FILE-121 | Assets | fonts | Font asset | `assets/fonts/Poppins-Bold.ttf` | Poppins Bold font resource. | — | 0 | — |
-| FILE-122 | Assets | fonts | Font asset | `assets/fonts/Poppins-Medium.ttf` | Poppins Medium font resource. | — | 0 | — |
-| FILE-123 | Assets | fonts | Font asset | `assets/fonts/Poppins-Regular.ttf` | Poppins Regular font resource. | — | 0 | — |
-| FILE-124 | Assets | fonts | Font asset | `assets/fonts/Poppins-SemiBold.ttf` | Poppins Semi Bold font resource. | — | 0 | — |
-| FILE-125 | Assets | fonts | Font asset | `assets/fonts/Rubik-Bold.ttf` | Rubik Bold font resource. | — | 0 | — |
-| FILE-126 | Assets | fonts | Font asset | `assets/fonts/Rubik-Medium.ttf` | Rubik Medium font resource. | — | 0 | — |
-| FILE-127 | Assets | fonts | Font asset | `assets/fonts/Rubik-Regular.ttf` | Rubik Regular font resource. | — | 0 | — |
-| FILE-128 | Assets | fonts | Font asset | `assets/fonts/Rubik-SemiBold.ttf` | Rubik Semi Bold font resource. | — | 0 | — |
-| FILE-129 | Assets | fonts | Font asset | `assets/fonts/SUSE-Black.ttf` | SUSE Black font resource. | — | 0 | — |
-| FILE-130 | Assets | fonts | Font asset | `assets/fonts/SUSE-Bold.ttf` | SUSE Bold font resource. | — | 0 | — |
-| FILE-131 | Assets | fonts | Font asset | `assets/fonts/SUSE-ExtraBold.ttf` | SUSE Extra Bold font resource. | — | 0 | — |
-| FILE-132 | Assets | fonts | Font asset | `assets/fonts/SUSE-ExtraLight.ttf` | SUSE Extra Light font resource. | — | 0 | — |
-| FILE-133 | Assets | fonts | Font asset | `assets/fonts/SUSE-Light.ttf` | SUSE Light font resource. | — | 0 | — |
-| FILE-134 | Assets | fonts | Font asset | `assets/fonts/SUSE-Medium.ttf` | SUSE Medium font resource. | — | 0 | — |
-| FILE-135 | Assets | fonts | Font asset | `assets/fonts/SUSE-Regular.ttf` | SUSE Regular font resource. | — | 0 | — |
-| FILE-136 | Assets | fonts | Font asset | `assets/fonts/SUSE-SemiBold.ttf` | SUSE Semi Bold font resource. | — | 0 | — |
-| FILE-137 | Assets | fonts | Font asset | `assets/fonts/SUSE-Thin.ttf` | SUSE Thin font resource. | — | 0 | — |
-| FILE-138 | Assets | fonts | Binary/archive | `assets/fonts/SUSE.zip` | SUSE binary/archive. | — | 0 | — |
-| FILE-139 | Assets | header_bg.png | Image asset | `assets/header_bg.png` | header bg image asset. | — | 0 | — |
-| FILE-140 | Assets | header_bg1.png | Image asset | `assets/header_bg1.png` | header bg1 image asset. | — | 0 | — |
-| FILE-141 | Assets | header_bg10.png | Image asset | `assets/header_bg10.png` | header bg10 image asset. | — | 0 | — |
-| FILE-142 | Assets | header_bg2.png | Image asset | `assets/header_bg2.png` | header bg2 image asset. | — | 0 | — |
-| FILE-143 | Assets | header_bg5.png | Image asset | `assets/header_bg5.png` | header bg5 image asset. | — | 0 | — |
-| FILE-144 | Assets | header_bg8.png | Image asset | `assets/header_bg8.png` | header bg8 image asset. | — | 0 | — |
-| FILE-145 | Assets | header_bg9.png | Image asset | `assets/header_bg9.png` | header bg9 image asset. | — | 0 | — |
-| FILE-146 | Assets | header.png | Image asset | `assets/header.png` | header image asset. | — | 0 | — |
-| FILE-147 | Assets | heroSetting.jpeg | Image asset | `assets/heroSetting.jpeg` | hero Setting image asset. | — | 0 | — |
-| FILE-148 | Assets | hindilogo.png | Image asset | `assets/hindilogo.png` | hindilogo image asset. | — | 0 | — |
-| FILE-149 | Assets | login.png | Image asset | `assets/login.png` | login image asset. | — | 0 | — |
-| FILE-150 | Assets | login1.png | Image asset | `assets/login1.png` | login1 image asset. | — | 0 | — |
-| FILE-151 | Assets | login2.png | Image asset | `assets/login2.png` | login2 image asset. | — | 0 | — |
-| FILE-152 | Assets | login5.png | Image asset | `assets/login5.png` | login5 image asset. | — | 0 | — |
-| FILE-153 | Assets | login6.png | Image asset | `assets/login6.png` | login6 image asset. | — | 0 | — |
-| FILE-154 | Assets | login7.png | Image asset | `assets/login7.png` | login7 image asset. | — | 0 | — |
-| FILE-155 | Assets | logo1.png | Image asset | `assets/logo1.png` | logo1 image asset. | — | 0 | — |
-| FILE-156 | Assets | logo2.png | Image asset | `assets/logo2.png` | logo2 image asset. | — | 0 | — |
-| FILE-157 | Assets | onboarding1.png | Image asset | `assets/onboarding1.png` | onboarding1 image asset. | — | 0 | — |
-| FILE-158 | Assets | onboarding2.jpg | Image asset | `assets/onboarding2.jpg` | onboarding2 image asset. | — | 0 | — |
-| FILE-159 | Assets | onboarding3.png | Image asset | `assets/onboarding3.png` | onboarding3 image asset. | — | 0 | — |
-| FILE-160 | Assets | onetimestat.png | Image asset | `assets/onetimestat.png` | onetimestat image asset. | — | 0 | — |
-| FILE-161 | Assets | onetimestat2.png | Image asset | `assets/onetimestat2.png` | onetimestat2 image asset. | — | 0 | — |
-| FILE-162 | Assets | products3d.png | Image asset | `assets/products3d.png` | products3d image asset. | — | 0 | — |
-| FILE-163 | Assets | routes3d.png | Image asset | `assets/routes3d.png` | routes3d image asset. | — | 0 | — |
-| FILE-164 | Assets | routestat.png | Image asset | `assets/routestat.png` | routestat image asset. | — | 0 | — |
-| FILE-165 | Assets | routestat2.png | Image asset | `assets/routestat2.png` | routestat2 image asset. | — | 0 | — |
-| FILE-166 | Assets | splash.png | Image asset | `assets/splash.png` | splash image asset. | — | 0 | — |
-| FILE-167 | Assets | squareHeader.png | Image asset | `assets/squareHeader.png` | square Header image asset. | — | 0 | — |
-| FILE-168 | Assets | subscriptions3d.png | Image asset | `assets/subscriptions3d.png` | subscriptions3d image asset. | — | 0 | — |
-| FILE-169 | Assets | truck.png | Image asset | `assets/truck.png` | truck image asset. | — | 0 | — |
-| FILE-170 | Project root | configuration | Project configuration/source | `babel.config.js` | babel.config configuration. | — | 0 | — |
-| FILE-171 | Documentation | project-docs | Documentation | `frontend_report_guide.md` | frontend report guide project documentation. | — | 0 | — |
-| FILE-172 | Project root | configuration | Native build configuration | `Gemfile` | Gemfile configuration. | — | 0 | — |
-| FILE-173 | Project root | configuration | Project configuration/source | `index.js` | React Native application registration entry point. | — | 2 | react-native |
-| FILE-174 | Native | ios | Project file | `ios/.xcode.env` | .xcode project file. | — | 0 | — |
-| FILE-175 | Native | ios | Xcode project configuration | `ios/Compunic.xcodeproj/project.pbxproj` | project configuration. | — | 0 | — |
-| FILE-176 | Native | ios | Xcode project configuration | `ios/Compunic.xcodeproj/xcshareddata/xcschemes/Compunic.xcscheme` | Compunic configuration. | — | 0 | — |
-| FILE-177 | Native | ios | Native source | `ios/Compunic/AppDelegate.swift` | App Delegate native bootstrap/source file. | — | 0 | — |
-| FILE-178 | Native | ios | Native resource/config | `ios/Compunic/Images.xcassets/AppIcon.appiconset/Contents.json` | Contents configuration. | — | 0 | — |
-| FILE-179 | Native | ios | Native resource/config | `ios/Compunic/Images.xcassets/Contents.json` | Contents configuration. | — | 0 | — |
-| FILE-180 | Native | ios | Native resource/config | `ios/Compunic/Info.plist` | Info configuration. | — | 0 | — |
-| FILE-181 | Native | ios | Native resource/config | `ios/Compunic/LaunchScreen.storyboard` | Launch Screen configuration. | — | 0 | — |
-| FILE-182 | Native | ios | Native resource/config | `ios/Compunic/PrivacyInfo.xcprivacy` | Privacy Info configuration. | — | 0 | — |
-| FILE-183 | Native | ios | Native resource/config | `ios/link-assets-manifest.json` | link assets manifest configuration. | — | 0 | — |
-| FILE-184 | Native | ios | Native build configuration | `ios/Podfile` | Podfile configuration. | — | 0 | — |
-| FILE-185 | Project root | configuration | Project configuration/source | `jest.config.js` | jest.config configuration. | — | 0 | — |
-| FILE-186 | Project root | configuration | Project configuration/source | `jest.setup.js` | jest.setup configuration. | — | 0 | react-native-gesture-handler |
-| FILE-187 | Project root | configuration | Project configuration/source | `metro.config.js` | metro.config configuration. | — | 0 | @react-native/metro-config |
-| FILE-188 | Project root | configuration | Dependency lockfile | `package-lock.json` | Exact npm dependency resolution lockfile. | — | 0 | — |
-| FILE-189 | Project root | configuration | Project configuration/source | `package.json` | Node package manifest, dependency versions, and developer commands. | — | 0 | — |
-| FILE-190 | Documentation | project-docs | Documentation | `PROJECT_DOCUMENTATION_SOURCE.md` | PROJECT DOCUMENTATION SOURCE project documentation. | — | 0 | — |
-| FILE-191 | Project root | configuration | Project configuration/source | `react-native.config.js` | react native.config configuration. | — | 0 | — |
-| FILE-192 | Documentation | project-docs | Documentation | `README.md` | README project documentation. | — | 0 | — |
-| FILE-193 | Tooling | scripts | Automation script | `scripts/updateProjectStructure.cjs` | Regenerates the Excel-ready current-project structure in workflow.md. | api | 0 | fs, path |
-| FILE-194 | Tooling | scripts | Automation script | `scripts/verifyRelativeImports.cjs` | Validates every relative import, export-from, dynamic import, and require path. | — | 0 | fs, path |
-| FILE-195 | Application shell | navigation | Navigation | `src/app/navigation/AuthStack.jsx` | Public onboarding and authentication stack registration. | AuthStack | 1 | @react-navigation/native-stack, react |
-| FILE-196 | Application shell | navigation | Navigation | `src/app/navigation/CustomDrawerContent.jsx` | Role-aware drawer menu, entitlement lock display, profile header, and logout action. | CustomDrawerContent | 7 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context, react-native-svg |
-| FILE-197 | Application shell | navigation | Navigation | `src/app/navigation/MainDrawer.jsx` | Authenticated drawer navigator and drawer-level screens. | MainDrawer | 6 | @react-navigation/drawer, lucide-react-native, react, react-i18next |
-| FILE-198 | Application shell | navigation | Navigation | `src/app/navigation/MainTabs.jsx` | Authenticated bottom-tab navigation and tab entitlement guards. | MainTabs | 10 | @react-navigation/bottom-tabs, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context, react-native-svg |
-| FILE-199 | Application shell | navigation | Navigation | `src/app/navigation/RootNavigator.jsx` | Top-level authentication gate, splash transition, entitlement-limit handling, and app stack registration. | RootNavigator | 20 | @react-navigation/native, @react-navigation/native-stack, react, react-i18next, react-native |
-| FILE-200 | Application shell | providers | Provider/context | `src/app/providers/AlertContext.jsx` | Global styled alert/modal API used instead of generic native alerts. | AlertProvider, useAlert | 1 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-201 | Application shell | providers | Provider/context | `src/app/providers/AuthContext.js` | Authentication session, persisted tokens, profile state, refresh callbacks, and logout. | AuthContext, AuthProvider | 3 | @react-native-async-storage/async-storage, react, react-native-fast-image |
-| FILE-202 | Application shell | providers | Provider/context | `src/app/providers/EntitlementContext.jsx` | Subscription entitlement state, proactive checks, and guarded navigation/actions. | EntitlementProvider, useEntitlements | 3 | react, react-native |
-| FILE-203 | Application shell | screens | Screen | `src/app/screens/SplashScreen.jsx` | Animated application splash experience and startup completion callback. | SplashScreen | 1 | lucide-react-native, react, react-native, react-native-fast-image, react-native-svg |
-| FILE-204 | Feature | auth | Feature public barrel | `src/features/auth/index.js` | Public exports for the auth feature boundary. | CompleteRegistrationScreen, LoginScreen, OnboardingScreen1, OnboardingScreen2, OtpVerificationScreen, RegisterScreen | 6 | — |
-| FILE-205 | Feature | auth | Screen | `src/features/auth/screens/CompleteRegistrationScreen.jsx` | Complete Registration user interface in the auth module. | CompleteRegistrationScreen | 5 | lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
-| FILE-206 | Feature | auth | Screen | `src/features/auth/screens/LoginScreen.jsx` | Login user interface in the auth module. | LoginScreen | 5 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-207 | Feature | auth | Project file | `src/features/auth/screens/OnboardingScreen1.jsx` | Onboarding Screen1 project file. | OnboardingScreen1 | 4 | lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
-| FILE-208 | Feature | auth | Project file | `src/features/auth/screens/OnboardingScreen2.jsx` | Onboarding Screen2 project file. | OnboardingScreen2 | 4 | lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
-| FILE-209 | Feature | auth | Screen | `src/features/auth/screens/OtpVerificationScreen.jsx` | Otp Verification user interface in the auth module. | OtpVerificationScreen | 4 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-210 | Feature | auth | Screen | `src/features/auth/screens/RegisterScreen.jsx` | Register user interface in the auth module. | RegisterScreen | 3 | @react-native-async-storage/async-storage, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-211 | Feature | customers | Feature modal | `src/features/customers/components/AddCustomerModal.jsx` | Add Customer modal owned by the customers module. | AddCustomerModal | 5 | lucide-react-native, react, react-i18next, react-native |
-| FILE-212 | Feature | customers | Feature public barrel | `src/features/customers/index.js` | Public exports for the customers feature boundary. | AddCustomerModal, AddCustomerScreen, CustomerDeliveryHistoryScreen, CustomerDetailScreen, CustomerHistoryScreen, CustomerListScreen | 6 | — |
-| FILE-213 | Feature | customers | Screen | `src/features/customers/screens/AddCustomerScreen.jsx` | Create/edit workflow for Customer. | AddCustomerScreen | 7 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-contacts |
-| FILE-214 | Feature | customers | Screen | `src/features/customers/screens/CustomerDeliveryHistoryScreen.jsx` | History and timeline UI for Customer Delivery. | CustomerDeliveryHistoryScreen | 4 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
-| FILE-215 | Feature | customers | Screen | `src/features/customers/screens/CustomerDetailScreen.jsx` | Detail and actions UI for Customer. | CustomerDetailScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
-| FILE-216 | Feature | customers | Screen | `src/features/customers/screens/CustomerHistoryScreen.jsx` | History and timeline UI for Customer. | CustomerHistoryScreen | 5 | lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient |
-| FILE-217 | Feature | customers | Screen | `src/features/customers/screens/CustomerListScreen.jsx` | List and management UI for Customer. | CustomerListScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context, react-native-svg |
-| FILE-218 | Feature | dashboard | Feature public barrel | `src/features/dashboard/index.js` | Public exports for the dashboard feature boundary. | HomeScreen | 1 | — |
-| FILE-219 | Feature | dashboard | Screen | `src/features/dashboard/screens/HomeScreen.jsx` | Home user interface in the dashboard module. | HomeScreen | 6 | @react-native-async-storage/async-storage, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context, react-native-svg |
-| FILE-220 | Feature | deliveries | Feature public barrel | `src/features/deliveries/index.js` | Public exports for the deliveries feature boundary. | OrdersScreen, PastDeliveriesScreen, UnbilledDeliveriesScreen | 3 | — |
-| FILE-221 | Feature | deliveries | Screen | `src/features/deliveries/screens/OrdersScreen.jsx` | Orders user interface in the deliveries module. | OrdersScreen | 6 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-222 | Feature | deliveries | Screen | `src/features/deliveries/screens/PastDeliveriesScreen.jsx` | Past Deliveries user interface in the deliveries module. | PastDeliveriesScreen | 6 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-223 | Feature | deliveries | Screen | `src/features/deliveries/screens/UnbilledDeliveriesScreen.jsx` | Unbilled Deliveries user interface in the deliveries module. | UnbilledDeliveriesScreen | 5 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient |
-| FILE-224 | Feature | delivery-subscriptions | Feature public barrel | `src/features/delivery-subscriptions/index.js` | Public exports for the delivery-subscriptions feature boundary. | AddSubscriptionScreen, SubscriptionDetailScreen, SubscriptionListScreen | 3 | — |
-| FILE-225 | Feature | delivery-subscriptions | Screen | `src/features/delivery-subscriptions/screens/AddSubscriptionScreen.jsx` | Create/edit workflow for Subscription. | AddSubscriptionScreen | 7 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
-| FILE-226 | Feature | delivery-subscriptions | Screen | `src/features/delivery-subscriptions/screens/SubscriptionDetailScreen.jsx` | Detail and actions UI for Subscription. | SubscriptionDetailScreen | 5 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-227 | Feature | delivery-subscriptions | Screen | `src/features/delivery-subscriptions/screens/SubscriptionListScreen.jsx` | List and management UI for Subscription. | SubscriptionListScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-svg |
-| FILE-228 | Feature | invoices | Feature public barrel | `src/features/invoices/index.js` | Public exports for the invoices feature boundary. | GenerateInvoiceScreen, InvoiceDetailScreen, InvoiceListScreen | 3 | — |
-| FILE-229 | Feature | invoices | Screen | `src/features/invoices/screens/GenerateInvoiceScreen.jsx` | Generate Invoice user interface in the invoices module. | GenerateInvoiceScreen | 6 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-svg |
-| FILE-230 | Feature | invoices | Screen | `src/features/invoices/screens/InvoiceDetailScreen.jsx` | Detail and actions UI for Invoice. | InvoiceDetailScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-blob-util, react-native-html-to-pdf, react-native-print, react-native-safe-area-context, react-native-share, react-native-svg |
-| FILE-231 | Feature | invoices | Screen | `src/features/invoices/screens/InvoiceListScreen.jsx` | List and management UI for Invoice. | InvoiceListScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context |
-| FILE-232 | Feature | one-time-orders | Feature public barrel | `src/features/one-time-orders/index.js` | Public exports for the one-time-orders feature boundary. | AddOneTimeOrderScreen, OneTimeOrderListScreen | 2 | — |
-| FILE-233 | Feature | one-time-orders | Screen | `src/features/one-time-orders/screens/AddOneTimeOrderScreen.jsx` | Create/edit workflow for One Time Order. | AddOneTimeOrderScreen | 7 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
-| FILE-234 | Feature | one-time-orders | Screen | `src/features/one-time-orders/screens/OneTimeOrderListScreen.jsx` | List and management UI for One Time Order. | OneTimeOrderListScreen | 8 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
-| FILE-235 | Feature | payments | Feature public barrel | `src/features/payments/index.js` | Public exports for the payments feature boundary. | PaymentsScreen | 1 | — |
-| FILE-236 | Feature | payments | Screen | `src/features/payments/screens/PaymentsScreen.jsx` | Payments user interface in the payments module. | PaymentsScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context, react-native-svg |
-| FILE-237 | Feature | plan-billing | Feature public barrel | `src/features/plan-billing/index.js` | Public exports for the plan-billing feature boundary. | SubscriptionDashboardScreen | 1 | — |
-| FILE-238 | Feature | plan-billing | Screen | `src/features/plan-billing/screens/SubscriptionDashboardScreen.jsx` | Subscription Dashboard user interface in the plan-billing module. | SubscriptionDashboardScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-razorpay |
-| FILE-239 | Feature | products | Feature modal | `src/features/products/components/AddProductModal.jsx` | Add Product modal owned by the products module. | AddProductModal | 4 | lucide-react-native, react, react-i18next, react-native |
-| FILE-240 | Feature | products | Feature public barrel | `src/features/products/index.js` | Public exports for the products feature boundary. | AddProductModal, AddProductScreen, ProductCatalogScreen, ProductDetailScreen | 4 | — |
-| FILE-241 | Feature | products | Screen | `src/features/products/screens/AddProductScreen.jsx` | Create/edit workflow for Product. | AddProductScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-image-picker, react-native-safe-area-context |
-| FILE-242 | Feature | products | Screen | `src/features/products/screens/ProductCatalogScreen.jsx` | Product Catalog user interface in the products module. | ProductCatalogScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-linear-gradient, react-native-safe-area-context, react-native-svg |
-| FILE-243 | Feature | products | Screen | `src/features/products/screens/ProductDetailScreen.jsx` | Detail and actions UI for Product. | ProductDetailScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
-| FILE-244 | Feature | reports | Component | `src/features/reports/components/FinancialReport.jsx` | Reusable Financial Report component. | FinancialReport | 3 | lucide-react-native, react, react-i18next, react-native, react-native-gifted-charts |
-| FILE-245 | Feature | reports | Component | `src/features/reports/components/InventoryReport.jsx` | Reusable Inventory Report component. | InventoryReport | 3 | lucide-react-native, react, react-i18next, react-native |
-| FILE-246 | Feature | reports | Component | `src/features/reports/components/OperationsReport.jsx` | Reusable Operations Report component. | OperationsReport | 3 | lucide-react-native, react, react-i18next, react-native, react-native-gifted-charts |
-| FILE-247 | Feature | reports | Component | `src/features/reports/components/OutstandingReport.jsx` | Reusable Outstanding Report component. | OutstandingReport | 3 | lucide-react-native, react, react-i18next, react-native |
-| FILE-248 | Feature | reports | Feature public barrel | `src/features/reports/index.js` | Public exports for the reports feature boundary. | FinancialReport, InventoryReport, OperationsReport, OutstandingReport, ReportsScreen | 5 | — |
-| FILE-249 | Feature | reports | Screen | `src/features/reports/screens/ReportsScreen.jsx` | Reports user interface in the reports module. | ReportsScreen | 9 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
-| FILE-250 | Feature | routes | Feature modal | `src/features/routes/components/AddRouteModal.jsx` | Add Route modal owned by the routes module. | AddRouteModal | 4 | lucide-react-native, react, react-i18next, react-native |
-| FILE-251 | Feature | routes | Feature public barrel | `src/features/routes/index.js` | Public exports for the routes feature boundary. | AddRouteModal, AddRouteScreen, RouteBuilderScreen, RouteDetailScreen, RouteListScreen | 5 | — |
-| FILE-252 | Feature | routes | Screen | `src/features/routes/screens/AddRouteScreen.jsx` | Create/edit workflow for Route. | AddRouteScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-253 | Feature | routes | Screen | `src/features/routes/screens/RouteBuilderScreen.jsx` | Route Builder user interface in the routes module. | RouteBuilderScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient |
-| FILE-254 | Feature | routes | Screen | `src/features/routes/screens/RouteDetailScreen.jsx` | Detail and actions UI for Route. | RouteDetailScreen | 5 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context |
-| FILE-255 | Feature | routes | Screen | `src/features/routes/screens/RouteListScreen.jsx` | List and management UI for Route. | RouteListScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context, react-native-svg |
-| FILE-256 | Feature | settings | Feature public barrel | `src/features/settings/index.js` | Public exports for the settings feature boundary. | ProfileScreen, SettingsScreen | 2 | — |
-| FILE-257 | Feature | settings | Screen | `src/features/settings/screens/ProfileScreen.jsx` | Profile user interface in the settings module. | ProfileScreen | 1 | react, react-native |
-| FILE-258 | Feature | settings | Screen | `src/features/settings/screens/SettingsScreen.jsx` | Settings user interface in the settings module. | SettingsScreen | 8 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
-| FILE-259 | Feature | staff | Feature public barrel | `src/features/staff/index.js` | Public exports for the staff feature boundary. | AddStaffScreen, StaffManagementScreen | 2 | — |
-| FILE-260 | Feature | staff | Screen | `src/features/staff/screens/AddStaffScreen.jsx` | Create/edit workflow for Staff. | AddStaffScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-261 | Feature | staff | Screen | `src/features/staff/screens/StaffManagementScreen.jsx` | Staff Management user interface in the staff module. | StaffManagementScreen | 7 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context |
-| FILE-262 | Documentation | project-docs | Documentation | `src/README.md` | Concise source ownership and validation guide. | — | 0 | — |
-| FILE-263 | Shared | assets | Image asset | `src/shared/assets/3d/catalog.png` | catalog image asset. | — | 0 | — |
-| FILE-264 | Shared | assets | Image asset | `src/shared/assets/3d/customers.png` | customers image asset. | — | 0 | — |
-| FILE-265 | Shared | assets | Image asset | `src/shared/assets/3d/routes.png` | routes image asset. | — | 0 | — |
-| FILE-266 | Shared | assets | Image asset | `src/shared/assets/3d/staff.png` | staff image asset. | — | 0 | — |
-| FILE-267 | Shared | assets | Image asset | `src/shared/assets/3d/subscriptions.png` | subscriptions image asset. | — | 0 | — |
-| FILE-268 | Shared | assets | Image asset | `src/shared/assets/images/home_banner.jpg` | home banner image asset. | — | 0 | — |
-| FILE-269 | Shared | assets | Image asset | `src/shared/assets/images/LoginScreenImage.png` | Login Screen Image image asset. | — | 0 | — |
-| FILE-270 | Shared | assets | Image asset | `src/shared/assets/images/OtpScreenImage.png` | Otp Screen Image image asset. | — | 0 | — |
-| FILE-271 | Shared | components | Component | `src/shared/components/CurvedHeader.jsx` | Reusable gradient curved header used across application screens. | CurvedHeader | 1 | @react-navigation/native, react, react-native, react-native-fast-image, react-native-safe-area-context, react-native-svg |
-| FILE-272 | Shared | components | Component | `src/shared/components/DeliveryStatusSlider.jsx` | Reusable interactive delivery-status control. | DeliveryStatusSlider | 1 | lucide-react-native, react, react-native, react-native-gesture-handler, react-native-reanimated |
-| FILE-273 | Shared | components | Component | `src/shared/components/ImageWithSkeleton.jsx` | Image wrapper that displays a loading skeleton until the asset is ready. | ImageWithSkeleton | 0 | react, react-native, react-native-fast-image |
-| FILE-274 | Shared | components | Component | `src/shared/components/LanguageSelector.jsx` | Reusable multi-language selector used by authentication and settings UI. | LanguageSelector, SUPPORTED_LANGUAGES | 1 | @react-native-async-storage/async-storage, lucide-react-native, react, react-i18next, react-native |
-| FILE-275 | Shared | constants | Constant/token map | `src/shared/constants/colors.js` | Shared application color tokens. | COLORS | 0 | — |
-| FILE-276 | Shared | constants | Constant/token map | `src/shared/constants/subscriptionEntitlements.js` | Entitlement identifiers and localized feature-name mappings. | ENTITLEMENT_KEYS, ENTITLEMENT_TRANSLATION_KEYS, PROACTIVE_ENTITLEMENT_KEYS | 0 | — |
-| FILE-277 | Shared | i18n | Localization setup | `src/shared/i18n/index.js` | i18next initialization, locale registration, fallback, and saved-language restoration. | i18n | 8 | @react-native-async-storage/async-storage, i18next, react-i18next |
-| FILE-278 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/bn.js` | Bengali translation dictionary. | bn | 0 | — |
-| FILE-279 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/en.js` | English translation dictionary. | en | 0 | — |
-| FILE-280 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/gu.js` | Gujarati translation dictionary. | gu | 0 | — |
-| FILE-281 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/hi.js` | Hindi translation dictionary. | hi | 0 | — |
-| FILE-282 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/mr.js` | Marathi translation dictionary. | mr | 0 | — |
-| FILE-283 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/pa.js` | Punjabi translation dictionary. | pa | 0 | — |
-| FILE-284 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/ta.js` | Tamil translation dictionary. | ta | 0 | — |
-| FILE-285 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/te.js` | Telugu translation dictionary. | te | 0 | — |
-| FILE-286 | Shared | services | Service/API client | `src/shared/services/api.js` | Central API base URL, authenticated request handling, refresh queue, logging, and domain API methods. | api, notifyPlanLimit, setApiRole, setLogoutCallback, setPlanLimitCallback, setTokenRefreshedCallback | 0 | @react-native-async-storage/async-storage, react-native-blob-util |
-| FILE-287 | Shared | utils | Utility | `src/shared/utils/seedDatabase.js` | Local seed/helper data utility. | seedDatabase | 1 | — |
-| FILE-288 | Project root | configuration | Binary/archive | `SUSE.zip` | SUSE binary/archive. | — | 0 | — |
-| FILE-289 | Documentation | project-docs | Documentation | `workflow.md` | Task history plus generated current-project architecture source for Excel exports. | — | 0 | — |
+| FILE-001 | Quality | tests | Automated test | `__tests__/apiSurface.test.js` | api Surface.test automated test. | — | 1 | — |
+| FILE-002 | Quality | tests | Automated test | `__tests__/App.test.tsx` | Application render smoke test. | — | 1 | react, react-native, react-test-renderer |
+| FILE-003 | Governance | agent-rules | Documentation | `.agents/AGENTS.md` | AGENTS project documentation. | — | 0 | — |
+| FILE-004 | Tooling | ruby | Project file | `.bundle/config` | config project file. | — | 0 | — |
+| FILE-005 | Project root | configuration | Project configuration/source | `.eslintrc.js` | .eslintrc configuration. | — | 0 | — |
+| FILE-006 | Project root | configuration | Project file | `.gitignore` | .gitignore project file. | — | 0 | — |
+| FILE-007 | Project root | configuration | Project configuration/source | `.prettierrc.js` | .prettierrc configuration. | — | 0 | — |
+| FILE-008 | Project root | configuration | Project file | `.watchmanconfig` | .watchmanconfig project file. | — | 0 | — |
+| FILE-009 | Documentation | project-docs | Documentation | `02_ARCHITECTURE_SOURCE.md` | 02 ARCHITECTURE SOURCE project documentation. | — | 0 | — |
+| FILE-010 | Documentation | project-docs | Documentation | `03_FUNCTIONAL_MODULES_SOURCE.md` | 03 FUNCTIONAL MODULES SOURCE project documentation. | — | 0 | — |
+| FILE-011 | Native | android | Native build configuration | `android/app/build.gradle` | build configuration. | — | 0 | — |
+| FILE-012 | Native | android | Project file | `android/app/camper-release-key.keystore` | camper release key project file. | — | 0 | — |
+| FILE-013 | Native | android | Project file | `android/app/debug.keystore` | debug project file. | — | 0 | — |
+| FILE-014 | Native | android | Project file | `android/app/proguard-rules.pro` | proguard rules project file. | — | 0 | — |
+| FILE-015 | Native | android | Native resource/config | `android/app/src/main/AndroidManifest.xml` | Android Manifest configuration. | — | 0 | — |
+| FILE-016 | Native | android | Binary/archive | `android/app/src/main/assets/custom/SUSE.zip` | SUSE binary/archive. | — | 0 | — |
+| FILE-017 | Native | android | Font asset | `android/app/src/main/assets/fonts/BricolageGrotesque-Bold.ttf` | Bricolage Grotesque Bold font resource. | — | 0 | — |
+| FILE-018 | Native | android | Font asset | `android/app/src/main/assets/fonts/BricolageGrotesque-Medium.ttf` | Bricolage Grotesque Medium font resource. | — | 0 | — |
+| FILE-019 | Native | android | Font asset | `android/app/src/main/assets/fonts/BricolageGrotesque-Regular.ttf` | Bricolage Grotesque Regular font resource. | — | 0 | — |
+| FILE-020 | Native | android | Font asset | `android/app/src/main/assets/fonts/BricolageGrotesque-SemiBold.ttf` | Bricolage Grotesque Semi Bold font resource. | — | 0 | — |
+| FILE-021 | Native | android | Font asset | `android/app/src/main/assets/fonts/Fredoka-Bold.ttf` | Fredoka Bold font resource. | — | 0 | — |
+| FILE-022 | Native | android | Font asset | `android/app/src/main/assets/fonts/Fredoka-Medium.ttf` | Fredoka Medium font resource. | — | 0 | — |
+| FILE-023 | Native | android | Font asset | `android/app/src/main/assets/fonts/Fredoka-Regular.ttf` | Fredoka Regular font resource. | — | 0 | — |
+| FILE-024 | Native | android | Font asset | `android/app/src/main/assets/fonts/Fredoka-SemiBold.ttf` | Fredoka Semi Bold font resource. | — | 0 | — |
+| FILE-025 | Native | android | Font asset | `android/app/src/main/assets/fonts/Geologica-Bold.ttf` | Geologica Bold font resource. | — | 0 | — |
+| FILE-026 | Native | android | Font asset | `android/app/src/main/assets/fonts/Geologica-Medium.ttf` | Geologica Medium font resource. | — | 0 | — |
+| FILE-027 | Native | android | Font asset | `android/app/src/main/assets/fonts/Geologica-Regular.ttf` | Geologica Regular font resource. | — | 0 | — |
+| FILE-028 | Native | android | Font asset | `android/app/src/main/assets/fonts/Geologica-SemiBold.ttf` | Geologica Semi Bold font resource. | — | 0 | — |
+| FILE-029 | Native | android | Font asset | `android/app/src/main/assets/fonts/Inter-Bold.ttf` | Inter Bold font resource. | — | 0 | — |
+| FILE-030 | Native | android | Font asset | `android/app/src/main/assets/fonts/Inter-Medium.ttf` | Inter Medium font resource. | — | 0 | — |
+| FILE-031 | Native | android | Font asset | `android/app/src/main/assets/fonts/Inter-Regular.ttf` | Inter Regular font resource. | — | 0 | — |
+| FILE-032 | Native | android | Font asset | `android/app/src/main/assets/fonts/Inter-SemiBold.ttf` | Inter Semi Bold font resource. | — | 0 | — |
+| FILE-033 | Native | android | Font asset | `android/app/src/main/assets/fonts/Poppins-Bold.ttf` | Poppins Bold font resource. | — | 0 | — |
+| FILE-034 | Native | android | Font asset | `android/app/src/main/assets/fonts/Poppins-Medium.ttf` | Poppins Medium font resource. | — | 0 | — |
+| FILE-035 | Native | android | Font asset | `android/app/src/main/assets/fonts/Poppins-Regular.ttf` | Poppins Regular font resource. | — | 0 | — |
+| FILE-036 | Native | android | Font asset | `android/app/src/main/assets/fonts/Poppins-SemiBold.ttf` | Poppins Semi Bold font resource. | — | 0 | — |
+| FILE-037 | Native | android | Font asset | `android/app/src/main/assets/fonts/Rubik-Bold.ttf` | Rubik Bold font resource. | — | 0 | — |
+| FILE-038 | Native | android | Font asset | `android/app/src/main/assets/fonts/Rubik-Medium.ttf` | Rubik Medium font resource. | — | 0 | — |
+| FILE-039 | Native | android | Font asset | `android/app/src/main/assets/fonts/Rubik-Regular.ttf` | Rubik Regular font resource. | — | 0 | — |
+| FILE-040 | Native | android | Font asset | `android/app/src/main/assets/fonts/Rubik-SemiBold.ttf` | Rubik Semi Bold font resource. | — | 0 | — |
+| FILE-041 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Black.ttf` | SUSE Black font resource. | — | 0 | — |
+| FILE-042 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Bold.ttf` | SUSE Bold font resource. | — | 0 | — |
+| FILE-043 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-ExtraBold.ttf` | SUSE Extra Bold font resource. | — | 0 | — |
+| FILE-044 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-ExtraLight.ttf` | SUSE Extra Light font resource. | — | 0 | — |
+| FILE-045 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Light.ttf` | SUSE Light font resource. | — | 0 | — |
+| FILE-046 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Medium.ttf` | SUSE Medium font resource. | — | 0 | — |
+| FILE-047 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Regular.ttf` | SUSE Regular font resource. | — | 0 | — |
+| FILE-048 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-SemiBold.ttf` | SUSE Semi Bold font resource. | — | 0 | — |
+| FILE-049 | Native | android | Font asset | `android/app/src/main/assets/fonts/SUSE-Thin.ttf` | SUSE Thin font resource. | — | 0 | — |
+| FILE-050 | Native | android | Native source | `android/app/src/main/java/com/com.camper.dailybudgetapp/MainActivity.kt` | Main Activity native bootstrap/source file. | — | 0 | — |
+| FILE-051 | Native | android | Native source | `android/app/src/main/java/com/com.camper.dailybudgetapp/MainApplication.kt` | Main Application native bootstrap/source file. | — | 0 | — |
+| FILE-052 | Native | android | Native resource/config | `android/app/src/main/res/drawable/rn_edit_text_material.xml` | rn edit text material configuration. | — | 0 | — |
+| FILE-053 | Native | android | Native resource/config | `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml` | ic launcher configuration. | — | 0 | — |
+| FILE-054 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
+| FILE-055 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
+| FILE-056 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
+| FILE-057 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
+| FILE-058 | Native | android | Image asset | `android/app/src/main/res/mipmap-hdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
+| FILE-059 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
+| FILE-060 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
+| FILE-061 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
+| FILE-062 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
+| FILE-063 | Native | android | Image asset | `android/app/src/main/res/mipmap-mdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
+| FILE-064 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
+| FILE-065 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
+| FILE-066 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
+| FILE-067 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
+| FILE-068 | Native | android | Image asset | `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
+| FILE-069 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
+| FILE-070 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
+| FILE-071 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
+| FILE-072 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
+| FILE-073 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
+| FILE-074 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_background.png` | ic launcher background image asset. | — | 0 | — |
+| FILE-075 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png` | ic launcher foreground image asset. | — | 0 | — |
+| FILE-076 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_monochrome.png` | ic launcher monochrome image asset. | — | 0 | — |
+| FILE-077 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png` | ic launcher round image asset. | — | 0 | — |
+| FILE-078 | Native | android | Image asset | `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` | ic launcher image asset. | — | 0 | — |
+| FILE-079 | Native | android | Native resource/config | `android/app/src/main/res/values/strings.xml` | strings configuration. | — | 0 | — |
+| FILE-080 | Native | android | Native resource/config | `android/app/src/main/res/values/styles.xml` | styles configuration. | — | 0 | — |
+| FILE-081 | Native | android | Native build configuration | `android/build.gradle` | build configuration. | — | 0 | — |
+| FILE-082 | Native | android | Native build configuration | `android/gradle.properties` | gradle configuration. | — | 0 | — |
+| FILE-083 | Native | android | Binary/archive | `android/gradle/wrapper/gradle-wrapper.jar` | gradle wrapper binary/archive. | — | 0 | — |
+| FILE-084 | Native | android | Native build configuration | `android/gradle/wrapper/gradle-wrapper.properties` | gradle wrapper configuration. | — | 0 | — |
+| FILE-085 | Native | android | Native build configuration | `android/gradlew` | gradlew configuration. | — | 0 | — |
+| FILE-086 | Native | android | Native build configuration | `android/gradlew.bat` | gradlew configuration. | — | 0 | — |
+| FILE-087 | Native | android | Native resource/config | `android/link-assets-manifest.json` | link assets manifest configuration. | — | 0 | — |
+| FILE-088 | Native | android | Native build configuration | `android/settings.gradle` | settings configuration. | — | 0 | — |
+| FILE-089 | Project root | configuration | Project configuration/source | `app.json` | app configuration. | — | 0 | — |
+| FILE-090 | Project root | configuration | Project file | `App.jsx` | Root React Native component; providers, global visual shell, status bar, navigation, and in-app updates. | App, navigationRef | 2 | @react-navigation/native, react, react-native, react-native-gesture-handler, react-native-safe-area-context, react-native-svg, sp-react-native-in-app-updates |
+| FILE-091 | Assets | activesubstat.png | Image asset | `assets/activesubstat.png` | activesubstat image asset. | — | 0 | — |
+| FILE-092 | Assets | activesubstat2.png | Image asset | `assets/activesubstat2.png` | activesubstat2 image asset. | — | 0 | — |
+| FILE-093 | Assets | branded_water_jar.jpg | Image asset | `assets/branded_water_jar.jpg` | branded water jar image asset. | — | 0 | — |
+| FILE-094 | Assets | camper_truck.jpg | Image asset | `assets/camper_truck.jpg` | camper truck image asset. | — | 0 | — |
+| FILE-095 | Assets | campersplash.png | Image asset | `assets/campersplash.png` | campersplash image asset. | — | 0 | — |
+| FILE-096 | Assets | car.png | Image asset | `assets/car.png` | car image asset. | — | 0 | — |
+| FILE-097 | Assets | customerfallback - Copy.png | Image asset | `assets/customerfallback - Copy.png` | customerfallback Copy image asset. | — | 0 | — |
+| FILE-098 | Assets | customerfallback.png | Image asset | `assets/customerfallback.png` | customerfallback image asset. | — | 0 | — |
+| FILE-099 | Assets | customers3d.png | Image asset | `assets/customers3d.png` | customers3d image asset. | — | 0 | — |
+| FILE-100 | Assets | customerstats.png | Image asset | `assets/customerstats.png` | customerstats image asset. | — | 0 | — |
+| FILE-101 | Assets | customerstats2.png | Image asset | `assets/customerstats2.png` | customerstats2 image asset. | — | 0 | — |
+| FILE-102 | Assets | delivery_rickshaw.jpg | Image asset | `assets/delivery_rickshaw.jpg` | delivery rickshaw image asset. | — | 0 | — |
+| FILE-103 | Assets | delivery_rickshaw.png | Image asset | `assets/delivery_rickshaw.png` | delivery rickshaw image asset. | — | 0 | — |
+| FILE-104 | Assets | englishlogo.png | Image asset | `assets/englishlogo.png` | englishlogo image asset. | — | 0 | — |
+| FILE-105 | Assets | fallbackimage.png | Image asset | `assets/fallbackimage.png` | fallbackimage image asset. | — | 0 | — |
+| FILE-106 | Assets | fallbackimage1.png | Image asset | `assets/fallbackimage1.png` | fallbackimage1 image asset. | — | 0 | — |
+| FILE-107 | Assets | fonts | Font asset | `assets/fonts/BricolageGrotesque-Bold.ttf` | Bricolage Grotesque Bold font resource. | — | 0 | — |
+| FILE-108 | Assets | fonts | Font asset | `assets/fonts/BricolageGrotesque-Medium.ttf` | Bricolage Grotesque Medium font resource. | — | 0 | — |
+| FILE-109 | Assets | fonts | Font asset | `assets/fonts/BricolageGrotesque-Regular.ttf` | Bricolage Grotesque Regular font resource. | — | 0 | — |
+| FILE-110 | Assets | fonts | Font asset | `assets/fonts/BricolageGrotesque-SemiBold.ttf` | Bricolage Grotesque Semi Bold font resource. | — | 0 | — |
+| FILE-111 | Assets | fonts | Font asset | `assets/fonts/Fredoka-Bold.ttf` | Fredoka Bold font resource. | — | 0 | — |
+| FILE-112 | Assets | fonts | Font asset | `assets/fonts/Fredoka-Medium.ttf` | Fredoka Medium font resource. | — | 0 | — |
+| FILE-113 | Assets | fonts | Font asset | `assets/fonts/Fredoka-Regular.ttf` | Fredoka Regular font resource. | — | 0 | — |
+| FILE-114 | Assets | fonts | Font asset | `assets/fonts/Fredoka-SemiBold.ttf` | Fredoka Semi Bold font resource. | — | 0 | — |
+| FILE-115 | Assets | fonts | Font asset | `assets/fonts/Geologica-Bold.ttf` | Geologica Bold font resource. | — | 0 | — |
+| FILE-116 | Assets | fonts | Font asset | `assets/fonts/Geologica-Medium.ttf` | Geologica Medium font resource. | — | 0 | — |
+| FILE-117 | Assets | fonts | Font asset | `assets/fonts/Geologica-Regular.ttf` | Geologica Regular font resource. | — | 0 | — |
+| FILE-118 | Assets | fonts | Font asset | `assets/fonts/Geologica-SemiBold.ttf` | Geologica Semi Bold font resource. | — | 0 | — |
+| FILE-119 | Assets | fonts | Font asset | `assets/fonts/Inter-Bold.ttf` | Inter Bold font resource. | — | 0 | — |
+| FILE-120 | Assets | fonts | Font asset | `assets/fonts/Inter-Medium.ttf` | Inter Medium font resource. | — | 0 | — |
+| FILE-121 | Assets | fonts | Font asset | `assets/fonts/Inter-Regular.ttf` | Inter Regular font resource. | — | 0 | — |
+| FILE-122 | Assets | fonts | Font asset | `assets/fonts/Inter-SemiBold.ttf` | Inter Semi Bold font resource. | — | 0 | — |
+| FILE-123 | Assets | fonts | Font asset | `assets/fonts/Poppins-Bold.ttf` | Poppins Bold font resource. | — | 0 | — |
+| FILE-124 | Assets | fonts | Font asset | `assets/fonts/Poppins-Medium.ttf` | Poppins Medium font resource. | — | 0 | — |
+| FILE-125 | Assets | fonts | Font asset | `assets/fonts/Poppins-Regular.ttf` | Poppins Regular font resource. | — | 0 | — |
+| FILE-126 | Assets | fonts | Font asset | `assets/fonts/Poppins-SemiBold.ttf` | Poppins Semi Bold font resource. | — | 0 | — |
+| FILE-127 | Assets | fonts | Font asset | `assets/fonts/Rubik-Bold.ttf` | Rubik Bold font resource. | — | 0 | — |
+| FILE-128 | Assets | fonts | Font asset | `assets/fonts/Rubik-Medium.ttf` | Rubik Medium font resource. | — | 0 | — |
+| FILE-129 | Assets | fonts | Font asset | `assets/fonts/Rubik-Regular.ttf` | Rubik Regular font resource. | — | 0 | — |
+| FILE-130 | Assets | fonts | Font asset | `assets/fonts/Rubik-SemiBold.ttf` | Rubik Semi Bold font resource. | — | 0 | — |
+| FILE-131 | Assets | fonts | Font asset | `assets/fonts/SUSE-Black.ttf` | SUSE Black font resource. | — | 0 | — |
+| FILE-132 | Assets | fonts | Font asset | `assets/fonts/SUSE-Bold.ttf` | SUSE Bold font resource. | — | 0 | — |
+| FILE-133 | Assets | fonts | Font asset | `assets/fonts/SUSE-ExtraBold.ttf` | SUSE Extra Bold font resource. | — | 0 | — |
+| FILE-134 | Assets | fonts | Font asset | `assets/fonts/SUSE-ExtraLight.ttf` | SUSE Extra Light font resource. | — | 0 | — |
+| FILE-135 | Assets | fonts | Font asset | `assets/fonts/SUSE-Light.ttf` | SUSE Light font resource. | — | 0 | — |
+| FILE-136 | Assets | fonts | Font asset | `assets/fonts/SUSE-Medium.ttf` | SUSE Medium font resource. | — | 0 | — |
+| FILE-137 | Assets | fonts | Font asset | `assets/fonts/SUSE-Regular.ttf` | SUSE Regular font resource. | — | 0 | — |
+| FILE-138 | Assets | fonts | Font asset | `assets/fonts/SUSE-SemiBold.ttf` | SUSE Semi Bold font resource. | — | 0 | — |
+| FILE-139 | Assets | fonts | Font asset | `assets/fonts/SUSE-Thin.ttf` | SUSE Thin font resource. | — | 0 | — |
+| FILE-140 | Assets | fonts | Binary/archive | `assets/fonts/SUSE.zip` | SUSE binary/archive. | — | 0 | — |
+| FILE-141 | Assets | goldCar.png | Image asset | `assets/goldCar.png` | gold Car image asset. | — | 0 | — |
+| FILE-142 | Assets | header_bg.png | Image asset | `assets/header_bg.png` | header bg image asset. | — | 0 | — |
+| FILE-143 | Assets | header_bg1.png | Image asset | `assets/header_bg1.png` | header bg1 image asset. | — | 0 | — |
+| FILE-144 | Assets | header_bg10.png | Image asset | `assets/header_bg10.png` | header bg10 image asset. | — | 0 | — |
+| FILE-145 | Assets | header_bg2.png | Image asset | `assets/header_bg2.png` | header bg2 image asset. | — | 0 | — |
+| FILE-146 | Assets | header_bg5.png | Image asset | `assets/header_bg5.png` | header bg5 image asset. | — | 0 | — |
+| FILE-147 | Assets | header_bg8.png | Image asset | `assets/header_bg8.png` | header bg8 image asset. | — | 0 | — |
+| FILE-148 | Assets | header_bg9.png | Image asset | `assets/header_bg9.png` | header bg9 image asset. | — | 0 | — |
+| FILE-149 | Assets | header.png | Image asset | `assets/header.png` | header image asset. | — | 0 | — |
+| FILE-150 | Assets | heroSetting.jpeg | Image asset | `assets/heroSetting.jpeg` | hero Setting image asset. | — | 0 | — |
+| FILE-151 | Assets | hindilogo.png | Image asset | `assets/hindilogo.png` | hindilogo image asset. | — | 0 | — |
+| FILE-152 | Assets | login.png | Image asset | `assets/login.png` | login image asset. | — | 0 | — |
+| FILE-153 | Assets | login1.png | Image asset | `assets/login1.png` | login1 image asset. | — | 0 | — |
+| FILE-154 | Assets | login2.png | Image asset | `assets/login2.png` | login2 image asset. | — | 0 | — |
+| FILE-155 | Assets | login5.png | Image asset | `assets/login5.png` | login5 image asset. | — | 0 | — |
+| FILE-156 | Assets | login6.png | Image asset | `assets/login6.png` | login6 image asset. | — | 0 | — |
+| FILE-157 | Assets | login7.png | Image asset | `assets/login7.png` | login7 image asset. | — | 0 | — |
+| FILE-158 | Assets | logo1.png | Image asset | `assets/logo1.png` | logo1 image asset. | — | 0 | — |
+| FILE-159 | Assets | logo2.png | Image asset | `assets/logo2.png` | logo2 image asset. | — | 0 | — |
+| FILE-160 | Assets | onboarding1.png | Image asset | `assets/onboarding1.png` | onboarding1 image asset. | — | 0 | — |
+| FILE-161 | Assets | onboarding2.jpg | Image asset | `assets/onboarding2.jpg` | onboarding2 image asset. | — | 0 | — |
+| FILE-162 | Assets | onboarding3.png | Image asset | `assets/onboarding3.png` | onboarding3 image asset. | — | 0 | — |
+| FILE-163 | Assets | onetimestat.png | Image asset | `assets/onetimestat.png` | onetimestat image asset. | — | 0 | — |
+| FILE-164 | Assets | onetimestat2.png | Image asset | `assets/onetimestat2.png` | onetimestat2 image asset. | — | 0 | — |
+| FILE-165 | Assets | products3d.png | Image asset | `assets/products3d.png` | products3d image asset. | — | 0 | — |
+| FILE-166 | Assets | rich.png | Image asset | `assets/rich.png` | rich image asset. | — | 0 | — |
+| FILE-167 | Assets | routes3d.png | Image asset | `assets/routes3d.png` | routes3d image asset. | — | 0 | — |
+| FILE-168 | Assets | routestat.png | Image asset | `assets/routestat.png` | routestat image asset. | — | 0 | — |
+| FILE-169 | Assets | routestat2.png | Image asset | `assets/routestat2.png` | routestat2 image asset. | — | 0 | — |
+| FILE-170 | Assets | splash.png | Image asset | `assets/splash.png` | splash image asset. | — | 0 | — |
+| FILE-171 | Assets | squareHeader.png | Image asset | `assets/squareHeader.png` | square Header image asset. | — | 0 | — |
+| FILE-172 | Assets | subscriptions3d.png | Image asset | `assets/subscriptions3d.png` | subscriptions3d image asset. | — | 0 | — |
+| FILE-173 | Assets | truck.png | Image asset | `assets/truck.png` | truck image asset. | — | 0 | — |
+| FILE-174 | Project root | configuration | Project configuration/source | `babel.config.js` | babel.config configuration. | — | 0 | — |
+| FILE-175 | Documentation | project-docs | Documentation | `frontend_report_guide.md` | frontend report guide project documentation. | — | 0 | — |
+| FILE-176 | Project root | configuration | Native build configuration | `Gemfile` | Gemfile configuration. | — | 0 | — |
+| FILE-177 | Project root | configuration | Project configuration/source | `index.js` | React Native application registration entry point. | — | 2 | react-native |
+| FILE-178 | Native | ios | Project file | `ios/.xcode.env` | .xcode project file. | — | 0 | — |
+| FILE-179 | Native | ios | Xcode project configuration | `ios/Compunic.xcodeproj/project.pbxproj` | project configuration. | — | 0 | — |
+| FILE-180 | Native | ios | Xcode project configuration | `ios/Compunic.xcodeproj/xcshareddata/xcschemes/Compunic.xcscheme` | Compunic configuration. | — | 0 | — |
+| FILE-181 | Native | ios | Native source | `ios/Compunic/AppDelegate.swift` | App Delegate native bootstrap/source file. | — | 0 | — |
+| FILE-182 | Native | ios | Native resource/config | `ios/Compunic/Images.xcassets/AppIcon.appiconset/Contents.json` | Contents configuration. | — | 0 | — |
+| FILE-183 | Native | ios | Native resource/config | `ios/Compunic/Images.xcassets/Contents.json` | Contents configuration. | — | 0 | — |
+| FILE-184 | Native | ios | Native resource/config | `ios/Compunic/Info.plist` | Info configuration. | — | 0 | — |
+| FILE-185 | Native | ios | Native resource/config | `ios/Compunic/LaunchScreen.storyboard` | Launch Screen configuration. | — | 0 | — |
+| FILE-186 | Native | ios | Native resource/config | `ios/Compunic/PrivacyInfo.xcprivacy` | Privacy Info configuration. | — | 0 | — |
+| FILE-187 | Native | ios | Native resource/config | `ios/link-assets-manifest.json` | link assets manifest configuration. | — | 0 | — |
+| FILE-188 | Native | ios | Native build configuration | `ios/Podfile` | Podfile configuration. | — | 0 | — |
+| FILE-189 | Project root | configuration | Project configuration/source | `jest.config.js` | jest.config configuration. | — | 0 | — |
+| FILE-190 | Project root | configuration | Project configuration/source | `jest.setup.js` | jest.setup configuration. | — | 0 | react-native-gesture-handler |
+| FILE-191 | Project root | configuration | Project configuration/source | `metro.config.js` | metro.config configuration. | — | 0 | @react-native/metro-config |
+| FILE-192 | Project root | configuration | Dependency lockfile | `package-lock.json` | Exact npm dependency resolution lockfile. | — | 0 | — |
+| FILE-193 | Project root | configuration | Project configuration/source | `package.json` | Node package manifest, dependency versions, and developer commands. | — | 0 | — |
+| FILE-194 | Documentation | project-docs | Documentation | `PROJECT_DOCUMENTATION_SOURCE.md` | PROJECT DOCUMENTATION SOURCE project documentation. | — | 0 | — |
+| FILE-195 | Project root | configuration | Project configuration/source | `react-native.config.js` | react native.config configuration. | — | 0 | — |
+| FILE-196 | Documentation | project-docs | Documentation | `README.md` | README project documentation. | — | 0 | — |
+| FILE-197 | Tooling | scripts | Automation script | `scripts/updateProjectStructure.cjs` | Regenerates the Excel-ready current-project structure in workflow.md. | const | 0 | fs, path |
+| FILE-198 | Tooling | scripts | Automation script | `scripts/verifyRelativeImports.cjs` | Validates every relative import, export-from, dynamic import, and require path. | — | 0 | fs, path |
+| FILE-199 | Application shell | navigation | Navigation | `src/app/navigation/AuthStack.jsx` | Public onboarding and authentication stack registration. | AuthStack | 1 | @react-navigation/native-stack, react |
+| FILE-200 | Application shell | navigation | Navigation | `src/app/navigation/CustomDrawerContent.jsx` | Role-aware drawer menu, entitlement lock display, profile header, and logout action. | CustomDrawerContent | 7 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context, react-native-svg |
+| FILE-201 | Application shell | navigation | Navigation | `src/app/navigation/MainDrawer.jsx` | Authenticated drawer navigator and drawer-level screens. | MainDrawer | 6 | @react-navigation/drawer, lucide-react-native, react, react-i18next |
+| FILE-202 | Application shell | navigation | Navigation | `src/app/navigation/MainTabs.jsx` | Authenticated bottom-tab navigation and tab entitlement guards. | MainTabs | 10 | @react-navigation/bottom-tabs, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context, react-native-svg |
+| FILE-203 | Application shell | navigation | Navigation | `src/app/navigation/RootNavigator.jsx` | Top-level authentication gate, splash transition, entitlement-limit handling, and app stack registration. | RootNavigator | 20 | @react-navigation/native, @react-navigation/native-stack, react, react-i18next, react-native |
+| FILE-204 | Application shell | providers | Provider/context | `src/app/providers/AlertContext.jsx` | Global styled alert/modal API used instead of generic native alerts. | AlertProvider, useAlert | 1 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-205 | Application shell | providers | Provider/context | `src/app/providers/AuthContext.js` | Authentication session, persisted tokens, profile state, refresh callbacks, and logout. | AuthContext, AuthProvider | 3 | @react-native-async-storage/async-storage, react, react-native-fast-image |
+| FILE-206 | Application shell | providers | Provider/context | `src/app/providers/EntitlementContext.jsx` | Subscription entitlement state, proactive checks, and guarded navigation/actions. | EntitlementProvider, useEntitlements | 3 | react, react-native |
+| FILE-207 | Application shell | screens | Screen | `src/app/screens/SplashScreen.jsx` | Animated application splash experience and startup completion callback. | SplashScreen | 1 | lucide-react-native, react, react-native, react-native-fast-image, react-native-svg |
+| FILE-208 | Feature | auth | Feature public barrel | `src/features/auth/index.js` | Public exports for the auth feature boundary. | CompleteRegistrationScreen, LoginScreen, OnboardingScreen1, OnboardingScreen2, OtpVerificationScreen, RegisterScreen | 6 | — |
+| FILE-209 | Feature | auth | Screen | `src/features/auth/screens/CompleteRegistrationScreen.jsx` | Complete Registration user interface in the auth module. | CompleteRegistrationScreen | 5 | lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
+| FILE-210 | Feature | auth | Screen | `src/features/auth/screens/LoginScreen.jsx` | Login user interface in the auth module. | LoginScreen | 5 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-211 | Feature | auth | Project file | `src/features/auth/screens/OnboardingScreen1.jsx` | Onboarding Screen1 project file. | OnboardingScreen1 | 4 | lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
+| FILE-212 | Feature | auth | Project file | `src/features/auth/screens/OnboardingScreen2.jsx` | Onboarding Screen2 project file. | OnboardingScreen2 | 4 | lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
+| FILE-213 | Feature | auth | Screen | `src/features/auth/screens/OtpVerificationScreen.jsx` | Otp Verification user interface in the auth module. | OtpVerificationScreen | 4 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-214 | Feature | auth | Screen | `src/features/auth/screens/RegisterScreen.jsx` | Register user interface in the auth module. | RegisterScreen | 3 | @react-native-async-storage/async-storage, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-215 | Feature | customers | Feature modal | `src/features/customers/components/AddCustomerModal.jsx` | Add Customer modal owned by the customers module. | AddCustomerModal | 5 | lucide-react-native, react, react-i18next, react-native |
+| FILE-216 | Feature | customers | Feature public barrel | `src/features/customers/index.js` | Public exports for the customers feature boundary. | AddCustomerModal, AddCustomerScreen, CustomerDeliveryHistoryScreen, CustomerDetailScreen, CustomerHistoryScreen, CustomerListScreen | 6 | — |
+| FILE-217 | Feature | customers | Screen | `src/features/customers/screens/AddCustomerScreen.jsx` | Create/edit workflow for Customer. | AddCustomerScreen | 7 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-contacts |
+| FILE-218 | Feature | customers | Screen | `src/features/customers/screens/CustomerDeliveryHistoryScreen.jsx` | History and timeline UI for Customer Delivery. | CustomerDeliveryHistoryScreen | 4 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
+| FILE-219 | Feature | customers | Screen | `src/features/customers/screens/CustomerDetailScreen.jsx` | Detail and actions UI for Customer. | CustomerDetailScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
+| FILE-220 | Feature | customers | Screen | `src/features/customers/screens/CustomerHistoryScreen.jsx` | History and timeline UI for Customer. | CustomerHistoryScreen | 5 | lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient |
+| FILE-221 | Feature | customers | Screen | `src/features/customers/screens/CustomerListScreen.jsx` | List and management UI for Customer. | CustomerListScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context, react-native-svg |
+| FILE-222 | Feature | dashboard | Feature public barrel | `src/features/dashboard/index.js` | Public exports for the dashboard feature boundary. | HomeScreen | 1 | — |
+| FILE-223 | Feature | dashboard | Screen | `src/features/dashboard/screens/HomeScreen.jsx` | Home user interface in the dashboard module. | HomeScreen | 6 | @react-native-async-storage/async-storage, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context, react-native-svg |
+| FILE-224 | Feature | deliveries | Feature public barrel | `src/features/deliveries/index.js` | Public exports for the deliveries feature boundary. | OrdersScreen, PastDeliveriesScreen, UnbilledDeliveriesScreen | 3 | — |
+| FILE-225 | Feature | deliveries | Screen | `src/features/deliveries/screens/OrdersScreen.jsx` | Orders user interface in the deliveries module. | OrdersScreen | 6 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-226 | Feature | deliveries | Screen | `src/features/deliveries/screens/PastDeliveriesScreen.jsx` | Past Deliveries user interface in the deliveries module. | PastDeliveriesScreen | 6 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-227 | Feature | deliveries | Screen | `src/features/deliveries/screens/UnbilledDeliveriesScreen.jsx` | Unbilled Deliveries user interface in the deliveries module. | UnbilledDeliveriesScreen | 5 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient |
+| FILE-228 | Feature | delivery-subscriptions | Feature public barrel | `src/features/delivery-subscriptions/index.js` | Public exports for the delivery-subscriptions feature boundary. | AddSubscriptionScreen, SubscriptionDetailScreen, SubscriptionListScreen | 3 | — |
+| FILE-229 | Feature | delivery-subscriptions | Screen | `src/features/delivery-subscriptions/screens/AddSubscriptionScreen.jsx` | Create/edit workflow for Subscription. | AddSubscriptionScreen | 7 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
+| FILE-230 | Feature | delivery-subscriptions | Screen | `src/features/delivery-subscriptions/screens/SubscriptionDetailScreen.jsx` | Detail and actions UI for Subscription. | SubscriptionDetailScreen | 5 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-231 | Feature | delivery-subscriptions | Screen | `src/features/delivery-subscriptions/screens/SubscriptionListScreen.jsx` | List and management UI for Subscription. | SubscriptionListScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-svg |
+| FILE-232 | Feature | invoices | Component | `src/features/invoices/components/InvoiceAdjustmentActionsSheet.jsx` | Reusable Invoice Adjustment Actions Sheet component. | InvoiceAdjustmentActionsSheet | 1 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-233 | Feature | invoices | Feature modal | `src/features/invoices/components/InvoiceAdjustmentModal.jsx` | Invoice Adjustment modal owned by the invoices module. | InvoiceAdjustmentModal | 1 | lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-234 | Feature | invoices | Feature public barrel | `src/features/invoices/index.js` | Public exports for the invoices feature boundary. | GenerateInvoiceScreen, InvoiceDetailScreen, InvoiceListScreen | 3 | — |
+| FILE-235 | Feature | invoices | Screen | `src/features/invoices/screens/GenerateInvoiceScreen.jsx` | Generate Invoice user interface in the invoices module. | GenerateInvoiceScreen | 6 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-svg |
+| FILE-236 | Feature | invoices | Screen | `src/features/invoices/screens/InvoiceDetailScreen.jsx` | Detail and actions UI for Invoice. | InvoiceDetailScreen | 9 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-blob-util, react-native-html-to-pdf, react-native-print, react-native-safe-area-context, react-native-share, react-native-svg |
+| FILE-237 | Feature | invoices | Screen | `src/features/invoices/screens/InvoiceListScreen.jsx` | List and management UI for Invoice. | InvoiceListScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context |
+| FILE-238 | Feature | one-time-orders | Feature public barrel | `src/features/one-time-orders/index.js` | Public exports for the one-time-orders feature boundary. | AddOneTimeOrderScreen, OneTimeOrderListScreen | 2 | — |
+| FILE-239 | Feature | one-time-orders | Screen | `src/features/one-time-orders/screens/AddOneTimeOrderScreen.jsx` | Create/edit workflow for One Time Order. | AddOneTimeOrderScreen | 7 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
+| FILE-240 | Feature | one-time-orders | Screen | `src/features/one-time-orders/screens/OneTimeOrderListScreen.jsx` | List and management UI for One Time Order. | OneTimeOrderListScreen | 8 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
+| FILE-241 | Feature | payments | Feature public barrel | `src/features/payments/index.js` | Public exports for the payments feature boundary. | PaymentsScreen | 1 | — |
+| FILE-242 | Feature | payments | Screen | `src/features/payments/screens/PaymentsScreen.jsx` | Payments user interface in the payments module. | PaymentsScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context, react-native-svg |
+| FILE-243 | Feature | plan-billing | Feature public barrel | `src/features/plan-billing/index.js` | Public exports for the plan-billing feature boundary. | SubscriptionDashboardScreen | 1 | — |
+| FILE-244 | Feature | plan-billing | Screen | `src/features/plan-billing/screens/SubscriptionDashboardScreen.jsx` | Subscription Dashboard user interface in the plan-billing module. | SubscriptionDashboardScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-razorpay |
+| FILE-245 | Feature | products | Feature modal | `src/features/products/components/AddProductModal.jsx` | Add Product modal owned by the products module. | AddProductModal | 4 | lucide-react-native, react, react-i18next, react-native |
+| FILE-246 | Feature | products | Feature public barrel | `src/features/products/index.js` | Public exports for the products feature boundary. | AddProductModal, AddProductScreen, ProductCatalogScreen, ProductDetailScreen | 4 | — |
+| FILE-247 | Feature | products | Screen | `src/features/products/screens/AddProductScreen.jsx` | Create/edit workflow for Product. | AddProductScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-image-picker, react-native-safe-area-context |
+| FILE-248 | Feature | products | Screen | `src/features/products/screens/ProductCatalogScreen.jsx` | Product Catalog user interface in the products module. | ProductCatalogScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-linear-gradient, react-native-safe-area-context, react-native-svg |
+| FILE-249 | Feature | products | Screen | `src/features/products/screens/ProductDetailScreen.jsx` | Detail and actions UI for Product. | ProductDetailScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
+| FILE-250 | Feature | reports | Component | `src/features/reports/components/FinancialReport.jsx` | Reusable Financial Report component. | FinancialReport | 3 | lucide-react-native, react, react-i18next, react-native, react-native-gifted-charts |
+| FILE-251 | Feature | reports | Component | `src/features/reports/components/InventoryReport.jsx` | Reusable Inventory Report component. | InventoryReport | 3 | lucide-react-native, react, react-i18next, react-native |
+| FILE-252 | Feature | reports | Component | `src/features/reports/components/OperationsReport.jsx` | Reusable Operations Report component. | OperationsReport | 3 | lucide-react-native, react, react-i18next, react-native, react-native-gifted-charts |
+| FILE-253 | Feature | reports | Component | `src/features/reports/components/OutstandingReport.jsx` | Reusable Outstanding Report component. | OutstandingReport | 3 | lucide-react-native, react, react-i18next, react-native |
+| FILE-254 | Feature | reports | Feature public barrel | `src/features/reports/index.js` | Public exports for the reports feature boundary. | FinancialReport, InventoryReport, OperationsReport, OutstandingReport, ReportsScreen | 5 | — |
+| FILE-255 | Feature | reports | Screen | `src/features/reports/screens/ReportsScreen.jsx` | Reports user interface in the reports module. | ReportsScreen | 9 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native |
+| FILE-256 | Feature | routes | Feature modal | `src/features/routes/components/AddRouteModal.jsx` | Add Route modal owned by the routes module. | AddRouteModal | 4 | lucide-react-native, react, react-i18next, react-native |
+| FILE-257 | Feature | routes | Feature public barrel | `src/features/routes/index.js` | Public exports for the routes feature boundary. | AddRouteModal, AddRouteScreen, RouteBuilderScreen, RouteDetailScreen, RouteListScreen | 5 | — |
+| FILE-258 | Feature | routes | Screen | `src/features/routes/screens/AddRouteScreen.jsx` | Create/edit workflow for Route. | AddRouteScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-259 | Feature | routes | Screen | `src/features/routes/screens/RouteBuilderScreen.jsx` | Route Builder user interface in the routes module. | RouteBuilderScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient |
+| FILE-260 | Feature | routes | Screen | `src/features/routes/screens/RouteDetailScreen.jsx` | Detail and actions UI for Route. | RouteDetailScreen | 5 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context |
+| FILE-261 | Feature | routes | Screen | `src/features/routes/screens/RouteListScreen.jsx` | List and management UI for Route. | RouteListScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context, react-native-svg |
+| FILE-262 | Feature | settings | Feature public barrel | `src/features/settings/index.js` | Public exports for the settings feature boundary. | ProfileScreen, SettingsScreen | 2 | — |
+| FILE-263 | Feature | settings | Screen | `src/features/settings/screens/ProfileScreen.jsx` | Profile user interface in the settings module. | ProfileScreen | 1 | react, react-native |
+| FILE-264 | Feature | settings | Screen | `src/features/settings/screens/SettingsScreen.jsx` | Settings user interface in the settings module. | SettingsScreen | 8 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
+| FILE-265 | Feature | staff | Feature public barrel | `src/features/staff/index.js` | Public exports for the staff feature boundary. | AddStaffScreen, StaffManagementScreen | 2 | — |
+| FILE-266 | Feature | staff | Screen | `src/features/staff/screens/AddStaffScreen.jsx` | Create/edit workflow for Staff. | AddStaffScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-267 | Feature | staff | Screen | `src/features/staff/screens/StaffManagementScreen.jsx` | Staff Management user interface in the staff module. | StaffManagementScreen | 7 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context |
+| FILE-268 | Documentation | project-docs | Documentation | `src/README.md` | Concise source ownership and validation guide. | — | 0 | — |
+| FILE-269 | Shared | assets | Image asset | `src/shared/assets/3d/catalog.png` | catalog image asset. | — | 0 | — |
+| FILE-270 | Shared | assets | Image asset | `src/shared/assets/3d/customers.png` | customers image asset. | — | 0 | — |
+| FILE-271 | Shared | assets | Image asset | `src/shared/assets/3d/routes.png` | routes image asset. | — | 0 | — |
+| FILE-272 | Shared | assets | Image asset | `src/shared/assets/3d/staff.png` | staff image asset. | — | 0 | — |
+| FILE-273 | Shared | assets | Image asset | `src/shared/assets/3d/subscriptions.png` | subscriptions image asset. | — | 0 | — |
+| FILE-274 | Shared | assets | Image asset | `src/shared/assets/images/home_banner.jpg` | home banner image asset. | — | 0 | — |
+| FILE-275 | Shared | assets | Image asset | `src/shared/assets/images/LoginScreenImage.png` | Login Screen Image image asset. | — | 0 | — |
+| FILE-276 | Shared | assets | Image asset | `src/shared/assets/images/OtpScreenImage.png` | Otp Screen Image image asset. | — | 0 | — |
+| FILE-277 | Shared | components | Component | `src/shared/components/CurvedHeader.jsx` | Reusable gradient curved header used across application screens. | CurvedHeader | 1 | @react-navigation/native, react, react-native, react-native-fast-image, react-native-safe-area-context, react-native-svg |
+| FILE-278 | Shared | components | Component | `src/shared/components/DeliveryStatusSlider.jsx` | Reusable interactive delivery-status control. | DeliveryStatusSlider | 1 | lucide-react-native, react, react-native, react-native-gesture-handler, react-native-reanimated |
+| FILE-279 | Shared | components | Component | `src/shared/components/ImageWithSkeleton.jsx` | Image wrapper that displays a loading skeleton until the asset is ready. | ImageWithSkeleton | 0 | react, react-native, react-native-fast-image |
+| FILE-280 | Shared | components | Component | `src/shared/components/LanguageSelector.jsx` | Reusable multi-language selector used by authentication and settings UI. | LanguageSelector, SUPPORTED_LANGUAGES | 1 | @react-native-async-storage/async-storage, lucide-react-native, react, react-i18next, react-native |
+| FILE-281 | Shared | constants | Constant/token map | `src/shared/constants/colors.js` | Shared application color tokens. | COLORS | 0 | — |
+| FILE-282 | Shared | constants | Constant/token map | `src/shared/constants/subscriptionEntitlements.js` | Entitlement identifiers and localized feature-name mappings. | ENTITLEMENT_KEYS, ENTITLEMENT_TRANSLATION_KEYS, PROACTIVE_ENTITLEMENT_KEYS | 0 | — |
+| FILE-283 | Shared | i18n | Localization setup | `src/shared/i18n/index.js` | i18next initialization, locale registration, fallback, and saved-language restoration. | i18n | 8 | @react-native-async-storage/async-storage, i18next, react-i18next |
+| FILE-284 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/bn.js` | Bengali translation dictionary. | bn | 0 | — |
+| FILE-285 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/en.js` | English translation dictionary. | en | 0 | — |
+| FILE-286 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/gu.js` | Gujarati translation dictionary. | gu | 0 | — |
+| FILE-287 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/hi.js` | Hindi translation dictionary. | hi | 0 | — |
+| FILE-288 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/mr.js` | Marathi translation dictionary. | mr | 0 | — |
+| FILE-289 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/pa.js` | Punjabi translation dictionary. | pa | 0 | — |
+| FILE-290 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/ta.js` | Tamil translation dictionary. | ta | 0 | — |
+| FILE-291 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/te.js` | Telugu translation dictionary. | te | 0 | — |
+| FILE-292 | Shared | services | Service/API client | `src/shared/services/api.js` | Compatibility facade preserving the existing public api and callback exports. | api, notifyPlanLimit, setApiRole, setLogoutCallback, setPlanLimitCallback, setTokenRefreshedCallback | 2 | — |
+| FILE-293 | Shared | services | Service/API client | `src/shared/services/api/accountingApi.js` | Ledger, payment, and customer-deposit API operations. | accountingApi | 1 | — |
+| FILE-294 | Shared | services | Service/API client | `src/shared/services/api/authApi.js` | Authentication, OTP, registration, logout, and account deletion API operations. | authApi | 1 | — |
+| FILE-295 | Shared | services | Service/API client | `src/shared/services/api/client.js` | API base URL, role prefix, authentication, token refresh queue, entitlement handling, logging, and HTTP request helpers. | API_BASE_URL, deleteRequest, fetchWithAuth, getApiPrefix, getRequest, notifyPlanLimit, patchMultipartRequest, patchRequest, postMultipartRequest, postRequest, putRequest, runSubscriptionRequest, setApiRole, setLogoutCallback, setPlanLimitCallback, setTokenRefreshedCallback | 0 | @react-native-async-storage/async-storage |
+| FILE-296 | Shared | services | Service/API client | `src/shared/services/api/customersApi.js` | Customer CRUD, sequencing, delivery history, jar collection, and activity API operations. | customersApi | 1 | — |
+| FILE-297 | Shared | services | Service/API client | `src/shared/services/api/dashboardApi.js` | Dashboard summary API operations. | dashboardApi | 1 | — |
+| FILE-298 | Shared | services | Service/API client | `src/shared/services/api/deliveriesApi.js` | Delivery generation, listing, tracking, and status API operations. | deliveriesApi | 1 | — |
+| FILE-299 | Shared | services | Service/API client | `src/shared/services/api/deliverySubscriptionsApi.js` | Customer delivery-subscription, pause, and override API operations. | deliverySubscriptionsApi | 1 | — |
+| FILE-300 | Shared | services | Service/API client | `src/shared/services/api/index.js` | Combines all domain API modules into the existing public api object. | api | 14 | — |
+| FILE-301 | Shared | services | Service/API client | `src/shared/services/api/invoicesApi.js` | Invoice generation, listing, summary, detail, and PDF-download API operations. | invoicesApi | 1 | react-native-blob-util |
+| FILE-302 | Shared | services | Service/API client | `src/shared/services/api/oneTimeOrdersApi.js` | One-time order API operations. | oneTimeOrdersApi | 1 | — |
+| FILE-303 | Shared | services | Service/API client | `src/shared/services/api/planBillingApi.js` | Vendor plan, entitlement, checkout, billing, cancellation, payment-history, and usage API operations. | planBillingApi | 1 | — |
+| FILE-304 | Shared | services | Service/API client | `src/shared/services/api/productsApi.js` | Product catalog API operations, including multipart create/update. | productsApi | 1 | — |
+| FILE-305 | Shared | services | Service/API client | `src/shared/services/api/profileApi.js` | Vendor profile and public category API operations. | profileApi | 1 | — |
+| FILE-306 | Shared | services | Service/API client | `src/shared/services/api/reportsApi.js` | Financial, outstanding, operations, and inventory report API operations. | reportsApi | 1 | — |
+| FILE-307 | Shared | services | Service/API client | `src/shared/services/api/routesApi.js` | Route CRUD and staff-assignment API operations. | routesApi | 1 | — |
+| FILE-308 | Shared | services | Service/API client | `src/shared/services/api/staffApi.js` | Staff CRUD API operations. | staffApi | 1 | — |
+| FILE-309 | Shared | utils | Utility | `src/shared/utils/seedDatabase.js` | Local seed/helper data utility. | seedDatabase | 1 | — |
+| FILE-310 | Project root | configuration | Binary/archive | `SUSE.zip` | SUSE binary/archive. | — | 0 | — |
+| FILE-311 | Documentation | project-docs | Documentation | `workflow.md` | Task history plus generated current-project architecture source for Excel exports. | — | 0 | — |
 
 ### 12.11 Automatic Maintenance Contract
 
@@ -1913,3 +2072,16 @@ This section tracks the dates for which daily Excel reports have been generated 
 
 Generated-section boundaries: `<!-- PROJECT_STRUCTURE:START -->` to `<!-- PROJECT_STRUCTURE:END -->`.
 <!-- PROJECT_STRUCTURE:END -->
+
+### Date: 2026-09-09 (Wednesday)
+- **Component / File**: HomeScreen.jsx
+- **User Request**: Update the dashboard overview card to replace the rickshaw image with the camper truck image and adjust its sizing.
+- **Root Cause / Task**: The UI overview card needed an updated aesthetic using the new camper truck asset instead of the rickshaw asset.
+- **Changes Made**:
+  1. Updated the FastImage source in the overview card from delivery_rickshaw.jpg to camper_truck.jpg.
+  2. Adjusted the image dimensions (width: 110, height: 80, marginLeft: 0) to ensure the camper truck fits perfectly inside the card layout without overlapping text.
+  3. Made the camper truck image larger (width: 150, height: 130), set resizeMode to 'cover', and absolutely positioned it to bleed to the edges of the card.
+  5. The user reverted the full-background design due to aspect ratio distortion on the truck. Restored the truck to be an inline element on the right side but with improved layout bounds (width: 140, height: 95, resizeMode: contain) to ensure it displays crisply without stretching.
+  5. Scaled the width of car.png to 140 while pinning the height to 85. This makes the car significantly larger due to its landscape aspect ratio, while ensuring the overall card container height doesn't expand vertically.
+  6. Absolutely positioned the car.png image (`right: -16`, `bottom: -16`) and increased its dimensions (width: 160, height: 110). This anchors the car perfectly to the bottom-right corner of the card, making it look much larger and more integrated without distorting the internal flex layout or increasing the card's height.
+  7. Engineered a new FloatingCarImage animated component in HomeScreen.jsx that wraps the vehicle asset in an infinite, smooth floating animation loop (bobbing up and down by 8px using Native Driver), giving the dashboard a highly dynamic and polished feel.

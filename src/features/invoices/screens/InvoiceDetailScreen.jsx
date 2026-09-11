@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,7 @@ import {
   Download,
   ChevronLeft,
   User,
+  SlidersHorizontal,
 } from 'lucide-react-native';
 
 const WhatsAppIcon = ({ size = 20, color = "#FFF", style }) => (
@@ -43,6 +44,10 @@ import { AuthContext } from '../../../app/providers/AuthContext';
 import { api } from '../../../shared/services/api';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '../../../app/providers/AlertContext';
+import { useEntitlements } from '../../../app/providers/EntitlementContext';
+import { ENTITLEMENT_KEYS } from '../../../shared/constants/subscriptionEntitlements';
+import InvoiceAdjustmentModal from '../components/InvoiceAdjustmentModal';
+import InvoiceAdjustmentActionsSheet from '../components/InvoiceAdjustmentActionsSheet';
 
 const InvoiceDetailScreen = () => {
   const { t, i18n } = useTranslation();
@@ -50,35 +55,50 @@ const InvoiceDetailScreen = () => {
   const navigation = useNavigation();
   const { userToken, user } = useContext(AuthContext);
   const { showAlert } = useAlert();
+  const { guardEntitlement } = useEntitlements();
 
   const { invoiceId, invoice: initialInvoice } = route.params || {};
+  const initialInvoiceId = initialInvoice?.id || initialInvoice?.invoiceId;
+  const hasInitialItems = Boolean(
+    initialInvoice?.Deliveries
+    || initialInvoice?.deliveries
+    || initialInvoice?.InvoiceLineItems
+    || initialInvoice?.lineItems
+  );
 
   const [invoiceData, setInvoiceData] = useState(initialInvoice || null);
-  const [loading, setLoading] = useState(!initialInvoice?.Deliveries && !initialInvoice?.InvoiceLineItems);
+  const [loading, setLoading] = useState(!hasInitialItems);
   const [isSharingPdf, setIsSharingPdf] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isPrintingPdf, setIsPrintingPdf] = useState(false);
   const [error, setError] = useState(null);
+  const [adjustmentActionsVisible, setAdjustmentActionsVisible] = useState(false);
+  const [adjustmentModalVisible, setAdjustmentModalVisible] = useState(false);
+  const [adjustmentType, setAdjustmentType] = useState('discount');
+  const [submittingAdjustment, setSubmittingAdjustment] = useState(false);
 
-  const fetchInvoiceDetail = async () => {
-    if (!invoiceId && !initialInvoice?.id) return;
-    const targetId = invoiceId || initialInvoice.id;
-    setLoading(true);
+  const fetchInvoiceDetail = async (showLoading = true) => {
+    const targetId = invoiceId || initialInvoiceId;
+    if (!targetId) {
+      setLoading(false);
+      return;
+    }
+    if (showLoading) setLoading(true);
     setError(null);
     try {
-      console.log('ðŸ” [INVOICE FETCH] Fetching invoice details for ID:', targetId);
+      console.log('[INVOICE FETCH] Fetching invoice details for ID:', targetId);
       const res = await api.getInvoiceById(userToken, targetId);
-      console.log('ðŸ§¾ [INVOICE DETAILS RESPONSE]:', res);
+      console.log('[INVOICE DETAILS RESPONSE]:', res);
 
       if (res && res.success && res.data) {
         setInvoiceData(res.data);
-      } else if (res && (res.id || res.totalAmount)) {
+      } else if (res && (res.id || res.invoiceId || res.totalAmount)) {
         setInvoiceData(res);
       } else {
         if (initialInvoice) setInvoiceData(initialInvoice);
       }
     } catch (err) {
-      console.error('âŒ Error fetching invoice detail:', err);
+      console.error('Error fetching invoice detail:', err);
       setError(err.message || 'Failed to load invoice details');
       if (initialInvoice) setInvoiceData(initialInvoice);
     } finally {
@@ -153,14 +173,92 @@ const InvoiceDetailScreen = () => {
   const deliveries = invoiceData?.Deliveries || invoiceData?.deliveries || [];
   const lineItems = invoiceData?.InvoiceLineItems || invoiceData?.lineItems || [];
 
-  const previousDues = parseFloat(invoiceData?.previousDues || 0);
-  const currentCharges = parseFloat(invoiceData?.totalAmount || 0);
-  const amountPaid = parseFloat(invoiceData?.amountPaid || 0);
+  const parseAmount = (...values) => {
+    for (const value of values) {
+      if (value === undefined || value === null || value === '') continue;
+      const parsed = Number.parseFloat(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    return 0;
+  };
 
-  const grandTotal = currentCharges + previousDues;
-  const balanceDue = Math.max(0, grandTotal - amountPaid);
+  const previousDues = parseAmount(invoiceData?.previousDues, invoiceData?.previousDuesFormatted);
+  const previousBalanceAmount = Math.abs(previousDues);
+  const currentCharges = parseAmount(
+    invoiceData?.currentCharges,
+    invoiceData?.currentChargesFormatted,
+    invoiceData?.totalAmount,
+    invoiceData?.totalAmountFormatted
+  );
+  const amountPaid = parseAmount(
+    invoiceData?.displayAmountPaid,
+    invoiceData?.amountPaid,
+    invoiceData?.amountPaidFormatted
+  );
+  const grandTotal = parseAmount(
+    invoiceData?.displayGrandTotal,
+    invoiceData?.totalAmount,
+    invoiceData?.totalAmountFormatted,
+    currentCharges + previousDues
+  );
+  const balanceDue = Math.max(
+    0,
+    parseAmount(invoiceData?.balanceDue, invoiceData?.balanceDueFormatted, grandTotal - amountPaid)
+  );
 
-  const invoiceNum = invoiceData?.invoiceNumber || (invoiceData?.id ? `#${String(invoiceData.id).substring(0, 8).toUpperCase()}` : 'INV-001');
+  const resolvedInvoiceId = invoiceId || invoiceData?.id || invoiceData?.invoiceId || initialInvoiceId;
+  const invoiceNum = invoiceData?.invoiceNumber
+    || (resolvedInvoiceId ? `#${String(resolvedInvoiceId).substring(0, 8).toUpperCase()}` : 'INV-001');
+
+  const openAdjustmentActions = () => {
+    guardEntitlement(ENTITLEMENT_KEYS.INVOICING, () => {
+      setAdjustmentActionsVisible(true);
+    });
+  };
+
+  const openAdjustmentModal = type => {
+    setAdjustmentActionsVisible(false);
+    setAdjustmentType(type);
+    setTimeout(() => setAdjustmentModalVisible(true), 220);
+  };
+
+  const handleAddAdjustment = async adjustment => {
+    if (!resolvedInvoiceId || submittingAdjustment) return;
+
+    setSubmittingAdjustment(true);
+    try {
+      const response = await api.addInvoiceAdjustments(
+        userToken,
+        resolvedInvoiceId,
+        [adjustment]
+      );
+
+      if (!response?.success) {
+        throw new Error(response?.message || t('invoices.adjustmentAddFailed'));
+      }
+
+      setAdjustmentModalVisible(false);
+      await fetchInvoiceDetail(false);
+      showAlert(
+        t('common.success'),
+        t(adjustment.type === 'discount' ? 'invoices.discountAdded' : 'invoices.extraChargeAdded'),
+        'success'
+      );
+    } catch (adjustmentError) {
+      if (adjustmentError?.isPlanLimit) return;
+
+      const backendMessage = adjustmentError?.backendMessage || adjustmentError?.message || '';
+      let displayMessage = backendMessage || t('invoices.adjustmentAddFailed');
+      if (/discount total exceeds|total cannot be negative/i.test(backendMessage)) {
+        displayMessage = t('invoices.discountExceedsInvoice');
+      } else if (/fully paid invoice/i.test(backendMessage)) {
+        displayMessage = t('invoices.paidInvoiceAdjustmentBlocked');
+      }
+      showAlert(t('common.error'), displayMessage, 'error');
+    } finally {
+      setSubmittingAdjustment(false);
+    }
+  };
 
   const handleWhatsAppShare = async () => {
     try {
@@ -225,6 +323,8 @@ const InvoiceDetailScreen = () => {
     let productName = item.productName || item.Product?.name || item.Subscription?.Product?.name;
     let rawDescription = item.description || '';
     let status = (item.status || '').toLowerCase();
+    const isGenericProductName = ['delivery', 'water delivery', 'delivery charge']
+      .includes(String(productName || '').trim().toLowerCase());
 
     if (rawDescription) {
       const lowerDesc = rawDescription.toLowerCase();
@@ -237,7 +337,7 @@ const InvoiceDetailScreen = () => {
       }
     }
 
-    if (!productName && rawDescription) {
+    if ((!productName || isGenericProductName) && rawDescription) {
       if (rawDescription.toLowerCase().includes('opening balance')) {
         productName = 'Opening Balance';
       } else if (rawDescription.includes(' of ') && rawDescription.includes(' on ')) {
@@ -253,14 +353,17 @@ const InvoiceDetailScreen = () => {
     }
 
     if (!productName) {
-      productName = 'Jar 30 rs';
+      productName = t('invoices.deliveries');
     }
 
     const dateStr = item.dateFormatted || (item.deliveryDate ? formatDate(item.deliveryDate) : '');
     const qty = getItemQuantity(item);
 
     // Clean up hardcoded manual bracket tags like [ONE-TIME ORDER DELIVERED] or [DELIVERED]
-    let description = rawDescription.replace(/\[ONE-TIME ORDER DELIVERED\]|\[DELIVERED\]|\[NOT DELIVERED \(SKIPPED\)\]|\[NOT DELIVERED \(PENDING\)\]|\[DELIVERY\]/gi, '').trim();
+    let description = rawDescription
+      .replace(/\[ONE-TIME ORDER DELIVERED\]|\[DELIVERED\]|\[NOT DELIVERED \(SKIPPED\)\]|\[NOT DELIVERED \(PENDING\)\]|\[DELIVERY\]/gi, '')
+      .trim()
+      .replace(/^(\d+(?:\.\d+)?)\s+\1\s+/i, '$1 ');
 
     if (!description) {
       if (status === 'skipped') {
@@ -292,16 +395,16 @@ const InvoiceDetailScreen = () => {
     let itemsHtml = '';
     
     // Top Row: Opening Balance / Previous Dues if present
-    if (previousDues > 0) {
+    if (previousDues !== 0) {
       itemsHtml += `
-        <tr style="background-color: #fffbeb;">
+        <tr style="background-color: ${previousDues > 0 ? '#fffbeb' : '#ecfdf5'};">
           <td style="padding: 8px 10px;">
-            <div style="font-weight: bold; font-size: 11px; color: #0f172a;">Opening Balance / Previous Dues</div>
-            <div style="font-size: 10px; margin-top: 3px; line-height: 1.4; color: #b45309; font-weight: bold;">[PREVIOUS DUES] Carried forward from previous billing period</div>
+            <div style="font-weight: bold; font-size: 11px; color: #0f172a;">${previousDues > 0 ? 'Opening Balance / Previous Dues' : 'Opening Balance / Advance Credit'}</div>
+            <div style="font-size: 10px; margin-top: 3px; line-height: 1.4; color: ${previousDues > 0 ? '#b45309' : '#047857'}; font-weight: bold;">${previousDues > 0 ? '[PREVIOUS DUES] Carried forward from previous billing period' : '[ADVANCE CREDIT] Prepaid balance / advance deposit'}</div>
           </td>
           <td style="text-align: center; padding: 8px; color: #334155;">1</td>
-          <td style="text-align: right; padding: 8px; color: #334155;">${formatCurrency(previousDues)}</td>
-          <td style="text-align: right; padding: 8px; font-weight: bold; color: #0f172a;">${formatCurrency(previousDues)}</td>
+          <td style="text-align: right; padding: 8px; color: ${previousDues > 0 ? '#334155' : '#047857'};">${formatCurrency(previousBalanceAmount)}</td>
+          <td style="text-align: right; padding: 8px; font-weight: bold; color: ${previousDues > 0 ? '#0f172a' : '#047857'};">${formatCurrency(previousBalanceAmount)}</td>
         </tr>
       `;
     }
@@ -345,6 +448,38 @@ const InvoiceDetailScreen = () => {
             <td style="text-align: right; padding: 8px; font-weight: bold;">${formatCurrency(currentCharges)}</td>
           </tr>
         `;
+    }
+
+    if (invoiceData?.extraItems?.length > 0) {
+      invoiceData.extraItems.forEach(extra => {
+        itemsHtml += `
+            <tr style="background-color: #FFF7ED;">
+              <td style="padding: 8px 10px;">
+                <div style="font-weight: bold; font-size: 11px; color: #9A3412;">${extra.description || 'Extra Charge'}</div>
+                <div style="font-size: 10px; margin-top: 3px; line-height: 1.4; color: #C2410C; font-weight: bold;">[EXTRA]</div>
+              </td>
+              <td style="text-align: center; padding: 8px; color: #9A3412;">-</td>
+              <td style="text-align: right; padding: 8px; color: #9A3412;">-</td>
+              <td style="text-align: right; padding: 8px; font-weight: bold; color: #9A3412;">${formatCurrency(extra.amount)}</td>
+            </tr>
+          `;
+      });
+    }
+
+    if (invoiceData?.discountItems?.length > 0) {
+      invoiceData.discountItems.forEach(disc => {
+        itemsHtml += `
+            <tr style="background-color: #ECFDF5;">
+              <td style="padding: 8px 10px;">
+                <div style="font-weight: bold; font-size: 11px; color: #065F46;">${disc.description || 'Discount'}</div>
+                <div style="font-size: 10px; margin-top: 3px; line-height: 1.4; color: #047857; font-weight: bold;">[DISCOUNT]</div>
+              </td>
+              <td style="text-align: center; padding: 8px; color: #065F46;">-</td>
+              <td style="text-align: right; padding: 8px; color: #065F46;">-</td>
+              <td style="text-align: right; padding: 8px; font-weight: bold; color: #065F46;">-${formatCurrency(disc.amount)}</td>
+            </tr>
+          `;
+      });
     }
 
     const htmlContent = `
@@ -570,7 +705,7 @@ const InvoiceDetailScreen = () => {
                 ${previousDues !== 0 ? `
                 <tr>
                   <td style="color: ${previousDues > 0 ? '#64748b' : '#059669'};">${previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}</td>
-                  <td style="text-align: right; font-weight: bold; color: ${previousDues > 0 ? '#334155' : '#059669'};">${formatCurrency(previousDues)}</td>
+                  <td style="text-align: right; font-weight: bold; color: ${previousDues > 0 ? '#334155' : '#059669'};">${formatCurrency(previousBalanceAmount)}</td>
                 </tr>
                 ` : ''}
                 ${amountPaid > 0 ? `
@@ -580,8 +715,8 @@ const InvoiceDetailScreen = () => {
                 </tr>
                 ` : ''}
                 <tr class="grand-row">
-                  <td style="font-weight: bold; color: #ffffff;">Total Amount</td>
-                  <td style="text-align: right; font-weight: bold; color: #ffffff; font-size: 12px;">${formatCurrency(balanceDue > 0 ? balanceDue : grandTotal)}</td>
+                  <td style="font-weight: bold; color: #ffffff;">Balance Due</td>
+                  <td style="text-align: right; font-weight: bold; color: #ffffff; font-size: 12px;">${formatCurrency(balanceDue)}</td>
                 </tr>
               </table>
             </div>
@@ -599,7 +734,7 @@ const InvoiceDetailScreen = () => {
     try {
       setIsPrintingPdf(true);
       const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
-      const targetId = invoiceId || initialInvoice?.id;
+      const targetId = resolvedInvoiceId;
 
       let pdfFilePath = null;
       if (targetId && userToken) {
@@ -629,7 +764,7 @@ const InvoiceDetailScreen = () => {
     try {
       setIsDownloadingPdf(true);
       const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
-      const targetId = invoiceId || initialInvoice?.id;
+      const targetId = resolvedInvoiceId;
 
       let filePath = null;
       if (targetId && userToken) {
@@ -675,7 +810,7 @@ const InvoiceDetailScreen = () => {
 
       const customerName = invoiceData?.customerName || invoiceData?.Customer?.name || 'Customer';
       const dateStr = formatDate(invoiceData?.generatedAt || invoiceData?.createdAt || invoiceData?.created_at);
-      const targetId = invoiceId || initialInvoice?.id;
+      const targetId = resolvedInvoiceId;
       let filePath = null;
 
       try {
@@ -744,6 +879,10 @@ const InvoiceDetailScreen = () => {
         title={t('invoices.taxInvoice')}
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
+        rightIcon={String(invoiceData?.status || '').toLowerCase() !== 'paid' && user?.role !== 'staff'
+          ? <SlidersHorizontal size={22} color="#FFFFFF" />
+          : null}
+        onRightPress={openAdjustmentActions}
         height={130}
         contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
       />
@@ -878,9 +1017,9 @@ const InvoiceDetailScreen = () => {
                           </View>
                         </View>
 
-                        <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>1</Text>
-                        <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#334155' }}>{formatCurrency(previousDues)}</Text>
-                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Rubik-Bold', color: previousDues > 0 ? '#0F172A' : '#047857' }}>{formatCurrency(previousDues)}</Text>
+                        <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>{'--'}</Text>
+                        <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: previousDues > 0 ? '#334155' : '#047857' }}>{formatCurrency(previousBalanceAmount)}</Text>
+                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Rubik-Bold', color: previousDues > 0 ? '#0F172A' : '#047857' }}>{formatCurrency(previousBalanceAmount)}</Text>
                       </View>
                     )}
 
@@ -936,6 +1075,42 @@ const InvoiceDetailScreen = () => {
                         );
                       })
                     )}
+
+                    {invoiceData?.extraItems?.map((extra, idx) => (
+                      <View key={extra.id || `extra-${idx}`} style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', backgroundColor: '#FFF7ED', alignItems: 'center' }}>
+                        <View style={{ flex: 1, paddingRight: 6 }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: 'Rubik-Bold', color: '#9A3412' }}>{extra.description || 'Extra Charge'}</Text>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 3 }}>
+                            <View style={{ backgroundColor: '#FFEDD5', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, marginRight: 4, marginBottom: 2 }}>
+                              <Text style={{ fontSize: 8.5, fontFamily: 'Rubik-Bold', color: '#C2410C', textTransform: 'uppercase' }}>
+                                EXTRA
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                        <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#9A3412' }}>-</Text>
+                        <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#9A3412' }}>-</Text>
+                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Rubik-Bold', color: '#9A3412' }}>{formatCurrency(extra.amount)}</Text>
+                      </View>
+                    ))}
+
+                    {invoiceData?.discountItems?.map((disc, idx) => (
+                      <View key={disc.id || `disc-${idx}`} style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', backgroundColor: '#ECFDF5', alignItems: 'center' }}>
+                        <View style={{ flex: 1, paddingRight: 6 }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: 'Rubik-Bold', color: '#065F46' }}>{disc.description || 'Discount'}</Text>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 3 }}>
+                            <View style={{ backgroundColor: '#D1FAE5', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, marginRight: 4, marginBottom: 2 }}>
+                              <Text style={{ fontSize: 8.5, fontFamily: 'Rubik-Bold', color: '#047857', textTransform: 'uppercase' }}>
+                                DISCOUNT
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                        <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#065F46' }}>-</Text>
+                        <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#065F46' }}>-</Text>
+                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Rubik-Bold', color: '#065F46' }}>-{formatCurrency(disc.amount)}</Text>
+                      </View>
+                    ))}
                   </>
                 );
               })()}
@@ -961,7 +1136,7 @@ const InvoiceDetailScreen = () => {
                         {previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}
                       </Text>
                       <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#334155' : '#059669', fontFamily: 'Rubik-Bold' }}>
-                        {formatCurrency(previousDues)}
+                        {formatCurrency(previousBalanceAmount)}
                       </Text>
                     </View>
                   )}
@@ -975,9 +1150,9 @@ const InvoiceDetailScreen = () => {
 
                   {/* Solid Navy Total Row */}
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, paddingHorizontal: 8, backgroundColor: '#1E3A8A' }}>
-                    <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#FFFFFF' }}>Total Amount</Text>
+                    <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#FFFFFF' }}>{t('invoices.balanceDue')}</Text>
                     <Text style={{ fontSize: 12, fontFamily: 'Rubik-Bold', color: '#FFFFFF' }}>
-                      {formatCurrency(balanceDue > 0 ? balanceDue : grandTotal)}
+                      {formatCurrency(balanceDue)}
                     </Text>
                   </View>
                 </View>
@@ -1001,7 +1176,10 @@ const InvoiceDetailScreen = () => {
                     screen: 'MainTabs',
                     params: {
                       screen: 'Payments',
-                      params: { customerId: invoiceData.CustomerId || invoiceData.Customer?.id, prefillAmount: balanceDue }
+                      params: {
+                        customerId: invoiceData.customerId || invoiceData.CustomerId || invoiceData.Customer?.id,
+                        prefillAmount: balanceDue,
+                      }
                     }
                   });
                 }}
@@ -1100,6 +1278,19 @@ const InvoiceDetailScreen = () => {
           </View>
         </>
       )}
+
+      <InvoiceAdjustmentModal
+        visible={adjustmentModalVisible}
+        type={adjustmentType}
+        submitting={submittingAdjustment}
+        onClose={() => setAdjustmentModalVisible(false)}
+        onSubmit={handleAddAdjustment}
+      />
+      <InvoiceAdjustmentActionsSheet
+        visible={adjustmentActionsVisible}
+        onClose={() => setAdjustmentActionsVisible(false)}
+        onSelect={openAdjustmentModal}
+      />
     </SafeAreaView>
   );
 };

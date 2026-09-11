@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,12 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { FileText, ChevronRight, Menu, CheckCircle, User, Phone, IndianRupee, Package, Calendar, ArrowRight } from 'lucide-react-native';
+import { FileText, Menu, User, Phone, Package, Calendar, ArrowRight, Search } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import LinearGradient from 'react-native-linear-gradient';
 import CurvedHeader from '../../../shared/components/CurvedHeader';
@@ -19,7 +20,15 @@ import { useAlert } from '../../../app/providers/AlertContext';
 import { api } from '../../../shared/services/api';
 import { COLORS } from '../../../shared/constants/colors';
 
-const CustomerCard = ({ item, handleGenerateInvoice, user, generatingForId, t }) => {
+const CustomerCard = ({
+  item,
+  handleGenerateInvoice,
+  handleCustomerPress,
+  handleLowerSectionPress,
+  user,
+  generatingForId,
+  t,
+}) => {
   const getInitialEndDate = () => {
     const startStr = item.earliestDeliveryDate || new Date().toISOString().split('T')[0];
     const parts = startStr.split('-');
@@ -79,7 +88,12 @@ const CustomerCard = ({ item, handleGenerateInvoice, user, generatingForId, t })
 
   return (
     <View style={styles.card}>
-      <View style={styles.cardHeader}>
+      <TouchableOpacity
+        style={styles.cardHeader}
+        onPress={() => handleCustomerPress(item.customerId)}
+        activeOpacity={0.75}
+        accessibilityRole="button"
+      >
         <View style={styles.customerInfoContainer}>
           <View style={[styles.avatarBox, { backgroundColor: '#F0F9FF' }]}>
             <User size={20} color="#0EA5E9" />
@@ -98,9 +112,14 @@ const CustomerCard = ({ item, handleGenerateInvoice, user, generatingForId, t })
             <Text style={styles.amountValue}>₹{Number(calcTotal).toFixed(2)}</Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
 
-      <View style={styles.cardStats}>
+      <TouchableOpacity
+        style={styles.cardStats}
+        onPress={handleLowerSectionPress}
+        activeOpacity={0.75}
+        accessibilityRole="button"
+      >
         <View style={styles.statRow}>
           <View style={styles.iconWrapperSmall}>
             <Package size={14} color={COLORS.primary} />
@@ -124,7 +143,7 @@ const CustomerCard = ({ item, handleGenerateInvoice, user, generatingForId, t })
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {showStartPicker && (
         <DateTimePicker
@@ -181,6 +200,17 @@ const UnbilledDeliveriesScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [summaryData, setSummaryData] = useState([]);
   const [generatingForId, setGeneratingForId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredSummaryData = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return summaryData;
+
+    return summaryData.filter(item =>
+      String(item.customerName || '').toLowerCase().includes(query)
+      || String(item.customerPhone || '').toLowerCase().includes(query)
+    );
+  }, [searchQuery, summaryData]);
 
   const fetchSummary = useCallback(async () => {
     try {
@@ -234,8 +264,29 @@ const UnbilledDeliveriesScreen = () => {
     );
   };
 
+  const handleCustomerPress = customerId => {
+    navigation.navigate('CustomerDetail', { customerId });
+  };
+
+  const handleLowerSectionPress = () => {
+    showAlert(
+      t('common.comingSoon'),
+      t('common.functionalityComingSoon'),
+      [{ text: t('common.okay') }],
+      'info'
+    );
+  };
+
   const renderCustomerCard = ({ item }) => (
-    <CustomerCard item={item} handleGenerateInvoice={handleGenerateInvoice} user={user} generatingForId={generatingForId} t={t} />
+    <CustomerCard
+      item={item}
+      handleGenerateInvoice={handleGenerateInvoice}
+      handleCustomerPress={handleCustomerPress}
+      handleLowerSectionPress={handleLowerSectionPress}
+      user={user}
+      generatingForId={generatingForId}
+      t={t}
+    />
   );
 
   return (
@@ -259,16 +310,43 @@ const UnbilledDeliveriesScreen = () => {
           <Text style={styles.emptySubtitle}>{t('deliveries.noDeliveriesFound')}</Text>
         </View>
       ) : (
-        <FlatList
-          data={summaryData}
-          keyExtractor={(item) => item.customerId}
-          renderItem={renderCustomerCard}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
-          }
-        />
+        <View style={styles.contentWrapper}>
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <Search size={20} color={COLORS.textPlaceholder} style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder={t('customers.searchPlaceholder')}
+                placeholderTextColor={COLORS.textPlaceholder}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                returnKeyType="search"
+              />
+            </View>
+          </View>
+
+          <FlatList
+            data={filteredSummaryData}
+            keyExtractor={(item) => item.customerId}
+            renderItem={renderCustomerCard}
+            contentContainerStyle={
+              filteredSummaryData.length === 0
+                ? styles.emptyListContainer
+                : styles.listContainer
+            }
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+            }
+            ListEmptyComponent={
+              <View style={styles.searchEmptyContainer}>
+                <Search size={52} color={COLORS.textPlaceholder} style={styles.searchEmptyIcon} />
+                <Text style={styles.emptyTitle}>{t('invoices.noInvoicesFound')}</Text>
+                <Text style={styles.emptySubtitle}>{t('customers.noCustomersSearch')}</Text>
+              </View>
+            }
+          />
+        </View>
       )}
     </View>
   );
@@ -285,6 +363,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
+  contentWrapper: {
+    flex: 1,
+    paddingTop: 16,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 50,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 0,
+    color: COLORS.textPrimary,
+    fontFamily: 'Rubik-Medium',
+    fontSize: 15,
+  },
   emptyTitle: {
     fontSize: 20,
     fontFamily: 'Rubik-Bold',
@@ -299,8 +405,20 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 16,
-    paddingTop: 24,
     paddingBottom: 40,
+  },
+  emptyListContainer: {
+    flexGrow: 1,
+  },
+  searchEmptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    paddingBottom: 80,
+  },
+  searchEmptyIcon: {
+    marginBottom: 16,
   },
   card: {
     backgroundColor: '#FFFFFF',

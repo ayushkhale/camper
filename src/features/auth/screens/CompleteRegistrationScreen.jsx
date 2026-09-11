@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -34,6 +34,8 @@ const CompleteRegistrationScreen = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const submitLockedRef = useRef(false);
   const { t, i18n } = useTranslation();
 
   // We no longer need Modals for City and State, but we can track if we are fetching.
@@ -120,7 +122,11 @@ const CompleteRegistrationScreen = () => {
       return;
     }
 
+    if (submitLockedRef.current) return;
+
+    submitLockedRef.current = true;
     setLoading(true);
+    let registrationSucceeded = false;
     try {
       const response = await api.completeRegistration(
         userToken,
@@ -136,6 +142,8 @@ const CompleteRegistrationScreen = () => {
       );
 
       if (response.success) {
+        registrationSucceeded = true;
+        setRegistrationComplete(true);
         triggerToast(t('completeReg.success'), 'success');
         setTimeout(async () => {
           await login(response.token, response.refreshToken, response.user);
@@ -144,9 +152,22 @@ const CompleteRegistrationScreen = () => {
     } catch (error) {
       triggerToast(error.message || 'Registration failed', 'error');
     } finally {
-      setLoading(false);
+      if (!registrationSucceeded) {
+        submitLockedRef.current = false;
+        setLoading(false);
+      }
     }
   };
+
+  if (registrationComplete) {
+    return (
+      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+        <View style={styles.registrationLoader}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -305,6 +326,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  registrationLoader: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   header: {
     flexDirection: 'row',

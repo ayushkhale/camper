@@ -150,8 +150,13 @@ const AddSubscriptionScreen = () => {
       if (isEditMode) {
         const response = await api.updateSubscription(userToken, editSub.id, subData);
         if (response && response.success) {
+          const updatedSubscription = response.data || { ...editSub, ...subData };
+          const updatedSubscriptionId = updatedSubscription.id || editSub.id;
           showAlert('Success', 'Subscription updated successfully', 'success');
-          navigation.goBack();
+          navigation.popTo('SubscriptionDetail', {
+            subscriptionId: updatedSubscriptionId,
+            subscription: updatedSubscription,
+          });
         } else {
           setApiError(response.message || 'Failed to update subscription');
           showAlert('Error', response.message || 'Failed to update subscription', 'error');

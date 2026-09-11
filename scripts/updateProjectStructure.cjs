@@ -59,6 +59,7 @@ const DIRECTORY_PURPOSES = {
   'src/shared/i18n': 'i18next initialization and language resources.',
   'src/shared/i18n/locales': 'Per-language translation dictionaries.',
   'src/shared/services': 'Central authenticated HTTP/API client.',
+  'src/shared/services/api': 'Domain API modules and shared authenticated request infrastructure.',
   'src/shared/utils': 'Cross-feature utility and seed helpers.',
   assets: 'Root React Native images, branding files, and linked fonts.',
   'assets/fonts': 'Source font files linked into native applications.',
@@ -84,7 +85,23 @@ const SPECIAL_FILE_ROLES = {
   'src/app/providers/AuthContext.js': 'Authentication session, persisted tokens, profile state, refresh callbacks, and logout.',
   'src/app/providers/EntitlementContext.jsx': 'Subscription entitlement state, proactive checks, and guarded navigation/actions.',
   'src/app/screens/SplashScreen.jsx': 'Animated application splash experience and startup completion callback.',
-  'src/shared/services/api.js': 'Central API base URL, authenticated request handling, refresh queue, logging, and domain API methods.',
+  'src/shared/services/api.js': 'Compatibility facade preserving the existing public api and callback exports.',
+  'src/shared/services/api/client.js': 'API base URL, role prefix, authentication, token refresh queue, entitlement handling, logging, and HTTP request helpers.',
+  'src/shared/services/api/index.js': 'Combines all domain API modules into the existing public api object.',
+  'src/shared/services/api/accountingApi.js': 'Ledger, payment, and customer-deposit API operations.',
+  'src/shared/services/api/authApi.js': 'Authentication, OTP, registration, logout, and account deletion API operations.',
+  'src/shared/services/api/customersApi.js': 'Customer CRUD, sequencing, delivery history, jar collection, and activity API operations.',
+  'src/shared/services/api/dashboardApi.js': 'Dashboard summary API operations.',
+  'src/shared/services/api/deliveriesApi.js': 'Delivery generation, listing, tracking, and status API operations.',
+  'src/shared/services/api/deliverySubscriptionsApi.js': 'Customer delivery-subscription, pause, and override API operations.',
+  'src/shared/services/api/invoicesApi.js': 'Invoice generation, listing, summary, detail, and PDF-download API operations.',
+  'src/shared/services/api/oneTimeOrdersApi.js': 'One-time order API operations.',
+  'src/shared/services/api/planBillingApi.js': 'Vendor plan, entitlement, checkout, billing, cancellation, payment-history, and usage API operations.',
+  'src/shared/services/api/productsApi.js': 'Product catalog API operations, including multipart create/update.',
+  'src/shared/services/api/profileApi.js': 'Vendor profile and public category API operations.',
+  'src/shared/services/api/reportsApi.js': 'Financial, outstanding, operations, and inventory report API operations.',
+  'src/shared/services/api/routesApi.js': 'Route CRUD and staff-assignment API operations.',
+  'src/shared/services/api/staffApi.js': 'Staff CRUD API operations.',
   'src/shared/i18n/index.js': 'i18next initialization, locale registration, fallback, and saved-language restoration.',
   'src/shared/constants/colors.js': 'Shared application color tokens.',
   'src/shared/constants/subscriptionEntitlements.js': 'Entitlement identifiers and localized feature-name mappings.',
@@ -114,7 +131,7 @@ const LOCALES = {
 };
 
 const toPosix = value => value.split(path.sep).join('/');
-const escapeCell = value => String(value ?? '')
+const escapeCell = value => String(value == null ? '' : value)
   .replace(/\|/g, '\\|')
   .replace(/\r?\n/g, ' ')
   .replace(/\s+/g, ' ')
@@ -237,7 +254,8 @@ const sourceMetadata = absolutePath => {
   for (const match of source.matchAll(/export\s+(?:default\s+)?(?:const|function|class)?\s*([A-Za-z_$][\w$]*)/g)) exports.add(match[1]);
   for (const match of source.matchAll(/export\s*\{([\s\S]*?)\}\s*from/g)) {
     for (const item of match[1].split(',')) {
-      const symbol = item.trim().match(/(?:as\s+)?([A-Za-z_$][\w$]*)$/)?.[1];
+      const symbolMatch = item.trim().match(/(?:as\s+)?([A-Za-z_$][\w$]*)$/);
+      const symbol = symbolMatch && symbolMatch[1];
       if (symbol) exports.add(symbol);
     }
   }
@@ -283,9 +301,11 @@ const extractRoutes = files => {
     const relativePath = toPosix(path.relative(PROJECT_ROOT, file));
     for (const match of source.matchAll(/<(Stack|Drawer|Tab)\.Screen\b([\s\S]*?)\/>/g)) {
       const props = match[2];
-      const routeName = props.match(/\bname=["']([^"']+)["']/)?.[1];
+      const routeNameMatch = props.match(/\bname=["']([^"']+)["']/);
+      const routeName = routeNameMatch && routeNameMatch[1];
       if (!routeName) continue;
-      const component = props.match(/\bcomponent=\{([^}]+)\}/)?.[1] || 'Inline/children';
+      const componentMatch = props.match(/\bcomponent=\{([^}]+)\}/);
+      const component = (componentMatch && componentMatch[1]) || 'Inline/children';
       rows.push([scopeByFile[path.basename(file)] || match[1], routeName, component, code(relativePath)]);
     }
   }
@@ -293,14 +313,11 @@ const extractRoutes = files => {
 };
 
 const extractApiOperations = () => {
-  const apiPath = path.join(PROJECT_ROOT, 'src', 'shared', 'services', 'api.js');
-  if (!fs.existsSync(apiPath)) return [];
-  const source = fs.readFileSync(apiPath, 'utf8');
-  const objectStart = source.indexOf('export const api = {');
-  if (objectStart < 0) return [];
-  const apiSource = source.slice(objectStart);
-  const propertyPattern = /^\s{2}([A-Za-z_$][\w$]*):/gm;
-  const matches = [...apiSource.matchAll(propertyPattern)];
+  const apiDirectory = path.join(PROJECT_ROOT, 'src', 'shared', 'services', 'api');
+  if (!fs.existsSync(apiDirectory)) return [];
+  const apiFiles = fs.readdirSync(apiDirectory)
+    .filter(file => file.endsWith('Api.js'))
+    .sort();
   const occurrence = new Map();
   const transportMap = {
     getRequest: 'GET',
@@ -312,22 +329,39 @@ const extractApiOperations = () => {
     patchMultipartRequest: 'PATCH multipart',
   };
 
-  return matches.map((match, index) => {
-    const operation = match[1];
-    const block = apiSource.slice(match.index, matches[index + 1]?.index ?? apiSource.length);
-    const requestMatch = block.match(/\b(getRequest|postRequest|patchRequest|putRequest|deleteRequest|postMultipartRequest|patchMultipartRequest)\s*\(\s*([`'"])([\s\S]*?)\2/);
-    const declaredEndpoint = block.match(/\bconst\s+endpoint\s*=\s*([`'"])([\s\S]*?)\1/)?.[2];
-    const customUrl = block.match(/([`'"])(\/(?:api\/)?[A-Za-z][^`'"]*)\1/)?.[2];
-    const declaredMethod = block.match(/\bmethod:\s*['"]([^'"]+)['"]/)?.[1];
-    const seen = (occurrence.get(operation) || 0) + 1;
-    occurrence.set(operation, seen);
-    return [
-      operation,
-      seen,
-      requestMatch ? transportMap[requestMatch[1]] : declaredMethod || 'Custom request',
-      code(declaredEndpoint || requestMatch?.[3] || customUrl || 'Computed at runtime'),
-    ];
-  });
+  const rows = [];
+  for (const apiFile of apiFiles) {
+    const source = fs.readFileSync(path.join(apiDirectory, apiFile), 'utf8');
+    const objectStart = source.search(/export const [A-Za-z_$][\w$]*Api\s*=\s*\{/);
+    if (objectStart < 0) continue;
+    const apiSource = source.slice(objectStart);
+    const propertyPattern = /^\s{2}([A-Za-z_$][\w$]*):/gm;
+    const matches = [...apiSource.matchAll(propertyPattern)];
+
+    matches.forEach((match, index) => {
+      const operation = match[1];
+      const nextMatch = matches[index + 1];
+      const block = apiSource.slice(match.index, nextMatch ? nextMatch.index : apiSource.length);
+      const requestMatch = block.match(/\b(getRequest|postRequest|patchRequest|putRequest|deleteRequest|postMultipartRequest|patchMultipartRequest)\s*\(\s*([`'"])([\s\S]*?)\2/);
+      const declaredEndpointMatch = block.match(/\bconst\s+endpoint\s*=\s*([`'"])([\s\S]*?)\1/);
+      const customUrlMatch = block.match(/([`'"])(\/(?:api\/)?[A-Za-z][^`'"]*)\1/);
+      const declaredMethodMatch = block.match(/\bmethod:\s*['"]([^'"]+)['"]/);
+      const declaredEndpoint = declaredEndpointMatch && declaredEndpointMatch[2];
+      const customUrl = customUrlMatch && customUrlMatch[2];
+      const declaredMethod = declaredMethodMatch && declaredMethodMatch[1];
+      const seen = (occurrence.get(operation) || 0) + 1;
+      occurrence.set(operation, seen);
+      rows.push([
+        operation,
+        seen,
+        requestMatch ? transportMap[requestMatch[1]] : declaredMethod || 'Custom request',
+        code(declaredEndpoint || (requestMatch && requestMatch[3]) || customUrl || 'Computed at runtime'),
+        code(`src/shared/services/api/${apiFile}`),
+      ]);
+    });
+  }
+
+  return rows.sort((left, right) => left[0].localeCompare(right[0]));
 };
 
 const directoryRows = files => {
@@ -425,9 +459,9 @@ const buildGeneratedSection = files => {
       [
         ['Application', packageJson.name, 'React Native package/application identifier'],
         ['Application version', packageJson.version, 'JavaScript package version'],
-        ['React Native', packageJson.dependencies?.['react-native'] || 'Unknown', 'Runtime framework version'],
-        ['React', packageJson.dependencies?.react || 'Unknown', 'React runtime version'],
-        ['Node engine', packageJson.engines?.node || 'Not declared', 'Required Node.js version'],
+        ['React Native', (packageJson.dependencies && packageJson.dependencies['react-native']) || 'Unknown', 'Runtime framework version'],
+        ['React', (packageJson.dependencies && packageJson.dependencies.react) || 'Unknown', 'React runtime version'],
+        ['Node engine', (packageJson.engines && packageJson.engines.node) || 'Not declared', 'Required Node.js version'],
         ['Feature modules', featureData.length, 'Business-owned modules under src/features'],
         ['Maintained source files', sourceFiles.length, 'Files under src excluding generated output'],
         ['Screens', screens.length, 'Application and feature screen components'],
@@ -438,7 +472,7 @@ const buildGeneratedSection = files => {
         ['Runtime dependencies', Object.keys(packageJson.dependencies || {}).length, 'Production npm packages'],
         ['Development dependencies', Object.keys(packageJson.devDependencies || {}).length, 'Build and test npm packages'],
         ['Maintained project files', files.length, 'All inventoried files excluding generated/vendor directories'],
-      ],
+      ]
     ),
     '',
     '### 12.2 Excel Workbook Mapping',
@@ -455,7 +489,7 @@ const buildGeneratedSection = files => {
         ['Dependencies', '12.9 Dependency Inventory', 'Scope + Package', 'Runtime and development package versions.'],
         ['Files', '12.10 Complete Maintained File Inventory', 'File ID', 'One normalized row per maintained project file.'],
         ['Activity Log', 'Section 10', 'Date + Component/File', 'Chronological implementation and bug-fix history.'],
-      ],
+      ]
     ),
     '',
     '### 12.3 Architecture and Dependency Rules',
@@ -470,7 +504,7 @@ const buildGeneratedSection = files => {
         ['Native iOS', code('ios'), 'Xcode, CocoaPods, Swift bootstrap, iOS resources/privacy metadata', 'Hosts the React Native iOS runtime.'],
         ['Root assets', code('assets'), 'Branding, general images, and linkable fonts', 'Consumed by JavaScript and native asset-linking configuration.'],
         ['Tooling/tests', code('scripts, __tests__'), 'Structure generation, import validation, and smoke tests', 'May inspect application files but does not ship as application functionality.'],
-      ],
+      ]
     ),
     '',
     '### 12.4 Feature Module Ownership',
@@ -487,9 +521,9 @@ const buildGeneratedSection = files => {
     '',
     '### 12.7 API Client Operation Inventory',
     '',
-    '> Endpoints are extracted from `src/shared/services/api.js`. `Computed at runtime` indicates a custom request or dynamically assembled URL.',
+    '> Endpoints are extracted from the domain modules under `src/shared/services/api`. `Computed at runtime` indicates a custom request or dynamically assembled URL.',
     '',
-    markdownTable(['API Operation', 'Occurrence', 'HTTP Transport', 'Endpoint Template'], apiRows),
+    markdownTable(['API Operation', 'Occurrence', 'HTTP Transport', 'Endpoint Template', 'Domain Source'], apiRows),
     '',
     '### 12.8 Localization Inventory',
     '',
@@ -505,7 +539,7 @@ const buildGeneratedSection = files => {
     '',
     markdownTable(
       ['File ID', 'Layer', 'Module/Area', 'Type', 'Relative Path', 'Responsibility', 'Public Symbols', 'Local Imports', 'External Packages'],
-      inventory,
+      inventory
     ),
     '',
     '### 12.11 Automatic Maintenance Contract',
@@ -517,7 +551,7 @@ const buildGeneratedSection = files => {
         ['Any source import is changed', code('npm run check:imports'), 'Regenerates Section 12, then verifies every relative import path.'],
         ['Any functional or UI change is completed', 'Append a dated entry to Section 10 and run the structure generator.', 'Keeps history and current architecture synchronized.'],
         ['Before Excel generation', code('npm run docs:structure'), 'Ensures workbook input reflects the latest maintained project state.'],
-      ],
+      ]
     ),
     '',
     `Generated-section boundaries: ${code(START_MARKER)} to ${code(END_MARKER)}.`,
@@ -530,7 +564,10 @@ const buildGeneratedSection = files => {
 const updateWorkflow = () => {
   const files = collectMaintainedFiles();
   const generated = buildGeneratedSection(files);
-  const existing = fs.readFileSync(WORKFLOW_PATH, 'utf8');
+  const rawExisting = fs.readFileSync(WORKFLOW_PATH, 'utf8');
+  const existing = rawExisting
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n');
   const start = existing.indexOf(START_MARKER);
   const end = existing.lastIndexOf(END_MARKER);
   let next;
@@ -541,7 +578,7 @@ const updateWorkflow = () => {
     next = `${existing.trimEnd()}\n\n${generated}\n`;
   }
 
-  const changed = next !== existing;
+  const changed = next !== rawExisting;
   if (changed) fs.writeFileSync(WORKFLOW_PATH, next, 'utf8');
   console.log(`${changed ? 'Updated' : 'Verified'} workflow.md project structure: ${files.length} maintained files inventoried.`);
 };
