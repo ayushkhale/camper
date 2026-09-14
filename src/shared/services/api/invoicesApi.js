@@ -1,5 +1,6 @@
+import { Platform } from 'react-native';
 import ReactNativeBlobUtil from 'react-native-blob-util';
-import { API_BASE_URL, getApiPrefix, getRequest, postRequest } from './client';
+import { API_BASE_URL, getApiPrefix, getRequest, postRequest, patchRequest, postMultipartRequest, deleteRequest } from './client';
 
 export const invoicesApi = {
   getUninvoicedPreSummary: (token, customerId = '') => {
@@ -74,4 +75,50 @@ export const invoicesApi = {
     const params = customerId ? `?customerId=${encodeURIComponent(customerId)}` : '';
     return getRequest(`${getApiPrefix()}/invoices/pre-summary${params}`, token);
   },
+
+  getInvoiceSettings: (token) =>
+    getRequest('/api/vendor/invoice-settings', token),
+
+  updateInvoiceSettings: (token, payload) =>
+    patchRequest('/api/vendor/invoice-settings', payload, token),
+
+  uploadQrCode: async (token, asset) => {
+    const url = `${API_BASE_URL}/api/vendor/invoice-settings/qr-code`;
+    const realUri = Platform.OS === 'ios' ? asset.uri.replace('file://', '') : asset.uri;
+    const res = await ReactNativeBlobUtil.fetch('POST', url, {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    }, [
+      {
+        name: 'qrCode',
+        filename: asset.fileName || 'qr_code.jpg',
+        type: asset.type || 'image/jpeg',
+        data: ReactNativeBlobUtil.wrap(realUri)
+      }
+    ]);
+    const json = JSON.parse(res.data);
+    if (res.info().status < 200 || res.info().status >= 300) {
+      throw new Error(json.message || json.error || 'Failed to upload QR code');
+    }
+    return json;
+  },
+
+  getBankAccounts: (token) =>
+    getRequest('/api/vendor/bank-accounts', token),
+
+  addBankAccount: (token, payload) =>
+    postRequest('/api/vendor/bank-accounts', payload, token),
+
+  updateBankAccount: (token, id, payload) =>
+    patchRequest(`/api/vendor/bank-accounts/${encodeURIComponent(id)}`, payload, token),
+
+  deleteBankAccount: (token, id) =>
+    deleteRequest(`/api/vendor/bank-accounts/${encodeURIComponent(id)}`, token),
+
+  // Immediately set a specific bank account as the active payment mode on invoices
+  setActiveBankAccount: (token, bankAccountId) =>
+    patchRequest('/api/vendor/invoice-settings', {
+      paymentMode: 'bank_account',
+      selectedBankAccountId: bankAccountId,
+    }, token),
 };

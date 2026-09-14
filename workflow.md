@@ -1393,15 +1393,15 @@ This section tracks the dates for which daily Excel reports have been generated 
 | React | 19.2.3 | React runtime version |
 | Node engine | >= 22.11.0 | Required Node.js version |
 | Feature modules | 14 | Business-owned modules under src/features |
-| Maintained source files | 111 | Files under src excluding generated output |
-| Screens | 36 | Application and feature screen components |
+| Maintained source files | 112 | Files under src excluding generated output |
+| Screens | 37 | Application and feature screen components |
 | Component files | 13 | Shared and feature-owned components/modals |
-| Registered navigation routes | 42 | Stack, drawer, and tab registrations |
-| API client operations | 84 | Methods exposed by the central api object |
+| Registered navigation routes | 43 | Stack, drawer, and tab registrations |
+| API client operations | 91 | Methods exposed by the central api object |
 | Supported locales | 8 | Per-language translation dictionaries |
 | Runtime dependencies | 36 | Production npm packages |
 | Development dependencies | 14 | Build and test npm packages |
-| Maintained project files | 311 | All inventoried files excluding generated/vendor directories |
+| Maintained project files | 312 | All inventoried files excluding generated/vendor directories |
 
 ### 12.2 Excel Workbook Mapping
 
@@ -1445,7 +1445,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | products | Product catalog, product creation/editing, details, and product selection UI. | 3 | AddProductScreen, ProductCatalogScreen, ProductDetailScreen | AddProductModal | AddProductModal, AddProductScreen, ProductCatalogScreen, ProductDetailScreen |
 | reports | Financial, inventory, operations, and outstanding analytics. | 1 | ReportsScreen | FinancialReport, InventoryReport, OperationsReport, OutstandingReport | FinancialReport, InventoryReport, OperationsReport, OutstandingReport, ReportsScreen |
 | routes | Delivery route creation, details, staff assignment, and customer sequencing. | 4 | AddRouteScreen, RouteBuilderScreen, RouteDetailScreen, RouteListScreen | AddRouteModal | AddRouteModal, AddRouteScreen, RouteBuilderScreen, RouteDetailScreen, RouteListScreen |
-| settings | Vendor profile, language, account settings, and logout/account actions. | 2 | ProfileScreen, SettingsScreen | None | ProfileScreen, SettingsScreen |
+| settings | Vendor profile, language, account settings, and logout/account actions. | 3 | InvoiceSettingsScreen, ProfileScreen, SettingsScreen | None | InvoiceSettingsScreen, ProfileScreen, SettingsScreen |
 | staff | Staff creation, management, assignment visibility, and staff operations. | 2 | AddStaffScreen, StaffManagementScreen | None | AddStaffScreen, StaffManagementScreen |
 
 ### 12.5 Directory Inventory
@@ -1486,12 +1486,12 @@ This section tracks the dates for which daily Excel reports have been generated 
 | `ios/Compunic/Images.xcassets` | 1 | 2 | Images.xcassets project resources. |
 | `ios/Compunic/Images.xcassets/AppIcon.appiconset` | 1 | 1 | App Icon.appiconset project resources. |
 | `scripts` | 2 | 2 | Repository validation and documentation automation. |
-| `src` | 1 | 111 | All JavaScript application source organized by ownership. |
+| `src` | 1 | 112 | All JavaScript application source organized by ownership. |
 | `src/app` | 0 | 9 | Application composition layer; startup, navigation, and global providers. |
 | `src/app/navigation` | 5 | 5 | Navigation containers, stacks, drawer, tabs, and drawer content. |
 | `src/app/providers` | 3 | 3 | Global authentication, alert, and subscription-entitlement state. |
 | `src/app/screens` | 1 | 1 | Screens owned by application startup rather than a business feature. |
-| `src/features` | 0 | 60 | Business modules with feature-owned screens, components, and public barrels. |
+| `src/features` | 0 | 61 | Business modules with feature-owned screens, components, and public barrels. |
 | `src/features/auth` | 1 | 7 | Authentication, onboarding, OTP verification, and vendor registration. |
 | `src/features/auth/screens` | 6 | 6 | screens owned by the auth feature. |
 | `src/features/customers` | 1 | 7 | Customer onboarding, listing, profiles, history, and delivery history. |
@@ -1521,8 +1521,8 @@ This section tracks the dates for which daily Excel reports have been generated 
 | `src/features/routes` | 1 | 6 | Delivery route creation, details, staff assignment, and customer sequencing. |
 | `src/features/routes/components` | 1 | 1 | components owned by the routes feature. |
 | `src/features/routes/screens` | 4 | 4 | screens owned by the routes feature. |
-| `src/features/settings` | 1 | 3 | Vendor profile, language, account settings, and logout/account actions. |
-| `src/features/settings/screens` | 2 | 2 | screens owned by the settings feature. |
+| `src/features/settings` | 1 | 4 | Vendor profile, language, account settings, and logout/account actions. |
+| `src/features/settings/screens` | 3 | 3 | screens owned by the settings feature. |
 | `src/features/staff` | 1 | 3 | Staff creation, management, assignment visibility, and staff operations. |
 | `src/features/staff/screens` | 2 | 2 | screens owned by the staff feature. |
 | `src/shared` | 0 | 41 | Reusable code with no single-feature ownership. |
@@ -1545,6 +1545,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | Authenticated bottom tabs | Deliveries | OrdersScreen | `src/app/navigation/MainTabs.jsx` |
 | Authenticated bottom tabs | Home | HomeScreen | `src/app/navigation/MainTabs.jsx` |
 | Authenticated bottom tabs | Payments | PaymentsScreen | `src/app/navigation/MainTabs.jsx` |
+| Authenticated drawer | InvoiceSettings | InvoiceSettingsScreen | `src/app/navigation/MainDrawer.jsx` |
 | Authenticated drawer | MainTabs | MainTabs | `src/app/navigation/MainDrawer.jsx` |
 | Authenticated drawer | Settings | SettingsScreen | `src/app/navigation/MainDrawer.jsx` |
 | Authenticated drawer | SubscriptionDashboard | SubscriptionDashboardScreen | `src/app/navigation/MainDrawer.jsx` |
@@ -1590,6 +1591,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 
 | API Operation | Occurrence | HTTP Transport | Endpoint Template | Domain Source |
 | --- | --- | --- | --- | --- |
+| addBankAccount | 1 | POST | `/api/vendor/bank-accounts` | `src/shared/services/api/invoicesApi.js` |
 | addInvoiceAdjustments | 1 | POST | `${getApiPrefix()}/invoices/${encodeURIComponent(invoiceId)}/adjustments` | `src/shared/services/api/invoicesApi.js` |
 | addOverride | 1 | POST | `${getApiPrefix()}/subscriptions/${subscriptionId}/overrides` | `src/shared/services/api/deliverySubscriptionsApi.js` |
 | addPause | 1 | POST | `${getApiPrefix()}/subscriptions/${subscriptionId}/pauses` | `src/shared/services/api/deliverySubscriptionsApi.js` |
@@ -1606,6 +1608,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | createRoute | 1 | POST | `${getApiPrefix()}/routes` | `src/shared/services/api/routesApi.js` |
 | createSubscription | 1 | POST | `${getApiPrefix()}/subscriptions` | `src/shared/services/api/deliverySubscriptionsApi.js` |
 | deleteAccount | 1 | DELETE | `/api/auth/delete-account` | `src/shared/services/api/authApi.js` |
+| deleteBankAccount | 1 | DELETE | `/api/vendor/bank-accounts/${encodeURIComponent(id)}` | `src/shared/services/api/invoicesApi.js` |
 | deleteCustomer | 1 | DELETE | `${getApiPrefix()}/customers/${id}` | `src/shared/services/api/customersApi.js` |
 | deleteOverride | 1 | DELETE | `${getApiPrefix()}/subscriptions/${subscriptionId}/overrides/${overrideId}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
 | deletePause | 1 | DELETE | `${getApiPrefix()}/subscriptions/${subscriptionId}/pauses/${pauseId}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
@@ -1620,6 +1623,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | generateInvoices | 1 | POST | `${getApiPrefix()}/invoices/generate` | `src/shared/services/api/invoicesApi.js` |
 | getAccountStatement | 1 | GET | `${getApiPrefix()}/ledgers/account/${customerId}` | `src/shared/services/api/accountingApi.js` |
 | getActivePlans | 1 | GET | `/api/subscription_module/customer/plans` | `src/shared/services/api/planBillingApi.js` |
+| getBankAccounts | 1 | GET | `/api/vendor/bank-accounts` | `src/shared/services/api/invoicesApi.js` |
 | getCategories | 1 | GET | `/api/public/categories` | `src/shared/services/api/profileApi.js` |
 | getCustomer | 1 | GET | `${getApiPrefix()}/customers/${id}` | `src/shared/services/api/customersApi.js` |
 | getCustomerActivity | 1 | GET | `${getApiPrefix()}/customers/${customerId}/activity${queryString}` | `src/shared/services/api/customersApi.js` |
@@ -1631,6 +1635,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | getFinancialReports | 1 | GET | `${getApiPrefix()}/reports/financials${queryString}` | `src/shared/services/api/reportsApi.js` |
 | getInventoryReports | 1 | GET | `${getApiPrefix()}/reports/inventory${queryString}` | `src/shared/services/api/reportsApi.js` |
 | getInvoiceById | 1 | GET | `${getApiPrefix()}/invoices/${id}` | `src/shared/services/api/invoicesApi.js` |
+| getInvoiceSettings | 1 | GET | `/api/vendor/invoice-settings` | `src/shared/services/api/invoicesApi.js` |
 | getOperationsReports | 1 | GET | `${getApiPrefix()}/reports/operations${queryString}` | `src/shared/services/api/reportsApi.js` |
 | getOutstandingReports | 1 | GET | `${getApiPrefix()}/reports/outstanding${queryString}` | `src/shared/services/api/reportsApi.js` |
 | getProduct | 1 | GET | `${getApiPrefix()}/products/${id}` | `src/shared/services/api/productsApi.js` |
@@ -1665,15 +1670,18 @@ This section tracks the dates for which daily Excel reports have been generated 
 | signupRequestOtp | 1 | POST | `/api/auth/signup-request-otp` | `src/shared/services/api/authApi.js` |
 | signupVerifyOtp | 1 | POST | `/api/auth/signup-verify-otp` | `src/shared/services/api/authApi.js` |
 | trackDeliveries | 1 | GET | `${getApiPrefix()}/deliveries/track${queryString}` | `src/shared/services/api/deliveriesApi.js` |
+| updateBankAccount | 1 | PATCH | `/api/vendor/bank-accounts/${encodeURIComponent(id)}` | `src/shared/services/api/invoicesApi.js` |
 | updateCustomer | 1 | PATCH | `${getApiPrefix()}/customers/${id}` | `src/shared/services/api/customersApi.js` |
 | updateCustomerSequence | 1 | PATCH | `${getApiPrefix()}/customers/sequence` | `src/shared/services/api/customersApi.js` |
 | updateDeliveryStatus | 1 | PATCH | `${getApiPrefix()}/deliveries/${id}/status` | `src/shared/services/api/deliveriesApi.js` |
+| updateInvoiceSettings | 1 | PATCH | `/api/vendor/invoice-settings` | `src/shared/services/api/invoicesApi.js` |
 | updateOneTimeOrderStatus | 1 | PATCH | `${getApiPrefix()}/one-time-orders/${id}/status` | `src/shared/services/api/oneTimeOrdersApi.js` |
 | updateProduct | 1 | PATCH multipart | `${getApiPrefix()}/products/${id}` | `src/shared/services/api/productsApi.js` |
 | updateRoute | 1 | PATCH | `${getApiPrefix()}/routes/${id}` | `src/shared/services/api/routesApi.js` |
 | updateStaff | 1 | PATCH | `${getApiPrefix()}/staff/${id}` | `src/shared/services/api/staffApi.js` |
 | updateSubscription | 1 | PATCH | `${getApiPrefix()}/subscriptions/${id}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
 | updateVendorProfile | 1 | PATCH | `${getApiPrefix()}/profile` | `src/shared/services/api/profileApi.js` |
+| uploadQrCode | 1 | POST multipart | `/api/vendor/invoice-settings/qr-code` | `src/shared/services/api/invoicesApi.js` |
 
 ### 12.8 Localization Inventory
 
@@ -2010,56 +2018,57 @@ This section tracks the dates for which daily Excel reports have been generated 
 | FILE-259 | Feature | routes | Screen | `src/features/routes/screens/RouteBuilderScreen.jsx` | Route Builder user interface in the routes module. | RouteBuilderScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient |
 | FILE-260 | Feature | routes | Screen | `src/features/routes/screens/RouteDetailScreen.jsx` | Detail and actions UI for Route. | RouteDetailScreen | 5 | @react-native-community/datetimepicker, @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context |
 | FILE-261 | Feature | routes | Screen | `src/features/routes/screens/RouteListScreen.jsx` | List and management UI for Route. | RouteListScreen | 6 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context, react-native-svg |
-| FILE-262 | Feature | settings | Feature public barrel | `src/features/settings/index.js` | Public exports for the settings feature boundary. | ProfileScreen, SettingsScreen | 2 | — |
-| FILE-263 | Feature | settings | Screen | `src/features/settings/screens/ProfileScreen.jsx` | Profile user interface in the settings module. | ProfileScreen | 1 | react, react-native |
-| FILE-264 | Feature | settings | Screen | `src/features/settings/screens/SettingsScreen.jsx` | Settings user interface in the settings module. | SettingsScreen | 8 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
-| FILE-265 | Feature | staff | Feature public barrel | `src/features/staff/index.js` | Public exports for the staff feature boundary. | AddStaffScreen, StaffManagementScreen | 2 | — |
-| FILE-266 | Feature | staff | Screen | `src/features/staff/screens/AddStaffScreen.jsx` | Create/edit workflow for Staff. | AddStaffScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
-| FILE-267 | Feature | staff | Screen | `src/features/staff/screens/StaffManagementScreen.jsx` | Staff Management user interface in the staff module. | StaffManagementScreen | 7 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context |
-| FILE-268 | Documentation | project-docs | Documentation | `src/README.md` | Concise source ownership and validation guide. | — | 0 | — |
-| FILE-269 | Shared | assets | Image asset | `src/shared/assets/3d/catalog.png` | catalog image asset. | — | 0 | — |
-| FILE-270 | Shared | assets | Image asset | `src/shared/assets/3d/customers.png` | customers image asset. | — | 0 | — |
-| FILE-271 | Shared | assets | Image asset | `src/shared/assets/3d/routes.png` | routes image asset. | — | 0 | — |
-| FILE-272 | Shared | assets | Image asset | `src/shared/assets/3d/staff.png` | staff image asset. | — | 0 | — |
-| FILE-273 | Shared | assets | Image asset | `src/shared/assets/3d/subscriptions.png` | subscriptions image asset. | — | 0 | — |
-| FILE-274 | Shared | assets | Image asset | `src/shared/assets/images/home_banner.jpg` | home banner image asset. | — | 0 | — |
-| FILE-275 | Shared | assets | Image asset | `src/shared/assets/images/LoginScreenImage.png` | Login Screen Image image asset. | — | 0 | — |
-| FILE-276 | Shared | assets | Image asset | `src/shared/assets/images/OtpScreenImage.png` | Otp Screen Image image asset. | — | 0 | — |
-| FILE-277 | Shared | components | Component | `src/shared/components/CurvedHeader.jsx` | Reusable gradient curved header used across application screens. | CurvedHeader | 1 | @react-navigation/native, react, react-native, react-native-fast-image, react-native-safe-area-context, react-native-svg |
-| FILE-278 | Shared | components | Component | `src/shared/components/DeliveryStatusSlider.jsx` | Reusable interactive delivery-status control. | DeliveryStatusSlider | 1 | lucide-react-native, react, react-native, react-native-gesture-handler, react-native-reanimated |
-| FILE-279 | Shared | components | Component | `src/shared/components/ImageWithSkeleton.jsx` | Image wrapper that displays a loading skeleton until the asset is ready. | ImageWithSkeleton | 0 | react, react-native, react-native-fast-image |
-| FILE-280 | Shared | components | Component | `src/shared/components/LanguageSelector.jsx` | Reusable multi-language selector used by authentication and settings UI. | LanguageSelector, SUPPORTED_LANGUAGES | 1 | @react-native-async-storage/async-storage, lucide-react-native, react, react-i18next, react-native |
-| FILE-281 | Shared | constants | Constant/token map | `src/shared/constants/colors.js` | Shared application color tokens. | COLORS | 0 | — |
-| FILE-282 | Shared | constants | Constant/token map | `src/shared/constants/subscriptionEntitlements.js` | Entitlement identifiers and localized feature-name mappings. | ENTITLEMENT_KEYS, ENTITLEMENT_TRANSLATION_KEYS, PROACTIVE_ENTITLEMENT_KEYS | 0 | — |
-| FILE-283 | Shared | i18n | Localization setup | `src/shared/i18n/index.js` | i18next initialization, locale registration, fallback, and saved-language restoration. | i18n | 8 | @react-native-async-storage/async-storage, i18next, react-i18next |
-| FILE-284 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/bn.js` | Bengali translation dictionary. | bn | 0 | — |
-| FILE-285 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/en.js` | English translation dictionary. | en | 0 | — |
-| FILE-286 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/gu.js` | Gujarati translation dictionary. | gu | 0 | — |
-| FILE-287 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/hi.js` | Hindi translation dictionary. | hi | 0 | — |
-| FILE-288 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/mr.js` | Marathi translation dictionary. | mr | 0 | — |
-| FILE-289 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/pa.js` | Punjabi translation dictionary. | pa | 0 | — |
-| FILE-290 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/ta.js` | Tamil translation dictionary. | ta | 0 | — |
-| FILE-291 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/te.js` | Telugu translation dictionary. | te | 0 | — |
-| FILE-292 | Shared | services | Service/API client | `src/shared/services/api.js` | Compatibility facade preserving the existing public api and callback exports. | api, notifyPlanLimit, setApiRole, setLogoutCallback, setPlanLimitCallback, setTokenRefreshedCallback | 2 | — |
-| FILE-293 | Shared | services | Service/API client | `src/shared/services/api/accountingApi.js` | Ledger, payment, and customer-deposit API operations. | accountingApi | 1 | — |
-| FILE-294 | Shared | services | Service/API client | `src/shared/services/api/authApi.js` | Authentication, OTP, registration, logout, and account deletion API operations. | authApi | 1 | — |
-| FILE-295 | Shared | services | Service/API client | `src/shared/services/api/client.js` | API base URL, role prefix, authentication, token refresh queue, entitlement handling, logging, and HTTP request helpers. | API_BASE_URL, deleteRequest, fetchWithAuth, getApiPrefix, getRequest, notifyPlanLimit, patchMultipartRequest, patchRequest, postMultipartRequest, postRequest, putRequest, runSubscriptionRequest, setApiRole, setLogoutCallback, setPlanLimitCallback, setTokenRefreshedCallback | 0 | @react-native-async-storage/async-storage |
-| FILE-296 | Shared | services | Service/API client | `src/shared/services/api/customersApi.js` | Customer CRUD, sequencing, delivery history, jar collection, and activity API operations. | customersApi | 1 | — |
-| FILE-297 | Shared | services | Service/API client | `src/shared/services/api/dashboardApi.js` | Dashboard summary API operations. | dashboardApi | 1 | — |
-| FILE-298 | Shared | services | Service/API client | `src/shared/services/api/deliveriesApi.js` | Delivery generation, listing, tracking, and status API operations. | deliveriesApi | 1 | — |
-| FILE-299 | Shared | services | Service/API client | `src/shared/services/api/deliverySubscriptionsApi.js` | Customer delivery-subscription, pause, and override API operations. | deliverySubscriptionsApi | 1 | — |
-| FILE-300 | Shared | services | Service/API client | `src/shared/services/api/index.js` | Combines all domain API modules into the existing public api object. | api | 14 | — |
-| FILE-301 | Shared | services | Service/API client | `src/shared/services/api/invoicesApi.js` | Invoice generation, listing, summary, detail, and PDF-download API operations. | invoicesApi | 1 | react-native-blob-util |
-| FILE-302 | Shared | services | Service/API client | `src/shared/services/api/oneTimeOrdersApi.js` | One-time order API operations. | oneTimeOrdersApi | 1 | — |
-| FILE-303 | Shared | services | Service/API client | `src/shared/services/api/planBillingApi.js` | Vendor plan, entitlement, checkout, billing, cancellation, payment-history, and usage API operations. | planBillingApi | 1 | — |
-| FILE-304 | Shared | services | Service/API client | `src/shared/services/api/productsApi.js` | Product catalog API operations, including multipart create/update. | productsApi | 1 | — |
-| FILE-305 | Shared | services | Service/API client | `src/shared/services/api/profileApi.js` | Vendor profile and public category API operations. | profileApi | 1 | — |
-| FILE-306 | Shared | services | Service/API client | `src/shared/services/api/reportsApi.js` | Financial, outstanding, operations, and inventory report API operations. | reportsApi | 1 | — |
-| FILE-307 | Shared | services | Service/API client | `src/shared/services/api/routesApi.js` | Route CRUD and staff-assignment API operations. | routesApi | 1 | — |
-| FILE-308 | Shared | services | Service/API client | `src/shared/services/api/staffApi.js` | Staff CRUD API operations. | staffApi | 1 | — |
-| FILE-309 | Shared | utils | Utility | `src/shared/utils/seedDatabase.js` | Local seed/helper data utility. | seedDatabase | 1 | — |
-| FILE-310 | Project root | configuration | Binary/archive | `SUSE.zip` | SUSE binary/archive. | — | 0 | — |
-| FILE-311 | Documentation | project-docs | Documentation | `workflow.md` | Task history plus generated current-project architecture source for Excel exports. | — | 0 | — |
+| FILE-262 | Feature | settings | Feature public barrel | `src/features/settings/index.js` | Public exports for the settings feature boundary. | InvoiceSettingsScreen, ProfileScreen, SettingsScreen | 3 | — |
+| FILE-263 | Feature | settings | Screen | `src/features/settings/screens/InvoiceSettingsScreen.jsx` | Invoice Settings user interface in the settings module. | InvoiceSettingsScreen | 5 | @react-navigation/native, lucide-react-native, react, react-native, react-native-image-picker, react-native-safe-area-context |
+| FILE-264 | Feature | settings | Screen | `src/features/settings/screens/ProfileScreen.jsx` | Profile user interface in the settings module. | ProfileScreen | 1 | react, react-native |
+| FILE-265 | Feature | settings | Screen | `src/features/settings/screens/SettingsScreen.jsx` | Settings user interface in the settings module. | SettingsScreen | 8 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-fast-image, react-native-safe-area-context |
+| FILE-266 | Feature | staff | Feature public barrel | `src/features/staff/index.js` | Public exports for the staff feature boundary. | AddStaffScreen, StaffManagementScreen | 2 | — |
+| FILE-267 | Feature | staff | Screen | `src/features/staff/screens/AddStaffScreen.jsx` | Create/edit workflow for Staff. | AddStaffScreen | 5 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-safe-area-context |
+| FILE-268 | Feature | staff | Screen | `src/features/staff/screens/StaffManagementScreen.jsx` | Staff Management user interface in the staff module. | StaffManagementScreen | 7 | @react-navigation/native, lucide-react-native, react, react-i18next, react-native, react-native-linear-gradient, react-native-safe-area-context |
+| FILE-269 | Documentation | project-docs | Documentation | `src/README.md` | Concise source ownership and validation guide. | — | 0 | — |
+| FILE-270 | Shared | assets | Image asset | `src/shared/assets/3d/catalog.png` | catalog image asset. | — | 0 | — |
+| FILE-271 | Shared | assets | Image asset | `src/shared/assets/3d/customers.png` | customers image asset. | — | 0 | — |
+| FILE-272 | Shared | assets | Image asset | `src/shared/assets/3d/routes.png` | routes image asset. | — | 0 | — |
+| FILE-273 | Shared | assets | Image asset | `src/shared/assets/3d/staff.png` | staff image asset. | — | 0 | — |
+| FILE-274 | Shared | assets | Image asset | `src/shared/assets/3d/subscriptions.png` | subscriptions image asset. | — | 0 | — |
+| FILE-275 | Shared | assets | Image asset | `src/shared/assets/images/home_banner.jpg` | home banner image asset. | — | 0 | — |
+| FILE-276 | Shared | assets | Image asset | `src/shared/assets/images/LoginScreenImage.png` | Login Screen Image image asset. | — | 0 | — |
+| FILE-277 | Shared | assets | Image asset | `src/shared/assets/images/OtpScreenImage.png` | Otp Screen Image image asset. | — | 0 | — |
+| FILE-278 | Shared | components | Component | `src/shared/components/CurvedHeader.jsx` | Reusable gradient curved header used across application screens. | CurvedHeader | 1 | @react-navigation/native, react, react-native, react-native-fast-image, react-native-safe-area-context, react-native-svg |
+| FILE-279 | Shared | components | Component | `src/shared/components/DeliveryStatusSlider.jsx` | Reusable interactive delivery-status control. | DeliveryStatusSlider | 1 | lucide-react-native, react, react-native, react-native-gesture-handler, react-native-reanimated |
+| FILE-280 | Shared | components | Component | `src/shared/components/ImageWithSkeleton.jsx` | Image wrapper that displays a loading skeleton until the asset is ready. | ImageWithSkeleton | 0 | react, react-native, react-native-fast-image |
+| FILE-281 | Shared | components | Component | `src/shared/components/LanguageSelector.jsx` | Reusable multi-language selector used by authentication and settings UI. | LanguageSelector, SUPPORTED_LANGUAGES | 1 | @react-native-async-storage/async-storage, lucide-react-native, react, react-i18next, react-native |
+| FILE-282 | Shared | constants | Constant/token map | `src/shared/constants/colors.js` | Shared application color tokens. | COLORS | 0 | — |
+| FILE-283 | Shared | constants | Constant/token map | `src/shared/constants/subscriptionEntitlements.js` | Entitlement identifiers and localized feature-name mappings. | ENTITLEMENT_KEYS, ENTITLEMENT_TRANSLATION_KEYS, PROACTIVE_ENTITLEMENT_KEYS | 0 | — |
+| FILE-284 | Shared | i18n | Localization setup | `src/shared/i18n/index.js` | i18next initialization, locale registration, fallback, and saved-language restoration. | i18n | 8 | @react-native-async-storage/async-storage, i18next, react-i18next |
+| FILE-285 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/bn.js` | Bengali translation dictionary. | bn | 0 | — |
+| FILE-286 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/en.js` | English translation dictionary. | en | 0 | — |
+| FILE-287 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/gu.js` | Gujarati translation dictionary. | gu | 0 | — |
+| FILE-288 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/hi.js` | Hindi translation dictionary. | hi | 0 | — |
+| FILE-289 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/mr.js` | Marathi translation dictionary. | mr | 0 | — |
+| FILE-290 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/pa.js` | Punjabi translation dictionary. | pa | 0 | — |
+| FILE-291 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/ta.js` | Tamil translation dictionary. | ta | 0 | — |
+| FILE-292 | Shared | i18n | Locale dictionary | `src/shared/i18n/locales/te.js` | Telugu translation dictionary. | te | 0 | — |
+| FILE-293 | Shared | services | Service/API client | `src/shared/services/api.js` | Compatibility facade preserving the existing public api and callback exports. | api, notifyPlanLimit, setApiRole, setLogoutCallback, setPlanLimitCallback, setTokenRefreshedCallback | 2 | — |
+| FILE-294 | Shared | services | Service/API client | `src/shared/services/api/accountingApi.js` | Ledger, payment, and customer-deposit API operations. | accountingApi | 1 | — |
+| FILE-295 | Shared | services | Service/API client | `src/shared/services/api/authApi.js` | Authentication, OTP, registration, logout, and account deletion API operations. | authApi | 1 | — |
+| FILE-296 | Shared | services | Service/API client | `src/shared/services/api/client.js` | API base URL, role prefix, authentication, token refresh queue, entitlement handling, logging, and HTTP request helpers. | API_BASE_URL, deleteRequest, fetchWithAuth, getApiPrefix, getRequest, notifyPlanLimit, patchMultipartRequest, patchRequest, postMultipartRequest, postRequest, putRequest, runSubscriptionRequest, setApiRole, setLogoutCallback, setPlanLimitCallback, setTokenRefreshedCallback | 0 | @react-native-async-storage/async-storage |
+| FILE-297 | Shared | services | Service/API client | `src/shared/services/api/customersApi.js` | Customer CRUD, sequencing, delivery history, jar collection, and activity API operations. | customersApi | 1 | — |
+| FILE-298 | Shared | services | Service/API client | `src/shared/services/api/dashboardApi.js` | Dashboard summary API operations. | dashboardApi | 1 | — |
+| FILE-299 | Shared | services | Service/API client | `src/shared/services/api/deliveriesApi.js` | Delivery generation, listing, tracking, and status API operations. | deliveriesApi | 1 | — |
+| FILE-300 | Shared | services | Service/API client | `src/shared/services/api/deliverySubscriptionsApi.js` | Customer delivery-subscription, pause, and override API operations. | deliverySubscriptionsApi | 1 | — |
+| FILE-301 | Shared | services | Service/API client | `src/shared/services/api/index.js` | Combines all domain API modules into the existing public api object. | api | 14 | — |
+| FILE-302 | Shared | services | Service/API client | `src/shared/services/api/invoicesApi.js` | Invoice generation, listing, summary, detail, and PDF-download API operations. | invoicesApi | 1 | react-native-blob-util |
+| FILE-303 | Shared | services | Service/API client | `src/shared/services/api/oneTimeOrdersApi.js` | One-time order API operations. | oneTimeOrdersApi | 1 | — |
+| FILE-304 | Shared | services | Service/API client | `src/shared/services/api/planBillingApi.js` | Vendor plan, entitlement, checkout, billing, cancellation, payment-history, and usage API operations. | planBillingApi | 1 | — |
+| FILE-305 | Shared | services | Service/API client | `src/shared/services/api/productsApi.js` | Product catalog API operations, including multipart create/update. | productsApi | 1 | — |
+| FILE-306 | Shared | services | Service/API client | `src/shared/services/api/profileApi.js` | Vendor profile and public category API operations. | profileApi | 1 | — |
+| FILE-307 | Shared | services | Service/API client | `src/shared/services/api/reportsApi.js` | Financial, outstanding, operations, and inventory report API operations. | reportsApi | 1 | — |
+| FILE-308 | Shared | services | Service/API client | `src/shared/services/api/routesApi.js` | Route CRUD and staff-assignment API operations. | routesApi | 1 | — |
+| FILE-309 | Shared | services | Service/API client | `src/shared/services/api/staffApi.js` | Staff CRUD API operations. | staffApi | 1 | — |
+| FILE-310 | Shared | utils | Utility | `src/shared/utils/seedDatabase.js` | Local seed/helper data utility. | seedDatabase | 1 | — |
+| FILE-311 | Project root | configuration | Binary/archive | `SUSE.zip` | SUSE binary/archive. | — | 0 | — |
+| FILE-312 | Documentation | project-docs | Documentation | `workflow.md` | Task history plus generated current-project architecture source for Excel exports. | — | 0 | — |
 
 ### 12.11 Automatic Maintenance Contract
 

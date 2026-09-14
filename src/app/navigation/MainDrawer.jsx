@@ -1,7 +1,7 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import MainTabs from './MainTabs';
-import { SettingsScreen } from '../../features/settings';
+import { SettingsScreen, InvoiceSettingsScreen } from '../../features/settings';
 import { UnbilledDeliveriesScreen } from '../../features/deliveries';
 import CustomDrawerContent from './CustomDrawerContent';
 import { SubscriptionDashboardScreen } from '../../features/plan-billing';
@@ -33,41 +33,51 @@ const MainDrawer = () => {
         }
       }}
     >
-      <Drawer.Screen 
-        name="MainTabs" 
-        component={MainTabs} 
-        options={{ 
-          title: 'Home', 
+      <Drawer.Screen
+        name="MainTabs"
+        component={MainTabs}
+        options={{
+          title: 'Home',
           headerShown: false,
           drawerIcon: ({ color }) => <Home color={color} size={22} />
-        }} 
+        }}
       />
-      <Drawer.Screen 
-        name="Settings" 
-        component={SettingsScreen} 
-        options={{ 
+      <Drawer.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
           title: 'Settings',
           headerShown: false,
-          drawerIcon: ({ color }) => <Settings color={color} size={22} /> 
-        }} 
+          drawerIcon: ({ color }) => <Settings color={color} size={22} />
+        }}
       />
-      <Drawer.Screen 
-        name="UnbilledDeliveries" 
-        component={UnbilledDeliveriesScreen} 
-        options={{ 
+      <Drawer.Screen
+        name="UnbilledDeliveries"
+        component={UnbilledDeliveriesScreen}
+        options={{
           title: 'Unbilled Deliveries',
           headerShown: false,
-          drawerIcon: ({ color }) => <FileText color={color} size={22} /> 
-        }} 
+          drawerIcon: ({ color }) => <FileText color={color} size={22} />
+        }}
       />
-      <Drawer.Screen 
-        name="SubscriptionDashboard" 
-        component={SubscriptionDashboardScreen} 
-        options={{ 
+      <Drawer.Screen
+        name="SubscriptionDashboard"
+        component={SubscriptionDashboardScreen}
+        options={{
           title: t('subscriptionBilling.title'),
           headerShown: false,
-          drawerIcon: ({ color }) => <FileText color={color} size={22} /> 
-        }} 
+          drawerIcon: ({ color }) => <FileText color={color} size={22} />
+        }}
+      />
+      {/* Hidden route — navigated to programmatically from SettingsScreen */}
+      <Drawer.Screen
+        name="InvoiceSettings"
+        component={InvoiceSettingsScreen}
+        options={{
+          title: 'Invoice Settings',
+          headerShown: false,
+          drawerItemStyle: { display: 'none' },
+        }}
       />
     </Drawer.Navigator>
   );

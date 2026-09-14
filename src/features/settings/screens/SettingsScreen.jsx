@@ -10,7 +10,7 @@ import { COLORS } from '../../../shared/constants/colors';
 import { AuthContext } from '../../../app/providers/AuthContext';
 import { api } from '../../../shared/services/api';
 import { useAlert } from '../../../app/providers/AlertContext';
-import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink, Briefcase, Mail, MapPin, Map, Hash, Grid, Edit2, ArrowLeft } from 'lucide-react-native';
+import { Menu, LogOut, Globe, User, Edit3, X, Check, Shield, Trash2, ExternalLink, Briefcase, Mail, MapPin, Map, Hash, Grid, Edit2, ArrowLeft, FileText } from 'lucide-react-native';
 import { seedDatabase } from '../../../shared/utils/seedDatabase';
 import CurvedHeader from '../../../shared/components/CurvedHeader';
 import LanguageSelector from '../../../shared/components/LanguageSelector';
@@ -331,6 +331,20 @@ const SettingsScreen = () => {
               </View>
               <LanguageSelector />
             </View>
+
+            {/* Invoice Settings — owner only */}
+            {user?.role === 'owner' && (
+              <TouchableOpacity
+                style={[styles.prefRow, { marginTop: 12 }]}
+                onPress={() => navigation.navigate('InvoiceSettings')}
+              >
+                <View style={styles.prefLeft}>
+                  <FileText size={20} color={COLORS.primary} style={{ marginRight: 10 }} />
+                  <Text style={[styles.prefLabel, { color: COLORS.primary }]}>Invoice Settings</Text>
+                </View>
+                <ExternalLink size={16} color={COLORS.primary} />
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[styles.prefRow, { marginTop: 12 }]}

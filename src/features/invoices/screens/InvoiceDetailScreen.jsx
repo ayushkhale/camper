@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Share,
   Linking,
+  Image,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import RNPrint from 'react-native-print';
@@ -190,6 +191,8 @@ const InvoiceDetailScreen = () => {
     invoiceData?.totalAmount,
     invoiceData?.totalAmountFormatted
   );
+  const discountTotal = parseAmount(invoiceData?.discountTotal, invoiceData?.discountTotalFormatted);
+  const extraTotal = parseAmount(invoiceData?.extraTotal, invoiceData?.extraTotalFormatted);
   const amountPaid = parseAmount(
     invoiceData?.displayAmountPaid,
     invoiceData?.amountPaid,
@@ -209,6 +212,12 @@ const InvoiceDetailScreen = () => {
   const resolvedInvoiceId = invoiceId || invoiceData?.id || invoiceData?.invoiceId || initialInvoiceId;
   const invoiceNum = invoiceData?.invoiceNumber
     || (resolvedInvoiceId ? `#${String(resolvedInvoiceId).substring(0, 8).toUpperCase()}` : 'INV-001');
+
+  // Payment details from invoice data — nested under paymentDetails object
+  const paymentMode        = invoiceData?.paymentDetails?.mode || 'none';
+  const paymentUpiId       = invoiceData?.paymentDetails?.upiId || null;
+  const paymentQrUrl       = invoiceData?.paymentDetails?.qrCodeUrl || invoiceData?.paymentDetails?.qrCodeImageUrl || null;
+  const paymentBankAccount = invoiceData?.paymentDetails?.bankAccount || null;
 
   const openAdjustmentActions = () => {
     guardEntitlement(ENTITLEMENT_KEYS.INVOICING, () => {
@@ -585,17 +594,18 @@ const InvoiceDetailScreen = () => {
               
               .summary-container {
                 display: flex;
-                border: 1px solid #cbd5e1;
-                border-top: 1.5px solid #cbd5e1;
+                border: 1.5px solid #94A3B8;
+                border-top: 1.5px solid #94A3B8;
                 margin-top: 0;
                 margin-bottom: 24px;
                 box-sizing: border-box;
               }
               .notes-box {
                 flex: 1;
-                border-right: 1px solid #cbd5e1;
+                border-right: 1.5px solid #94A3B8;
+                border-left: 3px solid #0EA5E9;
                 padding: 10px 12px;
-                background-color: #f8fafc;
+                background-color: #F0F9FF;
                 box-sizing: border-box;
               }
               .notes-box .n-label {
@@ -689,37 +699,83 @@ const InvoiceDetailScreen = () => {
               </tbody>
             </table>
 
-            <div class="summary-container">
-              <div class="notes-box">
-                <div class="n-label">Notes</div>
-                <div style="color: #475569; font-size: 9.5px; line-height: 1.4;">
-                  Thank you for choosing ${bName}! Clean & Pure Water Delivery. All particulars are true and correct.
+            <div class="summary-container" style="margin-bottom: 0;">
+              <div class="notes-box" style="padding: 10px;">
+                <div class="n-label" style="color: #0369A1; font-weight: bold; font-size: 11px; margin-bottom: 4px;">Notes</div>
+                <div style="font-size: 9.5px; line-height: 1.4; color: #334155;">
+                  Thank you for choosing ${invoiceData?.businessName || bName}!<br/>
+                  Clean &amp; Pure Water Delivery.<br/><br/>
+                  All particulars are true and correct.
                 </div>
               </div>
 
-              <table class="totals-box">
-                <tr>
-                  <td>Current Charges</td>
-                  <td style="text-align: right; font-weight: bold; color: #334155;">${formatCurrency(currentCharges)}</td>
-                </tr>
-                ${previousDues !== 0 ? `
-                <tr>
-                  <td style="color: ${previousDues > 0 ? '#64748b' : '#059669'};">${previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}</td>
-                  <td style="text-align: right; font-weight: bold; color: ${previousDues > 0 ? '#334155' : '#059669'};">${formatCurrency(previousBalanceAmount)}</td>
-                </tr>
-                ` : ''}
-                ${amountPaid > 0 ? `
-                <tr>
-                  <td>Amount Paid</td>
-                  <td style="text-align: right; font-weight: bold; color: #059669;">${formatCurrency(amountPaid)}</td>
-                </tr>
-                ` : ''}
-                <tr class="grand-row">
-                  <td style="font-weight: bold; color: #ffffff;">Balance Due</td>
-                  <td style="text-align: right; font-weight: bold; color: #ffffff; font-size: 12px;">${formatCurrency(balanceDue)}</td>
-                </tr>
-              </table>
+              <div class="totals-box" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: #64748B; border-bottom: 1px solid #E2E8F0;">Current Charges</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: #334155; border-bottom: 1px solid #E2E8F0;">${formatCurrency(currentCharges)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: #065F46; border-bottom: 1px solid #E2E8F0;">Total Discount</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: #065F46; border-bottom: 1px solid #E2E8F0;">${discountTotal > 0 ? '-' : ''}${formatCurrency(discountTotal)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: #9A3412; border-bottom: 1px solid #E2E8F0;">Extra Charges</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: #9A3412; border-bottom: 1px solid #E2E8F0;">${formatCurrency(extraTotal)}</td>
+                  </tr>
+                  ${previousDues !== 0 ? `
+                  <tr>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: ${previousDues > 0 ? '#64748b' : '#059669'}; border-bottom: 1px solid #E2E8F0;">${previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: ${previousDues > 0 ? '#334155' : '#059669'}; border-bottom: 1px solid #E2E8F0;">${formatCurrency(previousBalanceAmount)}</td>
+                  </tr>
+                  ` : ''}
+                  ${amountPaid > 0 ? `
+                  <tr>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: #64748B;">Amount Paid</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: #059669;">${formatCurrency(amountPaid)}</td>
+                  </tr>
+                  ` : ''}
+                </table>
+                
+                <div style="display: flex; justify-content: space-between; padding: 8px 10px; background: #1E3A8A; color: #FFFFFF; font-weight: bold; font-size: 11.5px;">
+                  <div>${t('invoices.balanceDue')}</div>
+                  <div>${formatCurrency(balanceDue)}</div>
+                </div>
+              </div>
+              </div>
             </div>
+
+            ${(paymentMode !== 'none' || invoiceData?.termsAndConditions) ? `
+            <div style="border: 1px solid #94A3B8; border-top: none; margin-bottom: 24px; background-color: #FFFFFF; display: flex; flex-direction: column;">
+              ${paymentMode !== 'none' ? `
+                <div style="padding: 10px; border-bottom: ${invoiceData?.termsAndConditions ? '1px solid #94A3B8' : 'none'};">
+                  <div style="font-size: 11px; font-weight: bold; color: #1E3A8A; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.8px;">Payment Details</div>
+                  ${paymentMode === 'bank_account' && paymentBankAccount ? `
+                    <table style="width: 100%; font-size: 9.5px; border-collapse: collapse;">
+                      <tr><td style="color: #64748b; padding: 1px 0; width: 60px;">Acc Name</td><td style="color: #0f172a; font-weight: bold;">${paymentBankAccount.accountName || ''}</td></tr>
+                      <tr><td style="color: #64748b; padding: 1px 0;">Bank</td><td style="color: #0f172a; font-weight: bold;">${paymentBankAccount.bankName || ''}</td></tr>
+                      <tr><td style="color: #64748b; padding: 1px 0;">Acc No.</td><td style="color: #0f172a; font-weight: bold;">${paymentBankAccount.accountNumber || ''}</td></tr>
+                      <tr><td style="color: #64748b; padding: 1px 0;">IFSC</td><td style="color: #0f172a; font-weight: bold;">${paymentBankAccount.ifscCode || ''}</td></tr>
+                    </table>
+                  ` : ''}
+                  ${paymentMode === 'upi_id' && paymentUpiId ? `
+                    <div style="font-size: 10px; font-weight: bold; color: #7C3AED;">UPI: ${paymentUpiId}</div>
+                  ` : ''}
+                  ${paymentMode === 'qr_code' && paymentQrUrl ? `
+                    <div style="font-size: 9px; color: #64748b; margin-bottom: 3px;">Scan to Pay</div>
+                    <img src="${paymentQrUrl}" style="width: 80px; height: 80px; object-fit: contain; border-radius: 4px;" />
+                  ` : ''}
+                </div>
+              ` : ''}
+              ${invoiceData?.termsAndConditions ? `
+                <div style="padding: 10px;">
+                  <div style="font-size: 11px; font-weight: bold; color: #0D9488; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px;">Terms &amp; Conditions</div>
+                  <div style="font-size: 9.5px; color: #475569; line-height: 1.4; white-space: pre-wrap;">${invoiceData.termsAndConditions}</div>
+                </div>
+              ` : ''}
+            </div>
+            ` : ''}
+
 
             <div class="footer-tag">
               Thank you! We appreciate your business.
@@ -1115,40 +1171,60 @@ const InvoiceDetailScreen = () => {
                 );
               })()}
 
-              <View style={{ flexDirection: 'row', borderTopWidth: 1.5, borderColor: '#CBD5E1' }}>
-                <View style={{ flex: 1, borderRightWidth: 1, borderColor: '#CBD5E1', padding: 10, backgroundColor: '#F8FAFC' }}>
-                  <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#1E3A8A', marginBottom: 3 }}>Notes</Text>
-                  <Text style={{ fontSize: 9.5, color: '#475569', lineHeight: 13 }}>
-                    Thank you for choosing {invoiceData?.businessName || invoiceData?.VendorProfile?.businessName || 'Patidar Water Plant'}! Clean & Pure Water Delivery. All particulars are true and correct.
+              <View style={{ flexDirection: 'row', borderTopWidth: 1.5, borderColor: '#94A3B8' }}>
+                <View style={{ flex: 1, borderRightWidth: 1.5, borderLeftWidth: 3, borderLeftColor: '#0EA5E9', borderRightColor: '#94A3B8', backgroundColor: '#F0F9FF', padding: 10 }}>
+                  <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#0369A1', marginBottom: 4 }}>
+                    Notes
+                  </Text>
+                  <Text style={{ fontSize: 9.5, color: '#334155', lineHeight: 14 }}>
+                    Thank you for choosing {invoiceData?.businessName || bName}!{'\n'}
+                    Clean & Pure Water Delivery.{'\n\n'}
+                    All particulars are true and correct.
                   </Text>
                 </View>
 
                 {/* Totals Table Box */}
-                <View style={{ width: 175, backgroundColor: '#FFFFFF' }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
-                    <Text style={{ fontSize: 10.5, color: '#64748B' }}>Current Charges</Text>
-                    <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Rubik-Bold' }}>{formatCurrency(currentCharges)}</Text>
+                <View style={{ width: 175, backgroundColor: '#FFFFFF', justifyContent: 'space-between' }}>
+                  <View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                      <Text style={{ fontSize: 10.5, color: '#64748B' }}>Current Charges</Text>
+                      <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Rubik-Bold' }}>{formatCurrency(currentCharges)}</Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                      <Text style={{ fontSize: 10.5, color: '#065F46' }}>Total Discount</Text>
+                      <Text style={{ fontSize: 10.5, color: '#065F46', fontFamily: 'Rubik-Bold' }}>
+                        {discountTotal > 0 ? '-' : ''}{formatCurrency(discountTotal)}
+                      </Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                      <Text style={{ fontSize: 10.5, color: '#9A3412' }}>Extra Charges</Text>
+                      <Text style={{ fontSize: 10.5, color: '#9A3412', fontFamily: 'Rubik-Bold' }}>
+                        {formatCurrency(extraTotal)}
+                      </Text>
+                    </View>
+
+                    {previousDues !== 0 && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                        <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#64748B' : '#059669' }}>
+                          {previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}
+                        </Text>
+                        <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#334155' : '#059669', fontFamily: 'Rubik-Bold' }}>
+                          {formatCurrency(previousBalanceAmount)}
+                        </Text>
+                      </View>
+                    )}
+
+                    {amountPaid > 0 && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                        <Text style={{ fontSize: 10.5, color: '#64748B' }}>Amount Paid</Text>
+                        <Text style={{ fontSize: 10.5, color: '#059669', fontFamily: 'Rubik-Bold' }}>{formatCurrency(amountPaid)}</Text>
+                      </View>
+                    )}
                   </View>
 
-                  {previousDues !== 0 && (
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
-                      <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#64748B' : '#059669' }}>
-                        {previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}
-                      </Text>
-                      <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#334155' : '#059669', fontFamily: 'Rubik-Bold' }}>
-                        {formatCurrency(previousBalanceAmount)}
-                      </Text>
-                    </View>
-                  )}
-
-                  {amountPaid > 0 && (
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
-                      <Text style={{ fontSize: 10.5, color: '#64748B' }}>Amount Paid</Text>
-                      <Text style={{ fontSize: 10.5, color: '#059669', fontFamily: 'Rubik-Bold' }}>{formatCurrency(amountPaid)}</Text>
-                    </View>
-                  )}
-
-                  {/* Solid Navy Total Row */}
+                  {/* Solid Navy Total Row - Pushed to Bottom */}
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, paddingHorizontal: 8, backgroundColor: '#1E3A8A' }}>
                     <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#FFFFFF' }}>{t('invoices.balanceDue')}</Text>
                     <Text style={{ fontSize: 12, fontFamily: 'Rubik-Bold', color: '#FFFFFF' }}>
@@ -1158,7 +1234,62 @@ const InvoiceDetailScreen = () => {
                 </View>
               </View>
 
-              {/* Footer Tag */}
+              {/* Payments and T&C Row (Below Totals) */}
+              {(paymentMode !== 'none' || invoiceData?.termsAndConditions) && (
+                <View style={{ flexDirection: 'column', borderTopWidth: 0, borderBottomWidth: 1.5, borderLeftWidth: 1.5, borderRightWidth: 1.5, borderColor: '#94A3B8', backgroundColor: '#FFFFFF' }}>
+                  {paymentMode !== 'none' && (
+                    <View style={{ padding: 10, borderBottomWidth: invoiceData?.termsAndConditions ? 1.5 : 0, borderColor: '#94A3B8' }}>
+                      <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#1E3A8A', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>
+                        Payment Details
+                      </Text>
+
+                      {paymentMode === 'bank_account' && paymentBankAccount && (
+                        <View style={{ gap: 3 }}>
+                          {[
+                            ['Acc Name', paymentBankAccount.accountName],
+                            ['Bank', paymentBankAccount.bankName],
+                            ['Acc No.', paymentBankAccount.accountNumber],
+                            ['IFSC', paymentBankAccount.ifscCode],
+                          ].map(([label, value]) => (
+                            <View key={label} style={{ flexDirection: 'row', gap: 4 }}>
+                              <Text style={{ fontSize: 9.5, color: '#64748B', fontFamily: 'Rubik-SemiBold', width: 60 }}>{label}</Text>
+                              <Text style={{ fontSize: 9.5, color: '#0F172A', fontFamily: 'Rubik-Bold', flex: 1 }}>{value || '—'}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+
+                      {paymentMode === 'upi_id' && paymentUpiId && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <View style={{ backgroundColor: '#7C3AED', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                            <Text style={{ fontSize: 9, fontFamily: 'Rubik-Bold', color: '#FFFFFF' }}>UPI</Text>
+                          </View>
+                          <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#7C3AED' }}>{paymentUpiId}</Text>
+                        </View>
+                      )}
+
+                      {paymentMode === 'qr_code' && paymentQrUrl && (
+                        <View style={{ alignItems: 'flex-start', gap: 4 }}>
+                          <Text style={{ fontSize: 9, fontFamily: 'Rubik-SemiBold', color: '#64748B' }}>Scan to Pay</Text>
+                          <Image source={{ uri: paymentQrUrl }} style={{ width: 80, height: 80, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }} resizeMode="contain" />
+                        </View>
+                      )}
+                    </View>
+                  )}
+                  {invoiceData?.termsAndConditions && (
+                    <View style={{ padding: 10 }}>
+                      <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#0D9488', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>
+                        Terms &amp; Conditions
+                      </Text>
+                      <Text style={{ fontSize: 10, color: '#475569', lineHeight: 14 }}>
+                        {invoiceData.termsAndConditions}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* Minimal Footer Tag inside the card container */}
               <View style={{ backgroundColor: '#F8FAFC', paddingVertical: 10, borderTopWidth: 1, borderColor: '#E2E8F0', alignItems: 'center' }}>
                 <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#1E3A8A' }}>
                   Thank you! We appreciate your business.
@@ -1189,12 +1320,6 @@ const InvoiceDetailScreen = () => {
               </TouchableOpacity>
             )}
 
-
-            {/* Footer Note */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>{t('invoices.thankYou')}</Text>
-              <Text style={styles.footerSubtext}>{t('invoices.computerGenerated')}</Text>
-            </View>
 
             {/* Metadata Section */}
             <View style={styles.metadataSection}>
