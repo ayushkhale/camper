@@ -1378,6 +1378,27 @@ This section tracks the dates for which daily Excel reports have been generated 
   3. Preserved bottom-sheet animation, backdrop dismissal, validation, and submission behavior.
 - **Status**: Fixed without changing adjustment functionality.
 
+### Date: 2026-09-10 (Thursday)
+- **Component / File**: `InvoiceDetailScreen.jsx`, `InvoiceAdjustmentActionsSheet.jsx`, invoice locale dictionaries
+- **User Request**: Move the Add Discount and Add Extra Charge entry points from the invoice body into a compact lined action on the right side of the curved header.
+- **Changes Made**:
+  1. Removed the two inline adjustment buttons from the invoice preview body.
+  2. Added a white sliders action to the curved header for unpaid invoices viewed by owner users.
+  3. Added a localized bottom action sheet containing Add Discount and Add Extra Charge choices.
+  4. Kept the existing entitlement check, preselected adjustment form, validation, and adjustment API submission unchanged.
+- **Status**: Implemented as a UI-entry-point change only.
+
+### Date: 2026-09-15 (Tuesday)
+- **Component / File**: `CustomDrawerContent.jsx` Staff Management entitlement guard
+- **User Request**: Keep Staff Management visibly locked and prevent the screen from opening when the staff-limit entitlement is exhausted (`value: 0`).
+- **Root Cause / Task**: The drawer displayed a lock using `staff.limit`, but navigation checked only `staff.management`; therefore `staff.management: allowed` still opened the screen while `staff.limit` was locked.
+- **Changes Made**:
+  1. Added `staff.limit` as a required navigation entitlement specifically for the Staff Management drawer item.
+  2. Kept `staff.management` as the primary screen entitlement and preserved the existing staff-limit lock indicator.
+  3. Blocked navigation and reused the global subscription-limit modal when either required entitlement is denied.
+  4. Left all other drawer items and their navigation rules unchanged.
+- **Status**: Fixed without changing backend requests or Staff Management functionality.
+
 <!-- PROJECT_STRUCTURE:START -->
 ## Section 12: Current Project Structure — Excel-Ready Source of Truth
 
@@ -1397,7 +1418,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | Screens | 37 | Application and feature screen components |
 | Component files | 13 | Shared and feature-owned components/modals |
 | Registered navigation routes | 43 | Stack, drawer, and tab registrations |
-| API client operations | 91 | Methods exposed by the central api object |
+| API client operations | 92 | Methods exposed by the central api object |
 | Supported locales | 8 | Per-language translation dictionaries |
 | Runtime dependencies | 36 | Production npm packages |
 | Development dependencies | 14 | Build and test npm packages |
@@ -1666,6 +1687,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | recordPayment | 1 | POST | `${getApiPrefix()}/ledgers/payment` | `src/shared/services/api/accountingApi.js` |
 | refundDeposit | 1 | POST | `${getApiPrefix()}/deposits/refund` | `src/shared/services/api/accountingApi.js` |
 | resendOtp | 1 | POST | `/api/auth/resend-otp` | `src/shared/services/api/authApi.js` |
+| setActiveBankAccount | 1 | PATCH | `/api/vendor/invoice-settings` | `src/shared/services/api/invoicesApi.js` |
 | settleDepositToBill | 1 | POST | `${getApiPrefix()}/deposits/settle-to-bill` | `src/shared/services/api/accountingApi.js` |
 | signupRequestOtp | 1 | POST | `/api/auth/signup-request-otp` | `src/shared/services/api/authApi.js` |
 | signupVerifyOtp | 1 | POST | `/api/auth/signup-verify-otp` | `src/shared/services/api/authApi.js` |
@@ -1681,7 +1703,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | updateStaff | 1 | PATCH | `${getApiPrefix()}/staff/${id}` | `src/shared/services/api/staffApi.js` |
 | updateSubscription | 1 | PATCH | `${getApiPrefix()}/subscriptions/${id}` | `src/shared/services/api/deliverySubscriptionsApi.js` |
 | updateVendorProfile | 1 | PATCH | `${getApiPrefix()}/profile` | `src/shared/services/api/profileApi.js` |
-| uploadQrCode | 1 | POST multipart | `/api/vendor/invoice-settings/qr-code` | `src/shared/services/api/invoicesApi.js` |
+| uploadQrCode | 1 | Custom request | `Computed at runtime` | `src/shared/services/api/invoicesApi.js` |
 
 ### 12.8 Localization Inventory
 
@@ -2058,7 +2080,7 @@ This section tracks the dates for which daily Excel reports have been generated 
 | FILE-299 | Shared | services | Service/API client | `src/shared/services/api/deliveriesApi.js` | Delivery generation, listing, tracking, and status API operations. | deliveriesApi | 1 | — |
 | FILE-300 | Shared | services | Service/API client | `src/shared/services/api/deliverySubscriptionsApi.js` | Customer delivery-subscription, pause, and override API operations. | deliverySubscriptionsApi | 1 | — |
 | FILE-301 | Shared | services | Service/API client | `src/shared/services/api/index.js` | Combines all domain API modules into the existing public api object. | api | 14 | — |
-| FILE-302 | Shared | services | Service/API client | `src/shared/services/api/invoicesApi.js` | Invoice generation, listing, summary, detail, and PDF-download API operations. | invoicesApi | 1 | react-native-blob-util |
+| FILE-302 | Shared | services | Service/API client | `src/shared/services/api/invoicesApi.js` | Invoice generation, listing, summary, detail, and PDF-download API operations. | invoicesApi | 1 | react-native, react-native-blob-util |
 | FILE-303 | Shared | services | Service/API client | `src/shared/services/api/oneTimeOrdersApi.js` | One-time order API operations. | oneTimeOrdersApi | 1 | — |
 | FILE-304 | Shared | services | Service/API client | `src/shared/services/api/planBillingApi.js` | Vendor plan, entitlement, checkout, billing, cancellation, payment-history, and usage API operations. | planBillingApi | 1 | — |
 | FILE-305 | Shared | services | Service/API client | `src/shared/services/api/productsApi.js` | Product catalog API operations, including multipart create/update. | productsApi | 1 | — |
@@ -2094,3 +2116,17 @@ Generated-section boundaries: `<!-- PROJECT_STRUCTURE:START -->` to `<!-- PROJEC
   5. Scaled the width of car.png to 140 while pinning the height to 85. This makes the car significantly larger due to its landscape aspect ratio, while ensuring the overall card container height doesn't expand vertically.
   6. Absolutely positioned the car.png image (`right: -16`, `bottom: -16`) and increased its dimensions (width: 160, height: 110). This anchors the car perfectly to the bottom-right corner of the card, making it look much larger and more integrated without distorting the internal flex layout or increasing the card's height.
   7. Engineered a new FloatingCarImage animated component in HomeScreen.jsx that wraps the vehicle asset in an infinite, smooth floating animation loop (bobbing up and down by 8px using Native Driver), giving the dashboard a highly dynamic and polished feel.
+
+### Date: 2026-09-12 (Saturday)
+- **Component / File**: InvoiceDetailScreen.jsx, invoicesApi.js
+- **User Request**: Restructure the invoice detail layout to restore the classic "Notes" section, position Payments and Terms & Conditions at the bottom, and style the elements to look beautiful and professional.
+- **Root Cause / Task**: The user wanted to revert some layout changes and implement a highly structured, aesthetically pleasing invoice view (for both the screen and the generated PDF) with clear borders, ordered totals, and distinct callout sections.
+- **Changes Made**:
+  1. Updated `InvoiceDetailScreen.jsx` to restore the "Notes" section on the left side of the "Totals" box.
+  2. Moved the "Payment Details" and "Terms & Conditions" to a new dedicated, full-width block positioned strictly *below* the totals.
+  3. Switched the Payment and T&C block layout to a vertical column (`flexDirection: 'column'`) so that T&C explicitly sits below Payment Details instead of side-by-side.
+  4. Reordered the "Totals Table Box" so that **Total Discount** reliably renders immediately after **Current Charges**, followed by **Extra Charges**.
+  5. Removed conditional rendering (`> 0`) for Discount and Extra Charges in the totals table. They now *always* render (displaying as `0.00` if empty) to ensure strict layout consistency across all invoices.
+  6. Upgraded the visual styling of the "Notes" box to a premium "callout" design. Applied a soft blue background (`#F0F9FF`), a distinct sky-blue left border (`#0EA5E9`), and high-contrast dark blue text (`#0369A1`) for perfect readability.
+  7. Increased border widths around the layout blocks to `1.5px` and used a darker `#94A3B8` slate color to provide a crisp, clearly distinguished visual hierarchy on screen and in print.
+  8. Refactored the corresponding HTML template inside `InvoiceDetailScreen.jsx` so that the generated PDF perfectly matches the exact new structure and styling of the screen UI.

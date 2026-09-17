@@ -75,7 +75,7 @@ const CustomDrawerContent = (props) => {
     { title: t('subscriptions.title'), icon: Repeat, type: 'navigate', screen: 'SubscriptionList', featureKey: ENTITLEMENT_KEYS.SUBSCRIPTION_MANAGEMENT },
     { title: t('oneTimeOrders.title'), icon: ShoppingBag, type: 'navigate', screen: 'OneTimeOrderList', featureKey: ENTITLEMENT_KEYS.ONE_TIME_ORDERS },
     { title: t('products.title'), icon: Package, type: 'navigate', screen: 'ProductCatalog', featureKey: ENTITLEMENT_KEYS.PRODUCT_MANAGEMENT, lockFeatureKeys: [ENTITLEMENT_KEYS.PRODUCT_LIMIT] },
-    { title: t('staff.title'), icon: UserCog, type: 'navigate', screen: 'StaffManagement', ownerOnly: true, featureKey: ENTITLEMENT_KEYS.STAFF_MANAGEMENT, lockFeatureKeys: [ENTITLEMENT_KEYS.STAFF_LIMIT] },
+    { title: t('staff.title'), icon: UserCog, type: 'navigate', screen: 'StaffManagement', ownerOnly: true, featureKey: ENTITLEMENT_KEYS.STAFF_MANAGEMENT, lockFeatureKeys: [ENTITLEMENT_KEYS.STAFF_LIMIT], requiredFeatureKeys: [ENTITLEMENT_KEYS.STAFF_LIMIT] },
     { title: t('tabs.reports') || 'Reports & Analytics', icon: BarChart3, type: 'navigate', screen: 'Reports', ownerOnly: true, featureKey: ENTITLEMENT_KEYS.REPORTS_ANALYTICS },
     { title: t('subscriptionBilling.title'), icon: CreditCard, type: 'navigate', screen: 'SubscriptionDashboard', ownerOnly: true },
     { title: t('settings.title'), icon: Settings, type: 'navigate', screen: 'Settings', ownerOnly: true },
@@ -89,7 +89,13 @@ const CustomDrawerContent = (props) => {
     if (item.type === 'navigate') {
       const navigateToItem = () => navigation.navigate(item.screen, item.params);
       if (item.featureKey) {
-        await guardEntitlement(item.featureKey, navigateToItem);
+        await guardEntitlement(item.featureKey, async () => {
+          for (const requiredFeatureKey of item.requiredFeatureKeys || []) {
+            const isAllowed = await guardEntitlement(requiredFeatureKey);
+            if (!isAllowed) return;
+          }
+          navigateToItem();
+        });
       } else {
         navigateToItem();
       }
