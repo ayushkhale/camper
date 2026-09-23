@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import ReactNativeBlobUtil from 'react-native-blob-util';
-import { API_BASE_URL, getApiPrefix, getRequest, postRequest, patchRequest, postMultipartRequest, deleteRequest } from './client';
+import { API_BASE_URL, apiDebugLog, getApiPrefix, getRequest, postRequest, patchRequest, postMultipartRequest, deleteRequest } from './client';
 
 export const invoicesApi = {
   getUninvoicedPreSummary: (token, customerId = '') => {
@@ -33,7 +33,7 @@ export const invoicesApi = {
 
   downloadInvoicePDF: async (token, invoiceId, customerName = 'Customer') => {
     const url = `${API_BASE_URL}/api/vendor/invoices/${invoiceId}/download`;
-    console.log(`🚀 [API Request] GET ${url} for PDF download`);
+    apiDebugLog(`🚀 [API Request] GET ${url} for PDF download`);
 
     try {
       const response = await fetch(url, {

@@ -9,132 +9,143 @@ import React, {
 } from 'react';
 import { AppState } from 'react-native';
 import { AuthContext } from './AuthContext';
-import { api, notifyPlanLimit } from '../../shared/services/api';
+import { api, apiDebugError, apiDebugLog, notifyPlanLimit } from '../../shared/services/api';
 import { PROACTIVE_ENTITLEMENT_KEYS } from '../../shared/constants/subscriptionEntitlements';
+import {
+  decodeTokenEntitlements,
+  entitlementsFromSubscription,
+  getTokenEntitlement,
+} from '../../shared/utils/entitlements';
 
-const ENTITLEMENT_CACHE_TTL_MS = 5 * 60 * 1000;
-
+const FOREGROUND_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const REFRESH_BEFORE_EXPIRY_MS = 60 * 1000;
 const EntitlementContext = createContext(null);
 
-const unwrapEntitlement = (response) => {
-  const payload = response?.data || response;
-  return {
-    allowed: payload?.allowed !== false,
-    value: payload?.value,
-    reason: payload?.reason || payload?.message || '',
-    checkedAt: Date.now(),
-  };
-};
-
 export const EntitlementProvider = ({ children }) => {
-  const { userToken, user } = useContext(AuthContext);
-  const customerId = user?.vendorAccountId || 'me';
-  const [entitlements, setEntitlements] = useState({});
-  const cacheRef = useRef(new Map());
-  const inFlightRef = useRef(new Map());
-  const lastFullRefreshAtRef = useRef(0);
-  const sessionRef = useRef('');
-  const stateVersionRef = useRef(0);
+  const { userToken, user, refreshAuthToken } = useContext(AuthContext);
+  const [locked, setLocked] = useState({ token: null, values: {} });
+  const [fallback, setFallback] = useState({ token: null, entitlements: null });
+  const [clockTick, setClockTick] = useState(Date.now());
+  const lastRefreshAtRef = useRef(Date.now());
+  const lastAttemptRef = useRef({ token: null, reason: null });
+  const fallbackRequestRef = useRef(null);
+
+  const decoded = useMemo(
+    () => decodeTokenEntitlements(userToken, Math.max(Date.now(), clockTick)),
+    [userToken, clockTick],
+  );
+  const lockedValues = useMemo(
+    () => locked.token === userToken ? locked.values : {},
+    [locked, userToken],
+  );
+
+  const loadFallback = useCallback((token) => {
+    if (fallbackRequestRef.current?.token === token) {
+      return fallbackRequestRef.current.promise;
+    }
+    apiDebugLog('[Entitlement JWT] Token has no entitlement claims; starting the one-request legacy fallback.');
+    const promise = api.getSubscriptionStatus(token, user?.vendorAccountId || 'me')
+      .then(entitlementsFromSubscription)
+      .catch((error) => {
+        apiDebugError('[Entitlement JWT] Legacy fallback failed.', error?.message || String(error));
+        return null;
+      })
+      .then((features) => {
+        apiDebugLog('[Entitlement JWT] Legacy fallback completed.', {
+          entitlementCount: features ? Object.keys(features).length : 0,
+          entitlements: features,
+        });
+        setFallback({ token, entitlements: features });
+        return features;
+      })
+      .finally(() => {
+        if (fallbackRequestRef.current?.token === token) fallbackRequestRef.current = null;
+      });
+    fallbackRequestRef.current = { token, promise };
+    return promise;
+  }, [user?.vendorAccountId]);
+
+  const getCurrentEntitlement = useCallback((featureKey) => {
+    if (!featureKey || !userToken) {
+      return { allowed: false, unavailable: true, checkedAt: Date.now() };
+    }
+    const features = decoded.status === 'valid'
+      ? decoded.entitlements
+      : decoded.status === 'missing-claims' && fallback.token === userToken
+        ? fallback.entitlements
+        : null;
+    if (!features) return { allowed: false, unavailable: true, checkedAt: Date.now() };
+    return lockedValues[featureKey] || getTokenEntitlement(features, featureKey);
+  }, [decoded, fallback, lockedValues, userToken]);
 
   const invalidateEntitlements = useCallback(() => {
-    stateVersionRef.current += 1;
-    cacheRef.current.clear();
-    inFlightRef.current.clear();
-    lastFullRefreshAtRef.current = 0;
-    setEntitlements({});
-  }, []);
+    setLocked({ token: userToken, values: {} });
+  }, [userToken]);
 
   const markEntitlementLocked = useCallback((featureKey, reason = '') => {
     if (!featureKey) return;
-    stateVersionRef.current += 1;
-    inFlightRef.current.delete(featureKey);
-    const lockedEntitlement = {
-      allowed: false,
-      reason,
-      checkedAt: Date.now(),
-    };
-    cacheRef.current.set(featureKey, lockedEntitlement);
-    setEntitlements((current) => ({
-      ...current,
-      [featureKey]: lockedEntitlement,
+    setLocked((current) => ({
+      token: userToken,
+      values: {
+        ...(current.token === userToken ? current.values : {}),
+        [featureKey]: { allowed: false, reason, checkedAt: Date.now() },
+      },
     }));
-  }, []);
+  }, [userToken]);
 
   const markAllEntitlementsLocked = useCallback((reason = '') => {
-    stateVersionRef.current += 1;
-    inFlightRef.current.clear();
-    const checkedAt = Date.now();
-    const lockedEntitlements = {};
+    const values = {};
     PROACTIVE_ENTITLEMENT_KEYS.forEach((featureKey) => {
-      const lockedEntitlement = { allowed: false, reason, checkedAt };
-      cacheRef.current.set(featureKey, lockedEntitlement);
-      lockedEntitlements[featureKey] = lockedEntitlement;
+      values[featureKey] = { allowed: false, reason, checkedAt: Date.now() };
     });
-    setEntitlements(lockedEntitlements);
-  }, []);
+    setLocked({ token: userToken, values });
+  }, [userToken]);
 
-  const checkEntitlement = useCallback(async (featureKey, options = {}) => {
-    if (!featureKey || !userToken) {
-      return { allowed: true, unavailable: true, checkedAt: Date.now() };
-    }
-
-    const { force = false } = options;
-    const cached = cacheRef.current.get(featureKey);
-    if (!force && cached && Date.now() - cached.checkedAt < ENTITLEMENT_CACHE_TTL_MS) {
-      return cached;
-    }
-
-    if (!force && inFlightRef.current.has(featureKey)) {
-      return inFlightRef.current.get(featureKey);
-    }
-
-    const requestSession = sessionRef.current;
-    const requestStateVersion = stateVersionRef.current;
-    const request = api.getSubscriptionEntitlement(userToken, customerId, featureKey)
-      .then(unwrapEntitlement)
-      .catch((error) => {
-        if (error?.isPlanLimit) {
-          return {
-            allowed: false,
-            reason: error.backendMessage || '',
-            checkedAt: Date.now(),
-          };
+  const checkEntitlement = useCallback(async (featureKey) => {
+    let result = getCurrentEntitlement(featureKey);
+    if (result.unavailable && userToken) {
+      try {
+        const freshToken = decoded.status === 'missing-claims'
+          ? userToken
+          : await refreshAuthToken();
+        const freshClaims = decodeTokenEntitlements(freshToken);
+        if (freshClaims.status === 'valid') {
+          result = getTokenEntitlement(freshClaims.entitlements, featureKey);
+        } else if (freshClaims.status === 'missing-claims') {
+          const features = await loadFallback(freshToken);
+          if (features) result = getTokenEntitlement(features, featureKey);
         }
+      } catch {
+        // The auth layer handles revoked refresh tokens. A network failure stays locked.
+      }
+    }
+    apiDebugLog('[Entitlement JWT] Feature checked.', {
+      featureKey,
+      allowed: Boolean(result.allowed),
+      unavailable: Boolean(result.unavailable),
+      value: result.value,
+      tokenStatus: decoded.status,
+    });
+    return result;
+  }, [decoded.status, getCurrentEntitlement, loadFallback, refreshAuthToken, userToken]);
 
-        console.log(`[Entitlements] ${featureKey} check unavailable:`, error?.message);
-        return {
-          allowed: true,
-          unavailable: true,
-          checkedAt: Date.now(),
-        };
-      })
-      .then((result) => {
-        if (
-          sessionRef.current === requestSession &&
-          stateVersionRef.current === requestStateVersion
-        ) {
-          cacheRef.current.set(featureKey, result);
-          setEntitlements((current) => ({ ...current, [featureKey]: result }));
-        }
-        return result;
-      })
-      .finally(() => {
-        if (inFlightRef.current.get(featureKey) === request) {
-          inFlightRef.current.delete(featureKey);
-        }
+  const refreshEntitlements = useCallback(async () => {
+    apiDebugLog('[Entitlement JWT] A fresh entitlement token was requested.');
+    const token = await refreshAuthToken({ forceFresh: true });
+    const claims = decodeTokenEntitlements(token);
+    if (claims.status === 'valid') {
+      apiDebugLog('[Entitlement JWT] Fresh JWT entitlements applied.', {
+        entitlementCount: Object.keys(claims.entitlements).length,
+        entitlements: claims.entitlements,
       });
-
-    inFlightRef.current.set(featureKey, request);
-    return request;
-  }, [customerId, userToken]);
-
-  const refreshEntitlements = useCallback(async (featureKeys = PROACTIVE_ENTITLEMENT_KEYS) => {
-    if (!userToken) return [];
-    const keys = Array.from(new Set(featureKeys.filter(Boolean)));
-    const results = await Promise.all(keys.map((key) => checkEntitlement(key, { force: true })));
-    lastFullRefreshAtRef.current = Date.now();
-    return results;
-  }, [checkEntitlement, userToken]);
+      return claims.entitlements;
+    }
+    if (claims.status === 'missing-claims') {
+      const features = await loadFallback(token);
+      if (features) return features;
+    }
+    throw new Error('Entitlements are unavailable after token refresh');
+  }, [loadFallback, refreshAuthToken]);
 
   const guardEntitlement = useCallback(async (featureKey, onAllowed) => {
     const entitlement = await checkEntitlement(featureKey);
@@ -142,6 +153,7 @@ export const EntitlementProvider = ({ children }) => {
       if (onAllowed) await onAllowed();
       return true;
     }
+    if (entitlement.unavailable) return false;
 
     const reason = entitlement.reason ? ` ${entitlement.reason}` : '';
     notifyPlanLimit(`Feature '${featureKey}' is locked.${reason}`, {
@@ -152,31 +164,72 @@ export const EntitlementProvider = ({ children }) => {
   }, [checkEntitlement]);
 
   const isEntitlementLocked = useCallback(
-    (featureKey) => entitlements[featureKey]?.allowed === false,
-    [entitlements],
+    (featureKey) => Boolean(featureKey) && !getCurrentEntitlement(featureKey).allowed,
+    [getCurrentEntitlement],
   );
 
+  const entitlements = useMemo(() => {
+    const values = {};
+    PROACTIVE_ENTITLEMENT_KEYS.forEach((featureKey) => {
+      values[featureKey] = getCurrentEntitlement(featureKey);
+    });
+    return values;
+  }, [getCurrentEntitlement]);
+
   useEffect(() => {
-    sessionRef.current = `${userToken || ''}:${customerId}`;
-    invalidateEntitlements();
-    if (userToken) {
-      refreshEntitlements();
+    lastRefreshAtRef.current = Date.now();
+    if (!userToken) {
+      apiDebugLog('[Entitlement JWT] No signed-in token; all gated features remain locked.');
+      return undefined;
     }
-  }, [customerId, invalidateEntitlements, refreshEntitlements, userToken]);
+
+    apiDebugLog('[Entitlement JWT] Token claims loaded into entitlement state.', {
+      status: decoded.status,
+      expiresAt: decoded.expiresAt ? new Date(decoded.expiresAt).toISOString() : null,
+      entitlementCount: Object.keys(decoded.entitlements || {}).length,
+      entitlements: decoded.entitlements,
+    });
+
+    if (decoded.status === 'missing-claims' && fallback.token !== userToken) {
+      loadFallback(userToken);
+    }
+
+    const needsRefresh = (decoded.status !== 'valid' && decoded.status !== 'missing-claims') ||
+      decoded.expiresAt - Date.now() <= REFRESH_BEFORE_EXPIRY_MS;
+    if (needsRefresh) {
+      const reason = decoded.status === 'valid' ? 'expiring' : decoded.status;
+      if (lastAttemptRef.current.token !== userToken || lastAttemptRef.current.reason !== reason) {
+        lastAttemptRef.current = { token: userToken, reason };
+        apiDebugLog('[Entitlement JWT] Refreshing because the token needs attention.', { reason });
+        refreshAuthToken().catch(() => {});
+      }
+    }
+
+    if (decoded.status !== 'valid' && decoded.status !== 'missing-claims') return undefined;
+    const refreshIn = Math.max(0, decoded.expiresAt - Date.now() - REFRESH_BEFORE_EXPIRY_MS);
+    const expireIn = Math.max(0, decoded.expiresAt - Date.now() + 100);
+    const refreshTimer = setTimeout(() => {
+      lastAttemptRef.current = { token: userToken, reason: 'expiring' };
+      apiDebugLog('[Entitlement JWT] Refreshing one minute before token expiry.');
+      refreshAuthToken().catch(() => {});
+    }, refreshIn);
+    const expiryTimer = setTimeout(() => setClockTick(Date.now()), expireIn);
+    return () => {
+      clearTimeout(refreshTimer);
+      clearTimeout(expiryTimer);
+    };
+  }, [decoded, fallback.token, loadFallback, refreshAuthToken, userToken]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
-      if (
-        nextState === 'active' &&
-        userToken &&
-        Date.now() - lastFullRefreshAtRef.current >= ENTITLEMENT_CACHE_TTL_MS
-      ) {
-        refreshEntitlements();
-      }
+      if (nextState !== 'active' || !userToken) return;
+      if (Date.now() - lastRefreshAtRef.current < FOREGROUND_REFRESH_INTERVAL_MS) return;
+      lastRefreshAtRef.current = Date.now();
+      apiDebugLog('[Entitlement JWT] App returned to foreground after five minutes; refreshing token.');
+      refreshAuthToken().catch(() => {});
     });
-
     return () => subscription.remove();
-  }, [refreshEntitlements, userToken]);
+  }, [refreshAuthToken, userToken]);
 
   const value = useMemo(() => ({
     entitlements,
@@ -207,8 +260,6 @@ export const EntitlementProvider = ({ children }) => {
 
 export const useEntitlements = () => {
   const context = useContext(EntitlementContext);
-  if (!context) {
-    throw new Error('useEntitlements must be used within an EntitlementProvider');
-  }
+  if (!context) throw new Error('useEntitlements must be used within an EntitlementProvider');
   return context;
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import { generatePDF } from 'react-native-html-to-pdf';
 import RNShare from 'react-native-share';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
   ArrowLeft,
   FileText,
@@ -43,6 +43,12 @@ import CurvedHeader from '../../../shared/components/CurvedHeader';
 import { COLORS } from '../../../shared/constants/colors';
 import { AuthContext } from '../../../app/providers/AuthContext';
 import { api } from '../../../shared/services/api';
+import { apiDebugLog, apiDebugWarn, apiDebugError } from '../../../shared/services/api/client';
+import {
+  getInvoiceAmounts,
+  getInvoiceStatusText,
+  getInvoiceTotalQuantity,
+} from '../../../shared/utils/billing';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '../../../app/providers/AlertContext';
 import { useEntitlements } from '../../../app/providers/EntitlementContext';
@@ -78,7 +84,7 @@ const InvoiceDetailScreen = () => {
   const [adjustmentType, setAdjustmentType] = useState('discount');
   const [submittingAdjustment, setSubmittingAdjustment] = useState(false);
 
-  const fetchInvoiceDetail = async (showLoading = true) => {
+  const fetchInvoiceDetail = React.useCallback(async (showLoading = true) => {
     const targetId = invoiceId || initialInvoiceId;
     if (!targetId) {
       setLoading(false);
@@ -87,9 +93,9 @@ const InvoiceDetailScreen = () => {
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      console.log('[INVOICE FETCH] Fetching invoice details for ID:', targetId);
+      apiDebugLog('[INVOICE FETCH] Fetching invoice details for ID:', targetId);
       const res = await api.getInvoiceById(userToken, targetId);
-      console.log('[INVOICE DETAILS RESPONSE]:', res);
+      apiDebugLog('[INVOICE DETAILS RESPONSE]:', res);
 
       if (res && res.success && res.data) {
         setInvoiceData(res.data);
@@ -99,17 +105,19 @@ const InvoiceDetailScreen = () => {
         if (initialInvoice) setInvoiceData(initialInvoice);
       }
     } catch (err) {
-      console.error('Error fetching invoice detail:', err);
+      apiDebugError('Error fetching invoice detail:', err);
       setError(err.message || 'Failed to load invoice details');
       if (initialInvoice) setInvoiceData(initialInvoice);
     } finally {
       setLoading(false);
     }
-  };
+  }, [invoiceId, initialInvoiceId, initialInvoice, userToken]);
 
-  useEffect(() => {
-    fetchInvoiceDetail();
-  }, [invoiceId]);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchInvoiceDetail();
+    }, [fetchInvoiceDetail])
+  );
 
   const formatCurrency = (val) => {
     const num = parseFloat(val) || 0;
@@ -174,40 +182,16 @@ const InvoiceDetailScreen = () => {
   const deliveries = invoiceData?.Deliveries || invoiceData?.deliveries || [];
   const lineItems = invoiceData?.InvoiceLineItems || invoiceData?.lineItems || [];
 
-  const parseAmount = (...values) => {
-    for (const value of values) {
-      if (value === undefined || value === null || value === '') continue;
-      const parsed = Number.parseFloat(value);
-      if (Number.isFinite(parsed)) return parsed;
-    }
-    return 0;
-  };
-
-  const previousDues = parseAmount(invoiceData?.previousDues, invoiceData?.previousDuesFormatted);
+  const amounts = getInvoiceAmounts(invoiceData || {});
+  const previousDues = amounts.previousDues;
   const previousBalanceAmount = Math.abs(previousDues);
-  const currentCharges = parseAmount(
-    invoiceData?.currentCharges,
-    invoiceData?.currentChargesFormatted,
-    invoiceData?.totalAmount,
-    invoiceData?.totalAmountFormatted
-  );
-  const discountTotal = parseAmount(invoiceData?.discountTotal, invoiceData?.discountTotalFormatted);
-  const extraTotal = parseAmount(invoiceData?.extraTotal, invoiceData?.extraTotalFormatted);
-  const amountPaid = parseAmount(
-    invoiceData?.displayAmountPaid,
-    invoiceData?.amountPaid,
-    invoiceData?.amountPaidFormatted
-  );
-  const grandTotal = parseAmount(
-    invoiceData?.displayGrandTotal,
-    invoiceData?.totalAmount,
-    invoiceData?.totalAmountFormatted,
-    currentCharges + previousDues
-  );
-  const balanceDue = Math.max(
-    0,
-    parseAmount(invoiceData?.balanceDue, invoiceData?.balanceDueFormatted, grandTotal - amountPaid)
-  );
+  const currentCharges = amounts.deliveryCharges;
+  const discountTotal = amounts.discounts;
+  const extraTotal = amounts.extraCharges;
+  const amountPaid = amounts.alreadyPaid;
+  const grandTotal = amounts.thisInvoiceTotal;
+  const balanceDue = amounts.balanceDue;
+  const statusText = getInvoiceStatusText(invoiceData, t, formatCurrency);
 
   const resolvedInvoiceId = invoiceId || invoiceData?.id || invoiceData?.invoiceId || initialInvoiceId;
   const invoiceNum = invoiceData?.invoiceNumber
@@ -282,9 +266,13 @@ const InvoiceDetailScreen = () => {
       let message = `*INVOICE: ${invoiceNum}*\n`;
       message += `*Business:* ${bName}\n`;
       message += `*Customer:* ${customerName}\n`;
-      message += `*Grand Total:* ${formatCurrency(grandTotal)}\n`;
-      message += `*Paid:* ${formatCurrency(amountPaid)}\n`;
-      message += `*Balance Due:* ${formatCurrency(balanceDue)}\n\n`;
+      message += `*${t('invoices.totalQuantity')}:* ${totalQuantity}\n`;
+      message += `*${t('invoices.thisInvoiceTotal')}:* ${formatCurrency(grandTotal)}\n`;
+      if (previousDues !== 0) {
+        message += `*${t(previousDues > 0 ? 'invoices.previousDuesInfo' : 'invoices.advanceCreditInfo')}:* ${formatCurrency(previousBalanceAmount)}\n`;
+      }
+      message += `*${t('invoices.amountPaid')}:* ${formatCurrency(amountPaid)}\n`;
+      message += `*${t('invoices.balanceDue')}:* ${formatCurrency(balanceDue)}\n\n`;
       message += `Thank you for choosing ${bName}!`;
 
       const encodedMessage = encodeURIComponent(message);
@@ -300,7 +288,7 @@ const InvoiceDetailScreen = () => {
         await Share.share({ message });
       }
     } catch (error) {
-      console.error('Error sharing invoice:', error);
+      apiDebugError('Error sharing invoice:', error);
     }
   };
 
@@ -327,6 +315,12 @@ const InvoiceDetailScreen = () => {
     }
     return 1;
   };
+
+  const quantityItems = lineItems.length > 0 ? lineItems : deliveries;
+  const totalQuantity = getInvoiceTotalQuantity(
+    invoiceData || {},
+    quantityItems.map(getItemQuantity),
+  );
 
   const getItemDetails = (item) => {
     let productName = item.productName || item.Product?.name || item.Subscription?.Product?.name;
@@ -402,20 +396,16 @@ const InvoiceDetailScreen = () => {
     const periodEnd = invoiceData?.periodEndFormatted || formatDate(invoiceData?.periodEnd);
 
     let itemsHtml = '';
-    
-    // Top Row: Opening Balance / Previous Dues if present
     if (previousDues !== 0) {
+      const balanceColor = previousDues > 0 ? '#334155' : '#059669';
       itemsHtml += `
-        <tr style="background-color: ${previousDues > 0 ? '#fffbeb' : '#ecfdf5'};">
-          <td style="padding: 8px 10px;">
-            <div style="font-weight: bold; font-size: 11px; color: #0f172a;">${previousDues > 0 ? 'Opening Balance / Previous Dues' : 'Opening Balance / Advance Credit'}</div>
-            <div style="font-size: 10px; margin-top: 3px; line-height: 1.4; color: ${previousDues > 0 ? '#b45309' : '#047857'}; font-weight: bold;">${previousDues > 0 ? '[PREVIOUS DUES] Carried forward from previous billing period' : '[ADVANCE CREDIT] Prepaid balance / advance deposit'}</div>
-          </td>
-          <td style="text-align: center; padding: 8px; color: #334155;">1</td>
-          <td style="text-align: right; padding: 8px; color: ${previousDues > 0 ? '#334155' : '#047857'};">${formatCurrency(previousBalanceAmount)}</td>
-          <td style="text-align: right; padding: 8px; font-weight: bold; color: ${previousDues > 0 ? '#0f172a' : '#047857'};">${formatCurrency(previousBalanceAmount)}</td>
-        </tr>
-      `;
+          <tr style="background-color: ${previousDues > 0 ? '#F8FAFC' : '#ECFDF5'};">
+            <td style="padding: 8px 10px; font-size: 11px; font-weight: bold; color: ${balanceColor};">${t(previousDues > 0 ? 'invoices.previousDuesInfo' : 'invoices.advanceCreditInfo')}</td>
+            <td style="text-align: center; padding: 8px; color: #64748B;">-</td>
+            <td style="text-align: right; padding: 8px; color: #64748B;">-</td>
+            <td style="text-align: right; padding: 8px; font-weight: bold; color: ${balanceColor};">${formatCurrency(previousBalanceAmount)}</td>
+          </tr>
+        `;
     }
 
     let allItems = lineItems.length > 0 ? lineItems : deliveries;
@@ -445,12 +435,11 @@ const InvoiceDetailScreen = () => {
             </tr>
           `;
       });
-    } else if (previousDues === 0) {
+    } else {
       itemsHtml += `
           <tr>
             <td style="padding: 8px 10px;">
-              <div style="font-weight: bold; font-size: 11px; color: #0f172a;">Jar 30 rs</div>
-              <div style="font-size: 10px; color: #15803d; margin-top: 3px;" class="badge-delivered">Water Delivery</div>
+              <div style="font-weight: bold; font-size: 11px; color: #0f172a;">${t('invoices.deliveryCharges')}</div>
             </td>
             <td style="text-align: center; padding: 8px;">1</td>
             <td style="text-align: right; padding: 8px;">${formatCurrency(currentCharges)}</td>
@@ -712,26 +701,34 @@ const InvoiceDetailScreen = () => {
               <div class="totals-box" style="display: flex; flex-direction: column; justify-content: space-between;">
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr>
-                    <td style="padding: 6px 10px; font-size: 10.5px; color: #64748B; border-bottom: 1px solid #E2E8F0;">Current Charges</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: #64748B; border-bottom: 1px solid #E2E8F0;">${t('invoices.totalQuantity')}</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: #334155; border-bottom: 1px solid #E2E8F0;">${totalQuantity}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: #64748B; border-bottom: 1px solid #E2E8F0;">${t('invoices.deliveryCharges')}</td>
                     <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: #334155; border-bottom: 1px solid #E2E8F0;">${formatCurrency(currentCharges)}</td>
                   </tr>
                   <tr>
-                    <td style="padding: 6px 10px; font-size: 10.5px; color: #065F46; border-bottom: 1px solid #E2E8F0;">Total Discount</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: #065F46; border-bottom: 1px solid #E2E8F0;">${t('invoices.discounts')}</td>
                     <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: #065F46; border-bottom: 1px solid #E2E8F0;">${discountTotal > 0 ? '-' : ''}${formatCurrency(discountTotal)}</td>
                   </tr>
                   <tr>
-                    <td style="padding: 6px 10px; font-size: 10.5px; color: #9A3412; border-bottom: 1px solid #E2E8F0;">Extra Charges</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: #9A3412; border-bottom: 1px solid #E2E8F0;">${t('invoices.extraCharges')}</td>
                     <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: #9A3412; border-bottom: 1px solid #E2E8F0;">${formatCurrency(extraTotal)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 10px; font-size: 10.5px; font-weight: bold; border-bottom: 1px solid #E2E8F0;">${t('invoices.thisInvoiceTotal')}</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; border-bottom: 1px solid #E2E8F0;">${formatCurrency(grandTotal)}</td>
                   </tr>
                   ${previousDues !== 0 ? `
                   <tr>
-                    <td style="padding: 6px 10px; font-size: 10.5px; color: ${previousDues > 0 ? '#64748b' : '#059669'}; border-bottom: 1px solid #E2E8F0;">${previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: ${previousDues > 0 ? '#64748b' : '#059669'}; border-bottom: 1px solid #E2E8F0;">${t(previousDues > 0 ? 'invoices.previousDuesInfo' : 'invoices.advanceCreditInfo')}</td>
                     <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: ${previousDues > 0 ? '#334155' : '#059669'}; border-bottom: 1px solid #E2E8F0;">${formatCurrency(previousBalanceAmount)}</td>
                   </tr>
                   ` : ''}
                   ${amountPaid > 0 ? `
                   <tr>
-                    <td style="padding: 6px 10px; font-size: 10.5px; color: #64748B;">Amount Paid</td>
+                    <td style="padding: 6px 10px; font-size: 10.5px; color: #64748B;">${t('invoices.amountPaid')}</td>
                     <td style="padding: 6px 10px; font-size: 10.5px; text-align: right; font-weight: bold; color: #059669;">${formatCurrency(amountPaid)}</td>
                   </tr>
                   ` : ''}
@@ -797,19 +794,19 @@ const InvoiceDetailScreen = () => {
         try {
           pdfFilePath = await api.downloadInvoicePDF(userToken, targetId, customerName);
         } catch (apiErr) {
-          console.warn('Backend PDF download for print failed, using local HTML fallback:', apiErr.message);
+          apiDebugWarn('Backend PDF download for print failed, using local HTML fallback:', apiErr.message);
         }
       }
 
       if (pdfFilePath) {
-        console.log('Printing downloaded backend PDF file from:', pdfFilePath);
+        apiDebugLog('Printing downloaded backend PDF file from:', pdfFilePath);
         await RNPrint.print({ filePath: pdfFilePath });
       } else {
         const htmlContent = generateInvoiceHTML();
         await RNPrint.print({ html: htmlContent });
       }
     } catch (error) {
-      console.error('Error printing invoice:', error);
+      apiDebugError('Error printing invoice:', error);
       showAlert('Print Error', error.message || 'Could not print invoice', 'error');
     } finally {
       setIsPrintingPdf(false);
@@ -853,7 +850,7 @@ const InvoiceDetailScreen = () => {
         await handlePrint();
       }
     } catch (error) {
-      console.log('Download notice:', error.message);
+      apiDebugLog('Download notice:', error.message);
       await handlePrint();
     } finally {
       setIsDownloadingPdf(false);
@@ -871,9 +868,9 @@ const InvoiceDetailScreen = () => {
 
       try {
         filePath = await api.downloadInvoicePDF(userToken, targetId, customerName);
-        console.log('PDF downloaded to:', filePath);
+        apiDebugLog('PDF downloaded to:', filePath);
       } catch (dlErr) {
-        console.warn('PDF download failed, falling back to text share:', dlErr.message);
+        apiDebugWarn('PDF download failed, falling back to text share:', dlErr.message);
       }
 
       // Check if file exists and has content BEFORE opening share sheet
@@ -888,7 +885,7 @@ const InvoiceDetailScreen = () => {
             }
           }
         } catch (checkErr) {
-          console.warn('File existence check failed:', checkErr.message);
+          apiDebugWarn('File existence check failed:', checkErr.message);
         }
       }
 
@@ -911,12 +908,12 @@ const InvoiceDetailScreen = () => {
         await RNShare.open(shareOptions);
       } else {
         // Fallback to text share if PDF is not ready
-        console.log('PDF file not valid or missing, falling back to text share');
+        apiDebugLog('PDF file not valid or missing, falling back to text share');
         await handleWhatsAppShare();
       }
     } catch (error) {
       if (error && error.message !== 'User did not share') {
-        console.error('Error in handleSharePDFWhatsApp, falling back to text share:', error);
+        apiDebugError('Error in handleSharePDFWhatsApp, falling back to text share:', error);
         await handleWhatsAppShare();
       }
     } finally {
@@ -994,6 +991,10 @@ const InvoiceDetailScreen = () => {
 
               <View style={{ height: 1, backgroundColor: '#E2E8F0', marginHorizontal: 16, marginBottom: 14 }} />
 
+              <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg, marginHorizontal: 16, marginBottom: 12, alignSelf: 'flex-start' }]}>
+                <Text style={[styles.statusBadgeText, { color: statusInfo.text }]}>{statusText}</Text>
+              </View>
+
               <View style={{ paddingHorizontal: 16, marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
                 {/* Left Column: Billed To */}
                 <View style={{ flex: 1.1, paddingRight: 6 }}>
@@ -1054,36 +1055,22 @@ const InvoiceDetailScreen = () => {
 
                 return (
                   <>
-                    {/* Top Row: Opening Balance / Previous Dues or Advance Credit */}
                     {previousDues !== 0 && (
-                      <View style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', backgroundColor: previousDues > 0 ? '#FFFBEB' : '#ECFDF5', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', backgroundColor: previousDues > 0 ? '#F8FAFC' : '#ECFDF5', alignItems: 'center' }}>
                         <View style={{ flex: 1, paddingRight: 6 }}>
-                          <Text style={{ fontSize: 11.5, fontFamily: 'Rubik-Bold', color: '#0F172A' }}>
-                            {previousDues > 0 ? 'Opening Balance / Previous Dues' : 'Opening Balance / Advance Credit'}
+                          <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: previousDues > 0 ? '#334155' : '#059669' }}>
+                            {t(previousDues > 0 ? 'invoices.previousDuesInfo' : 'invoices.advanceCreditInfo')}
                           </Text>
-                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 3 }}>
-                            <View style={{ backgroundColor: previousDues > 0 ? '#FEF3C7' : '#D1FAE5', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, marginRight: 4, marginBottom: 2 }}>
-                              <Text style={{ fontSize: 8.5, fontFamily: 'Rubik-Bold', color: previousDues > 0 ? '#B45309' : '#047857', textTransform: 'uppercase' }}>
-                                {previousDues > 0 ? 'PREVIOUS DUES' : 'ADVANCE CREDIT'}
-                              </Text>
-                            </View>
-                            <Text style={{ fontSize: 10, color: previousDues > 0 ? '#92400E' : '#065F46', fontFamily: 'Rubik-SemiBold', lineHeight: 14, flex: 1 }}>
-                              {previousDues > 0 ? 'Carried forward from previous billing period' : 'Prepaid balance / advance deposit'}
-                            </Text>
-                          </View>
                         </View>
-
-                        <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>{'--'}</Text>
-                        <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: previousDues > 0 ? '#334155' : '#047857' }}>{formatCurrency(previousBalanceAmount)}</Text>
-                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11.5, fontFamily: 'Rubik-Bold', color: previousDues > 0 ? '#0F172A' : '#047857' }}>{formatCurrency(previousBalanceAmount)}</Text>
+                        <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#64748B' }}>-</Text>
+                        <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#64748B' }}>-</Text>
+                        <Text style={{ width: 75, textAlign: 'right', fontSize: 11, fontFamily: 'Rubik-Bold', color: previousDues > 0 ? '#334155' : '#059669' }}>{formatCurrency(previousBalanceAmount)}</Text>
                       </View>
                     )}
-
-                    {allItems.length === 0 && previousDues === 0 ? (
+                    {allItems.length === 0 ? (
                       <View style={{ flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 10, borderBottomWidth: 1, borderColor: '#E2E8F0', alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#0F172A' }}>Jar 30 rs</Text>
-                          <Text style={{ fontSize: 10, color: '#15803D', fontFamily: 'Rubik-SemiBold', marginTop: 2 }}>[DELIVERED] Water Delivery</Text>
+                          <Text style={{ fontSize: 11, fontFamily: 'Rubik-Bold', color: '#0F172A' }}>{t('invoices.deliveryCharges')}</Text>
                         </View>
                         <Text style={{ width: 55, textAlign: 'center', fontSize: 11, color: '#334155' }}>1</Text>
                         <Text style={{ width: 65, textAlign: 'right', fontSize: 11, color: '#334155' }}>{formatCurrency(currentCharges)}</Text>
@@ -1177,7 +1164,7 @@ const InvoiceDetailScreen = () => {
                     Notes
                   </Text>
                   <Text style={{ fontSize: 9.5, color: '#334155', lineHeight: 14 }}>
-                    Thank you for choosing {invoiceData?.businessName || bName}!{'\n'}
+                    Thank you for choosing {invoiceData?.businessName || invoiceData?.VendorProfile?.businessName || 'Patidar Water Plant'}!{'\n'}
                     Clean & Pure Water Delivery.{'\n\n'}
                     All particulars are true and correct.
                   </Text>
@@ -1187,28 +1174,38 @@ const InvoiceDetailScreen = () => {
                 <View style={{ width: 175, backgroundColor: '#FFFFFF', justifyContent: 'space-between' }}>
                   <View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
-                      <Text style={{ fontSize: 10.5, color: '#64748B' }}>Current Charges</Text>
+                      <Text style={{ fontSize: 10.5, color: '#64748B' }}>{t('invoices.totalQuantity')}</Text>
+                      <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Rubik-Bold' }}>{totalQuantity}</Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                      <Text style={{ fontSize: 10.5, color: '#64748B' }}>{t('invoices.deliveryCharges')}</Text>
                       <Text style={{ fontSize: 10.5, color: '#334155', fontFamily: 'Rubik-Bold' }}>{formatCurrency(currentCharges)}</Text>
                     </View>
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
-                      <Text style={{ fontSize: 10.5, color: '#065F46' }}>Total Discount</Text>
+                      <Text style={{ fontSize: 10.5, color: '#065F46' }}>{t('invoices.discounts')}</Text>
                       <Text style={{ fontSize: 10.5, color: '#065F46', fontFamily: 'Rubik-Bold' }}>
                         {discountTotal > 0 ? '-' : ''}{formatCurrency(discountTotal)}
                       </Text>
                     </View>
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
-                      <Text style={{ fontSize: 10.5, color: '#9A3412' }}>Extra Charges</Text>
+                      <Text style={{ fontSize: 10.5, color: '#9A3412' }}>{t('invoices.extraCharges')}</Text>
                       <Text style={{ fontSize: 10.5, color: '#9A3412', fontFamily: 'Rubik-Bold' }}>
                         {formatCurrency(extraTotal)}
                       </Text>
                     </View>
 
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
+                      <Text style={{ fontSize: 10.5, color: '#0F172A', fontFamily: 'Rubik-Bold' }}>{t('invoices.thisInvoiceTotal')}</Text>
+                      <Text style={{ fontSize: 10.5, color: '#0F172A', fontFamily: 'Rubik-Bold' }}>{formatCurrency(grandTotal)}</Text>
+                    </View>
+
                     {previousDues !== 0 && (
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
                         <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#64748B' : '#059669' }}>
-                          {previousDues > 0 ? 'Previous Dues' : 'Advance Credit'}
+                          {t(previousDues > 0 ? 'invoices.previousDuesInfo' : 'invoices.advanceCreditInfo')}
                         </Text>
                         <Text style={{ fontSize: 10.5, color: previousDues > 0 ? '#334155' : '#059669', fontFamily: 'Rubik-Bold' }}>
                           {formatCurrency(previousBalanceAmount)}
@@ -1218,7 +1215,7 @@ const InvoiceDetailScreen = () => {
 
                     {amountPaid > 0 && (
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderColor: '#E2E8F0' }}>
-                        <Text style={{ fontSize: 10.5, color: '#64748B' }}>Amount Paid</Text>
+                        <Text style={{ fontSize: 10.5, color: '#64748B' }}>{t('invoices.amountPaid')}</Text>
                         <Text style={{ fontSize: 10.5, color: '#059669', fontFamily: 'Rubik-Bold' }}>{formatCurrency(amountPaid)}</Text>
                       </View>
                     )}
@@ -1303,12 +1300,18 @@ const InvoiceDetailScreen = () => {
                 style={styles.payBtn}
                 activeOpacity={0.85}
                 onPress={() => {
+                  const customerId = invoiceData.customerId ?? invoiceData.customer_id ?? invoiceData.CustomerId ?? invoiceData.Customer?.id;
                   navigation.navigate('MainDrawer', {
                     screen: 'MainTabs',
                     params: {
                       screen: 'Payments',
                       params: {
-                        customerId: invoiceData.customerId || invoiceData.CustomerId || invoiceData.Customer?.id,
+                        customerId,
+                        preselectedCustomer: customerId == null ? undefined : {
+                          id: customerId,
+                          name: invoiceData.Customer?.name || invoiceData.customerName || 'Customer',
+                          phone: invoiceData.Customer?.phone || invoiceData.customerPhone,
+                        },
                         prefillAmount: balanceDue,
                       }
                     }

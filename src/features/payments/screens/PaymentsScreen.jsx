@@ -10,6 +10,7 @@ import { COLORS } from '../../../shared/constants/colors';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../../app/providers/AuthContext';
 import { api } from '../../../shared/services/api';
+import { getStatementDescription, getStatementDirection } from '../../../shared/utils/billing';
 import { useNavigation, useFocusEffect, DrawerActions, useRoute } from '@react-navigation/native';
 import { useAlert } from '../../../app/providers/AlertContext';
 import CurvedHeader from '../../../shared/components/CurvedHeader';
@@ -154,28 +155,22 @@ const PaymentsScreen = () => {
   );
 
   useEffect(() => {
-    if (route.params?.preselectedCustomer) {
-      selectCustomer(route.params.preselectedCustomer);
-      navigation.setParams({ preselectedCustomer: undefined });
-    }
-  }, [route.params?.preselectedCustomer]);
+    const routeCustomer = route.params?.preselectedCustomer;
+    const customerId = route.params?.customerId ?? routeCustomer?.id;
+    if (customerId == null || customerId === '') return;
 
-  // Handle route params from InvoiceDetailScreen
-  useEffect(() => {
-    if (customers.length > 0 && route.params?.customerId) {
-      const foundCustomer = customers.find(c => c.id === route.params.customerId || c.id === Number(route.params.customerId) || String(c.id) === String(route.params.customerId));
-      if (foundCustomer && (!selectedCustomer || selectedCustomer.id !== foundCustomer.id)) {
-        selectCustomer(foundCustomer);
-        navigation.setParams({ customerId: undefined });
-      }
-    }
-  }, [route.params?.customerId, customers]);
+    const foundCustomer = customers.find(c => String(c.id) === String(customerId));
+    const customer = foundCustomer || (routeCustomer ? { ...routeCustomer, id: customerId } : null);
+    if (!customer) return;
 
-  useEffect(() => {
-    if (route.params?.prefillAmount) {
+    setSelectedCustomer(customer);
+    setShowCustomerModal(false);
+    if (route.params?.prefillAmount != null) {
       setAmount(String(route.params.prefillAmount));
+      setActiveTab('record');
     }
-  }, [route.params?.prefillAmount]);
+    navigation.setParams({ preselectedCustomer: undefined, customerId: undefined, prefillAmount: undefined });
+  }, [route.params?.preselectedCustomer, route.params?.customerId, route.params?.prefillAmount, customers, navigation]);
 
   const fetchCustomers = async () => {
     if (!userToken) return;
@@ -185,6 +180,13 @@ const PaymentsScreen = () => {
       if (res.success) {
         setCustomers(res.data || []);
         setFilteredCustomers(res.data || []);
+        setSelectedCustomer(current => {
+          if (!current) return current;
+          const refreshed = (res.data || []).find(c => String(c.id) === String(current.id));
+          return refreshed?.name && refreshed.name !== current.name
+            ? { ...current, name: refreshed.name, phone: refreshed.phone }
+            : current;
+        });
       }
     } catch (error) {
       console.error('Error fetching customers', error);
@@ -261,15 +263,14 @@ const PaymentsScreen = () => {
         paymentMode,
         referenceNote
       });
-      if (res.success) {
-        showAlert('Success', 'Payment recorded successfully!', 'success');
-        setAmount('');
-        setReferenceNote('');
-        setActiveTab('statement');
-        fetchStatement(selectedCustomer.id);
-      }
+      if (!res?.success) throw new Error(res?.message || t('payments.paymentFailed'));
+      showAlert(t('common.success'), res.message || t('payments.paymentRecorded'), 'success');
+      setAmount('');
+      setReferenceNote('');
+      setActiveTab('statement');
+      await fetchStatement(selectedCustomer.id);
     } catch (error) {
-      showAlert('Error', error.message || 'Failed to record payment', 'error');
+      if (!error?.isPlanLimit) showAlert(t('common.error'), error.message || t('payments.paymentFailed'), 'error');
     } finally {
       setSubmittingPayment(false);
     }
@@ -410,7 +411,9 @@ const PaymentsScreen = () => {
     }
 
     const { summary, statement } = statementData;
-    const owesMoney = summary.outstandingBalance > 0;
+    const balance = Number(summary.outstandingBalance) || 0;
+    const owesMoney = balance > 0;
+    const hasCredit = balance < 0;
 
     return (
       <View style={{ flex: 1 }}>
@@ -442,19 +445,23 @@ const PaymentsScreen = () => {
 
                 <View style={{ zIndex: 1 }}>
                   <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontFamily: 'Rubik-SemiBold', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                    {owesMoney ? t('payments.totalAmountDue') : t('payments.availableBalance')}
+                      {owesMoney ? t('payments.totalAmountDue') : hasCredit ? t('payments.advanceCredit') : t('payments.accountClear')}
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                     <Text style={{ fontSize: 28, color: '#FFF', fontFamily: 'Rubik-Bold', includeFontPadding: false }}>
-                      {formatCurrency(Math.abs(summary.outstandingBalance))}
+                      {formatCurrency(Math.abs(balance))}
                     </Text>
                     {owesMoney ? (
                       <View style={{ backgroundColor: 'rgba(239,68,68,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
                         <Text style={{ color: '#FCA5A5', fontSize: 10, fontFamily: 'Rubik-Bold' }}>{t('payments.toCollect')}</Text>
                       </View>
-                    ) : (
+                    ) : hasCredit ? (
                        <View style={{ backgroundColor: 'rgba(16,185,129,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
-                        <Text style={{ color: '#6EE7B7', fontSize: 10, fontFamily: 'Rubik-Bold' }}>{t('payments.settled')}</Text>
+                         <Text style={{ color: '#6EE7B7', fontSize: 10, fontFamily: 'Rubik-Bold' }}>{t('payments.advanceCredit')}</Text>
+                       </View>
+                    ) : (
+                      <View style={{ backgroundColor: 'rgba(16,185,129,0.2)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginLeft: 10 }}>
+                        <Text style={{ color: '#6EE7B7', fontSize: 10, fontFamily: 'Rubik-Bold' }}>{t('payments.accountClear')}</Text>
                       </View>
                     )}
                   </View>
@@ -476,16 +483,18 @@ const PaymentsScreen = () => {
             </View>
           }
           renderItem={({ item }) => {
-            const isCredit = item.credit !== null;
-            const amountStr = isCredit ? `+${formatCurrency(item.credit)}` : `-${formatCurrency(item.debit)}`;
+            const direction = getStatementDirection(item);
+            const isCredit = direction.kind === 'credit';
+            const amountStr = direction.kind === 'none'
+              ? '—'
+              : `${isCredit ? '+' : '-'}${formatCurrency(direction.amount)}`;
             const amountColor = isCredit ? COLORS.success : COLORS.danger;
             
             // Icon Selection
-            const isInvoice = item.entryType === 'delivery_charge' || item.description?.toLowerCase().includes('invoice');
-            const IconComponent = isInvoice ? FileText : Banknote;
-            const iconColor = isInvoice ? '#0B409C' : '#10B981'; // Blue for invoice, Green for payment
-            const iconBg = isInvoice ? '#E0E7FF' : '#D1FAE5'; // Light background for circle
-            const borderColor = isInvoice ? '#0B409C' : '#10B981';
+            const IconComponent = isCredit ? Banknote : FileText;
+            const iconColor = isCredit ? '#10B981' : '#0B409C';
+            const iconBg = isCredit ? '#D1FAE5' : '#E0E7FF';
+            const borderColor = iconColor;
 
             return (
               <View style={[styles.statementItem, { borderLeftColor: borderColor }]}>
@@ -496,7 +505,7 @@ const PaymentsScreen = () => {
                   <Text style={styles.statementDate}>
                     {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </Text>
-                  <Text style={styles.statementDesc} numberOfLines={2}>{item.description}</Text>
+                  <Text style={styles.statementDesc} numberOfLines={2}>{getStatementDescription(item, t)}</Text>
                   {item.paymentMode && (
                     <View style={styles.badge}>
                       <Text style={styles.badgeText}>{getPaymentModeLabel(item.paymentMode, t)}</Text>
@@ -505,7 +514,9 @@ const PaymentsScreen = () => {
                 </View>
                 <View style={styles.statementRight}>
                   <Text style={[styles.statementAmount, { color: amountColor }]}>{amountStr}</Text>
-                  <Text style={styles.statementBalance}>Bal: {formatCurrency(item.balanceAfter)}</Text>
+                  <Text style={styles.statementBalance}>
+                    {Number(item.balanceAfter) > 0 ? t('payments.totalAmountDue') : Number(item.balanceAfter) < 0 ? t('payments.advanceCredit') : t('payments.accountClear')}: {formatCurrency(Math.abs(Number(item.balanceAfter) || 0))}
+                  </Text>
                 </View>
               </View>
             );

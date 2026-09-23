@@ -8,3 +8,7 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# pdfbox-android optionally supports JPEG 2000 through Gemalto's decoder.
+# The decoder is not bundled or used by Camper's generated invoice PDFs.
+-dontwarn com.gemalto.jp2.JP2Decoder

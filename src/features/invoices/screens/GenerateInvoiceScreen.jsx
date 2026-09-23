@@ -23,6 +23,8 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../../shared/constants/colors';
 import { AuthContext } from '../../../app/providers/AuthContext';
 import { api } from '../../../shared/services/api';
+import { apiDebugError, apiDebugLog, shouldLogApi } from '../../../shared/services/api/client';
+import { toLocalDateString, validateInvoicePeriod } from '../../../shared/utils/billing';
 import { useAlert } from '../../../app/providers/AlertContext';
 import AddCustomerModal from '../../customers/components/AddCustomerModal';
 import Svg, { Defs, LinearGradient, Stop, Rect, Circle } from 'react-native-svg';
@@ -37,8 +39,8 @@ const GenerateInvoiceScreen = () => {
   const initialCustomerId = route.params?.customerId || '';
 
   const [customerId, setCustomerId] = useState(initialCustomerId);
-  const [periodStart, setPeriodStart] = useState(route.params?.periodStart || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
-  const [periodEnd, setPeriodEnd] = useState(route.params?.periodEnd || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  const [periodStart, setPeriodStart] = useState(route.params?.periodStart || toLocalDateString(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
+  const [periodEnd, setPeriodEnd] = useState(route.params?.periodEnd || toLocalDateString());
   
   const [customers, setCustomers] = useState([]);
   const [apiError, setApiError] = useState('');
@@ -76,7 +78,9 @@ const GenerateInvoiceScreen = () => {
   const onStartDateChange = (event, selectedDate) => {
     setShowStartDatePicker(false);
     if (selectedDate) {
-      setPeriodStart(formatDateString(selectedDate));
+      const nextStart = formatDateString(selectedDate);
+      setPeriodStart(nextStart);
+      if (periodEnd < nextStart) setPeriodEnd(nextStart);
     }
   };
 
@@ -134,7 +138,7 @@ const GenerateInvoiceScreen = () => {
         setRawUninvoicedData(null);
       }
     } catch (err) {
-      console.log('Error fetching pre-summary', err);
+      apiDebugError('Error fetching pre-summary', err);
       setRawUninvoicedData(null);
     }
   };
@@ -146,7 +150,7 @@ const GenerateInvoiceScreen = () => {
         setCustomers(custRes.data || []);
       }
     } catch (err) {
-      console.error('Error fetching customers:', err);
+      apiDebugError('Error fetching customers:', err);
       setApiError('Failed to load customers');
     } finally {
       setLoadingData(false);
@@ -155,10 +159,8 @@ const GenerateInvoiceScreen = () => {
 
   const validate = () => {
     if (!customerId) return t('invoices.selectCustomerRequired');
-    if (!periodStart || !/^\d{4}-\d{2}-\d{2}$/.test(periodStart)) return t('invoices.invalidStartDate');
-    if (!periodEnd || !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd)) return t('invoices.invalidEndDate');
-    if (new Date(periodStart) > new Date(periodEnd)) return t('invoices.startAfterEnd');
-    return null;
+    const errorKey = validateInvoicePeriod(periodStart, periodEnd);
+    return errorKey ? t(`invoices.${errorKey}`) : null;
   };
 
   const handleSubmit = async () => {
@@ -176,9 +178,9 @@ const GenerateInvoiceScreen = () => {
     if (customerId) payload.customerId = customerId;
 
     try {
-      console.log('--- GenerateInvoiceScreen: Payload ---', payload);
+      apiDebugLog('--- GenerateInvoiceScreen: Payload ---', payload);
       const response = await api.generateInvoices(userToken, payload);
-      console.log('--- GenerateInvoiceScreen: Response ---', JSON.stringify(response, null, 2));
+      if (shouldLogApi()) apiDebugLog('--- GenerateInvoiceScreen: Response ---', JSON.stringify(response, null, 2));
       const msg = response?.message || '';
 
       const customerName = customerId ? getCustomerName(customerId) : '';
@@ -193,22 +195,18 @@ const GenerateInvoiceScreen = () => {
         }
       };
 
-      if (response && response.success && (response.data?.invoicesGenerated === undefined || response.data?.invoicesGenerated > 0)) {
-        showAlert('Success', msg || 'Invoices generated successfully', 'success');
-        navigateToInvoice();
+      if (!response?.success) throw new Error(msg || t('invoices.generateFailed'));
+      if (response.data?.invoicesGenerated === 0 || response.data?.invoices?.length === 0) {
+        showAlert(t('common.notice'), msg || t('invoices.noNewInvoices'), 'info');
+        navigation.navigate('InvoiceList', { searchQuery });
       } else {
-        showAlert('Notice', 'Invoice already generated for this period. Redirecting...', 'info');
-        setTimeout(() => {
-          navigation.navigate('InvoiceList', { searchQuery });
-        }, 1500);
+        showAlert(t('common.success'), msg || t('invoices.generatedSuccessfully'), 'success');
+        navigateToInvoice();
       }
     } catch (err) {
-      const customerName = customerId ? getCustomerName(customerId) : '';
-      const searchQuery = customerName !== t('common.selectCustomer') ? customerName : '';
-      showAlert('Notice', 'Invoice already generated for this period. Redirecting...', 'info');
-      setTimeout(() => {
-        navigation.navigate('InvoiceList', { searchQuery });
-      }, 1500);
+      if (!err?.isPlanLimit) {
+        showAlert(t('common.error'), err.message || t('invoices.generateFailed'), 'error');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -438,6 +436,8 @@ const GenerateInvoiceScreen = () => {
                   value={parseDateString(periodStart)}
                   mode="date"
                   display="default"
+                  minimumDate={new Date(2020, 0, 1)}
+                  maximumDate={new Date()}
                   onChange={onStartDateChange}
                 />
               )}
@@ -460,6 +460,8 @@ const GenerateInvoiceScreen = () => {
                   value={parseDateString(periodEnd)}
                   mode="date"
                   display="default"
+                  minimumDate={parseDateString(periodStart)}
+                  maximumDate={new Date()}
                   onChange={onEndDateChange}
                 />
               )}

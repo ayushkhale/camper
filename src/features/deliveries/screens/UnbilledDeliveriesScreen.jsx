@@ -18,6 +18,7 @@ import CurvedHeader from '../../../shared/components/CurvedHeader';
 import { AuthContext } from '../../../app/providers/AuthContext';
 import { useAlert } from '../../../app/providers/AlertContext';
 import { api } from '../../../shared/services/api';
+import { toLocalDateString, validateInvoicePeriod } from '../../../shared/utils/billing';
 import { COLORS } from '../../../shared/constants/colors';
 
 const CustomerCard = ({
@@ -30,20 +31,27 @@ const CustomerCard = ({
   t,
 }) => {
   const getInitialEndDate = () => {
-    const startStr = item.earliestDeliveryDate || new Date().toISOString().split('T')[0];
+    const startStr = String(item.earliestDeliveryDate || toLocalDateString()).split('T')[0];
     const parts = startStr.split('-');
     if (parts.length === 3) {
       const endOfMonth = new Date(parseInt(parts[0]), parseInt(parts[1]), 0);
       const yyyy = endOfMonth.getFullYear();
       const mm = String(endOfMonth.getMonth() + 1).padStart(2, '0');
       const dd = String(endOfMonth.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
+      const monthEnd = `${yyyy}-${mm}-${dd}`;
+      return monthEnd > toLocalDateString() ? toLocalDateString() : monthEnd;
     }
-    return new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
+    return toLocalDateString();
   };
 
-  const [periodStart, setPeriodStart] = useState(item.earliestDeliveryDate || new Date().toISOString().split('T')[0]);
-  const [periodEnd, setPeriodEnd] = useState(getInitialEndDate());
+  const [periodStart, setPeriodStart] = useState(() => {
+    const candidate = String(item.earliestDeliveryDate || toLocalDateString()).split('T')[0];
+    return candidate < '2020-01-01' ? '2020-01-01' : candidate > toLocalDateString() ? toLocalDateString() : candidate;
+  });
+  const [periodEnd, setPeriodEnd] = useState(() => {
+    const candidate = getInitialEndDate();
+    return candidate < '2020-01-01' ? '2020-01-01' : candidate;
+  });
 
   const calculateDerivedStats = () => {
     let total = 0;
@@ -151,8 +159,14 @@ const CustomerCard = ({
           mode="date"
           onChange={(event, date) => {
             setShowStartPicker(false);
-            if (date) setPeriodStart(formatDateString(date));
+            if (date) {
+              const nextStart = formatDateString(date);
+              setPeriodStart(nextStart);
+              if (periodEnd < nextStart) setPeriodEnd(nextStart);
+            }
           }}
+          minimumDate={new Date(2020, 0, 1)}
+          maximumDate={new Date()}
         />
       )}
       
@@ -160,6 +174,8 @@ const CustomerCard = ({
         <DateTimePicker
           value={parseDateString(periodEnd)}
           mode="date"
+          minimumDate={parseDateString(periodStart)}
+          maximumDate={new Date()}
           onChange={(event, date) => {
             setShowEndPicker(false);
             if (date) setPeriodEnd(formatDateString(date));
@@ -236,6 +252,11 @@ const UnbilledDeliveriesScreen = () => {
   };
 
   const handleGenerateInvoice = async (customerId, periodStart, periodEnd) => {
+    const periodError = validateInvoicePeriod(periodStart, periodEnd);
+    if (periodError) {
+      showAlert(t('common.error'), t(`invoices.${periodError}`), 'error');
+      return;
+    }
     showAlert(
       t('invoices.generateInvoice'),
       t('invoices.generateConfirm'),
@@ -249,12 +270,16 @@ const UnbilledDeliveriesScreen = () => {
               setGeneratingForId(customerId);
               const payload = { customerId, periodStart, periodEnd };
               const res = await api.generateInvoices(userToken, payload);
-              if (res.success) {
-                showAlert('Success', res.message || 'Invoice generated successfully.', 'success');
-                fetchSummary();
-              }
+              if (!res?.success) throw new Error(res?.message || t('invoices.generateFailed'));
+              const created = res.data?.invoicesGenerated;
+              showAlert(
+                created === 0 ? t('common.notice') : t('common.success'),
+                res.message || t(created === 0 ? 'invoices.noNewInvoices' : 'invoices.generatedSuccessfully'),
+                created === 0 ? 'info' : 'success'
+              );
+              fetchSummary();
             } catch (error) {
-              showAlert('Error', error.message || 'Failed to generate invoice.', 'error');
+              if (!error?.isPlanLimit) showAlert(t('common.error'), error.message || t('invoices.generateFailed'), 'error');
             } finally {
               setGeneratingForId(null);
             }

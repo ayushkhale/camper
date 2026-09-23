@@ -1,6 +1,14 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setApiRole } from '../../shared/services/api';
+import {
+  refreshAccessToken,
+  apiDebugError,
+  apiDebugLog,
+  logAccessTokenDetails,
+  setApiRole,
+  setLogoutCallback,
+  setTokenRefreshedCallback,
+} from '../../shared/services/api';
 
 export const AuthContext = createContext();
 
@@ -17,6 +25,9 @@ export const AuthProvider = ({ children }) => {
         if (token && userData) {
           const parsedUser = JSON.parse(userData);
           setApiRole(parsedUser.role);
+          logAccessTokenDetails('Restored saved session on app boot', token, {
+            userRole: parsedUser.role,
+          });
           
           if (parsedUser.logoUrl || parsedUser.imageUrl) {
             import('react-native-fast-image').then(FastImage => {
@@ -26,24 +37,31 @@ export const AuthProvider = ({ children }) => {
 
           setUserToken(token);
           setUser(parsedUser);
+        } else {
+          apiDebugLog('[Auth Token] App boot found no complete saved session.', {
+            accessTokenPresent: Boolean(token),
+            userDataPresent: Boolean(userData),
+          });
         }
       } catch (e) {
-        console.error('Failed to load auth data', e);
+        apiDebugError('[Auth Token] Failed to load saved auth data.', e);
       } finally {
         setIsLoading(false);
       }
     };
+    setLogoutCallback(() => {
+      logout();
+    });
+    setTokenRefreshedCallback((token) => {
+      apiDebugLog('[Auth Token] React auth state updated with the new access token.');
+      setUserToken(token);
+    });
     loadAuthData();
 
-    // Register callback so api.js can trigger logout on refresh token failure
-    import('../../shared/services/api').then(({ setLogoutCallback, setTokenRefreshedCallback }) => {
-      setLogoutCallback(() => {
-        logout();
-      });
-      setTokenRefreshedCallback((newToken) => {
-        setUserToken(newToken);
-      });
-    });
+    return () => {
+      setLogoutCallback(null);
+      setTokenRefreshedCallback(null);
+    };
   }, []);
 
   const login = async (token, refreshToken, userData) => {
@@ -54,6 +72,10 @@ export const AuthProvider = ({ children }) => {
       }
       await AsyncStorage.setItem('user_data', JSON.stringify(userData));
       setApiRole(userData?.role || 'owner');
+      logAccessTokenDetails('Login succeeded and token was stored', token, {
+        refreshTokenStored: Boolean(refreshToken),
+        userRole: userData?.role || 'owner',
+      });
       
       if (userData?.logoUrl || userData?.imageUrl) {
         import('react-native-fast-image').then(FastImage => {
@@ -64,16 +86,22 @@ export const AuthProvider = ({ children }) => {
       setUserToken(token);
       setUser(userData);
     } catch (e) {
-      console.error('Failed to save login data', e);
+      apiDebugError('[Auth Token] Failed to save login data.', e);
     }
   };
 
   const logout = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem('refresh_token');
+      apiDebugLog('[Auth Token] Logout started.', {
+        refreshTokenPresent: Boolean(refreshToken),
+      });
       if (refreshToken) {
         import('../../shared/services/api').then(({ api }) => {
-          api.logout(refreshToken).catch(err => console.log('API logout failed, cleaning up locally', err));
+          api.logout(refreshToken).catch(err => apiDebugLog(
+            '[Auth Token] API logout failed; local session cleanup continued.',
+            err?.message || String(err),
+          ));
         });
       }
       await AsyncStorage.removeItem('jwt_token');
@@ -81,13 +109,34 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.removeItem('user_data');
       setUserToken(null);
       setUser(null);
+      apiDebugLog('[Auth Token] Local session cleared.');
     } catch (e) {
-      console.error('Failed to remove login data', e);
+      apiDebugError('[Auth Token] Failed to remove login data.', e);
     }
   };
 
+  const refreshAuthToken = useCallback(async (options) => {
+    try {
+      apiDebugLog('[Auth Token] AuthContext requested an access-token refresh.', options || {});
+      const token = await refreshAccessToken(options);
+      setUserToken(token);
+      apiDebugLog('[Auth Token] AuthContext refresh completed.');
+      return token;
+    } catch (error) {
+      apiDebugError('[Auth Token] AuthContext refresh failed.', {
+        message: error?.message || String(error),
+        authRevoked: Boolean(error?.authRevoked),
+      });
+      if (error.authRevoked) {
+        setUserToken(null);
+        setUser(null);
+      }
+      throw error;
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ isLoading, userToken, user, login, logout }}>
+    <AuthContext.Provider value={{ isLoading, userToken, user, login, logout, refreshAuthToken }}>
       {children}
     </AuthContext.Provider>
   );

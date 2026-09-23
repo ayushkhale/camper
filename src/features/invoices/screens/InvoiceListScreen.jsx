@@ -19,6 +19,8 @@ import CurvedHeader from '../../../shared/components/CurvedHeader';
 import { COLORS } from '../../../shared/constants/colors';
 import { AuthContext } from '../../../app/providers/AuthContext';
 import { api } from '../../../shared/services/api';
+import { apiDebugError, apiDebugLog, shouldLogApi } from '../../../shared/services/api/client';
+import { getInvoiceAmounts } from '../../../shared/utils/billing';
 import { useEntitlements } from '../../../app/providers/EntitlementContext';
 import { ENTITLEMENT_KEYS } from '../../../shared/constants/subscriptionEntitlements';
 
@@ -48,14 +50,14 @@ const InvoiceListScreen = () => {
     setError(null);
     try {
       const res = await api.listInvoices(userToken);
-      console.log('--- InvoiceListScreen: fetchInvoices Response ---', JSON.stringify(res, null, 2));
+      if (shouldLogApi()) apiDebugLog('--- InvoiceListScreen: fetchInvoices Response ---', JSON.stringify(res, null, 2));
       if (res && res.success) {
         setInvoices(res.data || []);
       } else {
         throw new Error(res.message || 'Failed to fetch invoices');
       }
     } catch (err) {
-      console.error('Error fetching invoices:', err);
+      apiDebugError('Error fetching invoices:', err);
       setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
@@ -108,29 +110,11 @@ const InvoiceListScreen = () => {
   const renderInvoiceCard = ({ item }) => {
     const statusColors = getStatusColors(item.status);
     const dateFormatted = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
-    const readAmount = (...values) => {
-      for (const value of values) {
-        if (value === undefined || value === null || value === '') continue;
-        const parsed = Number.parseFloat(value);
-        if (Number.isFinite(parsed)) return parsed;
-      }
-      return 0;
-    };
-    const previousDues = readAmount(item.previousDues, item.previousDuesFormatted);
+    const amounts = getInvoiceAmounts(item);
+    const previousDues = amounts.previousDues;
     const previousBalanceAmount = Math.abs(previousDues);
-    const currentCharges = readAmount(
-      item.currentCharges,
-      item.currentChargesFormatted,
-      item.totalAmount,
-      item.totalAmountFormatted
-    );
-    const grandTotal = readAmount(
-      item.displayGrandTotal,
-      item.totalAmount,
-      item.totalAmountFormatted,
-      currentCharges + previousDues
-    );
-    const amountPaid = readAmount(item.displayAmountPaid, item.amountPaid, item.amountPaidFormatted);
+    const grandTotal = amounts.thisInvoiceTotal;
+    const amountPaid = amounts.alreadyPaid;
 
     return (
       <TouchableOpacity
@@ -176,10 +160,10 @@ const InvoiceListScreen = () => {
               {previousDues !== 0 ? (
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={[styles.paidSubText, { color: previousDues > 0 ? '#64748B' : '#059669', marginBottom: 2 }]}>
-                    {previousDues > 0 ? 'Prev. Due' : 'Advance Credit'}: ₹{previousBalanceAmount.toFixed(2)}
+                    {t(previousDues > 0 ? 'invoices.previousDuesInfo' : 'invoices.advanceCreditInfo')}: ₹{previousBalanceAmount.toFixed(2)}
                   </Text>
                   <Text style={[styles.paidSubText, { color: '#64748B', marginBottom: 4 }]}>
-                    Current: ₹{currentCharges.toFixed(2)}
+                    {t('invoices.thisInvoiceTotal')}: ₹{grandTotal.toFixed(2)}
                   </Text>
                   <View style={styles.totalRow}>
                     <IndianRupee size={14} color={COLORS.primary} style={{ marginTop: 1 }} />

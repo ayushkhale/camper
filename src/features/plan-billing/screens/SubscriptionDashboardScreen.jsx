@@ -29,13 +29,14 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../../app/providers/AuthContext';
 import { api } from '../../../shared/services/api';
+import { apiDebugError, apiDebugLog, shouldLogApi } from '../../../shared/services/api/client';
 import CurvedHeader from '../../../shared/components/CurvedHeader';
 import { COLORS } from '../../../shared/constants/colors';
 import { useAlert } from '../../../app/providers/AlertContext';
 import { useEntitlements } from '../../../app/providers/EntitlementContext';
 
-// const RAZORPAY_KEY_ID = 'rzp_test_SbMjn5LrmOZKI7';
-const RAZORPAY_KEY_ID = 'rzp_live_TbpvwjzvPKOiNw';
+const RAZORPAY_KEY_ID = 'rzp_test_SbMjn5LrmOZKI7';
+// const RAZORPAY_KEY_ID = 'rzp_live_TbpvwjzvPKOiNw';
 const PAYMENT_POLL_INTERVAL_MS = 3000;
 const PAYMENT_POLL_MAX_ATTEMPTS = 21;
 const SUPPORT_PHONE_NUMBER = '+9752050655';
@@ -293,12 +294,12 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
       const [statusRes, plansRes] = await Promise.all([
         api.getSubscriptionStatus(userToken, user?.vendorAccountId || 'me').catch(() => ({ error: true })),
         api.getActivePlans(userToken).catch((error) => {
-          console.log('[Subscription] Available plans request failed:', error.message);
+          apiDebugLog('[Subscription] Available plans request failed:', error.message);
           return null;
         }),
       ]);
 
-      console.log('[Subscription] Active plan response:', JSON.stringify(statusRes, null, 2));
+      if (shouldLogApi()) apiDebugLog('[Subscription] Active plan response:', JSON.stringify(statusRes, null, 2));
 
       const activePlans = getPlanList(plansRes);
       const subscription = statusRes?.data || statusRes;
@@ -333,7 +334,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
         setAvailablePlans(mapAvailablePlans(activePlans, t));
       }
     } catch (error) {
-      console.log('Error fetching subscription data:', error.message);
+      apiDebugLog('Error fetching subscription data:', error.message);
       setActiveSubscription(null);
     } finally {
       setLoading(false);
@@ -344,7 +345,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
   useFocusEffect(
     useCallback(() => {
       if (route?.params?.refreshCurrentPlanAt) {
-        console.log('[Subscription] Refreshing current plan after View Plans navigation.');
+        apiDebugLog('[Subscription] Refreshing current plan after View Plans navigation.');
       }
       fetchData();
     }, [fetchData, route?.params?.refreshCurrentPlanAt]),
@@ -408,7 +409,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
             : null;
         const status = String(subscription?.status || '').toLowerCase();
 
-        console.log('[Razorpay SDK] Subscription activation check:', {
+        apiDebugLog('[Razorpay SDK] Subscription activation check:', {
           attempt: attempts,
           maxAttempts: PAYMENT_POLL_MAX_ATTEMPTS,
           paymentId: paymentVerification.paymentId,
@@ -422,7 +423,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
         });
 
         if (!subscription) {
-          console.log('[Razorpay SDK] Ignoring the previous plan and waiting for the paid subscription record.');
+          apiDebugLog('[Razorpay SDK] Ignoring the previous plan and waiting for the paid subscription record.');
         }
 
         if (subscription) {
@@ -443,8 +444,33 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
 
           if (['active', 'trial', 'trialing'].includes(status)) {
             stopVerification();
-            setActivationModalState('success');
-            refreshEntitlements();
+            try {
+              // Prefer the inline newToken the backend embeds in the status
+              // response after activation — no extra /auth/refresh round-trip.
+              const inlineToken =
+                currentStatusResponse?.newToken ||
+                currentStatusResponse?.data?.newToken ||
+                paidSubscriptionResponse?.newToken ||
+                paidSubscriptionResponse?.data?.newToken ||
+                null;
+              if (inlineToken) {
+                apiDebugLog('[Subscription] Activation newToken was applied by the subscription API client.');
+              } else {
+                apiDebugLog('[Subscription] No inline newToken — falling back to refreshEntitlements().');
+                await refreshEntitlements();
+              }
+              if (screenMountedRef.current) setActivationModalState('success');
+            } catch (error) {
+              apiDebugLog('[Subscription] Token refresh after activation failed:', error.message);
+              if (screenMountedRef.current) {
+                setActivationModalState(null);
+                showAlertRef.current(
+                  t('subscriptionBilling.activeSubscription'),
+                  t('subscriptionBilling.activationDelayed'),
+                  'info',
+                );
+              }
+            }
 
             // Refresh only the catalog here. The exact purchased subscription above
             // remains the source of truth, so a stale customer-status response cannot
@@ -457,7 +483,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
                 }
               })
               .catch((error) => {
-                console.log('[Subscription] Post-activation plans refresh failed:', error.message);
+                apiDebugLog('[Subscription] Post-activation plans refresh failed:', error.message);
               });
 
             activationSuccessTimerRef.current = setTimeout(() => {
@@ -479,7 +505,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
           }
         }
       } catch (error) {
-        console.log('[Subscription] Payment status check failed:', error.message);
+        apiDebugLog('[Subscription] Payment status check failed:', error.message);
       } finally {
         requestInFlight = false;
       }
@@ -569,7 +595,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
         }));
       }
     } catch (error) {
-      console.log('[Subscription] Payment summary load failed:', error.message);
+      apiDebugLog('[Subscription] Payment summary load failed:', error.message);
       if (error.isPlanLimit) {
         setPaymentSummaryVisible(false);
       } else {
@@ -590,11 +616,21 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
 
     setCancellingSubscription(true);
     try {
-      await api.cancelSubscriptionPlan(userToken, activeSubscription.id, {
+      const cancelResponse = await api.cancelSubscriptionPlan(userToken, activeSubscription.id, {
         cancelAtPeriodEnd: true,
       });
+
+      // The subscription API client applies the backend-supplied newToken
+      // before this handler continues.
+      const cancelToken =
+        cancelResponse?.newToken ||
+        cancelResponse?.data?.newToken ||
+        null;
+      if (cancelToken) {
+        apiDebugLog('[Subscription] Cancellation newToken was applied by the subscription API client.');
+      }
+
       await fetchData();
-      await refreshEntitlements();
       setActiveSubscription((currentSubscription) => currentSubscription
         ? { ...currentSubscription, cancelAtPeriodEnd: true }
         : currentSubscription);
@@ -604,7 +640,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
         'success',
       );
     } catch (error) {
-      console.log('[Subscription] Cancellation failed:', error.message);
+      apiDebugLog('[Subscription] Cancellation failed:', error.message);
       if (!error.isPlanLimit) {
         const currentLanguage = i18n.resolvedLanguage || i18n.language;
         showAlert(
@@ -653,7 +689,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
         billingCycle,
       };
 
-      console.log('[Razorpay SDK] Creating subscription checkout:', {
+      apiDebugLog('[Razorpay SDK] Creating subscription checkout:', {
         customerId: payload.customerId,
         planVersionId: payload.planVersionId,
         billingCycle: payload.billingCycle,
@@ -677,7 +713,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
         razorpaySubscription?.key_id ||
         RAZORPAY_KEY_ID;
 
-      console.log('[Razorpay SDK] Checkout configuration received:', {
+      apiDebugLog('[Razorpay SDK] Checkout configuration received:', {
         localSubscriptionId,
         razorpaySubscriptionId,
         keyConfigured: Boolean(razorpayKeyId),
@@ -711,7 +747,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
       };
 
       checkoutStage = 'open_native_checkout';
-      console.log('[Razorpay SDK] Opening native checkout:', {
+      apiDebugLog('[Razorpay SDK] Opening native checkout:', {
         razorpaySubscriptionId,
         planVersionId: plan.id,
         currency: plan.currency,
@@ -728,7 +764,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
         throw new Error(t('subscriptionBilling.invalidPaymentResponse'));
       }
 
-      console.log('[Razorpay SDK] Payment authorization succeeded:', {
+      apiDebugLog('[Razorpay SDK] Payment authorization succeeded:', {
         razorpayPaymentId: paymentId,
         razorpaySubscriptionId: successfulSubscriptionId,
         signatureReceived: Boolean(paymentResult?.razorpay_signature),
@@ -755,7 +791,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
         planName: plan.name,
       });
     } catch (error) {
-      console.error('[Razorpay SDK] Checkout failed:', {
+      apiDebugError('[Razorpay SDK] Checkout failed:', {
         stage: checkoutStage,
         code: error?.code,
         description: error?.description,
@@ -765,7 +801,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
       setActivationModalState(null);
 
       if (!error.isPlanLimit) {
-        console.log('[Razorpay SDK] Payment failure modal opened:', {
+        apiDebugLog('[Razorpay SDK] Payment failure modal opened:', {
           planVersionId: plan.id,
         });
         setPaymentFailurePlan(plan);
@@ -787,7 +823,7 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
     try {
       await Linking.openURL(`tel:${SUPPORT_PHONE_NUMBER}`);
     } catch (error) {
-      console.log('[Subscription] Could not open support dialer:', error.message);
+      apiDebugLog('[Subscription] Could not open support dialer:', error.message);
     }
   };
 

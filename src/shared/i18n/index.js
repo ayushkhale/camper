@@ -9,16 +9,23 @@ import mrTranslation from './locales/mr.js';
 import paTranslation from './locales/pa.js';
 import taTranslation from './locales/ta.js';
 import teTranslation from './locales/te.js';
+import billingTranslations from './billingTranslations';
+
+const withBillingTranslations = (translation, language) => ({
+  ...translation,
+  invoices: { ...translation.invoices, ...billingTranslations[language].invoices },
+  payments: { ...translation.payments, ...billingTranslations[language].payments },
+});
 
 const resources = {
-  bn: { translation: bnTranslation },
-  en: { translation: enTranslation },
-  gu: { translation: guTranslation },
-  hi: { translation: hiTranslation },
-  mr: { translation: mrTranslation },
-  pa: { translation: paTranslation },
-  ta: { translation: taTranslation },
-  te: { translation: teTranslation },
+  bn: { translation: withBillingTranslations(bnTranslation, 'bn') },
+  en: { translation: withBillingTranslations(enTranslation, 'en') },
+  gu: { translation: withBillingTranslations(guTranslation, 'gu') },
+  hi: { translation: withBillingTranslations(hiTranslation, 'hi') },
+  mr: { translation: withBillingTranslations(mrTranslation, 'mr') },
+  pa: { translation: withBillingTranslations(paTranslation, 'pa') },
+  ta: { translation: withBillingTranslations(taTranslation, 'ta') },
+  te: { translation: withBillingTranslations(teTranslation, 'te') },
 };
 
 const LANGUAGE_KEY = 'app_language';

@@ -23,6 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../../../shared/constants/colors';
 import { AuthContext } from '../../../app/providers/AuthContext';
 import { api } from '../../../shared/services/api';
+import { apiDebugError, apiDebugLog, shouldLogApi } from '../../../shared/services/api/client';
 import { useEntitlements } from '../../../app/providers/EntitlementContext';
 import { ENTITLEMENT_KEYS } from '../../../shared/constants/subscriptionEntitlements';
 
@@ -173,7 +174,7 @@ const HomeScreen = () => {
               setNoAssignedRoutes(assignedRoutes.length === 0);
             }
           } catch (e) {
-            console.error('Error fetching staff profile on home:', e);
+            apiDebugError('Error fetching staff profile on home:', e);
           }
           return;
         }
@@ -182,7 +183,7 @@ const HomeScreen = () => {
           const res = await api.getDashboardStats(userToken);
           if (isActive && res.success) {
             const data = res.data || {};
-            console.log('📊 Dashboard Stats API Response:', JSON.stringify(data));
+            if (shouldLogApi()) apiDebugLog('📊 Dashboard Stats API Response:', JSON.stringify(data));
             setStats({
               customers: data.customersCount ?? data.customers ?? 0,
               subscriptions: data.activeSubscriptionsCount ?? data.subscriptionsCount ?? data.subscriptions ?? 0,
@@ -191,7 +192,7 @@ const HomeScreen = () => {
             });
           }
         } catch (err) {
-          console.error('Error fetching dashboard stats:', err);
+          apiDebugError('Error fetching dashboard stats:', err);
         } finally {
           if (isActive) setLoadingStats(false);
         }
@@ -223,7 +224,7 @@ const HomeScreen = () => {
             setTodaysDeliveries(sortedList);
           }
         } catch (err) {
-          console.error('Error fetching today deliveries:', err);
+          apiDebugError('Error fetching today deliveries:', err);
         } finally {
           if (isActive) setLoadingDeliveries(false);
         }

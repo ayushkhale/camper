@@ -34,16 +34,6 @@ export const planBillingApi = {
     );
   },
 
-  getSubscriptionEntitlement: (token, customerId, featureKey) => {
-    const encodedFeatureKey = encodeURIComponent(featureKey);
-    const endpoint = `/api/subscription_module/customer/subscription/${customerId}/entitlement/${encodedFeatureKey}`;
-    return runSubscriptionRequest(
-      'getSubscriptionEntitlement',
-      { method: 'GET', endpoint, customerId, featureKey },
-      () => getRequest(endpoint, token),
-    );
-  },
-
   checkoutSubscription: (token, data) => {
     const endpoint = '/api/subscription_module/customer/checkout';
     return runSubscriptionRequest(

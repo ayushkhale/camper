@@ -86,10 +86,7 @@ const RootNavigatorContent = () => {
 
       if (featureKey) {
         markEntitlementLocked(featureKey, backendMessage);
-      } else if (
-        details.status === 409 ||
-        /subscription|trial.*expired|purchase a plan/i.test(backendMessage)
-      ) {
+      } else if (/subscription|trial.*expired|purchase a plan/i.test(backendMessage)) {
         markAllEntitlementsLocked(backendMessage);
       }
       const featureName = featureTranslationKey ? t(featureTranslationKey) : null;

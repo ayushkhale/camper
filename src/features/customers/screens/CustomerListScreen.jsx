@@ -176,14 +176,14 @@ const CustomerListScreen = () => {
               {isDue ? (
                 <>
                   <Text style={styles.dueAmount}>₹{balance.toFixed(2)}</Text>
-                  <Text style={styles.statusSubtext}>Due</Text>
+                   <Text style={styles.statusSubtext}>{t('payments.totalAmountDue')}</Text>
                 </>
               ) : (
                 <>
                   <View style={[styles.statusBadge, { backgroundColor: '#D1FAE5' }]}>
-                    <Text style={[styles.statusBadgeText, { color: '#10B981' }]}>Paid</Text>
-                  </View>
-                  <Text style={styles.statusSubtext}>Adv: ₹{Math.abs(balance).toFixed(2)}</Text>
+                     <Text style={[styles.statusBadgeText, { color: '#10B981' }]}>{balance < 0 ? t('payments.advanceCredit') : t('payments.accountClear')}</Text>
+                   </View>
+                   {balance < 0 && <Text style={styles.statusSubtext}>₹{Math.abs(balance).toFixed(2)}</Text>}
                 </>
               )}
             </View>
