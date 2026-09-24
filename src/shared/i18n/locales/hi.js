@@ -281,7 +281,7 @@ const hi = {
     removeExceptionConfirm: 'क्या इस अपवाद को हटाना है?',
   },
   subscriptionBilling: {
-    title: 'सब्सक्रिप्शन और बिलिंग',
+    title: 'प्लान्स और प्राइसिंग',
     activeSubscription: 'सक्रिय सब्सक्रिप्शन',
     active: 'सक्रिय',
     freeTrial: 'मुफ़्त ट्रायल',

@@ -174,7 +174,7 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
         height={130}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        contentStyle={{ paddingBottom: 25 }}
       />
 
       {/* Tabs */}
@@ -201,12 +201,13 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
 
       {/* Summary Area */}
       {!loading && activeTab === 'deliveries' && deliveriesSummary && (
-        <LinearGradient
-          colors={['#0F4499', '#0A3172']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.summaryCard}
-        >
+        <View style={styles.summaryCard}>
+          <LinearGradient
+            colors={['#0F4499', '#0A3172']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[StyleSheet.absoluteFillObject, { borderRadius: 16 }]}
+          />
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <View style={styles.summaryIconBox}>
@@ -228,16 +229,17 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
               </View>
             </View>
           </View>
-        </LinearGradient>
+        </View>
       )}
 
       {!loading && activeTab === 'jars' && jarsSummary && (
-        <LinearGradient
-          colors={['#0F4499', '#0A3172']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.summaryCard}
-        >
+        <View style={styles.summaryCard}>
+          <LinearGradient
+            colors={['#0F4499', '#0A3172']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[StyleSheet.absoluteFillObject, { borderRadius: 16 }]}
+          />
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <View style={styles.summaryIconBox}>
@@ -249,7 +251,7 @@ const CustomerHistoryScreen = ({ route, navigation }) => {
               </View>
             </View>
           </View>
-        </LinearGradient>
+        </View>
       )}
 
       {/* List Area */}

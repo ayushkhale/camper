@@ -57,7 +57,7 @@ const RouteDetailScreen = () => {
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [staffDropdownVisible, setStaffDropdownVisible] = useState(false);
   const [isPermanent, setIsPermanent] = useState(true);
-  
+
   // Date states (formatted YYYY-MM-DD)
   const getTodayString = () => {
     const today = new Date();
@@ -313,29 +313,32 @@ const RouteDetailScreen = () => {
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: 32 }]} showsVerticalScrollIndicator={false}>
         {/* Route Info Card (Premium Gradient) */}
-        <LinearGradient
-          colors={['#F59E0B', '#D97706']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.premiumRouteCard}
-        >
-          {/* Decorative Background Icon */}
-          <View style={{ position: 'absolute', right: -15, bottom: -25, opacity: 0.15, transform: [{ rotate: '-15deg' }] }}>
-            <MapPin size={120} color="#FFFFFF" />
+        <View style={styles.premiumRouteCardShadow}>
+          <View style={styles.premiumRouteCardInner}>
+            <LinearGradient
+              colors={['#F59E0B', '#D97706']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            {/* Decorative Background Icon */}
+            <View style={{ position: 'absolute', right: -15, bottom: -25, opacity: 0.15, transform: [{ rotate: '-15deg' }] }}>
+              <MapPin size={120} color="#FFFFFF" />
+            </View>
+
+            <View style={styles.premiumRouteIconBox}>
+              <MapPin size={26} color="#FFFFFF" />
+            </View>
+            <View style={styles.premiumRouteInfo}>
+              <Text style={styles.premiumRouteName} numberOfLines={1}>{routeData.name}</Text>
+              {routeData.areaCode ? (
+                <View style={styles.premiumRouteBadge}>
+                  <Text style={styles.premiumRouteBadgeText} numberOfLines={1}>{t('routes.areaCode')}: {routeData.areaCode}</Text>
+                </View>
+              ) : null}
+            </View>
           </View>
-          
-          <View style={styles.premiumRouteIconBox}>
-            <MapPin size={26} color="#FFFFFF" />
-          </View>
-          <View style={styles.premiumRouteInfo}>
-            <Text style={styles.premiumRouteName} numberOfLines={1}>{routeData.name}</Text>
-            {routeData.areaCode ? (
-              <View style={styles.premiumRouteBadge}>
-                <Text style={styles.premiumRouteBadgeText} numberOfLines={1}>{t('routes.areaCode')}: {routeData.areaCode}</Text>
-              </View>
-            ) : null}
-          </View>
-        </LinearGradient>
+        </View>
 
         {/* Action Button: Assign Staff */}
         {user?.role !== 'staff' && (
@@ -418,7 +421,7 @@ const RouteDetailScreen = () => {
             )}
           </>
         )}
-        
+
         {/* Metadata Section */}
         <View style={styles.metadataSection}>
           <Text style={styles.metadataLabel}>Last Modified By</Text>
@@ -451,7 +454,7 @@ const RouteDetailScreen = () => {
             setAssignModalVisible(false);
           }}
         >
-        <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
+          <TouchableOpacity activeOpacity={1} onPress={() => { }} style={styles.modalContent}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('routes.assignStaff')}</Text>
@@ -643,18 +646,22 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 120,
   },
-  premiumRouteCard: {
-    borderRadius: 20,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+  premiumRouteCardShadow: {
     marginBottom: 24,
-    overflow: 'hidden',
+    borderRadius: 20,
+    backgroundColor: '#D97706',
     shadowColor: '#D97706',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 6,
+  },
+  premiumRouteCardInner: {
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
   premiumRouteIconBox: {
     width: 56,

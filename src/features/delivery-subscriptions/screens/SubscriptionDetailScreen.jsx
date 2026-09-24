@@ -335,8 +335,8 @@ const SubscriptionDetailScreen = () => {
             </TouchableOpacity>
           </View>
         ) : null}
-        height={130}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

@@ -281,7 +281,7 @@ const ta = {
     "removeExceptionConfirm": "இந்த விதிவிலக்கை நீக்கவா?"
   },
   "subscriptionBilling": {
-    "title": "சப்ஸ்கிரிப்ஷன் மற்றும் பில்லிங்",
+    "title": "திட்டங்கள் மற்றும் விலை",
     "activeSubscription": "செயலில் உள்ள சந்தா",
     "active": "செயலில் உள்ள",
     "freeTrial": "இலவச பரிசோதனை",

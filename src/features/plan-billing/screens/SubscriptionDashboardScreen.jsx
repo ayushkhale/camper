@@ -1064,7 +1064,8 @@ const SubscriptionDashboardScreen = ({ navigation, route }) => {
         title={t('subscriptionBilling.title')}
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
-        height={130}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 
       {loading && !refreshing ? (

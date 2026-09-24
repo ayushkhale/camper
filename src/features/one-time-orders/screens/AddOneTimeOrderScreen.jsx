@@ -351,8 +351,8 @@ const AddOneTimeOrderScreen = () => {
         }
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
-        height={140}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 
       <KeyboardAvoidingView

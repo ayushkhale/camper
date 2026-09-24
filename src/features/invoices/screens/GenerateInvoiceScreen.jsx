@@ -331,17 +331,17 @@ const GenerateInvoiceScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <CurvedHeader
+        title={t('invoices.generateInvoices')}
+        leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
+        onLeftPress={() => navigation.goBack()}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
+      />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
       >
-        <CurvedHeader
-          title={t('invoices.generateInvoices')}
-          leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
-          onLeftPress={() => navigation.goBack()}
-          height={130}
-          contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
-        />
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"

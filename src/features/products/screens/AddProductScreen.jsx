@@ -251,7 +251,7 @@ const AddProductScreen = () => {
         title={isEditing ? t('products.editProduct') : t('products.addNew')}
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
-        height={110}
+        height={120}
         contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 

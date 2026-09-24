@@ -12,6 +12,7 @@ import {
   Building2, Check, X, Upload, ChevronDown, ChevronUp,
 } from 'lucide-react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../../shared/constants/colors';
 import { AuthContext } from '../../../app/providers/AuthContext';
 import { api } from '../../../shared/services/api';
@@ -22,10 +23,10 @@ const MAX_PREFIX_LENGTH = 11;
 const MAX_TERMS_LENGTH = 5000;
 
 const PAYMENT_MODES = [
-  { key: 'none',         label: 'None',         icon: Ban,          color: '#94A3B8', bg: '#F1F5F9' },
-  { key: 'bank_account', label: 'Bank Account',  icon: Building2,    color: '#1E3A8A', bg: '#EFF6FF' },
-  { key: 'upi_id',       label: 'UPI ID',        icon: Smartphone,   color: '#7C3AED', bg: '#F5F3FF' },
-  { key: 'qr_code',      label: 'QR Code',       icon: QrCode,       color: '#0D9488', bg: '#F0FDFA' },
+  { key: 'none',         label: 'settings.none', defaultLabel: 'None',         icon: Ban,          color: '#94A3B8', bg: '#F1F5F9' },
+  { key: 'bank_account', label: 'settings.bankAccount', defaultLabel: 'Bank Account',  icon: Building2,    color: '#1E3A8A', bg: '#EFF6FF' },
+  { key: 'upi_id',       label: 'settings.upiId', defaultLabel: 'UPI ID',        icon: Smartphone,   color: '#7C3AED', bg: '#F5F3FF' },
+  { key: 'qr_code',      label: 'settings.qrCode', defaultLabel: 'QR Code',       icon: QrCode,       color: '#0D9488', bg: '#F0FDFA' },
 ];
 
 const emptyBankForm = { accountName: '', bankName: '', accountNumber: '', ifscCode: '' };
@@ -34,6 +35,7 @@ const InvoiceSettingsScreen = () => {
   const navigation = useNavigation();
   const { userToken } = useContext(AuthContext);
   const { showAlert } = useAlert();
+  const { t } = useTranslation();
 
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState(false);
@@ -300,7 +302,7 @@ const InvoiceSettingsScreen = () => {
               </View>
               <View style={styles.prefixRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.fieldLabel}>Prefix Code</Text>
+                  <Text style={styles.fieldLabel}>{t('settings.prefixCode', 'Prefix Code')}</Text>
                   <TextInput
                     style={styles.prefixInput}
                     value={prefix}
@@ -315,14 +317,14 @@ const InvoiceSettingsScreen = () => {
                 </View>
                 <View style={styles.previewBox}>
                   <View style={[styles.iconBg, { backgroundColor: '#DBEAFE', alignSelf: 'center', marginBottom: 6 }]}><Eye size={14} color="#2563EB" /></View>
-                  <Text style={styles.previewLabel}>Next Invoice</Text>
+                  <Text style={styles.previewLabel}>{t('settings.nextInvoice', 'Next Invoice')}</Text>
                   <Text style={styles.previewValue}>{nextPreview}</Text>
-                  <Text style={styles.previewNote}>Live Preview</Text>
+                  <Text style={styles.previewNote}>{t('settings.livePreview', 'Live Preview')}</Text>
                 </View>
               </View>
               <View style={styles.infoBox}>
                 <Info size={13} color="#3B82F6" style={{ marginTop: 1 }} />
-                <Text style={styles.infoText}>Changing prefix will not renumber existing invoices.</Text>
+                <Text style={styles.infoText}>{t('settings.prefixInfo', 'Changing prefix will not renumber existing invoices.')}</Text>
               </View>
             </View>
           </View>
@@ -334,11 +336,11 @@ const InvoiceSettingsScreen = () => {
               <View style={styles.cardHeader}>
                 <View style={[styles.iconBg, { backgroundColor: '#F0FDFA' }]}><FileText size={17} color="#0D9488" /></View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>Terms & Conditions</Text>
-                  <Text style={styles.cardSubtitle}>Printed at the bottom of every PDF invoice</Text>
+                  <Text style={styles.cardTitle}>{t('settings.termsAndConditions', 'Terms & Conditions')}</Text>
+                  <Text style={styles.cardSubtitle}>{t('settings.termsSubtitle', 'Printed at the bottom of every PDF invoice')}</Text>
                 </View>
               </View>
-              <Text style={styles.fieldLabel}>T&C Text</Text>
+              <Text style={styles.fieldLabel}>{t('settings.tcText', 'T&C Text')}</Text>
               <TextInput
                 style={styles.termsInput}
                 value={terms}
@@ -355,7 +357,7 @@ const InvoiceSettingsScreen = () => {
                 {terms.length > 0 && (
                   <TouchableOpacity onPress={handleClearTerms} style={styles.clearBtn} activeOpacity={0.7}>
                     <RotateCcw size={12} color="#DC2626" />
-                    <Text style={styles.clearBtnText}>Clear</Text>
+                    <Text style={styles.clearBtnText}>{t('common.clear', 'Clear')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -363,7 +365,7 @@ const InvoiceSettingsScreen = () => {
                 <View style={styles.termsPreview}>
                   <View style={styles.termsPreviewAccent} />
                   <View style={{ flex: 1, padding: 10, backgroundColor: '#EFF6FF' }}>
-                    <Text style={styles.termsPreviewLabel}>TERMS & CONDITIONS</Text>
+                    <Text style={styles.termsPreviewLabel}>{t('settings.termsCaps', 'TERMS & CONDITIONS')}</Text>
                     <Text style={styles.termsPreviewText}>{terms}</Text>
                   </View>
                 </View>
@@ -378,13 +380,13 @@ const InvoiceSettingsScreen = () => {
               <View style={styles.cardHeader}>
                 <View style={[styles.iconBg, { backgroundColor: '#F5F3FF' }]}><CreditCard size={17} color="#7C3AED" /></View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>Payment Details on Invoice</Text>
-                  <Text style={styles.cardSubtitle}>How customers can pay you</Text>
+                  <Text style={styles.cardTitle}>{t('settings.paymentDetails', 'Payment Details on Invoice')}</Text>
+                  <Text style={styles.cardSubtitle}>{t('settings.paymentSubtitle', 'How customers can pay you')}</Text>
                 </View>
               </View>
 
               {/* Mode Selector */}
-              <Text style={styles.fieldLabel}>Payment Method</Text>
+              <Text style={styles.fieldLabel}>{t('settings.paymentMethod', 'Payment Method')}</Text>
               <View style={styles.modeGrid}>
                 {PAYMENT_MODES.map(mode => {
                   const Icon = mode.icon;
@@ -398,7 +400,7 @@ const InvoiceSettingsScreen = () => {
                     >
                       <Icon size={16} color={isActive ? mode.color : '#94A3B8'} />
                       <Text style={[styles.modeChipText, isActive && { color: mode.color, fontFamily: 'Rubik-Bold' }]}>
-                        {mode.label}
+                        {t(mode.label, mode.defaultLabel)}
                       </Text>
                       {isActive && <Check size={12} color={mode.color} style={{ marginLeft: 'auto' }} />}
                     </TouchableOpacity>
@@ -409,7 +411,7 @@ const InvoiceSettingsScreen = () => {
               {/* UPI ID Panel */}
               {paymentMode === 'upi_id' && (
                 <View style={styles.paymentPanel}>
-                  <Text style={styles.fieldLabel}>UPI ID</Text>
+                  <Text style={styles.fieldLabel}>{t('settings.upiId', 'UPI ID')}</Text>
                   <View style={styles.upiInputRow}>
                     <Smartphone size={18} color="#7C3AED" style={{ marginRight: 10 }} />
                     <TextInput
@@ -423,26 +425,26 @@ const InvoiceSettingsScreen = () => {
                       returnKeyType="done"
                     />
                   </View>
-                  <Text style={styles.inputHint}>This UPI ID will be printed on every PDF invoice.</Text>
+                  <Text style={styles.inputHint}>{t('settings.upiInfo', 'This UPI ID will be printed on every PDF invoice.')}</Text>
                 </View>
               )}
 
               {/* QR Code Panel */}
               {paymentMode === 'qr_code' && (
                 <View style={styles.paymentPanel}>
-                  <Text style={styles.fieldLabel}>Payment QR Code</Text>
+                  <Text style={styles.fieldLabel}>{t('settings.paymentQrCode', 'Payment QR Code')}</Text>
                   {qrCodeImageUrl ? (
                     <View style={styles.qrPreviewWrap}>
                       <Image source={{ uri: qrCodeImageUrl }} style={styles.qrPreviewImage} resizeMode="contain" />
                       <TouchableOpacity style={styles.qrChangeBtn} onPress={handleUploadQr} disabled={uploadingQr} activeOpacity={0.8}>
-                        {uploadingQr ? <ActivityIndicator size="small" color="#0D9488" /> : <><Upload size={14} color="#0D9488" /><Text style={styles.qrChangeBtnText}>Change QR</Text></>}
+                        {uploadingQr ? <ActivityIndicator size="small" color="#0D9488" /> : <><Upload size={14} color="#0D9488" /><Text style={styles.qrChangeBtnText}>{t('settings.changeQr', 'Change QR')}</Text></>}
                       </TouchableOpacity>
                     </View>
                   ) : (
                     <TouchableOpacity style={styles.qrUploadBtn} onPress={handleUploadQr} disabled={uploadingQr} activeOpacity={0.8}>
                       {uploadingQr
                         ? <ActivityIndicator size="small" color="#0D9488" />
-                        : <><Upload size={20} color="#0D9488" /><Text style={styles.qrUploadText}>Tap to Upload QR Code</Text><Text style={styles.qrUploadHint}>JPEG, PNG, or WebP image</Text></>
+                        : <><Upload size={20} color="#0D9488" /><Text style={styles.qrUploadText}>{t('settings.tapToUploadQr', 'Tap to Upload QR Code')}</Text><Text style={styles.qrUploadHint}>{t('settings.qrHint', 'JPEG, PNG, or WebP image')}</Text></>
                       }
                     </TouchableOpacity>
                   )}
@@ -454,7 +456,7 @@ const InvoiceSettingsScreen = () => {
                 <View style={styles.paymentPanel}>
                   <View style={styles.bankPanelHeader}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.fieldLabel}>Select Bank Account</Text>
+                      <Text style={styles.fieldLabel}>{t('settings.selectBankAccount', 'Select Bank Account')}</Text>
                       <Text style={{ fontSize: 11, fontFamily: 'Rubik-Regular', color: '#94A3B8', marginTop: 2 }}>
                         Tap any card to activate it on your invoices
                       </Text>
@@ -533,7 +535,7 @@ const InvoiceSettingsScreen = () => {
 
           {/* Save Button */}
           <TouchableOpacity style={[styles.saveBtn, saving && styles.saveBtnDisabled]} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
-            {saving ? <ActivityIndicator size="small" color="#FFFFFF" /> : <><Save size={18} color="#FFFFFF" style={{ marginRight: 8 }} /><Text style={styles.saveBtnText}>Save Settings</Text></>}
+            {saving ? <ActivityIndicator size="small" color="#FFFFFF" /> : <><Save size={18} color="#FFFFFF" style={{ marginRight: 8 }} /><Text style={styles.saveBtnText}>{t('settings.saveSettings', 'Save Settings')}</Text></>}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

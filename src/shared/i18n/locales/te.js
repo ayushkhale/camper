@@ -281,7 +281,7 @@ const te = {
     "removeExceptionConfirm": "ఈ మినహాయింపును తీసివేయాలా?"
   },
   "subscriptionBilling": {
-    "title": "సబ్‌స్క్రిప్షన్ & బిల్లింగ్",
+    "title": "ప్లాన్స్ మరియు ప్రైసింగ్",
     "activeSubscription": "ప్రాక్టివ్ సబ్‌స్క్రిప్షన్",
     "active": "సక్రియ",
     "freeTrial": "ఉచిత ట్రయల్",

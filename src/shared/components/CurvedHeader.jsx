@@ -59,7 +59,7 @@ const CurvedHeader = ({
       )}
 
       {/* Header Content */}
-      <View style={[styles.content, contentStyle]}>
+      <View style={[styles.content, { paddingTop: insets.top }, contentStyle]}>
         <View style={styles.topRow}>
           {leftIcon && (
             <TouchableOpacity onPress={onLeftPress} style={styles.iconButton} activeOpacity={0.7}>

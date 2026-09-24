@@ -281,7 +281,7 @@ const bn = {
     "removeExceptionConfirm": "এই ব্যতিক্রমটি সরান?"
   },
   "subscriptionBilling": {
-    "title": "সাবস্ক্রিপশন ও বিলিং",
+    "title": "প্ল্যানস এবং প্রাইসিং",
     "activeSubscription": "সক্রিয় সাবস্ক্রিপশন",
     "active": "সক্রিয়",
     "freeTrial": "ফ্রি ট্রায়াল",

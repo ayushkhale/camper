@@ -936,8 +936,8 @@ const InvoiceDetailScreen = () => {
           ? <SlidersHorizontal size={22} color="#FFFFFF" />
           : null}
         onRightPress={openAdjustmentActions}
-        height={130}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 
       {loading ? (

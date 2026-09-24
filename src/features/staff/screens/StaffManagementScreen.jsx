@@ -139,12 +139,13 @@ const StaffManagementScreen = () => {
     const initials = getInitials(item.name);
 
     return (
-      <LinearGradient 
-        colors={isActive ? ['#FFFFFF', '#F4F7FA'] : ['#F8FAFC', '#F1F5F9']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[styles.card, !isActive && styles.cardInactive]}
-      >
+      <View style={[styles.card, !isActive && styles.cardInactive]}>
+        <LinearGradient 
+          colors={isActive ? ['#FFFFFF', '#F4F7FA'] : ['#F8FAFC', '#F1F5F9']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={[StyleSheet.absoluteFillObject, { borderRadius: 16 }]}
+        />
         <View style={styles.cardHeader}>
           {/* Avatar */}
           <LinearGradient
@@ -211,7 +212,7 @@ const StaffManagementScreen = () => {
             <Text style={[styles.subActionText, { color: COLORS.danger }]}>{t('common.delete') || 'Delete'}</Text>
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </View>
     );
   };
 
@@ -221,8 +222,8 @@ const StaffManagementScreen = () => {
         title={t('staff.title')}
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
-        height={140}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 
       <View style={styles.contentWrapper}>
