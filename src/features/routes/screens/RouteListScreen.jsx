@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -88,8 +88,9 @@ const RouteListScreen = () => {
           colors={['#FFFFFF', '#F8FAFC']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.cardInner}
-        >
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={styles.cardInner}>
           {/* Decorative Background Circles (Route Theme) */}
           <View style={StyleSheet.absoluteFillObject}>
             <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -127,7 +128,7 @@ const RouteListScreen = () => {
               </Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     );
   };

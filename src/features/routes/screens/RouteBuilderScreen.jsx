@@ -202,16 +202,20 @@ const RouteBuilderScreen = () => {
     const isSelected = sequenceIndex >= 0;
     const sequenceNumber = sequenceIndex + 1;
 
-    const CardContainer = isSelected ? LinearGradient : View;
     const containerStyle = isSelected 
       ? [styles.customerCard, styles.customerCardSelected] 
       : styles.customerCard;
-    const containerProps = isSelected 
-      ? { colors: ['#FFFFFF', '#F0F9FF'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } }
-      : {};
 
     return (
-      <CardContainer style={containerStyle} {...containerProps}>
+      <View style={containerStyle}>
+        {isSelected && (
+          <LinearGradient
+            colors={['#FFFFFF', '#F0F9FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[StyleSheet.absoluteFillObject, { borderRadius: 16 }]}
+          />
+        )}
         <TouchableOpacity
           style={styles.cardContent}
           activeOpacity={0.7}
@@ -275,7 +279,7 @@ const RouteBuilderScreen = () => {
             </TouchableOpacity>
           )}
         </View>
-      </CardContainer>
+      </View>
     );
   };
 

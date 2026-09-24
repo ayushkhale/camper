@@ -254,8 +254,8 @@ const ReportsScreen = () => {
         title={t('reports.title') || 'Business Reports'}
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
-        height={110}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 15 }}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 
       {/* Tabs */}

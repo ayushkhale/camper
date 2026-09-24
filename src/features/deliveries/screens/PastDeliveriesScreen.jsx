@@ -518,11 +518,11 @@ const PastDeliveriesScreen = () => {
   return (
     <View style={styles.container}>
       <CurvedHeader
-        title={t('deliveries.allDeliveries') || 'All Deliveries'}
+        title={t('deliveries.pastDeliveries') || 'Modify / Past Deliveries'}
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.goBack()}
-        height={140}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

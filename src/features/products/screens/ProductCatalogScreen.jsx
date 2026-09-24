@@ -130,8 +130,9 @@ const ProductCatalogScreen = () => {
           colors={['#FFFFFF', '#F8FAFC']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.cardInner}
-        >
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={styles.cardInner}>
           {/* Decorative Background Circles */}
           <View style={StyleSheet.absoluteFillObject}>
             <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -182,7 +183,7 @@ const ProductCatalogScreen = () => {
 
             <ChevronRight size={18} color="#94A3B8" />
           </View>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -197,8 +198,8 @@ const ProductCatalogScreen = () => {
         }
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
-        height={140}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
       
       <View style={styles.contentWrapper}>

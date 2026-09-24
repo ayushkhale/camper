@@ -121,12 +121,20 @@ const InvoiceListScreen = () => {
         activeOpacity={0.8}
         onPress={() => navigation.navigate('InvoiceDetail', { invoiceId: item.id || item.invoiceId, invoice: item })}
       >
-        <LinearGradient
-          colors={statusColors.grad}
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 1}}
-          style={[styles.card, { borderColor: statusColors.border }]}
-        >
+        <View style={[
+          styles.card, 
+          { 
+            borderColor: statusColors.border,
+            borderLeftWidth: 4,
+            borderLeftColor: statusColors.dot
+          }
+        ]}>
+          <LinearGradient
+            colors={statusColors.grad}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 1}}
+            style={[StyleSheet.absoluteFillObject, { borderRadius: 16 }]}
+          />
           <View style={styles.cardHeader}>
             <View style={styles.iconBox}>
               <FileText size={22} color={COLORS.primary} />
@@ -188,7 +196,7 @@ const InvoiceListScreen = () => {
             </View>
             <ChevronRight size={18} color={COLORS.textPlaceholder} style={{ marginLeft: 8 }} />
           </View>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -199,8 +207,8 @@ const InvoiceListScreen = () => {
         title={t('invoices.title')}
         leftIcon={<ArrowLeft size={24} color="#FFFFFF" />}
         onLeftPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.openDrawer?.()}
-        height={140}
-        contentStyle={{ paddingTop: Platform.OS === 'ios' ? 40 : 20, paddingBottom: 25 }}
+        height={120}
+        contentStyle={{ paddingTop: 10, paddingBottom: 25 }}
       />
       <View style={styles.contentWrapper}>
 
@@ -405,6 +413,7 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   card: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,

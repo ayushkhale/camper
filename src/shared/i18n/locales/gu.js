@@ -281,7 +281,7 @@ const gu = {
     "removeExceptionConfirm": "આ અપવાદ દૂર કરવો?"
   },
   "subscriptionBilling": {
-    "title": "પ્લાન અને કિંમત",
+    "title": "પ્લાન્સ અને પ્રાઇસિંગ",
     "activeSubscription": "સક્રિય સબ્સ્ક્રિપ્શન",
     "active": "સક્રિય",
     "freeTrial": "મફત ટ્રાયલ",
