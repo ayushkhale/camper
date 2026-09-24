@@ -4,8 +4,8 @@ import { jwtDecode } from 'jwt-decode';
 // export const API_BASE_URL = typeof __DEV__ !== 'undefined' && __DEV__
 //   ? 'http://192.168.1.6:3007'
 //   : 'https://api-camper.compunic.co.in';
-export const API_BASE_URL = 'http://192.168.1.6:3007';
-// export const API_BASE_URL = 'https://api-camper.compunic.co.in';
+// export const API_BASE_URL = 'http://192.168.1.6:3007';
+export const API_BASE_URL = 'https://api-camper.compunic.co.in';
 
 export const shouldLogApi = (isDevelopment = typeof __DEV__ !== 'undefined' && __DEV__, baseUrl = API_BASE_URL) =>
   isDevelopment && !/^https:\/\//i.test(baseUrl);
