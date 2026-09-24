@@ -281,7 +281,7 @@ const pa = {
     "removeExceptionConfirm": "ਇਸ ਵਿਸ਼ੇਸ਼ਤਾ ਨੂੰ ਹਟਾਉਣਾ ਹੈ?"
   },
   "subscriptionBilling": {
-    "title": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਅਤੇ ਬਿੱਲਿੰਗ",
+    "title": "ਪਲਾਨ ਅਤੇ ਕੀਮਤਾਂ",
     "activeSubscription": "ਸਕ੍ਰਿਯ ਸਬਸਕ੍ਰਿਪਸ਼ਨ",
     "active": "ਸਕ੍ਰਿਯ",
     "freeTrial": "ਮੁਫ਼ਤ ਟ੍ਰਾਇਲ",

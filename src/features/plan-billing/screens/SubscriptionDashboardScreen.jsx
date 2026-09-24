@@ -35,8 +35,8 @@ import { COLORS } from '../../../shared/constants/colors';
 import { useAlert } from '../../../app/providers/AlertContext';
 import { useEntitlements } from '../../../app/providers/EntitlementContext';
 
-const RAZORPAY_KEY_ID = 'rzp_test_SbMjn5LrmOZKI7';
-// const RAZORPAY_KEY_ID = 'rzp_live_TbpvwjzvPKOiNw';
+// const RAZORPAY_KEY_ID = 'rzp_test_SbMjn5LrmOZKI7';
+const RAZORPAY_KEY_ID = 'rzp_live_TbpvwjzvPKOiNw';
 const PAYMENT_POLL_INTERVAL_MS = 3000;
 const PAYMENT_POLL_MAX_ATTEMPTS = 21;
 const SUPPORT_PHONE_NUMBER = '+9752050655';

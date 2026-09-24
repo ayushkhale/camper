@@ -281,7 +281,7 @@ const en = {
     removeExceptionConfirm: 'Remove this exception?',
   },
   subscriptionBilling: {
-    title: 'Subscription & Billing',
+    title: 'Plans & Pricing',
     activeSubscription: 'Active Subscription',
     active: 'Active',
     freeTrial: 'Free Trial',

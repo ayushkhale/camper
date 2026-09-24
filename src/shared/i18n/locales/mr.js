@@ -281,7 +281,7 @@ const mr = {
     "removeExceptionConfirm": "हा अपवाद काढायचा का?"
   },
   "subscriptionBilling": {
-    "title": "सदस्यता व बिलिंग",
+    "title": "योजना आणि किंमत",
     "activeSubscription": "सक्रिय सदस्यता",
     "active": "सक्रिय",
     "freeTrial": "मोफत चाचणी",
